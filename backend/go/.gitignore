@@ -1,0 +1,34 @@
+# Go 项目相关
+**/bin/
+**/pkg/
+**/*.exe
+**/*.test
+**/*.out
+**/*.o
+**/*.so
+
+# 构建工具和缓存
+**/.cache/
+**/.vscode/
+**/gotestsum.*
+**/gopath/
+
+# 操作系统生成的文件
+Thumbs.db
+.DS_Store
+*.swp
+*~
+
+# Docker 相关
+**/docker-compose.override.yml
+**/Dockerfile.build
+
+# IDE 和编辑器
+.idea/
+*.swo
+*.swn
+*.saves
+
+# 保留必要文件（明确不忽略）
+!**/go.mod
+!**/go.sum
