@@ -77,18 +77,17 @@ import { ElMessage } from 'element-plus'
 import { Picture, Star, StarFilled, User, UserFilled } from '@element-plus/icons-vue'
 import type { Club, ClubCategory } from '@/types'
 import { useAuthStore } from '@/stores/auth'
+import { useClubStore } from '@/stores/club'
 
 interface Props {
   club: Club
-  favorited?: boolean
 }
 
 const props = defineProps<Props>()
 const router = useRouter()
 const authStore = useAuthStore()
-
-// 是否已收藏
-const isFavorited = computed(() => props.favorited || false)
+const clubStore = useClubStore()
+const isFavorited = computed(() => props.club.isFavorite)
 
 // 获取分类对应的标签类型
 const getCategoryType = (category: ClubCategory) => {
@@ -114,8 +113,13 @@ const toggleFavorite = () => {
     return
   }
 
-  // TODO: 调用收藏/取消收藏API
-  ElMessage.success(isFavorited.value ? '已取消收藏' : '已收藏')
+  if (isFavorited.value) {
+    clubStore.unfavoriteClub(props.club.id)
+    props.club.isFavorite = false
+  } else {
+    clubStore.favoriteClub(props.club.id)
+    props.club.isFavorite = true
+  }
 }
 
 // 申请加入社团

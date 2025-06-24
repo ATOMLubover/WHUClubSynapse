@@ -141,7 +141,7 @@
 
                   <!-- 社团封面 -->
                   <div class="club-cover" @click="viewClubDetail(club.id)">
-                    <img :src="club.coverImage || club.logo" :alt="club.name" />
+                    <img :src="club.coverImage" :alt="club.name" />
                     <div class="cover-overlay">
                       <el-button type="primary" size="small">查看详情</el-button>
                     </div>
@@ -151,7 +151,7 @@
                   <div class="club-info">
                     <h3 class="club-name" @click="viewClubDetail(club.id)">{{ club.name }}</h3>
                     <p class="club-category">{{ getCategoryText(club.category) }}</p>
-                    <p class="club-members">{{ club.memberCount }} 人</p>
+                    <p class="club-members">{{ club.currentMembers }}</p>
                     <p class="favorite-time">{{ formatDate(club.favoriteAt) }}</p>
                   </div>
 
@@ -188,7 +188,7 @@
               >
                 <el-checkbox v-model="selectedClubs" :value="club.id" />
 
-                <el-avatar :size="50" :src="club.logo" class="club-avatar">
+                <el-avatar :size="50" :src="club.coverImage" class="club-avatar">
                   <el-icon><UserFilled /></el-icon>
                 </el-avatar>
 
@@ -199,7 +199,7 @@
 
                 <div class="club-meta">
                   <el-tag size="small">{{ getCategoryText(club.category) }}</el-tag>
-                  <span class="club-members">{{ club.memberCount }} 人</span>
+                  <span class="club-members">{{ club.currentMembers }} 人</span>
                 </div>
 
                 <div class="club-favorite-time">
@@ -298,7 +298,7 @@ const filteredClubs = computed(() => {
       case 'name_asc':
         return a.name.localeCompare(b.name)
       case 'memberCount_desc':
-        return b.memberCount - a.memberCount
+        return b.currentMembers - a.currentMembers
       default:
         return 0
     }
@@ -355,11 +355,13 @@ const loadFavorites = async () => {
       pageSize: 1000, // 获取全部收藏，前端分页
     })
 
-    const { data } = response.data.data
-    favoriteClubs.value = data.map((item: any) => ({
-      ...item.club,
+    const list = response.data.data.list
+    favoriteClubs.value = list.map((item: any) => ({
+      ...item,
       favoriteAt: item.createdAt,
     }))
+
+    console.log(favoriteClubs)
 
     // 更新统计数据
     updateStats()
@@ -440,6 +442,7 @@ const removeFavorite = async (clubId: string) => {
       type: 'warning',
     })
 
+    console.log(clubId)
     await unfavoriteClub(clubId)
     ElMessage.success('已取消收藏')
 

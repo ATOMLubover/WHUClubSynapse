@@ -199,7 +199,7 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const club = ref<Club | null>(null)
-const isFavorited = ref(false)
+const isFavorited = computed(() => club.value?.isFavorite || false)
 
 // 模拟活动数据
 const activities = ref([
@@ -258,8 +258,13 @@ const toggleFavorite = () => {
     return
   }
 
-  isFavorited.value = !isFavorited.value
-  ElMessage.success(isFavorited.value ? '已收藏' : '已取消收藏')
+  if (isFavorited.value) {
+    clubStore.unfavoriteClub(club.value!.id)
+    club.value!.isFavorite = false
+  } else {
+    clubStore.favoriteClub(club.value!.id)
+    club.value!.isFavorite = true
+  }
 }
 
 // 分享功能

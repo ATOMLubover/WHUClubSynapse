@@ -67,7 +67,7 @@
 
         <!-- 社团列表 -->
         <div v-loading="clubStore.loading" class="club-grid">
-          <div v-for="club in clubStore.clubs" :key="club.id" class="club-item">
+          <div v-for="club in filteredClubs" :key="club.id" class="club-item">
             <ClubCard :club="club" />
           </div>
         </div>
@@ -214,6 +214,7 @@ const clubStore = useClubStore()
 const authStore = useAuthStore()
 
 // 轮播横幅数据
+//TODO: 从后端获取轮播横幅数据？
 const banners = ref([
   {
     title: '欢迎来到WHU社团联盟',
@@ -248,6 +249,11 @@ const quickLinks = ref([
 const getTotalCount = () => {
   return Object.values(clubStore.categories).reduce((sum, count) => sum + count, 0)
 }
+
+// 计算过滤后的社团列表
+const filteredClubs = computed(() => {
+  return clubStore.clubs
+})
 
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {

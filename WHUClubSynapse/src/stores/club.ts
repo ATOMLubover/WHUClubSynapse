@@ -150,6 +150,47 @@ export const useClubStore = defineStore('club', () => {
     searchParams.value = { ...searchParams.value, ...params }
   }
 
+  //收藏社团
+  const favoriteClub=async(clubId:string)=>{
+    try{
+      const response=await clubApi.favoriteClub(clubId);
+      const data=response.data.data;
+      ElMessage.success('收藏成功')
+      return data;
+    } catch (error) {
+      console.error('收藏社团失败:', error)
+      ElMessage.error('收藏社团失败')
+      throw error
+    }
+  }
+
+  //取消收藏社团
+  const unfavoriteClub=async(clubId:string)=>{
+    try{
+      const response=await clubApi.unfavoriteClub(clubId);
+      const data=response.data.data;
+      ElMessage.success('取消收藏成功')
+      return data;
+    } catch (error) {
+      console.error('取消收藏社团失败:', error)
+      ElMessage.error('取消收藏社团失败')
+      throw error
+    }
+  }
+
+  //获取收藏列表
+  const fetchFavoriteClubs=async()=>{
+    try{
+      const response=await clubApi.getFavoriteClubs();
+      return response.data.data;
+    }
+    catch (error){
+      console.error('获取收藏社团失败:', error)
+      throw error
+    }
+
+  }
+
   // 重置搜索
   const resetSearch = () => {
     searchParams.value = {
@@ -199,5 +240,8 @@ export const useClubStore = defineStore('club', () => {
     resetSearch,
     setPage,
     setPageSize,
+    favoriteClub,
+    unfavoriteClub,
+    fetchFavoriteClubs,
   }
 })

@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = userToken
       localStorage.setItem('token', userToken)
 
-      ElMessage.success('登录成功')
+      // ElMessage.success('登录成功')
       return userInfo
     } catch (error) {
       console.error('登录失败:', error)

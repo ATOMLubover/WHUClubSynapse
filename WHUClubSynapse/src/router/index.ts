@@ -64,19 +64,19 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
+// router.beforeEach((to, from, next) => {
+//   const authStore = useAuthStore()
 
-  // 检查是否需要认证
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    // 未登录用户访问需要认证的页面，重定向到登录页
-    next({
-      path: '/login',
-      query: { redirect: to.fullPath },
-    })
-  } else {
-    next()
-  }
-})
+//   // 检查是否需要认证
+//   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+//     // 未登录用户访问需要认证的页面，重定向到登录页
+//     next({
+//       path: '/login',
+//       query: { redirect: to.fullPath },
+//     })
+//   } else {
+//     next()
+//   }
+// })
 
 export default router

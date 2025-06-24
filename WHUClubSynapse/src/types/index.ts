@@ -25,6 +25,7 @@ export interface Club {
   maxMembers: number
   tags: string[]
   isHot: boolean
+  isFavorite: boolean
   status: 'active' | 'inactive' | 'pending'
   createdAt: string
   updatedAt: string

@@ -18,6 +18,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z',
+    isFavorite: true,
   },
   {
     id: '2',
@@ -35,6 +36,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-10T14:00:00Z',
     updatedAt: '2024-01-18T09:15:00Z',
+    isFavorite: false,
   },
   {
     id: '3',
@@ -51,6 +53,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-08T16:30:00Z',
     updatedAt: '2024-01-22T11:45:00Z',
+    isFavorite: false,
   },
   {
     id: '4',
@@ -67,6 +70,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-12T08:00:00Z',
     updatedAt: '2024-01-19T14:20:00Z',
+    isFavorite: false,
   },
   {
     id: '5',
@@ -83,6 +87,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-05T20:00:00Z',
     updatedAt: '2024-01-25T16:10:00Z',
+    isFavorite: false,
   },
   {
     id: '6',
@@ -99,6 +104,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-18T12:30:00Z',
     updatedAt: '2024-01-24T10:05:00Z',
+    isFavorite: false,
   },
   {
     id: '7',
@@ -116,6 +122,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-07T19:15:00Z',
     updatedAt: '2024-01-21T13:40:00Z',
+    isFavorite: false,
   },
   {
     id: '8',
@@ -132,6 +139,7 @@ export const mockClubs: Club[] = [
     status: 'active',
     createdAt: '2024-01-14T11:20:00Z',
     updatedAt: '2024-01-23T17:25:00Z',
+    isFavorite: false,
   },
 ]
 
