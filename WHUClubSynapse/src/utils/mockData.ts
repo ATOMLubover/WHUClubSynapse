@@ -249,6 +249,27 @@ export const mockClubs: Club[] = [
     createdAt: '2024-01-07T19:15:00Z',
     updatedAt: '2024-01-21T13:40:00Z',
     isFavorite: false,
+    qq: '1234567890',
+    details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
+    activities:  [ {
+      id: 1,
+      title: '新成员见面会',
+      description: '欢迎新成员加入我们的大家庭，一起了解社团文化和未来规划。',
+      time: '2024-01-25 14:00',
+    },
+    {
+      id: 2,
+      title: '技能培训讲座',
+      description: '邀请专业导师分享实用技能，提升成员专业能力。',
+      time: '2024-01-20 19:00',
+    },
+    {
+      id: 3,
+      title: '团建活动',
+      description: '增进成员之间的友谊，加强团队凝聚力。',
+      time: '2024-01-18 15:30',
+    },],
+    location: '武汉大学音乐社',
   },
   {
     id: '8',
@@ -266,6 +287,27 @@ export const mockClubs: Club[] = [
     createdAt: '2024-01-14T11:20:00Z',
     updatedAt: '2024-01-23T17:25:00Z',
     isFavorite: false,
+    qq: '1234567890',
+    details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
+    activities:  [ {
+      id: 1,
+      title: '新成员见面会',
+      description: '欢迎新成员加入我们的大家庭，一起了解社团文化和未来规划。',
+      time: '2024-01-25 14:00',
+    },
+    {
+      id: 2,
+      title: '技能培训讲座',
+      description: '邀请专业导师分享实用技能，提升成员专业能力。',
+      time: '2024-01-20 19:00',
+    },
+    {
+      id: 3,
+      title: '团建活动',
+      description: '增进成员之间的友谊，加强团队凝聚力。',
+      time: '2024-01-18 15:30',
+    },],
+    location: '武汉大学环保行动社',
   },
 ]
 
@@ -281,6 +323,9 @@ export const mockUser: User = {
   college: '计算机学院',
   phone: '13800138000',
   createdAt: '2024-01-01T00:00:00Z',
+  emailVerified: '',
+  phoneVerified: '',
+  bio: ''
 }
 
 // 分类统计数据

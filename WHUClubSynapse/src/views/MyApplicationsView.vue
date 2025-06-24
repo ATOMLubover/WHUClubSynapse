@@ -354,8 +354,9 @@ const loadApplications = async () => {
     }
 
     const response = await getUserApplications(params)
+    console.log('API Response:', response)
     const { list, total } = response.data.data
-
+    // applications.value = data
     applications.value = list
     totalNum.value = total
 
@@ -552,9 +553,9 @@ onMounted(() => {
   align-items: center;
 }
 
-.applications-list {
+/* .applications-list {
   space-y: 20px;
-}
+} */
 
 .application-item {
   border: 1px solid #e4e7ed;

@@ -192,11 +192,6 @@ export const mockApplyToClub = async (data: {
 export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
 
-  const club = mockClubs.find((c) => c.id === clubId)
-  if (!club) {
-    throw new Error('社团不存在')
-  }
-  club.isFavorite = true
   return {
     data: {
       code: 200,
@@ -209,12 +204,6 @@ export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiRespo
 // 模拟取消收藏社团
 export const mockUnfavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
-
-  const club = mockClubs.find((c) => c.id === clubId)
-  if (!club) {
-    throw new Error('社团不存在')
-  }
-  club.isFavorite = false
 
   return {
     data: {
@@ -235,7 +224,7 @@ export const mockGetFavoriteClubs = async (
   await delay(500)
 
   // 模拟用户收藏的社团（取前几个）
-  const favoriteClubs = mockClubs.filter((club)=>club.isFavorite==true)
+  const favoriteClubs = mockClubs.slice(0, 5)
   const page = params.page || 1
   const pageSize = params.pageSize || 12
   const start = (page - 1) * pageSize
@@ -337,7 +326,6 @@ export const mockCreateClub = async (data: {
     maxMembers: data.maxMembers,
     tags: data.tags,
     isHot: false,
-    isFavorite: false,
     status: 'pending',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -345,6 +333,7 @@ export const mockCreateClub = async (data: {
     location: '',
     qq: '',
     details: '',
+    isFavorite: false
   }
 
   return {
