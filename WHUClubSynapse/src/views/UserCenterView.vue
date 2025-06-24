@@ -334,6 +334,7 @@ const editableUserInfo = reactive({
   email: '',
   phone: '',
   bio: '',
+
 })
 
 // 用户统计数据
