@@ -69,14 +69,14 @@
 
       <!-- 社团列表 -->
       <div v-loading="clubStore.loading" class="search-results">
-        <div v-for="club in clubStore.clubs" :key="club.id" class="search-item">
+        <div v-for="club in clubStore.searchResult" :key="club.id" class="search-item">
           <ClubCard :club="club" />
         </div>
       </div>
 
       <!-- 空状态 -->
       <el-empty
-        v-if="!clubStore.loading && clubStore.clubs.length === 0"
+        v-if="!clubStore.loading && clubStore.searchResult.length === 0"
         :description="searchKeyword ? `未找到 「${searchKeyword}」 相关的社团` : '暂无搜索结果'"
         :image-size="150"
       >
@@ -96,7 +96,7 @@
     </div>
 
     <!-- 推荐社团 -->
-    <div v-if="clubStore.clubs.length === 0 && !clubStore.loading" class="recommendations">
+    <div v-if="clubStore.searchClubs.length === 0 && !clubStore.loading" class="recommendations">
       <h3>推荐社团</h3>
       <div class="recommend-grid">
         <div v-for="club in recommendedClubs" :key="club.id" class="recommend-item">
@@ -221,7 +221,7 @@ watch(
       await performSearch()
     } else {
       clubStore.resetSearch()
-      await clubStore.fetchClubs()
+      await clubStore.searchClubs('')
     }
   },
   { immediate: true },

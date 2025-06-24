@@ -22,7 +22,7 @@
         <!-- 分类导航 -->
         <div class="category-nav">
           <el-tabs
-            v-model="activeCategory"
+            v-model="clubStore.activeCategory"
             @tab-change="handleCategoryChange"
             class="category-tabs"
           >
@@ -67,7 +67,7 @@
 
         <!-- 社团列表 -->
         <div v-loading="clubStore.loading" class="club-grid">
-          <div v-for="club in filteredClubs" :key="club.id" class="club-item">
+          <div v-for="club in clubStore.clubs" :key="club.id" class="club-item">
             <ClubCard :club="club" />
           </div>
         </div>
@@ -233,27 +233,20 @@ const banners = ref([
 // 分类数据
 const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
 
-// 当前选中的分类
-const activeCategory = ref<string>('')
 // 排序方式
 const sortBy = ref<string>('hot')
 
 // 快速链接
 const quickLinks = ref([
-  { label: '我的申请', path: '/my-applications', icon: Document },
-  { label: '我的社团', path: '/my-clubs', icon: UserFilled },
-  { label: '我的收藏', path: '/favorites', icon: Collection },
+  { label: '我的申请', path: '/user/applications', icon: Document },
+  { label: '我的社团', path: '/user/clubs', icon: UserFilled },
+  { label: '我的收藏', path: '/user/favorites', icon: Collection },
 ])
 
 // 计算总数
 const getTotalCount = () => {
   return Object.values(clubStore.categories).reduce((sum, count) => sum + count, 0)
 }
-
-// 计算过滤后的社团列表
-const filteredClubs = computed(() => {
-  return clubStore.clubs
-})
 
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {
@@ -282,15 +275,15 @@ const formatDate = (dateStr: string) => {
 
 // 处理分类切换
 const handleCategoryChange = (category: string) => {
-  activeCategory.value = category
-  clubStore.setSearchParams({ category })
+  clubStore.setActiveCategory(category)
+  clubStore.setSearchParams({ category: category as ClubCategory | '' })
   clubStore.fetchClubs()
 }
 
 // 处理排序切换
 const handleSortChange = (sort: string) => {
   sortBy.value = sort
-  clubStore.setSearchParams({ sortBy: sort })
+  clubStore.setSearchParams({ sortBy: sort as 'hot' | 'time' | 'members' })
   clubStore.fetchClubs()
 }
 
@@ -307,6 +300,9 @@ const goToClub = (clubId: string) => {
 
 // 初始化数据
 onMounted(async () => {
+  // 滚动到页面顶部
+  window.scrollTo(0, 0)
+
   try {
     // 并行获取数据
     await Promise.all([

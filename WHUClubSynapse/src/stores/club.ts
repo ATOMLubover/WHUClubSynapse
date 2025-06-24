@@ -7,6 +7,7 @@ import type { Club, ClubCategory, SearchParams, PaginatedData } from '@/types'
 export const useClubStore = defineStore('club', () => {
   // 状态
   const clubs = ref<Club[]>([])
+  const searchResult=ref<Club[]>([])
   const hotClubs = ref<Club[]>([])
   const latestClubs = ref<Club[]>([])
   const recommendedClubs = ref<Club[]>([])
@@ -16,13 +17,16 @@ export const useClubStore = defineStore('club', () => {
   // 分页和搜索状态
   const total = ref(0)
   const currentPage = ref(1)
-  const pageSize = ref(12)
+  const pageSize = ref(6)
   const loading = ref(false)
   const searchParams = ref<SearchParams>({
     keyword: '',
     category: '',
     sortBy: 'hot',
   })
+  
+  // UI状态
+  const activeCategory = ref<string>('')
 
   // 计算属性
   const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
@@ -69,7 +73,7 @@ export const useClubStore = defineStore('club', () => {
       const response = await clubApi.searchClubs(keyword, queryParams)
       const data = response.data.data
 
-      clubs.value = data.list
+      searchResult.value = data.list
       total.value = data.total
       currentPage.value = 1
       searchParams.value.keyword = keyword
@@ -150,6 +154,11 @@ export const useClubStore = defineStore('club', () => {
     searchParams.value = { ...searchParams.value, ...params }
   }
 
+  // 设置当前活跃分类
+  const setActiveCategory = (category: string) => {
+    activeCategory.value = category
+  }
+
   //收藏社团
   const favoriteClub=async(clubId:string)=>{
     try{
@@ -191,6 +200,19 @@ export const useClubStore = defineStore('club', () => {
 
   }
 
+  // 申请加入社团
+  const applyToClub = async (clubId: string, reason: string) => {
+    try {
+      const response = await clubApi.applyToClub({ clubId, reason })
+      return response.data.data
+    }
+    catch (error) {
+      console.error('申请加入社团失败:', error)
+      ElMessage.error('申请加入社团失败')
+      throw error
+    }
+  }
+
   // 重置搜索
   const resetSearch = () => {
     searchParams.value = {
@@ -215,6 +237,7 @@ export const useClubStore = defineStore('club', () => {
   return {
     // 状态
     clubs,
+    searchResult,
     hotClubs,
     latestClubs,
     recommendedClubs,
@@ -225,6 +248,7 @@ export const useClubStore = defineStore('club', () => {
     pageSize,
     loading,
     searchParams,
+    activeCategory,
     // 计算属性
     totalPages,
     hasMore,
@@ -237,11 +261,14 @@ export const useClubStore = defineStore('club', () => {
     fetchRecommendedClubs,
     fetchCategories,
     setSearchParams,
+    setActiveCategory,
     resetSearch,
     setPage,
     setPageSize,
     favoriteClub,
     unfavoriteClub,
     fetchFavoriteClubs,
+    applyToClub,
+
   }
 })

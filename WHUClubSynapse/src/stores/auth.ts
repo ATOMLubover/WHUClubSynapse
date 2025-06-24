@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
 
   // 计算属性
-  const isLoggedIn = computed(() => !!token.value && !!user.value)
+  const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isClubAdmin = computed(() => user.value?.role === 'club_admin')
 

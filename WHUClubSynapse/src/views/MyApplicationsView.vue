@@ -214,7 +214,7 @@
           <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
-            :total="total"
+            :total="totalNum"
             :page-sizes="[10, 20, 50]"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handleSizeChange"
@@ -266,7 +266,7 @@ const loading = ref(false)
 const reapplyLoading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(0)
+const totalNum = ref(0)
 
 // 筛选条件
 const filterStatus = ref('')
@@ -354,13 +354,13 @@ const loadApplications = async () => {
     }
 
     const response = await getUserApplications(params)
-    const { data, pagination } = response.data.data
+    const { list, total } = response.data.data
 
-    applications.value = data
-    total.value = pagination.total
+    applications.value = list
+    totalNum.value = total
 
     // 更新统计数据
-    updateStats(data)
+    updateStats(list)
   } catch (error: any) {
     ElMessage.error(error.message || '加载申请记录失败')
   } finally {
@@ -482,7 +482,7 @@ onMounted(() => {
 
 <style scoped>
 .my-applications {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
 }

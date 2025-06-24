@@ -72,7 +72,6 @@
                 <div class="club-description">
                   <p>{{ club.description }}</p>
                   <p>{{ club.details }}</p>
-
                 </div>
               </el-card>
 
@@ -191,8 +190,6 @@ const loading = ref(false)
 const club = ref<Club | null>(null)
 const isFavorited = computed(() => club.value?.isFavorite || false)
 
-
-
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {
   const typeMap: Record<ClubCategory, string> = {
@@ -210,13 +207,15 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
-// 申请加入社团
+// TODO：申请加入社团
 const handleApply = () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
+  // TODO：调用申请加入社团API
+  clubStore.applyToClub(club.value!.id, '我想加入这个社团')
 
   ElMessage.success('申请已提交，请等待审核')
 }

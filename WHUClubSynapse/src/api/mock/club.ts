@@ -56,6 +56,8 @@ export const mockGetClubList = async (
   const end = start + pageSize
   const list = filteredClubs.slice(start, end)
 
+  console.log(list);
+
   return {
     data: {
       code: 200,
@@ -171,6 +173,11 @@ export const mockApplyToClub = async (data: {
   reason: string
 }): Promise<{ data: ApiResponse<null> }> => {
   await delay(600)
+
+  const club = mockClubs.find((c) => c.id === data.clubId)
+  if (!club) {
+    throw new Error('社团不存在')
+  }
 
   return {
     data: {
@@ -334,6 +341,10 @@ export const mockCreateClub = async (data: {
     status: 'pending',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    activities: [],
+    location: '',
+    qq: '',
+    details: '',
   }
 
   return {

@@ -31,23 +31,44 @@ const router = createRouter({
           component: () => import('@/views/SearchView.vue'),
         },
         {
-          path: '/user/center',
-          name: 'user-center',
-          component: () => import('@/views/UserCenterView.vue'),
+          path: '/user',
+          name: 'user',
+          component: () => import('@/views/UserView.vue'),
           meta: { requiresAuth: true },
-        },
-        {
+          children: [
+            {
+              path: '/user/center',
+              name: 'user-center',
+              component: () => import('@/views/UserCenterView.vue'),
+              meta: { requiresAuth: true },
+            },
+              {
           path: '/user/applications',
           name: 'user-applications',
           component: () => import('@/views/MyApplicationsView.vue'),
           meta: { requiresAuth: true },
-        },
-        {
+        }, {
           path: '/user/favorites',
           name: 'user-favorites',
-          component: () => import('@/views/MyFavoritesView.vue'),
+         component: () => import('@/views/MyFavoritesView.vue'),
           meta: { requiresAuth: true },
         },
+        {
+          path: '/user/clubs/joined',
+          name: 'user-clubs-joined',
+          component: () => import('@/views/temp1.vue'),
+          meta: { requiresAuth: true },
+        },
+        {
+          path: '/user/clubs/managed',
+          name: 'user-clubs-managed',
+          component: () => import('@/views/temp2.vue'),
+          meta: { requiresAuth: true },
+        },
+          ],  
+        },
+      
+       
       ],
     },
     {
@@ -64,19 +85,19 @@ const router = createRouter({
 })
 
 // 路由守卫
-// router.beforeEach((to, from, next) => {
-//   const authStore = useAuthStore()
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
 
-//   // 检查是否需要认证
-//   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-//     // 未登录用户访问需要认证的页面，重定向到登录页
-//     next({
-//       path: '/login',
-//       query: { redirect: to.fullPath },
-//     })
-//   } else {
-//     next()
-//   }
-// })
+  // 检查是否需要认证
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    // 未登录用户访问需要认证的页面，重定向到登录页
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+    })
+  } else {
+    next()
+  }
+})
 
 export default router

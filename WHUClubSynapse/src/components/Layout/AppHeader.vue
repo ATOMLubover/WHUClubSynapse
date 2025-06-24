@@ -25,6 +25,10 @@
       </el-input>
     </div>
 
+    <div>
+      <el-button type="primary" @click="handleAdmin">后台管理入口</el-button>
+    </div>
+
     <!-- 右侧用户操作区 -->
     <div class="header-right">
       <!-- 未登录状态 -->
@@ -37,7 +41,7 @@
       <template v-else>
         <!-- 通知 -->
         <el-badge :value="notificationCount" class="notification-badge">
-          <el-button :icon="Bell" circle />
+          <el-button :icon="Bell" circle @click="handleNotification" />
         </el-badge>
 
         <!-- 用户菜单 -->
@@ -77,6 +81,14 @@
       </template>
     </div>
   </div>
+
+  <el-drawer v-model="notificationDialogVisible" title="通知" class="notification-drawer">
+    <div v-for="item in notificationList" :key="item.id" class="notification-item">
+      <span>{{ item.title }}</span>
+      <span>{{ item.content }}</span>
+      <span>{{ item.time }}</span>
+    </div>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
@@ -101,7 +113,11 @@ const authStore = useAuthStore()
 // 搜索关键词
 const searchKeyword = ref('')
 // 通知数量（模拟）
+// TODO: 获取通知数量
 const notificationCount = ref(0)
+const notificationDialogVisible = ref(false)
+//TODO: 获取通知列表,美化UI
+const notificationList = ref([])
 
 // 搜索处理
 const handleSearch = () => {
@@ -143,6 +159,14 @@ const handleUserMenuCommand = (command: string) => {
       router.push('/')
       break
   }
+}
+
+const handleAdmin = () => {
+  router.push('/admin/login')
+}
+
+const handleNotification = () => {
+  notificationDialogVisible.value = true
 }
 </script>
 
@@ -229,5 +253,14 @@ const handleUserMenuCommand = (command: string) => {
   .username {
     display: none;
   }
+}
+.notification-drawer {
+  --el-drawer-width: 30%;
+  --el-drawer-padding: 0;
+}
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 </style>

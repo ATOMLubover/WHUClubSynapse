@@ -158,7 +158,7 @@ onMounted(() => {
 
 <style scoped>
 .user-sidebar {
-  width: 250px;
+  width: 300px;
   min-height: calc(100vh - 60px);
 }
 

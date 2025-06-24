@@ -1,6 +1,6 @@
 //TODO: 需要改为与后端交互的api
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, Application } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockClub from './mock/club'
 
@@ -144,7 +144,7 @@ export const getUserApplications = async (
     pageSize?: number
     status?: string
   } = {},
-): Promise<{ data: ApiResponse<PaginatedData<any>> }> => {
+): Promise<{ data: ApiResponse<PaginatedData<Application>> }> => {
   if (getIsUsingMockAPI()) {
     return await mockClub.mockGetUserApplications(params)
   }

@@ -1,303 +1,296 @@
 <template>
-  <div class="user-center">
-    <div class="user-layout">
-      <!-- 侧边栏 -->
-      <UserSidebar />
+  <!-- 主内容区 -->
+  <div class="user-main">
+    <!-- 用户头部信息 -->
+    <div class="user-header">
+      <div class="user-avatar-section">
+        <el-avatar :size="80" :src="userInfo?.avatar || ''" class="user-avatar">
+          <el-icon><User /></el-icon>
+        </el-avatar>
+        <el-button size="small" @click="showAvatarUpload = true">更换头像</el-button>
+      </div>
 
-      <!-- 主内容区 -->
-      <div class="user-main">
-        <!-- 用户头部信息 -->
-        <div class="user-header">
-          <div class="user-avatar-section">
-            <el-avatar :size="80" :src="userInfo?.avatar || ''" class="user-avatar">
-              <el-icon><User /></el-icon>
-            </el-avatar>
-            <el-button size="small" @click="showAvatarUpload = true">更换头像</el-button>
-          </div>
+      <div class="user-basic-info">
+        <h2 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h2>
+        <p class="user-role">
+          <el-tag :type="userInfo?.role === 'admin' ? 'danger' : 'primary'">
+            {{ getUserRoleText(userInfo?.role) }}
+          </el-tag>
+        </p>
+        <p class="user-college">{{ userInfo?.college }}</p>
+        <p class="user-join-time">加入时间：{{ formatDate(userInfo?.createdAt) }}</p>
+      </div>
 
-          <div class="user-basic-info">
-            <h2 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h2>
-            <p class="user-role">
-              <el-tag :type="userInfo?.role === 'admin' ? 'danger' : 'primary'">
-                {{ getUserRoleText(userInfo?.role) }}
-              </el-tag>
-            </p>
-            <p class="user-college">{{ userInfo?.college }}</p>
-            <p class="user-join-time">加入时间：{{ formatDate(userInfo?.createdAt) }}</p>
-          </div>
-
-          <div class="user-stats">
-            <div class="stat-item">
-              <div class="stat-number">{{ userStats.appliedClubs }}</div>
-              <div class="stat-label">申请社团</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number">{{ userStats.favoriteClubs }}</div>
-              <div class="stat-label">收藏社团</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number">{{ userStats.joinedClubs }}</div>
-              <div class="stat-label">已加入</div>
-            </div>
-          </div>
+      <div class="user-stats">
+        <div class="stat-item">
+          <div class="stat-number">{{ userStats.appliedClubs }}</div>
+          <div class="stat-label">申请社团</div>
         </div>
-
-        <!-- 功能导航 -->
-        <div class="user-nav">
-          <el-button-group>
-            <el-button :type="activeTab === 'info' ? 'primary' : ''" @click="activeTab = 'info'">
-              个人信息
-            </el-button>
-            <el-button
-              :type="activeTab === 'security' ? 'primary' : ''"
-              @click="activeTab = 'security'"
-            >
-              安全设置
-            </el-button>
-            <el-button
-              :type="activeTab === 'preferences' ? 'primary' : ''"
-              @click="activeTab = 'preferences'"
-            >
-              偏好设置
-            </el-button>
-          </el-button-group>
+        <div class="stat-item">
+          <div class="stat-number">{{ userStats.favoriteClubs }}</div>
+          <div class="stat-label">收藏社团</div>
         </div>
-
-        <!-- 内容区域 -->
-        <div class="user-content">
-          <!-- 个人信息编辑 -->
-          <div v-if="activeTab === 'info'" class="content-section">
-            <el-card>
-              <template #header>
-                <div class="card-header">
-                  <span>个人信息</span>
-                  <el-button :type="editMode ? 'success' : 'primary'" @click="handleEditToggle">
-                    {{ editMode ? '保存' : '编辑' }}
-                  </el-button>
-                </div>
-              </template>
-
-              <el-form
-                ref="userFormRef"
-                :model="editableUserInfo"
-                :rules="userInfoRules"
-                label-width="100px"
-                :disabled="!editMode"
-              >
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="用户名" prop="username">
-                      <el-input v-model="editableUserInfo.username" disabled />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="真实姓名" prop="realName">
-                      <el-input v-model="editableUserInfo.realName" />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="学号" prop="studentId">
-                      <el-input v-model="editableUserInfo.studentId" />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="学院" prop="college">
-                      <el-select v-model="editableUserInfo.college" placeholder="请选择学院">
-                        <el-option
-                          v-for="college in colleges"
-                          :key="college"
-                          :label="college"
-                          :value="college"
-                        />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="邮箱" prop="email">
-                      <el-input v-model="editableUserInfo.email" />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="手机号" prop="phone">
-                      <el-input v-model="editableUserInfo.phone" />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-
-                <el-form-item label="个人简介" prop="bio">
-                  <el-input
-                    v-model="editableUserInfo.bio"
-                    type="textarea"
-                    :rows="3"
-                    placeholder="介绍一下自己吧..."
-                  />
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </div>
-
-          <!-- 安全设置 -->
-          <div v-if="activeTab === 'security'" class="content-section">
-            <el-card>
-              <template #header>
-                <span>安全设置</span>
-              </template>
-
-              <div class="security-items">
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>登录密码</h4>
-                    <p>建议定期更换密码以保护账户安全</p>
-                  </div>
-                  <el-button @click="showPasswordDialog = true">修改密码</el-button>
-                </div>
-
-                <el-divider />
-
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>邮箱验证</h4>
-                    <p>
-                      {{ userInfo?.email }}
-                      <el-tag :type="userInfo?.emailVerified ? 'success' : 'warning'" size="small">
-                        {{ userInfo?.emailVerified ? '已验证' : '未验证' }}
-                      </el-tag>
-                    </p>
-                  </div>
-                  <el-button
-                    v-if="!userInfo?.emailVerified"
-                    @click="sendVerificationEmail"
-                    :loading="verificationLoading"
-                  >
-                    发送验证邮件
-                  </el-button>
-                </div>
-
-                <el-divider />
-
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>手机验证</h4>
-                    <p>
-                      {{ userInfo?.phone || '未绑定' }}
-                      <el-tag
-                        v-if="userInfo?.phone"
-                        :type="userInfo?.phoneVerified ? 'success' : 'warning'"
-                        size="small"
-                      >
-                        {{ userInfo?.phoneVerified ? '已验证' : '未验证' }}
-                      </el-tag>
-                    </p>
-                  </div>
-                  <el-button @click="showPhoneDialog = true">
-                    {{ userInfo?.phone ? '更改手机号' : '绑定手机号' }}
-                  </el-button>
-                </div>
-              </div>
-            </el-card>
-          </div>
-
-          <!-- 偏好设置 -->
-          <div v-if="activeTab === 'preferences'" class="content-section">
-            <el-card>
-              <template #header>
-                <span>偏好设置</span>
-              </template>
-
-              <el-form label-width="120px">
-                <el-form-item label="感兴趣的社团类型">
-                  <el-checkbox-group v-model="preferences.interestedCategories">
-                    <el-checkbox label="学术科技">学术科技</el-checkbox>
-                    <el-checkbox label="文化艺术">文化艺术</el-checkbox>
-                    <el-checkbox label="体育运动">体育运动</el-checkbox>
-                    <el-checkbox label="志愿服务">志愿服务</el-checkbox>
-                    <el-checkbox label="社会实践">社会实践</el-checkbox>
-                    <el-checkbox label="创新创业">创新创业</el-checkbox>
-                  </el-checkbox-group>
-                </el-form-item>
-
-                <el-form-item label="通知设置">
-                  <el-switch v-model="preferences.emailNotifications" active-text="邮件通知" />
-                  <br /><br />
-                  <el-switch
-                    v-model="preferences.applicationNotifications"
-                    active-text="申请状态通知"
-                  />
-                  <br /><br />
-                  <el-switch v-model="preferences.activityNotifications" active-text="活动推送" />
-                </el-form-item>
-
-                <el-form-item label="隐私设置">
-                  <el-switch v-model="preferences.profilePublic" active-text="公开个人资料" />
-                  <br /><br />
-                  <el-switch v-model="preferences.showJoinedClubs" active-text="显示已加入社团" />
-                </el-form-item>
-
-                <el-form-item>
-                  <el-button type="primary" @click="savePreferences">保存偏好设置</el-button>
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </div>
+        <div class="stat-item">
+          <div class="stat-number">{{ userStats.joinedClubs }}</div>
+          <div class="stat-label">已加入</div>
         </div>
-
-        <!-- 修改密码对话框 -->
-        <el-dialog v-model="showPasswordDialog" title="修改密码" width="500px">
-          <el-form
-            ref="passwordFormRef"
-            :model="passwordForm"
-            :rules="passwordRules"
-            label-width="100px"
-          >
-            <el-form-item label="当前密码" prop="oldPassword">
-              <el-input v-model="passwordForm.oldPassword" type="password" show-password />
-            </el-form-item>
-            <el-form-item label="新密码" prop="newPassword">
-              <el-input v-model="passwordForm.newPassword" type="password" show-password />
-            </el-form-item>
-            <el-form-item label="确认密码" prop="confirmPassword">
-              <el-input v-model="passwordForm.confirmPassword" type="password" show-password />
-            </el-form-item>
-          </el-form>
-
-          <template #footer>
-            <el-button @click="showPasswordDialog = false">取消</el-button>
-            <el-button type="primary" @click="handlePasswordChange" :loading="passwordLoading"
-              >确定</el-button
-            >
-          </template>
-        </el-dialog>
-
-        <!-- 头像上传对话框 -->
-        <el-dialog v-model="showAvatarUpload" title="更换头像" width="400px">
-          <el-upload
-            class="avatar-uploader"
-            :show-file-list="false"
-            :before-upload="beforeAvatarUpload"
-            :http-request="uploadAvatar"
-          >
-            <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-          <div class="upload-tips">
-            <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
-          </div>
-
-          <template #footer>
-            <el-button @click="showAvatarUpload = false">取消</el-button>
-            <el-button type="primary" @click="confirmAvatarUpload" :disabled="!uploadedAvatar"
-              >确定</el-button
-            >
-          </template>
-        </el-dialog>
       </div>
     </div>
+
+    <!-- 功能导航 -->
+    <div class="user-nav">
+      <el-button-group>
+        <el-button :type="activeTab === 'info' ? 'primary' : ''" @click="activeTab = 'info'">
+          个人信息
+        </el-button>
+        <el-button
+          :type="activeTab === 'security' ? 'primary' : ''"
+          @click="activeTab = 'security'"
+        >
+          安全设置
+        </el-button>
+        <el-button
+          :type="activeTab === 'preferences' ? 'primary' : ''"
+          @click="activeTab = 'preferences'"
+        >
+          偏好设置
+        </el-button>
+      </el-button-group>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="user-content">
+      <!-- 个人信息编辑 -->
+      <div v-if="activeTab === 'info'" class="content-section">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <span>个人信息</span>
+              <el-button :type="editMode ? 'success' : 'primary'" @click="handleEditToggle">
+                {{ editMode ? '保存' : '编辑' }}
+              </el-button>
+            </div>
+          </template>
+
+          <el-form
+            ref="userFormRef"
+            :model="editableUserInfo"
+            :rules="userInfoRules"
+            label-width="100px"
+            :disabled="!editMode"
+          >
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="用户名" prop="username">
+                  <el-input v-model="editableUserInfo.username" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="真实姓名" prop="realName">
+                  <el-input v-model="editableUserInfo.realName" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="学号" prop="studentId">
+                  <el-input v-model="editableUserInfo.studentId" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="学院" prop="college">
+                  <el-select v-model="editableUserInfo.college" placeholder="请选择学院">
+                    <el-option
+                      v-for="college in colleges"
+                      :key="college"
+                      :label="college"
+                      :value="college"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="邮箱" prop="email">
+                  <el-input v-model="editableUserInfo.email" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model="editableUserInfo.phone" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-form-item label="个人简介" prop="bio">
+              <el-input
+                v-model="editableUserInfo.bio"
+                type="textarea"
+                :rows="3"
+                placeholder="介绍一下自己吧..."
+              />
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </div>
+
+      <!-- 安全设置 -->
+      <div v-if="activeTab === 'security'" class="content-section">
+        <el-card>
+          <template #header>
+            <span>安全设置</span>
+          </template>
+
+          <div class="security-items">
+            <div class="security-item">
+              <div class="security-info">
+                <h4>登录密码</h4>
+                <p>建议定期更换密码以保护账户安全</p>
+              </div>
+              <el-button @click="showPasswordDialog = true">修改密码</el-button>
+            </div>
+
+            <el-divider />
+
+            <div class="security-item">
+              <div class="security-info">
+                <h4>邮箱验证</h4>
+                <p>
+                  {{ userInfo?.email }}
+                  <el-tag :type="userInfo?.emailVerified ? 'success' : 'warning'" size="small">
+                    {{ userInfo?.emailVerified ? '已验证' : '未验证' }}
+                  </el-tag>
+                </p>
+              </div>
+              <el-button
+                v-if="!userInfo?.emailVerified"
+                @click="sendVerificationEmail"
+                :loading="verificationLoading"
+              >
+                发送验证邮件
+              </el-button>
+            </div>
+
+            <el-divider />
+
+            <div class="security-item">
+              <div class="security-info">
+                <h4>手机验证</h4>
+                <p>
+                  {{ userInfo?.phone || '未绑定' }}
+                  <el-tag
+                    v-if="userInfo?.phone"
+                    :type="userInfo?.phoneVerified ? 'success' : 'warning'"
+                    size="small"
+                  >
+                    {{ userInfo?.phoneVerified ? '已验证' : '未验证' }}
+                  </el-tag>
+                </p>
+              </div>
+              <el-button @click="showPhoneDialog = true">
+                {{ userInfo?.phone ? '更改手机号' : '绑定手机号' }}
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 偏好设置 -->
+      <div v-if="activeTab === 'preferences'" class="content-section">
+        <el-card>
+          <template #header>
+            <span>偏好设置</span>
+          </template>
+
+          <el-form label-width="120px">
+            <el-form-item label="感兴趣的社团类型">
+              <el-checkbox-group v-model="preferences.interestedCategories">
+                <el-checkbox label="学术科技">学术科技</el-checkbox>
+                <el-checkbox label="文化艺术">文化艺术</el-checkbox>
+                <el-checkbox label="体育运动">体育运动</el-checkbox>
+                <el-checkbox label="志愿服务">志愿服务</el-checkbox>
+                <el-checkbox label="社会实践">社会实践</el-checkbox>
+                <el-checkbox label="创新创业">创新创业</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+
+            <el-form-item label="通知设置">
+              <el-switch v-model="preferences.emailNotifications" active-text="邮件通知" />
+              <br /><br />
+              <el-switch
+                v-model="preferences.applicationNotifications"
+                active-text="申请状态通知"
+              />
+              <br /><br />
+              <el-switch v-model="preferences.activityNotifications" active-text="活动推送" />
+            </el-form-item>
+
+            <el-form-item label="隐私设置">
+              <el-switch v-model="preferences.profilePublic" active-text="公开个人资料" />
+              <br /><br />
+              <el-switch v-model="preferences.showJoinedClubs" active-text="显示已加入社团" />
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" @click="savePreferences">保存偏好设置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </div>
+    </div>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog v-model="showPasswordDialog" title="修改密码" width="500px">
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-width="100px"
+      >
+        <el-form-item label="当前密码" prop="oldPassword">
+          <el-input v-model="passwordForm.oldPassword" type="password" show-password />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="passwordForm.newPassword" type="password" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="passwordForm.confirmPassword" type="password" show-password />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="showPasswordDialog = false">取消</el-button>
+        <el-button type="primary" @click="handlePasswordChange" :loading="passwordLoading"
+          >确定</el-button
+        >
+      </template>
+    </el-dialog>
+
+    <!-- 头像上传对话框 -->
+    <el-dialog v-model="showAvatarUpload" title="更换头像" width="400px">
+      <el-upload
+        class="avatar-uploader"
+        :show-file-list="false"
+        :before-upload="beforeAvatarUpload"
+        :http-request="uploadAvatar"
+      >
+        <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
+        <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+      </el-upload>
+      <div class="upload-tips">
+        <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+      </div>
+
+      <template #footer>
+        <el-button @click="showAvatarUpload = false">取消</el-button>
+        <el-button type="primary" @click="confirmAvatarUpload" :disabled="!uploadedAvatar"
+          >确定</el-button
+        >
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -571,21 +564,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-center {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.user-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
 .user-main {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 .user-header {
