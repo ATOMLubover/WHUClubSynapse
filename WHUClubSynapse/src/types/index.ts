@@ -12,6 +12,13 @@ export interface User {
   createdAt: string
 }
 
+export interface Activity {
+  id: number
+  title: string
+  description: string
+  time: string
+}
+
 // 社团类型
 export interface Club {
   id: string
@@ -28,6 +35,10 @@ export interface Club {
   status: 'active' | 'inactive' | 'pending'
   createdAt: string
   updatedAt: string
+  activities: Activity[]
+  location: string
+  qq: string
+  details: string
 }
 
 // 社团分类
