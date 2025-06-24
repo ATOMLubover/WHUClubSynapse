@@ -354,10 +354,10 @@ const loadApplications = async () => {
     }
 
     const response = await getUserApplications(params)
-    const { data, pagination } = response.data.data
-
+    console.log('API Response:', response);
+    const {list:data, total} = response.data.data
     applications.value = data
-    total.value = pagination.total
+
 
     // 更新统计数据
     updateStats(data)

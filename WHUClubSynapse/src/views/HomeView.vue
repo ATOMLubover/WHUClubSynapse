@@ -283,14 +283,14 @@ const formatDate = (dateStr: string) => {
 // 处理分类切换
 const handleCategoryChange = (category: string) => {
   activeCategory.value = category
-  clubStore.setSearchParams({ category })
+  clubStore.setSearchParams({ category: category as ClubCategory }) // 类型断言
   clubStore.fetchClubs()
 }
 
 // 处理排序切换
 const handleSortChange = (sort: string) => {
   sortBy.value = sort
-  clubStore.setSearchParams({ sortBy: sort })
+  clubStore.setSearchParams( {sortBy: sort as 'hot' | 'time' | 'members'} )
   clubStore.fetchClubs()
 }
 
