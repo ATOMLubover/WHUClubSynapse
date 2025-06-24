@@ -2,10 +2,16 @@ package main
 
 import (
 	"log/slog"
+	"strconv"
 	"whuclubsynapse-server/internal/auth_server/authconfig"
+	"whuclubsynapse-server/internal/auth_server/grpcimpl"
 	"whuclubsynapse-server/internal/auth_server/handler"
+	"whuclubsynapse-server/internal/auth_server/redisimpl"
+	"whuclubsynapse-server/internal/auth_server/repo"
+	"whuclubsynapse-server/internal/auth_server/service"
 	"whuclubsynapse-server/internal/shared/config"
 	"whuclubsynapse-server/internal/shared/logger"
+	"whuclubsynapse-server/internal/shared/rediscli"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
@@ -14,23 +20,40 @@ import (
 )
 
 func main() {
-	app := iris.New()
+	app := iris.Default()
 	globalController := mvc.New(app.Party("/"))
 
 	config := LoadConfig("../config/auth_config.yaml")
+
 	logger := CreateLogger(config)
 	database := ConnectDatabase(config)
 
+	redisService := redisimpl.NewRedisClientService(config, logger)
+
+	userRepo := repo.CreateUserRepo(database, logger)
+
+	userService := service.NewUserService(userRepo)
+	mailvrfService := grpcimpl.NewMailvrfClientService(config, logger)
+
 	globalController.Register(
 		config,
+
 		logger,
 		database,
+
+		userRepo,
+
+		redisService,
+		userService,
+		mailvrfService,
 	)
 
 	{
-		authController := globalController.Party("/auth")
+		authController := globalController.Party("/user")
 		authController.Handle(new(handler.UserHandler))
 	}
+
+	app.Listen(":8080")
 }
 
 func LoadConfig(relPath string) *authconfig.Config {
@@ -56,4 +79,14 @@ func ConnectDatabase(cfg *authconfig.Config) *gorm.DB {
 	}
 
 	return db
+}
+
+func ConnectRedis(cfg *authconfig.Config) rediscli.RedisClient {
+	return *rediscli.NewRedisClient(
+		cfg.Redis.Host+":"+strconv.FormatUint(uint64(cfg.Redis.Port), 10),
+		cfg.Redis.Password,
+		cfg.Redis.MaxConn,
+		cfg.Redis.MinIdle,
+		cfg.Redis.MaxRetries,
+	)
 }

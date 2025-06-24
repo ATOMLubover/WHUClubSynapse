@@ -1,12 +1,7 @@
 package dto
 
-type LoginRequest struct {
-	Username          string `json:"username"`
-	EncryptedPassword string `json:"password"`
-}
-
-type LoginResponse struct {
-	Id         int    `json:"id"`
+type UserInfo struct {
+	Id         uint   `json:"id"`
 	Username   string `json:"username"`
 	Email      string `json:"email"`
 	AvatarUrl  string `json:"avatar_url"`
