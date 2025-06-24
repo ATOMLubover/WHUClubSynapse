@@ -142,66 +142,81 @@
             </el-card>
           </div>
 
-          <!-- 安全设置 -->
-          <div v-if="activeTab === 'security'" class="content-section">
-            <el-card>
-              <template #header>
-                <span>安全设置</span>
-              </template>
+<!-- 安全设置 -->
+<div v-if="activeTab === 'security'" class="content-section">
+  <el-card>
+    <template #header>
+      <span>安全设置</span>
+    </template>
 
-              <div class="security-items">
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>登录密码</h4>
-                    <p>建议定期更换密码以保护账户安全</p>
-                  </div>
-                  <el-button @click="showPasswordDialog = true">修改密码</el-button>
-                </div>
+    <div class="security-items">
+      <!-- 密码修改项 -->
+      <div class="security-item">
+        <div class="security-info">
+          <h4>登录密码</h4>
+          <p>建议定期更换密码以保护账户安全</p>
+        </div>
+        <div class="security-actions">
+          <el-button @click="showPasswordDialog = true">修改密码</el-button>
+        </div>
+      </div>
 
-                <el-divider />
+      <el-divider />
 
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>邮箱验证</h4>
-                    <p>
-                      {{ userInfo?.email }}
-                      <el-tag :type="userInfo?.emailVerified ? 'success' : 'warning'" size="small">
-                        {{ userInfo?.emailVerified ? '已验证' : '未验证' }}
-                      </el-tag>
-                    </p>
-                  </div>
-                  <el-button
-                    v-if="!userInfo?.emailVerified"
-                    @click="sendVerificationEmail"
-                    :loading="verificationLoading"
-                  >
-                    发送验证邮件
-                  </el-button>
-                </div>
+      <!-- 邮箱验证项 -->
+      <div class="security-item">
+        <div class="security-info">
+          <h4>邮箱验证</h4>
+          <p>
+            {{ userInfo?.email }}
+            <el-tag :type="userInfo?.emailVerified ? 'success' : 'warning'" size="small">
+              {{ userInfo?.emailVerified ? '已验证' : '未验证' }}
+            </el-tag>
+          </p>
+        </div>
+        <div class="security-actions">
+          <el-button
+            v-if="!userInfo?.emailVerified"
+            @click="sendVerificationEmail"
+            :loading="verificationLoading"
+          >
+            发送验证邮件
+          </el-button>
+          <el-button @click="handleChangeEmail">
+            更换邮箱
+          </el-button>
+        </div>
+      </div>
 
-                <el-divider />
+      <el-divider />
 
-                <div class="security-item">
-                  <div class="security-info">
-                    <h4>手机验证</h4>
-                    <p>
-                      {{ userInfo?.phone || '未绑定' }}
-                      <el-tag
-                        v-if="userInfo?.phone"
-                        :type="userInfo?.phoneVerified ? 'success' : 'warning'"
-                        size="small"
-                      >
-                        {{ userInfo?.phoneVerified ? '已验证' : '未验证' }}
-                      </el-tag>
-                    </p>
-                  </div>
-                  <el-button @click="showPhoneDialog = true">
-                    {{ userInfo?.phone ? '更改手机号' : '绑定手机号' }}
-                  </el-button>
-                </div>
-              </div>
-            </el-card>
-          </div>
+      <!-- 手机验证项 -->
+      <div class="security-item">
+        <div class="security-info">
+          <h4>手机验证</h4>
+          <p>
+            {{ userInfo?.phone || '未绑定' }}
+            <el-tag
+              v-if="userInfo?.phone"
+              :type="userInfo?.phoneVerified ? 'success' : 'warning'"
+              size="small"
+            >
+              {{ userInfo?.phoneVerified ? '已验证' : '未验证' }}
+            </el-tag>
+          </p>
+        </div>
+        <div class="security-actions">
+          <el-button v-if="!userInfo?.phone" @click="showPhoneDialog = true">
+            绑定手机号
+          </el-button>
+          <el-button v-else @click="handleChangePhone">
+            更换手机号
+          </el-button>
+        </div>
+      </div>
+    </div>
+  </el-card>
+</div>
 
           <!-- 偏好设置 -->
           <div v-if="activeTab === 'preferences'" class="content-section">
@@ -539,7 +554,63 @@ const savePreferences = () => {
   // TODO: 保存偏好设置到服务器
   ElMessage.success('偏好设置已保存')
 }
+//更换邮箱手机号
 
+// 更换手机号逻辑
+const handleChangePhone = async () => {
+  try {
+    // 弹出输入框，让用户输入新手机号
+    const { value: newPhone } = await ElMessageBox.prompt(
+      '请输入新的手机号', 
+      '更换手机号', 
+      {
+        inputType: 'text', // 输入类型设为文本，也可根据需求改 inputType: 'tel'
+        inputPlaceholder: '请输入新手机号',
+      }
+    );
+    // 这里可扩展：调用实际的接口，比如 updatePhone(newPhone) 去更新服务端数据
+    // 示例仅做提示，实际需结合后端 API
+    ElMessage.success(`已更换手机号为：${newPhone}`);
+    
+    // 如果需要更新前端 userInfo 展示，可这样写：
+    if (userInfo.value) {
+      userInfo.value.phone = newPhone;
+      // 同时更新可编辑对象（如果需要在编辑页同步显示）
+      editableUserInfo.phone = newPhone; 
+    }
+  } catch (error) {
+    // 点击取消会进入 catch，可根据需求处理
+    ElMessage.info('已取消更换手机号');
+  }
+};
+
+// 更换邮箱逻辑
+const handleChangeEmail = async () => {
+  try {
+    // 弹出输入框，让用户输入新邮箱
+    const { value: newEmail } = await ElMessageBox.prompt(
+      '请输入新的邮箱', 
+      '更换邮箱', 
+      {
+        inputType: 'email', // 输入类型设为 email，会有格式校验
+        inputPlaceholder: '请输入新邮箱',
+      }
+    );
+    // 这里可扩展：调用实际的接口，比如 updateEmail(newEmail) 去更新服务端数据
+    // 示例仅做提示，实际需结合后端 API
+    ElMessage.success(`已更换邮箱为：${newEmail}`);
+    
+    // 如果需要更新前端 userInfo 展示，可这样写：
+    if (userInfo.value) {
+      userInfo.value.email = newEmail;
+      // 同时更新可编辑对象（如果需要在编辑页同步显示）
+      editableUserInfo.email = newEmail; 
+    }
+  } catch (error) {
+    // 点击取消会进入 catch，可根据需求处理
+    ElMessage.info('已取消更换邮箱');
+  }
+};
 // 加载用户数据
 const loadUserData = async () => {
   try {
@@ -753,5 +824,16 @@ onMounted(() => {
     align-items: flex-start;
     gap: 12px;
   }
+  .security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+ }
+
+.security-actions {
+  display: flex;
+  gap: 10px;
+ }
 }
 </style>
