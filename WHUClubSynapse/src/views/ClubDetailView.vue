@@ -71,18 +71,8 @@
                 </template>
                 <div class="club-description">
                   <p>{{ club.description }}</p>
-                  <p>
-                    {{
-                      club.name
-                    }}是一个充满活力的学生组织，致力于为同学们提供优质的学习和交流平台。我们定期举办各类活动，包括学术讲座、技能培训、实践项目等，帮助成员提升专业能力和综合素质。
-                  </p>
-                  <p>加入我们，你将获得：</p>
-                  <ul>
-                    <li>专业的技能培训和指导</li>
-                    <li>丰富的实践项目机会</li>
-                    <li>志同道合的伙伴和导师</li>
-                    <li>个人能力的全面提升</li>
-                  </ul>
+                  <p>{{ club.details }}</p>
+
                 </div>
               </el-card>
 
@@ -95,7 +85,7 @@
                 </template>
                 <el-timeline>
                   <el-timeline-item
-                    v-for="activity in activities"
+                    v-for="activity in club.activities"
                     :key="activity.id"
                     :timestamp="activity.time"
                   >
@@ -144,7 +134,7 @@
                 <div class="contact-info">
                   <div class="contact-item">
                     <el-icon><Message /></el-icon>
-                    <span>QQ群：123456789</span>
+                    <span>QQ群：{{ club.qq }}</span>
                   </div>
                   <div class="contact-item">
                     <el-icon><ChatDotRound /></el-icon>
@@ -152,7 +142,7 @@
                   </div>
                   <div class="contact-item">
                     <el-icon><Location /></el-icon>
-                    <span>活动地点：学生活动中心</span>
+                    <span>活动地点：{{ club.location }}</span>
                   </div>
                 </div>
               </el-card>
@@ -201,27 +191,7 @@ const loading = ref(false)
 const club = ref<Club | null>(null)
 const isFavorited = computed(() => club.value?.isFavorite || false)
 
-// 模拟活动数据
-const activities = ref([
-  {
-    id: 1,
-    title: '新成员见面会',
-    description: '欢迎新成员加入我们的大家庭，一起了解社团文化和未来规划。',
-    time: '2024-01-25 14:00',
-  },
-  {
-    id: 2,
-    title: '技能培训讲座',
-    description: '邀请专业导师分享实用技能，提升成员专业能力。',
-    time: '2024-01-20 19:00',
-  },
-  {
-    id: 3,
-    title: '团建活动',
-    description: '增进成员之间的友谊，加强团队凝聚力。',
-    time: '2024-01-18 15:30',
-  },
-])
+
 
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {
