@@ -143,7 +143,7 @@ const handleSearch = async () => {
 
 // 分类筛选
 const handleCategoryFilter = async (category: string) => {
-  activeCategory.value = category
+  activeCategory.value = category as ClubCategory
 
   const query: any = {}
   if (searchKeyword.value) {
@@ -215,7 +215,7 @@ watch(
   () => route.query,
   async (newQuery) => {
     searchKeyword.value = (newQuery.keyword as string) || ''
-    activeCategory.value = (newQuery.category as string) || ''
+    activeCategory.value = (newQuery.category as ClubCategory) || ''
 
     if (newQuery.keyword || newQuery.category) {
       await performSearch()
@@ -230,7 +230,7 @@ watch(
 onMounted(async () => {
   // 从URL参数初始化搜索状态
   searchKeyword.value = (route.query.keyword as string) || ''
-  activeCategory.value = (route.query.category as string) || ''
+  activeCategory.value = (route.query.category as ClubCategory) || ''
 
   // 获取推荐社团
   await fetchRecommendations()

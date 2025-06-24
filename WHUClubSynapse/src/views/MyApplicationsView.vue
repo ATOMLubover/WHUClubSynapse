@@ -552,9 +552,9 @@ onMounted(() => {
   align-items: center;
 }
 
-.applications-list {
+/* .applications-list {
   space-y: 20px;
-}
+} */
 
 .application-item {
   border: 1px solid #e4e7ed;

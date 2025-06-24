@@ -673,9 +673,9 @@ onMounted(() => {
   align-items: center;
 }
 
-.security-items {
+/* .security-items {
   space-y: 20px;
-}
+} */
 
 .security-item {
   display: flex;
