@@ -66,13 +66,13 @@ const router = createRouter({
             {
               path: '/user/clubs/joined',
               name: 'user-clubs-joined',
-              component: () => import('@/views/temp1.vue'),
+              component: () => import('@/views/JoinedClubs.vue'),
               meta: { requiresAuth: true },
             },
             {
               path: '/user/clubs/managed',
               name: 'user-clubs-managed',
-              component: () => import('@/views/temp2.vue'),
+              component: () => import('@/views/ManagedClubs.vue'),
               meta: { requiresAuth: true },
             },
             {
