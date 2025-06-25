@@ -38,13 +38,8 @@
             </div>
 
             <div class="club-actions">
-              <el-button
-                type="primary"
-                size="large"
-                :disabled="club.currentMembers >= club.maxMembers"
-                @click="handleApply"
-              >
-                {{ club.currentMembers >= club.maxMembers ? '已满员' : '申请加入' }}
+              <el-button type="primary" size="large" :disabled="isDisabled" @click="handleApply">
+                {{ getApplyButtonText() }}
               </el-button>
               <el-button
                 :icon="isFavorited ? StarFilled : Star"
@@ -147,6 +142,24 @@
               </el-card>
             </el-col>
           </el-row>
+          <el-dialog v-model="showApplyDialog" title="申请加入新社团" width="600px">
+            <el-form-item label="申请理由">
+              <el-input
+                v-model="reason"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入申请理由"
+                maxlength="200"
+                show-word-limit
+              />
+            </el-form-item>
+            <template #footer>
+              <el-button @click="showApplyDialog = false">取消</el-button>
+              <el-button type="primary" @click="confirmApply()" :loading="createLoading">
+                提交申请
+              </el-button>
+            </template>
+          </el-dialog>
         </div>
       </template>
 
@@ -188,7 +201,28 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const club = ref<Club | null>(null)
+const reason = ref('')
 const isFavorited = computed(() => club.value?.isFavorite || false)
+const showApplyDialog = ref(false)
+const createLoading = ref(false)
+const hasApplied = ref(false) // 添加一个标记是否已申请的状态
+
+// 将 isDisabled 改为计算属性
+const isDisabled = computed(() => {
+  if (!club.value) return true
+
+  // 如果已经申请过了，就禁用
+  if (hasApplied.value) return true
+
+  // 根据社团状态判断
+  if (club.value.status === 'pending') return true
+  if (club.value.status === 'approved') return true
+
+  // 如果社团已满员
+  if (club.value.currentMembers >= club.value.maxMembers) return true
+
+  return false
+})
 
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {
@@ -214,10 +248,8 @@ const handleApply = () => {
     router.push('/login')
     return
   }
-  // TODO：调用申请加入社团API
-  clubStore.applyToClub(club.value!.id, '我想加入这个社团')
 
-  ElMessage.success('申请已提交，请等待审核')
+  showApplyDialog.value = true
 }
 
 // 切换收藏状态
@@ -267,9 +299,72 @@ const fetchClubDetail = async () => {
   }
 }
 
-onMounted(() => {
+const confirmApply = async () => {
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  if (!club.value) {
+    ElMessage.error('社团不存在')
+    return
+  }
+
+  try {
+    createLoading.value = true
+    await clubStore.applyToClub(club.value!.id, reason.value)
+    ElMessage.success('申请已提交，请等待审核')
+    // fetchClubDetail()
+    showApplyDialog.value = false
+    reason.value = ''
+    hasApplied.value = true // 标记为已申请
+    console.log('已申请，按钮应该被禁用')
+  } catch (error) {
+    console.error('申请加入社团失败:', error)
+  } finally {
+    createLoading.value = false
+  }
+}
+
+const getApplyButtonText = () => {
+  if (!club.value) return '加载中...'
+
+  // 如果已经申请过了
+  if (hasApplied.value) return '等待审核中'
+
+  // 根据社团状态返回对应文本
+  if (club.value.status === 'pending') return '等待审核中'
+  if (club.value.status === 'approved') return '已加入'
+  if (club.value.currentMembers >= club.value.maxMembers) return '已满员'
+
+  return '申请加入'
+}
+
+onMounted(async () => {
   window.scrollTo(0, 0)
-  fetchClubDetail()
+  await fetchClubDetail()
+
+  // 检查 URL 参数，如果有 isApply=true，自动打开申请弹窗
+  const isApply = route.query.isApply
+  if (isApply === 'true') {
+    // 检查用户是否已登录
+    if (!authStore.isLoggedIn) {
+      ElMessage.warning('请先登录')
+      router.push('/login')
+      return
+    }
+
+    // 检查是否可以申请
+    if (!isDisabled.value) {
+      showApplyDialog.value = true
+    }
+
+    // 清除 URL 中的查询参数，避免刷新时重复打开
+    router.replace({
+      path: route.path,
+      query: { ...route.query, isApply: undefined },
+    })
+  }
 })
 </script>
 

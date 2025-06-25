@@ -124,12 +124,12 @@
               <div class="application-content">
                 <!-- 社团信息 -->
                 <div class="club-info">
-                  <el-avatar :size="60" :src="application.club.logo" class="club-logo">
+                  <el-avatar :size="60" class="club-logo">
                     <el-icon><UserFilled /></el-icon>
                   </el-avatar>
                   <div class="club-details">
-                    <h3 class="club-name">{{ application.club.name }}</h3>
-                    <p class="club-category">{{ getCategoryText(application.club.category) }}</p>
+                    <h3 class="club-name">{{ application.clubName }}</h3>
+                    <p class="club-category">{{ getCategoryText(application.clubCategory) }}</p>
                     <p class="application-time">
                       申请时间：{{ formatDate(application.createdAt) }}
                     </p>
@@ -166,7 +166,7 @@
                   </div>
 
                   <div class="action-buttons">
-                    <el-button size="small" @click="viewClubDetail(application.club.id)">
+                    <el-button size="small" @click="viewClubDetail(application.clubId)">
                       查看社团
                     </el-button>
 
@@ -183,7 +183,7 @@
                       v-if="application.status === 'rejected'"
                       size="small"
                       type="primary"
-                      @click="reapplyToClub(application.club.id)"
+                      @click="reapplyToClub(application.clubId)"
                     >
                       重新申请
                     </el-button>
@@ -256,7 +256,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, UserFilled, ArrowDown } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { getUserApplications, applyToClub } from '@/api/club'
-import type { Club } from '@/types'
+import type { Application, Club } from '@/types'
 
 // 路由
 const router = useRouter()
@@ -274,7 +274,7 @@ const filterCategory = ref('')
 const searchKeyword = ref('')
 
 // 申请数据
-const applications = ref<any[]>([])
+const applications = ref<Application[]>([])
 const applicationStats = reactive({
   total: 0,
   pending: 0,
@@ -354,11 +354,11 @@ const loadApplications = async () => {
     }
 
     const response = await getUserApplications(params)
-    console.log('API Response:', response)
     const { list, total } = response.data.data
-    // applications.value = data
     applications.value = list
     totalNum.value = total
+
+    console.log(applications.value)
 
     // 更新统计数据
     updateStats(list)

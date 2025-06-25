@@ -56,13 +56,8 @@
 
       <!-- 操作按钮 -->
       <div class="club-actions">
-        <el-button
-          type="primary"
-          size="small"
-          @click.stop="handleApply"
-          :disabled="club.currentMembers >= club.maxMembers"
-        >
-          {{ club.currentMembers >= club.maxMembers ? '已满员' : '立即申请' }}
+        <el-button type="primary" size="small" @click.stop="handleApply" :disabled="isDisabled">
+          {{ getApplyButtonText() }}
         </el-button>
         <el-button size="small" @click.stop="goToDetail"> 查看详情 </el-button>
       </div>
@@ -84,11 +79,24 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits(['update:favorited'])
 const router = useRouter()
 const authStore = useAuthStore()
 const clubStore = useClubStore()
 const isFavorited = computed(() => props.club.isFavorite)
 
+const isDisabled = computed(() => {
+  if (!props.club) return true
+
+  // 根据社团状态判断
+  if (props.club.status === 'pending') return true
+  if (props.club.status === 'approved') return true
+
+  // 如果社团已满员
+  if (props.club.currentMembers >= props.club.maxMembers) return true
+
+  return false
+})
 // 获取分类对应的标签类型
 const getCategoryType = (category: ClubCategory) => {
   const typeMap: Record<ClubCategory, string> = {
@@ -115,10 +123,8 @@ const toggleFavorite = () => {
 
   if (isFavorited.value) {
     clubStore.unfavoriteClub(props.club.id)
-    props.club.isFavorite = false
   } else {
     clubStore.favoriteClub(props.club.id)
-    props.club.isFavorite = true
   }
 }
 
@@ -134,8 +140,19 @@ const handleApply = () => {
     return
   }
 
-  // TODO: 跳转到申请页面或打开申请弹窗
-  router.push(`/club/${props.club.id}/apply`)
+  // 跳转到社团详情页并自动打开申请弹窗
+  router.push(`/club/${props.club.id}?isApply=true`)
+}
+
+const getApplyButtonText = () => {
+  if (!props.club) return '加载中...'
+
+  // 根据社团状态返回对应文本
+  if (props.club.status === 'pending') return '等待审核中'
+  if (props.club.status === 'approved') return '已加入'
+  if (props.club.currentMembers >= props.club.maxMembers) return '已满员'
+
+  return '立即申请'
 }
 </script>
 

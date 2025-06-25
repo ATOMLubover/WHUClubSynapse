@@ -10,9 +10,6 @@ export interface User {
   college: string
   phone?: string
   createdAt: string
-  emailVerified: string
-  phoneVerified:string
-  bio:string
 }
 
 export interface Activity {
@@ -36,7 +33,7 @@ export interface Club {
   tags: string[]
   isHot: boolean
   isFavorite: boolean
-  status: 'active' | 'inactive' | 'pending'
+  status: 'pending' | 'approved' | 'rejected'
   createdAt: string
   updatedAt: string
   activities: Activity[]
@@ -46,7 +43,6 @@ export interface Club {
 }
 
 // 社团分类
-//TODO: 需要从后端获取
 export type ClubCategory = '学术科技' | '文艺体育' | '志愿服务' | '创新创业' | '其他'
 
 // 申请记录
@@ -61,6 +57,8 @@ export interface Application {
   createdAt: string
   reviewedAt?: string
   reviewerId?: string
+  clubCategory: ClubCategory
+  feedback?: string
 }
 
 // 收藏记录

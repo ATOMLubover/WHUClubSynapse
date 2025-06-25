@@ -278,6 +278,8 @@ export const mockGetUserApplications = async (
       reason: '希望能够加入学习相关技术',
       applyReason: '对技术很感兴趣',
       createdAt: new Date().toISOString(),
+      clubCategory: mockClubs[0].category,
+      feedback: '欢迎加入我们，请等待审核',
     },
     {
       id: '2',
@@ -288,6 +290,8 @@ export const mockGetUserApplications = async (
       applyReason: '想要参与文艺活动',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
       reviewedAt: new Date().toISOString(),
+      clubCategory: mockClubs[1].category,
+      feedback: '欢迎加入我们，请等待审核',
     },
   ]
 
