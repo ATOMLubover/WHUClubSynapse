@@ -325,7 +325,13 @@ export const mockUser: User = {
   createdAt: '2024-01-01T00:00:00Z',
   emailVerified: '',
   phoneVerified: '',
-  bio: ''
+  bio: '',
+  // 用户统计信息
+  stats: {
+    appliedClubs: 1,
+    favoriteClubs: 1,
+    joinedClubs: 3
+  }
 }
 
 

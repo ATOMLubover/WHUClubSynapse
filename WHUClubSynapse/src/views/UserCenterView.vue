@@ -23,15 +23,15 @@
 
       <div class="user-stats">
         <div class="stat-item">
-          <div class="stat-number">{{ userStats.appliedClubs }}</div>
+          <div class="stat-number">{{ userInfo?.stats?.appliedClubs || 0 }}</div>
           <div class="stat-label">申请社团</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ userStats.favoriteClubs }}</div>
+          <div class="stat-number">{{ userInfo?.stats?.favoriteClubs || 0 }}</div>
           <div class="stat-label">收藏社团</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ userStats.joinedClubs }}</div>
+          <div class="stat-number">{{ userInfo?.stats?.joinedClubs || 0 }}</div>
           <div class="stat-label">已加入</div>
         </div>
       </div>
@@ -111,7 +111,6 @@
                 </el-form-item>
               </el-col>
             </el-row>
-
 
             <el-form-item label="个人简介" prop="bio">
               <el-input
@@ -300,7 +299,7 @@ import { User, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
-import type { User as UserType } from '@/types'
+import type { User as UserType, UserStats } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 
 // Stores
@@ -328,12 +327,7 @@ const editableUserInfo = reactive({
   bio: '',
 })
 
-// 用户统计数据
-const userStats = reactive({
-  appliedClubs: 0,
-  favoriteClubs: 0,
-  joinedClubs: 0,
-})
+// 移除独立的userStats对象，现在直接使用userInfo.stats
 
 // 用户偏好设置
 const preferences = reactive({
@@ -597,9 +591,7 @@ const loadUserData = async () => {
     })
 
     // TODO: 加载用户统计数据和偏好设置
-    userStats.appliedClubs = 5
-    userStats.favoriteClubs = 8
-    userStats.joinedClubs = 3
+    // 设置用户统计信息到userInfo中
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户信息失败')
   }

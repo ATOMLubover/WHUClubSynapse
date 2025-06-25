@@ -47,6 +47,12 @@ export const mockRegister = async (
     emailVerified: 'true',
     phoneVerified: 'false',
     bio: '',
+    // 新用户的初始统计信息
+    stats: {
+      appliedClubs: 0,
+      favoriteClubs: 0,
+      joinedClubs: 0
+    }
   }
 
   return {

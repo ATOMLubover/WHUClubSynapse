@@ -13,6 +13,16 @@ export interface User {
   emailVerified: string
   phoneVerified: string
   bio: string
+  // 用户统计信息
+  stats?: UserStats
+}
+
+// 用户统计信息类型
+export interface UserStats {
+  appliedClubs: number  // 申请的社团数量
+  favoriteClubs: number // 收藏的社团数量
+  joinedClubs: number   // 已加入的社团数量
+  managedClubs: number  // 管理的社团数量
 }
 
 export interface Activity {

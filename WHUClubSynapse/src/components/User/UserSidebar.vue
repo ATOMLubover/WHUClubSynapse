@@ -24,11 +24,7 @@
         <el-menu-item index="user-applications">
           <el-icon><Document /></el-icon>
           <span>我的申请</span>
-          <el-badge
-            v-if="stats.pendingApplications > 0"
-            :value="stats.pendingApplications"
-            class="menu-badge"
-          />
+          <el-badge v-if="stats.appliedClubs > 0" :value="stats.appliedClubs" class="menu-badge" />
         </el-menu-item>
 
         <el-menu-item index="user-favorites">
@@ -46,15 +42,11 @@
           <el-menu-item index="managed-clubs">管理的社团</el-menu-item>
         </el-sub-menu>
 
-
-
         <el-menu-item index="user-settings">
           <el-icon><Setting /></el-icon>
           <span>账户设置</span>
         </el-menu-item>
       </el-menu>
-
-
     </el-card>
   </div>
 </template>
@@ -72,7 +64,8 @@ import {
   Search,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import type { User as UserType } from '@/types'
+import type { UserStats, User as UserType } from '@/types'
+import { getCurrentUser } from '@/api/auth'
 
 // 路由和Store
 const route = useRoute()
@@ -81,8 +74,8 @@ const authStore = useAuthStore()
 
 // 响应式数据
 const userInfo = ref<UserType | null>(authStore.user)
-const stats = ref({
-  pendingApplications: 0,
+const stats = ref<UserStats>({
+  appliedClubs: 0,
   favoriteClubs: 0,
   joinedClubs: 0,
   managedClubs: 0,
@@ -129,11 +122,12 @@ const loadUserStats = async () => {
   try {
     // TODO: 调用API获取用户统计数据
     // 这里使用模拟数据
-    stats.value = {
-      pendingApplications: 2,
-      favoriteClubs: 8,
-      joinedClubs: 3,
-      managedClubs: 1,
+    userInfo.value = (await getCurrentUser()).data.data
+    stats.value = userInfo.value?.stats || {
+      appliedClubs: 0,
+      favoriteClubs: 0,
+      joinedClubs: 0,
+      managedClubs: 0,
     }
   } catch (error) {
     console.error('加载用户统计失败:', error)

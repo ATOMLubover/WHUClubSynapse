@@ -167,7 +167,7 @@ const handleUserMenuCommand = (command: string) => {
       router.push('/user/favorites')
       break
     case 'create-clubs':
-      router.push('/user/createclubs')
+      router.push('/user/clubs/managed?isOpen=true')
       break
     case 'logout':
       authStore.logout()

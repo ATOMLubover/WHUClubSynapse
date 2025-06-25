@@ -81,12 +81,7 @@ const router = createRouter({
               redirect:'/user/clubs/joined',
               meta: { requiresAuth: true },
             }, 
-            {
-              path: '/user/createclubs',
-              name: 'user-clubs-create',
-              redirect:'/user/clubs/managed',
-              meta: { requiresAuth: true },
-            },
+            
           ],
         },
       ],

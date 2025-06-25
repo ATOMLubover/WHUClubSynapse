@@ -109,7 +109,9 @@
                   <div class="club-actions">
                     <el-button size="small" @click="editClub(club)"> 编辑信息 </el-button>
                     <el-button size="small" @click="manageMembers(club)"> 成员管理 </el-button>
-                    <el-button size="small" type="danger" @click="showDeleteDialog = true; deleteClub = club"> 删除社团 </el-button>
+                    <el-button size="small" type="danger" @click="handledelete()">
+                      删除社团
+                    </el-button>
                   </div>
                 </div>
               </el-col>
@@ -201,7 +203,9 @@
     <el-dialog v-model="showDeleteDialog" title="删除社团" width="400px">
       <div class="delete-dialog-content">
         <el-icon class="warning-icon" color="#F56C6C"><Warning /></el-icon>
-        <p>确定要删除社团 <strong>{{ deleteClub?.name }}</strong> 吗？</p>
+        <p>
+          确定要删除社团 <strong>{{ deleteClub?.name }}</strong> 吗？
+        </p>
         <p class="warning-text">删除后将无法恢复，所有成员将被移除</p>
       </div>
 
@@ -218,6 +222,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Refresh,
@@ -238,6 +243,7 @@ import type { Club, ClubCategory } from '@/types'
 const router = useRouter()
 const clubStore = useClubStore()
 const authStore = useAuthStore()
+const route = useRoute()
 
 // 响应式数据
 const loading = ref(false)
@@ -273,8 +279,8 @@ const createRules = {
 
 // 统计数据
 const stats = computed(() => {
-  const active = managedClubs.value.filter(club => club.status === 'approved').length
-  const pending = managedClubs.value.filter(club => club.status === 'pending').length
+  const active = managedClubs.value.filter((club) => club.status === 'approved').length
+  const pending = managedClubs.value.filter((club) => club.status === 'pending').length
   const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.currentMembers, 0)
   const pendingApplications = managedClubs.value.length * 3 // 模拟数据
 
@@ -387,6 +393,12 @@ const manageMembers = (club: Club) => {
   ElMessage.info('成员管理功能开发中...')
 }
 
+// 处理删除社团
+const handledelete = () => {
+  showDeleteDialog.value = true
+  deleteClub.value = club
+}
+
 // 处理更多操作
 const handleAction = (command: { action: string; club: Club }) => {
   switch (command.action) {
@@ -477,6 +489,10 @@ const confirmDelete = async () => {
 // 页面加载时获取数据
 onMounted(() => {
   loadManagedClubs()
+  const isOpen = route.query.isOpen
+  if (isOpen == 'true') {
+    showCreateDialog.value = true
+  }
 })
 </script>
 
