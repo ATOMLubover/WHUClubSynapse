@@ -330,8 +330,20 @@ export const mockUser: User = {
   stats: {
     appliedClubs: 1,
     favoriteClubs: 1,
-    joinedClubs: 3
-  }
+    joinedClubs: 3,
+    managedClubs: 0
+  },
+  // 用户偏好设置
+  preferences: {
+    interestedCategories: ['学术科技', '文艺体育'],
+    emailNotifications: true,
+    applicationNotifications: true,
+    activityNotifications: false,
+    profilePublic: true,
+    showJoinedClubs: true,
+  },
+  // 是否已完成偏好设置
+  hasCompletedPreferences: true
 }
 
 
