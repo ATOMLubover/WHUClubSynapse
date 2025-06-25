@@ -203,15 +203,14 @@
             <span>偏好设置</span>
           </template>
 
-          <el-form label-width="120px">
+          <el-form label-width="140px" class="preference-form">
             <el-form-item label="感兴趣的社团类型">
               <el-checkbox-group v-model="preferences.interestedCategories">
                 <el-checkbox label="学术科技">学术科技</el-checkbox>
-                <el-checkbox label="文化艺术">文化艺术</el-checkbox>
-                <el-checkbox label="体育运动">体育运动</el-checkbox>
+                <el-checkbox label="文艺体育">文艺体育</el-checkbox>
                 <el-checkbox label="志愿服务">志愿服务</el-checkbox>
-                <el-checkbox label="社会实践">社会实践</el-checkbox>
                 <el-checkbox label="创新创业">创新创业</el-checkbox>
+                <el-checkbox label="其他">其他</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
 
@@ -233,7 +232,7 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="savePreferences">保存偏好设置</el-button>
+              <el-button type="primary" @click="savePreferences" :loading="preferencesLoading">保存偏好设置</el-button>
             </el-form-item>
           </el-form>
         </el-card>
@@ -299,7 +298,7 @@ import { User, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
-import type { User as UserType, UserStats } from '@/types'
+import type { User as UserType, UserStats, UserPreferences, ClubCategory } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 
 // Stores
@@ -313,6 +312,7 @@ const showAvatarUpload = ref(false)
 const showPhoneDialog = ref(false)
 const verificationLoading = ref(false)
 const passwordLoading = ref(false)
+const preferencesLoading = ref(false)
 const uploadedAvatar = ref('')
 
 // 用户信息
@@ -330,8 +330,8 @@ const editableUserInfo = reactive({
 // 移除独立的userStats对象，现在直接使用userInfo.stats
 
 // 用户偏好设置
-const preferences = reactive({
-  interestedCategories: [] as string[],
+const preferences = reactive<UserPreferences>({
+  interestedCategories: [] as ClubCategory[],
   emailNotifications: true,
   applicationNotifications: true,
   activityNotifications: false,
@@ -520,9 +520,16 @@ const confirmAvatarUpload = () => {
   ElMessage.success('头像更新成功')
 }
 
-const savePreferences = () => {
-  // TODO: 保存偏好设置到服务器
-  ElMessage.success('偏好设置已保存')
+const savePreferences = async () => {
+  try {
+    preferencesLoading.value = true
+    await authStore.updatePreferences(preferences)
+    ElMessage.success('偏好设置已保存')
+  } catch (error: any) {
+    ElMessage.error(error.message || '保存偏好设置失败')
+  } finally {
+    preferencesLoading.value = false
+  }
 }
 //更换邮箱手机号
 
@@ -590,8 +597,10 @@ const loadUserData = async () => {
       bio: userInfo.value.bio || '',
     })
 
-    // TODO: 加载用户统计数据和偏好设置
-    // 设置用户统计信息到userInfo中
+    // 加载用户偏好设置
+    if (userInfo.value.preferences) {
+      Object.assign(preferences, userInfo.value.preferences)
+    }
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户信息失败')
   }
@@ -782,5 +791,10 @@ onMounted(() => {
     display: flex;
     gap: 10px;
   }
+}
+
+.preference-form :deep(.el-form-item__label) {
+  white-space: nowrap;
+  font-weight: 500;
 }
 </style>

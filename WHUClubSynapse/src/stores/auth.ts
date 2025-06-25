@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as authApi from '@/api/auth'
-import type { User, LoginRequest, RegisterRequest } from '@/types'
+import type { User, LoginRequest, RegisterRequest, UserPreferences } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
@@ -101,6 +101,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 更新用户偏好设置
+  const updatePreferences = async (preferences: UserPreferences) => {
+    try {
+      loading.value = true
+      const response = await authApi.updateUserPreferences(preferences)
+      user.value = response.data.data
+      return response.data.data
+    } catch (error) {
+      console.error('更新偏好设置失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // 状态
     user,
@@ -116,5 +131,6 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUserInfo,
     logout,
     initialize,
+    updatePreferences,
   }
 })

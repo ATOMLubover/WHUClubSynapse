@@ -51,8 +51,11 @@ export const mockRegister = async (
     stats: {
       appliedClubs: 0,
       favoriteClubs: 0,
-      joinedClubs: 0
-    }
+      joinedClubs: 0,
+      managedClubs: 0
+    },
+    // 新用户未完成偏好设置
+    hasCompletedPreferences: false
   }
 
   return {
@@ -192,6 +195,33 @@ export const mockResetPassword = async (data: {
       code: 200,
       message: '密码重置成功',
       data: null,
+    },
+  }
+}
+
+// 模拟更新用户偏好设置
+export const mockUpdateUserPreferences = async (preferences: {
+  interestedCategories: string[]
+  emailNotifications: boolean
+  applicationNotifications: boolean
+  activityNotifications: boolean
+  profilePublic: boolean
+  showJoinedClubs: boolean
+}): Promise<{ data: ApiResponse<User> }> => {
+  await delay(800)
+
+  // 更新mockUser的偏好设置
+  mockUser.preferences = {
+    ...preferences,
+    interestedCategories: preferences.interestedCategories as any[]
+  }
+  mockUser.hasCompletedPreferences = true
+
+  return {
+    data: {
+      code: 200,
+      message: '偏好设置更新成功',
+      data: mockUser,
     },
   }
 }

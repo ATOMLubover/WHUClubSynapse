@@ -1,9 +1,63 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import PreferenceSetupDialog from '@/components/User/PreferenceSetupDialog.vue'
+import type { UserPreferences } from '@/types'
+
+// 认证store
+const authStore = useAuthStore()
+
+// 偏好设置弹窗
+const showPreferenceDialog = ref(false)
+
+// 检查是否需要显示偏好设置弹窗
+const checkPreferenceSetup = () => {
+  if (authStore.isLoggedIn && authStore.user && !authStore.user.hasCompletedPreferences) {
+    showPreferenceDialog.value = true
+  }
+}
+
+// 处理偏好设置保存
+const handlePreferenceSave = async (preferences: UserPreferences) => {
+  try {
+    await authStore.updatePreferences(preferences)
+    showPreferenceDialog.value = false
+  } catch (error) {
+    console.error('保存偏好设置失败:', error)
+  }
+}
+
+// 监听登录状态变化
+watch(() => authStore.isLoggedIn, (isLoggedIn) => {
+  if (isLoggedIn) {
+    // 延迟检查，确保用户信息已加载
+    setTimeout(checkPreferenceSetup, 500)
+  }
+})
+
+// 监听用户信息变化
+watch(() => authStore.user, (user) => {
+  if (user && !user.hasCompletedPreferences) {
+    showPreferenceDialog.value = true
+  }
+})
+
+// 初始化
+onMounted(async () => {
+  await authStore.initialize()
+  checkPreferenceSetup()
+})
 </script>
 
 <template>
   <RouterView />
+  
+  <!-- 偏好设置弹窗 -->
+  <PreferenceSetupDialog
+    v-model="showPreferenceDialog"
+    @save="handlePreferenceSave"
+  />
 </template>
 
 <style>

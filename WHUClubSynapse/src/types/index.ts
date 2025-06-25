@@ -15,6 +15,10 @@ export interface User {
   bio: string
   // 用户统计信息
   stats?: UserStats
+  // 用户偏好设置
+  preferences?: UserPreferences
+  // 是否已完成偏好设置
+  hasCompletedPreferences?: boolean
 }
 
 // 用户统计信息类型
@@ -122,4 +126,14 @@ export interface RegisterRequest {
   studentId: string
   college: string
   phone?: string
+}
+
+// 用户偏好设置类型
+export interface UserPreferences {
+  interestedCategories: ClubCategory[]
+  emailNotifications: boolean
+  applicationNotifications: boolean
+  activityNotifications: boolean
+  profilePublic: boolean
+  showJoinedClubs: boolean
 }

@@ -88,3 +88,17 @@ export const resetPassword = async (data: {
     ? await mockAuth.mockResetPassword(data)
     : await request.post('/auth/reset-password', data)
 }
+
+// 更新用户偏好设置
+export const updateUserPreferences = async (preferences: {
+  interestedCategories: string[]
+  emailNotifications: boolean
+  applicationNotifications: boolean
+  activityNotifications: boolean
+  profilePublic: boolean
+  showJoinedClubs: boolean
+}): Promise<{ data: ApiResponse<User> }> => {
+  return getIsUsingMockAPI()
+    ? await mockAuth.mockUpdateUserPreferences(preferences)
+    : await request.put('/auth/preferences', preferences)
+}
