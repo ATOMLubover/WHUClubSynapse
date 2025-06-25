@@ -268,6 +268,7 @@ const fetchClubDetail = async () => {
 }
 
 onMounted(() => {
+  window.scrollTo(0, 0)
   fetchClubDetail()
 })
 </script>

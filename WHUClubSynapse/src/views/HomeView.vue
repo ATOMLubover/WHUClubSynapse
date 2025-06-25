@@ -283,7 +283,7 @@ const handleCategoryChange = (category: string) => {
 // 处理排序切换
 const handleSortChange = (sort: string) => {
   sortBy.value = sort
-  clubStore.setSearchParams({ sortBy: sort })
+  clubStore.setSearchParams({ sortBy: sort as 'hot' | 'time' | 'members' })
   clubStore.fetchClubs()
 }
 
@@ -300,9 +300,6 @@ const goToClub = (clubId: string) => {
 
 // 初始化数据
 onMounted(async () => {
-  // 滚动到页面顶部
-  window.scrollTo(0, 0)
-
   try {
     // 并行获取数据
     await Promise.all([
