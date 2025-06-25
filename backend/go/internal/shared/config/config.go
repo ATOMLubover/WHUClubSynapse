@@ -16,15 +16,14 @@ func LoadConfig[T any](cfg *T, relPath string) error {
 
 	fmt.Printf("配置文件绝对路径：%s\n", absPath)
 
-	v := viper.New()
-	v.SetConfigType("yaml")
-	v.SetConfigFile(absPath)
+	viper.SetConfigType("json")
+	viper.SetConfigFile(absPath)
 
-	if err := v.ReadInConfig(); err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return errors.New("读取配置文件失败")
 	}
 
-	if err := v.Unmarshal(cfg); err != nil {
+	if err := viper.Unmarshal(cfg); err != nil {
 		return errors.New("配置反序列化失败")
 	}
 

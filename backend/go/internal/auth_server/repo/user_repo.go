@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 	"whuclubsynapse-server/internal/auth_server/model"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ type UserRepo interface {
 	GetUserById(id uint) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)
 	GetUserList(offset int, num int) ([]*model.User, error)
+	UpdateUserLastActive(id uint) error
 }
 
 func CreateUserRepo(
@@ -123,4 +125,30 @@ func (r *sUserRepo) GetUserList(offset int, num int) ([]*model.User, error) {
 
 	r.logger.Debug("已提取用户列表", "长度", len(users))
 	return users, nil
+}
+
+func (r *sUserRepo) UpdateUserLastActive(id uint) error {
+	result := r.database.Model(&model.User{}).
+		Where("user_id = ?", id).
+		Update("last_active", time.Now())
+	if result.Error != nil {
+		switch {
+		case errors.Is(result.Error, gorm.ErrRecordNotFound):
+			r.logger.Error("所更新用户不存在",
+				"user_id", id, "error", result.Error)
+
+		default:
+			r.logger.Error("更新最后活跃时间数据库操作异常",
+				"user_id", id, "error", result.Error)
+		}
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		r.logger.Error("更新最后活跃时间失败",
+			"user_id", id, "error", result.Error)
+		return fmt.Errorf("更新最后活跃时间失败（id: %d）", id)
+	}
+
+	return nil
 }

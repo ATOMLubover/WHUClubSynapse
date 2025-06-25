@@ -1,15 +1,19 @@
 package service
 
 import (
+	"errors"
 	"whuclubsynapse-server/internal/auth_server/model"
 	"whuclubsynapse-server/internal/auth_server/repo"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
-	Login(username, passwordHash string) (*model.User, bool)
+	Login(username, rawPassword string) (*model.User, bool)
 	Register(username, email, passwordHash string) (*model.User, error)
 	GetUserById(id uint) (*model.User, error)
 	GetUserList(offset int, num int) ([]*model.User, error)
+	KeepUserActive(id uint, role string) error
 }
 
 type sUserService struct {
@@ -24,13 +28,16 @@ func NewUserService(
 	}
 }
 
-func (s *sUserService) Login(username, passwordHash string) (*model.User, bool) {
+func (s *sUserService) Login(username, rawPassword string) (*model.User, bool) {
 	userModel, err := s.UserRepo.GetUserByUsername(username)
 	if err != nil {
 		return nil, false
 	}
 
-	if userModel.PasswordHash != passwordHash {
+	if err := bcrypt.CompareHashAndPassword(
+		[]byte(userModel.PasswordHash),
+		[]byte(rawPassword),
+	); err != nil {
 		return nil, false
 	}
 
@@ -72,4 +79,22 @@ func (s *sUserService) GetUserList(offset int, num int) ([]*model.User, error) {
 	}
 
 	return userModelList, nil
+}
+
+func (s *sUserService) KeepUserActive(id uint, role string) error {
+	userModel, err := s.UserRepo.GetUserById(id)
+	if err != nil {
+		return err
+	}
+
+	if userModel.Role != role {
+		return errors.New("用户身份错误")
+	}
+
+	err = s.UserRepo.UpdateUserLastActive(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

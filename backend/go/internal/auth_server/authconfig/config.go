@@ -1,29 +1,23 @@
 package authconfig
 
 type Config struct {
-	Env struct {
-		Level string `yaml:"level"`
-	} `yaml:"env"`
+	EnvLevel    string `mapstructure:"env_level"`
+	DatabaseDsn string `mapstructure:"database_dsn"`
 
-	Database struct {
-		Dsn string `yaml:"dsn"`
-	} `yaml:"database"`
+	RedisHost       string `mapstructure:"redis_host"`
+	RedisPort       uint16 `mapstructure:"redis_port"`
+	RedisPassword   string `mapstructure:"redis_password"`
+	RedisDb         int    `mapstructure:"redis_db"`
+	RedisMaxConn    int    `mapstructure:"redis_max_conn"`
+	RedisMinIdle    int    `mapstructure:"redis_min_idle"`
+	RedisMaxRetries int    `mapstructure:"redis_max_retries"`
 
-	Redis struct {
-		Host       string `yaml:"host"`
-		Port       uint16 `yaml:"port"`
-		Password   string `yaml:"password"`
-		Db         int    `yaml:"db"`
-		MaxConn    int    `yaml:"max_conn"`
-		MinIdle    int    `yaml:"min_idle"`
-		MaxRetries int    `yaml:"max_retries"`
-	} `yaml:"redis"`
+	GrpcHost        string `mapstructure:"grpc_host"`
+	GrpcPort        uint16 `mapstructure:"grpc_port"`
+	GrpcMaxConn     int    `mapstructure:"grpc_max_conn"`
+	GrpcMinConn     int    `mapstructure:"grpc_min_conn"`
+	GrpcIdleTimeout int    `mapstructure:"grpc_idle_timeout"`
 
-	Grpc struct {
-		Host        string `yaml:"host"`
-		Port        uint16 `yaml:"port"`
-		MaxConn     int    `yaml:"max_conn"`
-		MinConn     int    `yaml:"min_conn"`
-		IdleTimeout int    `yaml:"idle_timeout"`
-	} `yaml:"grpc"`
+	JwtExpirationTime uint64 `mapstructure:"jwt_expiration_time"`
+	JwtSecretKey      string `mapstructure:"jwt_secret_key"`
 }

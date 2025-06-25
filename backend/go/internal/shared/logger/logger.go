@@ -11,7 +11,7 @@ func CreateLogger(opts *slog.HandlerOptions) *slog.Logger {
 	}
 
 	opts = &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: slog.LevelDebug,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
 				t := a.Value.Time()

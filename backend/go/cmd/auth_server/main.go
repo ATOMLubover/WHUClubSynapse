@@ -2,16 +2,18 @@ package main
 
 import (
 	"log/slog"
-	"strconv"
+	"time"
+
 	"whuclubsynapse-server/internal/auth_server/authconfig"
 	"whuclubsynapse-server/internal/auth_server/grpcimpl"
 	"whuclubsynapse-server/internal/auth_server/handler"
+	"whuclubsynapse-server/internal/auth_server/model"
 	"whuclubsynapse-server/internal/auth_server/redisimpl"
 	"whuclubsynapse-server/internal/auth_server/repo"
 	"whuclubsynapse-server/internal/auth_server/service"
 	"whuclubsynapse-server/internal/shared/config"
+	"whuclubsynapse-server/internal/shared/jwtutil"
 	"whuclubsynapse-server/internal/shared/logger"
-	"whuclubsynapse-server/internal/shared/rediscli"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
@@ -21,12 +23,15 @@ import (
 
 func main() {
 	app := iris.Default()
+	app.Logger().SetLevel("debug")
+
 	globalController := mvc.New(app.Party("/"))
 
-	config := LoadConfig("../config/auth_config.yaml")
+	config := LoadConfig("../../config/auth_config.json")
 
 	logger := CreateLogger(config)
 	database := ConnectDatabase(config)
+	jwtFactory := CreateJwtFactory(config, logger)
 
 	redisService := redisimpl.NewRedisClientService(config, logger)
 
@@ -38,6 +43,7 @@ func main() {
 	globalController.Register(
 		config,
 
+		jwtFactory,
 		logger,
 		database,
 
@@ -71,7 +77,7 @@ func CreateLogger(cfg *authconfig.Config) *slog.Logger {
 
 func ConnectDatabase(cfg *authconfig.Config) *gorm.DB {
 	db, err := gorm.Open(
-		postgres.Open(cfg.Database.Dsn),
+		postgres.Open(cfg.DatabaseDsn),
 		&gorm.Config{},
 	)
 	if err != nil {
@@ -81,12 +87,10 @@ func ConnectDatabase(cfg *authconfig.Config) *gorm.DB {
 	return db
 }
 
-func ConnectRedis(cfg *authconfig.Config) rediscli.RedisClient {
-	return *rediscli.NewRedisClient(
-		cfg.Redis.Host+":"+strconv.FormatUint(uint64(cfg.Redis.Port), 10),
-		cfg.Redis.Password,
-		cfg.Redis.MaxConn,
-		cfg.Redis.MinIdle,
-		cfg.Redis.MaxRetries,
+func CreateJwtFactory(cfg *authconfig.Config, lgr *slog.Logger) *jwtutil.CliamsFactory[model.UserClaims] {
+	return jwtutil.NewClaimsFactory[model.UserClaims](
+		time.Duration(cfg.JwtExpirationTime)*time.Hour,
+		cfg.JwtSecretKey,
+		lgr,
 	)
 }

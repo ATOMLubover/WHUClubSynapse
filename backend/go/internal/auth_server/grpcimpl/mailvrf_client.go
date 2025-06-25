@@ -27,15 +27,15 @@ func NewMailvrfClientService(
 	cfg *authconfig.Config,
 	logger *slog.Logger,
 ) MailvrfClientService {
-	addr := cfg.Grpc.Host + ":" + strconv.FormatUint(uint64(cfg.Grpc.Port), 10)
+	addr := cfg.GrpcHost + ":" + strconv.FormatUint(uint64(cfg.GrpcPort), 10)
 	cred := grpc.WithTransportCredentials(insecure.NewCredentials())
 
 	pool, err := grpcpool.New(
 		func() (*grpc.ClientConn, error) {
 			return grpc.NewClient(addr, cred)
 		},
-		cfg.Grpc.MinConn,
-		cfg.Grpc.MaxConn,
+		cfg.GrpcMinConn,
+		cfg.GrpcMaxConn,
 		time.Second*30,
 	)
 	if err != nil {

@@ -11,7 +11,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	kVrfCodePrefix = "vrfcode_"
+)
+
 type RedisClientService interface {
+	CheckVrfcodeExisting(email string) bool
 	ValidateRegVrfcode(email, vrfcode string) bool
 }
 
@@ -26,11 +31,11 @@ func NewRedisClientService(
 	logger *slog.Logger,
 ) RedisClientService {
 	client := rediscli.NewRedisClient(
-		cfg.Redis.Host+":"+strconv.FormatUint(uint64(cfg.Redis.Port), 10),
-		cfg.Redis.Password,
-		cfg.Redis.MaxConn,
-		cfg.Redis.MinIdle,
-		cfg.Redis.MaxRetries,
+		cfg.RedisHost+":"+strconv.FormatUint(uint64(cfg.RedisPort), 10),
+		cfg.RedisPassword,
+		cfg.RedisMaxConn,
+		cfg.RedisMinIdle,
+		cfg.RedisMaxRetries,
 	)
 	return &sRedisClientService{
 		client: client,
@@ -38,11 +43,26 @@ func NewRedisClientService(
 	}
 }
 
+func (s *sRedisClientService) CheckVrfcodeExisting(email string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := s.client.Inst().Get(ctx, kVrfCodePrefix+email).Result()
+	if err == redis.Nil {
+		return false
+	}
+	if err != nil {
+		s.logger.Error("Redis Get操作异常", "error", err)
+		return false
+	}
+
+	return true
+}
+
 func (s *sRedisClientService) ValidateRegVrfcode(email, vrfcode string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	const kVrfCodePrefix = "vrfcode_"
 	redisVrfcode, err := s.client.Inst().Get(ctx, kVrfCodePrefix+email).Result()
 	if err == redis.Nil {
 		return false

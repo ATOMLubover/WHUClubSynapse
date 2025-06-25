@@ -1,23 +1,31 @@
 package handler
 
 import (
+	"fmt"
 	"log/slog"
+	"reflect"
+	"strings"
 	"time"
 	"whuclubsynapse-server/internal/auth_server/dto"
 	"whuclubsynapse-server/internal/auth_server/grpcimpl"
+	"whuclubsynapse-server/internal/auth_server/model"
 	"whuclubsynapse-server/internal/auth_server/redisimpl"
 	"whuclubsynapse-server/internal/auth_server/service"
+	"whuclubsynapse-server/internal/shared/jwtutil"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	kBearerPrefix = "Bearer "
+)
+
 type UserHandler struct {
-	CtxIris iris.Context
+	JwtFactory *jwtutil.CliamsFactory[model.UserClaims]
 
-	RedisService redisimpl.RedisClientService
-
+	RedisService   redisimpl.RedisClientService
 	UserService    service.UserService
 	MailvrfService grpcimpl.MailvrfClientService
 
@@ -27,67 +35,90 @@ type UserHandler struct {
 func (h *UserHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/{id:int}", "GetUserInfo")
 	b.Handle("POST", "/verify", "PostSendVrfEmail")
-	b.Handle("PUT", "/ping", "PutPong")
 }
 
-func (h *UserHandler) PostLogin() {
+func (h *UserHandler) PostLogin(ctx iris.Context) {
 	var reqBody dto.LoginRequest
-	if err := h.CtxIris.ReadJSON(&reqBody); err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		h.Logger.Debug(fmt.Sprintf("LoginRequest 结构体字段: %+v",
+			reflect.VisibleFields(reflect.TypeOf(dto.LoginRequest{}))))
+
+		h.Logger.Debug("Login请求格式错误", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
 		return
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword(
-		[]byte(reqBody.EncryptedPassword),
-		bcrypt.DefaultCost,
-	)
-	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
-		return
-	}
-
-	userModel, ok := h.UserService.Login(reqBody.Username, string(hashedBytes))
+	userDetail, ok := h.UserService.Login(reqBody.Username, reqBody.Password)
 	if !ok {
-		h.CtxIris.StopWithText(
-			iris.StatusUnauthorized,
-			"用户名或密码错误",
-		)
+		h.Logger.Debug("用户名或密码错误")
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户名或密码错误")
 		return
 	}
 
-	resBody := dto.LoginResponse{
-		Id:         int(userModel.UserId),
-		Username:   userModel.Username,
-		Email:      userModel.Email,
-		Role:       userModel.Role,
-		AvatarUrl:  userModel.AvatarURL,
-		LastActive: userModel.LastActive.Format("2006-01-02 15:04:05"),
+	token, err := h.JwtFactory.GenToken(model.UserClaims{
+		Role:   userDetail.Role,
+		UserId: int(userDetail.UserId),
+	})
+	if err != nil {
+		h.Logger.Debug("生成token失败",
+			"error", err, "user_id", userDetail.UserId,
+		)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("token生成失败")
+		return
 	}
-	h.CtxIris.JSON(resBody)
+
+	ctx.Header("Authorization", kBearerPrefix+token)
+
+	resLoginConfirm := dto.LoginResponse{
+		Id:         int(userDetail.UserId),
+		Username:   userDetail.Username,
+		Email:      userDetail.Email,
+		Role:       userDetail.Role,
+		AvatarUrl:  userDetail.AvatarURL,
+		LastActive: userDetail.LastActive.Format("2006-01-02 15:04:05"),
+	}
+
+	ctx.JSON(resLoginConfirm)
 }
 
-func (h *UserHandler) PostSendVrfEmail() {
+func (h *UserHandler) PostSendVrfEmail(ctx iris.Context) {
 	var reqBody dto.MailvrfRequest
-	if err := h.CtxIris.ReadJSON(&reqBody); err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
+		return
+	}
+
+	if h.RedisService.CheckVrfcodeExisting(reqBody.Email) {
+		ctx.StatusCode(iris.StatusAccepted)
+		ctx.Text("验证码已发送，请勿重复申请")
 		return
 	}
 
 	if err := h.MailvrfService.RequestVerify(reqBody.Email); err != nil {
-		h.CtxIris.StopWithText(
-			iris.StatusServiceUnavailable,
-			"邮箱验证服务不可用",
+		h.Logger.Debug("发送验证码失败",
+			"error", err, "email", reqBody.Email,
 		)
+
+		ctx.StatusCode(iris.StatusServiceUnavailable)
+		ctx.Text("邮箱服务不可用")
 		return
 	}
 
-	h.CtxIris.Text("邮件已发送至%s", reqBody.Email)
+	ctx.Text("邮件已发送至%s", reqBody.Email)
 }
 
-func (h *UserHandler) PostRegister() {
+func (h *UserHandler) PostRegister(ctx iris.Context) {
 	var reqBody dto.RegisterRequest
-	if err := h.CtxIris.ReadJSON(&reqBody); err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
 		return
 	}
 
@@ -95,10 +126,8 @@ func (h *UserHandler) PostRegister() {
 		reqBody.Email,
 		reqBody.Vrfcode,
 	) {
-		h.CtxIris.StopWithText(
-			iris.StatusForbidden,
-			"邮箱验证码错误",
-		)
+		ctx.StatusCode(iris.StatusUnauthorized)
+		ctx.Text("验证码错误")
 		return
 	}
 
@@ -107,7 +136,12 @@ func (h *UserHandler) PostRegister() {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+		h.Logger.Debug("bcrypt加密密码失败",
+			"error", err, "encrypted_password", reqBody.EncryptedPassword,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("密码无效")
 		return
 	}
 
@@ -117,62 +151,104 @@ func (h *UserHandler) PostRegister() {
 		string(hashedBytes),
 	)
 	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+		h.Logger.Debug("用户注册失败",
+			"error", err, "reqBody", reqBody,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("注册失败，请检查用户名或邮箱")
 		return
 	}
 
-	resBody := dto.RegisterResponse{
+	resRegConfirm := dto.RegisterResponse{
 		Id:       newUser.UserId,
 		Username: newUser.Username,
 	}
 
-	h.CtxIris.JSON(resBody)
+	ctx.JSON(resRegConfirm)
 }
 
-func (h *UserHandler) GetUserInfo(id int) {
+func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
 	if id <= 0 {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID无效")
 		return
 	}
 
 	user, err := h.UserService.GetUserById(uint(id))
 	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusNotFound)
+		h.Logger.Debug(
+			"GetUserInfo失败",
+			"error", err, "id", id,
+		)
+
+		ctx.StatusCode(iris.StatusNotFound)
+		ctx.Text("用户ID无效")
 		return
 	}
 
-	userInfo := dto.UserInfo{
+	resUserInfo := dto.UserInfo{
 		Id:         user.UserId,
 		Email:      user.Email,
-		LastActive: user.LastActive.Format(time.DateTime),
 		Role:       user.Role,
 		Username:   user.Username,
+		LastActive: user.LastActive.Format(time.DateTime),
 	}
-	h.CtxIris.JSON(userInfo)
+
+	ctx.JSON(resUserInfo)
 }
 
-func (h *UserHandler) GetUserList() {
-	offset, err := h.CtxIris.URLParamInt("offset")
-	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+func (h *UserHandler) GetUserList(ctx iris.Context) {
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" {
+		ctx.StatusCode(iris.StatusUnauthorized)
 		return
 	}
 
-	num, err := h.CtxIris.URLParamInt("num")
+	claims := strings.TrimPrefix(authHeader, kBearerPrefix)
+	userClaims, err := h.JwtFactory.ParseToken(claims)
 	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+		h.Logger.Debug("claims反序列化错误",
+			"error", err, "authHeader", authHeader,
+		)
+
+		ctx.StatusCode(iris.StatusUnauthorized)
+		return
+	}
+
+	if userClaims.Role != "admin" {
+		ctx.StatusCode(iris.StatusForbidden)
+		return
+	}
+
+	offset, err := ctx.URLParamInt("offset")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("offset参数错误")
+		return
+	}
+
+	num, err := ctx.URLParamInt("num")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("num参数错误")
 		return
 	}
 
 	userList, err := h.UserService.GetUserList(offset, num)
 	if err != nil {
-		h.CtxIris.StopWithStatus(iris.StatusBadRequest)
+		h.Logger.Debug("获取用户列表失败",
+			"error", err, "offset", offset, "num", num,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法获取指定范围的用户列表")
 		return
 	}
 
-	userListDto := make([]dto.UserInfo, len(userList))
+	resUserList := make([]dto.UserInfo, len(userList))
 	for _, userModel := range userList {
-		userListDto = append(userListDto, dto.UserInfo{
+		resUserList = append(resUserList, dto.UserInfo{
 			Id:         userModel.UserId,
 			Email:      userModel.Email,
 			LastActive: userModel.LastActive.Format(time.DateTime),
@@ -181,9 +257,36 @@ func (h *UserHandler) GetUserList() {
 		})
 	}
 
-	h.CtxIris.JSON(userListDto)
+	ctx.JSON(resUserList)
 }
 
-func (h *UserHandler) PutPong() {
-	h.CtxIris.Text("pong")
+func (h *UserHandler) GetPing(ctx iris.Context) {
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" {
+		ctx.StatusCode(iris.StatusUnauthorized)
+		return
+	}
+
+	claims := strings.TrimPrefix(authHeader, kBearerPrefix)
+	userClaims, err := h.JwtFactory.ParseToken(claims)
+	if err != nil {
+		h.Logger.Debug("claims反序列化错误",
+			"error", err, "authHeader", authHeader,
+		)
+
+		ctx.StatusCode(iris.StatusUnauthorized)
+		return
+	}
+
+	if err := h.UserService.KeepUserActive(uint(userClaims.UserId), userClaims.Role); err != nil {
+		h.Logger.Debug("更新用户状态失败",
+			"error", err, "user_id", userClaims.UserId,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("更新用户状态失败")
+		return
+	}
+
+	ctx.Text("pong")
 }
