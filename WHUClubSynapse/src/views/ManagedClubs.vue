@@ -273,7 +273,7 @@ const createRules = {
 
 // 统计数据
 const stats = computed(() => {
-  const active = managedClubs.value.filter(club => club.status === 'active').length
+  const active = managedClubs.value.filter(club => club.status === 'approved').length
   const pending = managedClubs.value.filter(club => club.status === 'pending').length
   const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.currentMembers, 0)
   const pendingApplications = managedClubs.value.length * 3 // 模拟数据

@@ -10,6 +10,9 @@ export interface User {
   college: string
   phone?: string
   createdAt: string
+  emailVerified: string
+  phoneVerified: string
+  bio: string
 }
 
 export interface Activity {
