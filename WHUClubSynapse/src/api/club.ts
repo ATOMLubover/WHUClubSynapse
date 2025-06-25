@@ -204,3 +204,62 @@ export const deleteClub = async (id: string): Promise<{ data: ApiResponse<null> 
     ? await mockClub.mockDeleteClub(id)
     : await request.delete(`/clubs/${id}`)
 }
+
+// 获取用户已加入的社团
+export const getJoinedClubs = async (
+  params: {
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+  if (getIsUsingMockAPI()) {
+    return await mockClub.mockGetJoinedClubs(params)
+  }
+
+  const queryParams = new URLSearchParams()
+
+  if (params.page) {
+    queryParams.append('page', params.page.toString())
+  }
+  if (params.pageSize) {
+    queryParams.append('pageSize', params.pageSize.toString())
+  }
+
+  const queryString = queryParams.toString()
+  const url = queryString ? `/user/joined-clubs?${queryString}` : '/user/joined-clubs'
+
+  return await request.get(url)
+}
+
+// 获取用户管理的社团
+export const getManagedClubs = async (
+  params: {
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+  if (getIsUsingMockAPI()) {
+    return await mockClub.mockGetManagedClubs(params)
+  }
+
+  const queryParams = new URLSearchParams()
+
+  if (params.page) {
+    queryParams.append('page', params.page.toString())
+  }
+  if (params.pageSize) {
+    queryParams.append('pageSize', params.pageSize.toString())
+  }
+
+  const queryString = queryParams.toString()
+  const url = queryString ? `/user/managed-clubs?${queryString}` : '/user/managed-clubs'
+
+  return await request.get(url)
+}
+
+// 退出社团
+export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
+  return getIsUsingMockAPI()
+    ? await mockClub.mockQuitClub(clubId)
+    : await request.delete(`/user/joined-clubs/${clubId}`)
+}

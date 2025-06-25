@@ -212,6 +212,96 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  // 获取用户已加入的社团
+  const fetchJoinedClubs = async (params?: { page?: number; pageSize?: number }) => {
+    try {
+      const response = await clubApi.getJoinedClubs(params)
+      return response.data.data
+    } catch (error) {
+      console.error('获取已加入社团失败:', error)
+      ElMessage.error('获取已加入社团失败')
+      throw error
+    }
+  }
+
+  // 获取用户管理的社团
+  const fetchManagedClubs = async (params?: { page?: number; pageSize?: number }) => {
+    try {
+      const response = await clubApi.getManagedClubs(params)
+      return response.data.data
+    } catch (error) {
+      console.error('获取管理的社团失败:', error)
+      ElMessage.error('获取管理的社团失败')
+      throw error
+    }
+  }
+
+  // 退出社团
+  const quitClub = async (clubId: string) => {
+    try {
+      const response = await clubApi.quitClub(clubId)
+      ElMessage.success('退出社团成功')
+      return response.data.data
+    } catch (error) {
+      console.error('退出社团失败:', error)
+      ElMessage.error('退出社团失败')
+      throw error
+    }
+  }
+
+  // 创建社团
+  const createClub = async (data: {
+    name: string
+    description: string
+    category: string
+    maxMembers: number
+    tags: string[]
+    coverImage?: string
+  }) => {
+    try {
+      const response = await clubApi.createClub(data)
+      return response.data.data
+    } catch (error) {
+      console.error('创建社团失败:', error)
+      ElMessage.error('创建社团失败')
+      throw error
+    }
+  }
+
+  // 删除社团
+  const deleteClub = async (clubId: string) => {
+    try {
+      const response = await clubApi.deleteClub(clubId)
+      return response.data.data
+    } catch (error) {
+      console.error('删除社团失败:', error)
+      ElMessage.error('删除社团失败')
+      throw error
+    }
+  }
+
+  // 更新社团信息
+  const updateClub = async (
+    clubId: string,
+    data: Partial<{
+      name: string
+      description: string
+      category: string
+      maxMembers: number
+      tags: string[]
+      coverImage: string
+    }>,
+  ) => {
+    try {
+      const response = await clubApi.updateClub(clubId, data)
+      return response.data.data
+    } catch (error) {
+      console.error('更新社团失败:', error)
+      ElMessage.error('更新社团失败')
+      throw error
+    }
+  }
+
   // 重置搜索
   const resetSearch = () => {
     searchParams.value = {
@@ -268,6 +358,11 @@ export const useClubStore = defineStore('club', () => {
     unfavoriteClub,
     fetchFavoriteClubs,
     applyToClub,
-
+    fetchJoinedClubs,
+    fetchManagedClubs,
+    quitClub,
+    createClub,
+    deleteClub,
+    updateClub,
   }
 })

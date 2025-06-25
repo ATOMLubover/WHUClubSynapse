@@ -405,3 +405,91 @@ export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<nu
     },
   }
 }
+
+// 模拟获取用户已加入的社团
+export const mockGetJoinedClubs = async (
+  params: {
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+  await delay(500)
+
+  // 模拟已加入的社团（前3个社团）
+  const joinedClubs = mockClubs.slice(0, 3).map(club => ({
+    ...club,
+    isFavorite: false
+  }))
+
+  const page = params.page || 1
+  const pageSize = params.pageSize || 12
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = joinedClubs.slice(start, end)
+
+  return {
+    data: {
+      code: 200,
+      message: 'success',
+      data: {
+        list,
+        total: joinedClubs.length,
+        page,
+        pageSize,
+      },
+    },
+  }
+}
+
+// 模拟获取用户管理的社团
+export const mockGetManagedClubs = async (
+  params: {
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+  await delay(500)
+
+  // 模拟管理的社团（第1个社团）
+  const managedClubs = [mockClubs[0]].map(club => ({
+    ...club,
+    isFavorite: false
+  }))
+
+  const page = params.page || 1
+  const pageSize = params.pageSize || 12
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = managedClubs.slice(start, end)
+
+  return {
+    data: {
+      code: 200,
+      message: 'success',
+      data: {
+        list,
+        total: managedClubs.length,
+        page,
+        pageSize,
+      },
+    },
+  }
+}
+
+// 模拟退出社团
+export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
+  await delay(400)
+
+  const club = mockClubs.find((c) => c.id === clubId)
+  if (!club) {
+    throw new Error('社团不存在')
+  }
+
+  return {
+    data: {
+      code: 200,
+      message: '退出社团成功',
+      data: null,
+    },
+  }
+}
