@@ -24,13 +24,11 @@
         <el-menu-item index="user-applications">
           <el-icon><Document /></el-icon>
           <span>我的申请</span>
-          <el-badge v-if="stats.appliedClubs > 0" :value="stats.appliedClubs" class="menu-badge" />
         </el-menu-item>
 
         <el-menu-item index="user-favorites">
           <el-icon><Star /></el-icon>
           <span>我的收藏</span>
-          <span class="menu-count">({{ stats.favoriteClubs }})</span>
         </el-menu-item>
 
         <el-sub-menu index="user-clubs">
@@ -74,13 +72,6 @@ const authStore = useAuthStore()
 
 // 响应式数据
 const userInfo = ref<UserType | null>(authStore.user)
-const stats = ref<UserStats>({
-  appliedClubs: 0,
-  favoriteClubs: 0,
-  joinedClubs: 0,
-  managedClubs: 0,
-})
-
 // 当前激活的菜单项
 const activeMenu = computed(() => {
   return (route.name as string) || 'user-center'
@@ -123,12 +114,6 @@ const loadUserStats = async () => {
     // TODO: 调用API获取用户统计数据
     // 这里使用模拟数据
     userInfo.value = (await getCurrentUser()).data.data
-    stats.value = userInfo.value?.stats || {
-      appliedClubs: 0,
-      favoriteClubs: 0,
-      joinedClubs: 0,
-      managedClubs: 0,
-    }
   } catch (error) {
     console.error('加载用户统计失败:', error)
   }

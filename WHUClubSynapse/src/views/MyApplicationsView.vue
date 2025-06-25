@@ -31,12 +31,11 @@
               @change="handleFilter"
             >
               <el-option label="全部类型" value="" />
-              <el-option label="学术科技" value="academic" />
-              <el-option label="文化艺术" value="culture" />
-              <el-option label="体育运动" value="sports" />
-              <el-option label="志愿服务" value="volunteer" />
-              <el-option label="社会实践" value="practice" />
-              <el-option label="创新创业" value="innovation" />
+              <el-option
+                v-for="(category, index) in categories"
+                :label="categories[index]"
+                :value="categories[index]"
+              ></el-option>
             </el-select>
           </el-col>
           <el-col :span="8">
@@ -246,7 +245,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, UserFilled, ArrowDown } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { getUserApplications, applyToClub } from '@/api/club'
-import type { Application, Club } from '@/types'
+import type { Application, Club, ClubCategory } from '@/types'
 import { useClubStore } from '@/stores/club'
 
 // 路由
@@ -295,6 +294,9 @@ const filteredApplications = computed(() => {
   // 这里实际上应该在后端进行筛选，前端主要做展示
   return applications.value
 })
+
+// 分类数据
+const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
 
 // 方法
 const getCategoryText = (category: string) => {
@@ -470,6 +472,8 @@ const quitClub = async (clubId: string) => {
 }
 
 onMounted(() => {
+  console.log(clubStore.categories)
+
   loadApplications()
 })
 </script>

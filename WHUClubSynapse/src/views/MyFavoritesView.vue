@@ -18,12 +18,11 @@
               @change="handleFilter"
             >
               <el-option label="全部类型" value="" />
-              <el-option label="学术科技" value="academic" />
-              <el-option label="文化艺术" value="culture" />
-              <el-option label="体育运动" value="sports" />
-              <el-option label="志愿服务" value="volunteer" />
-              <el-option label="社会实践" value="practice" />
-              <el-option label="创新创业" value="innovation" />
+              <el-option
+                v-for="(category, index) in categories"
+                :label="categories[index]"
+                :value="categories[index]"
+              />
             </el-select>
           </el-col>
           <el-col :span="6">
@@ -59,32 +58,6 @@
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
-          </el-col>
-        </el-row>
-      </el-card>
-    </div>
-
-    <!-- 收藏统计 -->
-    <div class="stats-section">
-      <el-card>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="stat-item">
-              <div class="stat-number">{{ favoriteStats.total }}</div>
-              <div class="stat-label">总收藏数</div>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="stat-item">
-              <div class="stat-number">{{ favoriteStats.thisWeek }}</div>
-              <div class="stat-label">本周新增</div>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="stat-item">
-              <div class="stat-number">{{ favoriteStats.categories }}</div>
-              <div class="stat-label">涉及类型</div>
-            </div>
           </el-col>
         </el-row>
       </el-card>
@@ -241,7 +214,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, ArrowDown, UserFilled } from '@element-plus/icons-vue'
 import { getFavoriteClubs, unfavoriteClub } from '@/api/club'
-import type { Club } from '@/types'
+import type { Club, ClubCategory } from '@/types'
 
 // 路由
 const router = useRouter()
@@ -268,6 +241,9 @@ const favoriteStats = reactive({
   thisWeek: 0,
   categories: 0,
 })
+
+// 分类数据
+const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
 
 // 计算属性
 const filteredClubs = computed(() => {

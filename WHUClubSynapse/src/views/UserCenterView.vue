@@ -576,8 +576,7 @@ const handleChangeEmail = async () => {
 // 加载用户数据
 const loadUserData = async () => {
   try {
-    const response = await getCurrentUser()
-    userInfo.value = response.data.data
+    userInfo.value = (await getCurrentUser()).data.data
 
     // 复制到可编辑对象
     Object.assign(editableUserInfo, {

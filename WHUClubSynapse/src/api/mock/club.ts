@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications } from '@/utils/mockData'
+import { mockClubs, mockApplications, mockUser } from '@/utils/mockData'
 import { config } from '@/config'
 
 // 模拟延迟
@@ -206,6 +206,8 @@ export const mockApplyToClub = async (data: {
     feedback: '欢迎加入我们，请等待审核',
   });
 
+  mockUser.stats!.appliedClubs++
+
   return {
     data: {
       code: 200,
@@ -231,6 +233,8 @@ export const mockCancelApplication = async (applicationId: string)
   const filteredApplications = mockApplications.filter((app) => app.id !== applicationId)
   mockApplications.length = 0
   mockApplications.push(...filteredApplications)
+  mockUser.stats!.appliedClubs--
+
   return {
     data: {
       code: 200,
@@ -248,6 +252,8 @@ export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiRespo
     throw new Error('社团不存在')
   }
   club.isFavorite = true
+
+  mockUser.stats!.favoriteClubs++
 
   return {
     data: {
@@ -267,6 +273,8 @@ export const mockUnfavoriteClub = async (clubId: string): Promise<{ data: ApiRes
     throw new Error('社团不存在')
   }
   club.isFavorite = false
+
+  mockUser.stats!.favoriteClubs--
 
   return {
     data: {
