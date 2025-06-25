@@ -283,7 +283,7 @@ const handleCategoryChange = (category: string) => {
 // 处理排序切换
 const handleSortChange = (sort: string) => {
   sortBy.value = sort
-  clubStore.setSearchParams({ sortBy: sort })
+  clubStore.setSearchParams({ sortBy: sort as 'hot' | 'time' | 'members' })
   clubStore.fetchClubs()
 }
 

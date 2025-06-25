@@ -44,6 +44,9 @@ export const mockRegister = async (
     college: data.college,
     phone: data.phone,
     createdAt: new Date().toISOString(),
+    emailVerified: 'true',
+    phoneVerified: 'false',
+    bio: '',
   }
 
   return {
