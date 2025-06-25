@@ -10,6 +10,9 @@ export interface User {
   college: string
   phone?: string
   createdAt: string
+  emailVerified: string
+  phoneVerified: string
+  bio: string
 }
 
 export interface Activity {
@@ -33,7 +36,7 @@ export interface Club {
   tags: string[]
   isHot: boolean
   isFavorite: boolean
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'not_applied'
   createdAt: string
   updatedAt: string
   activities: Activity[]
@@ -51,13 +54,14 @@ export interface Application {
   userId: string
   clubId: string
   clubName: string
+  clubCoverImage: string
   status: 'pending' | 'approved' | 'rejected'
   reason?: string
   applyReason: string
   createdAt: string
   reviewedAt?: string
   reviewerId?: string
-  clubCategory: ClubCategory
+  clubCategory: string
   feedback?: string
 }
 

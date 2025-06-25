@@ -212,6 +212,19 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  // 撤销申请
+  const cancelApplication = async (applicationId: string) => {
+    try {
+      const response = await clubApi.cancelApplication(applicationId)
+      return response.data.data
+    }
+    catch (error) {
+      console.error('撤销申请失败:', error)
+      ElMessage.error('撤销申请失败')
+      throw error
+    }
+  }
+
   // 获取用户已加入的社团
   const fetchJoinedClubs = async (params?: { page?: number; pageSize?: number }) => {
     try {
@@ -358,6 +371,7 @@ export const useClubStore = defineStore('club', () => {
     unfavoriteClub,
     fetchFavoriteClubs,
     applyToClub,
+    cancelApplication,
     fetchJoinedClubs,
     fetchManagedClubs,
     quitClub,

@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockCategories } from '@/utils/mockData'
+import { mockClubs, mockCategories, mockApplications } from '@/utils/mockData'
 import { config } from '@/config'
 
 // 模拟延迟
@@ -179,6 +179,22 @@ export const mockApplyToClub = async (data: {
     throw new Error('社团不存在')
   }
 
+  club.status = 'pending'
+
+  mockApplications.push({
+    id: (mockApplications.length + 1).toString(),
+    userId: 'user1',
+    clubId: club.id,
+    clubName: club.name,
+    clubCoverImage: club.coverImage,
+    status: 'pending',
+    reason: data.reason,
+    applyReason: data.reason,
+    createdAt: new Date().toISOString(),
+    clubCategory: club.category,
+    feedback: '欢迎加入我们，请等待审核',
+  });
+
   return {
     data: {
       code: 200,
@@ -188,6 +204,30 @@ export const mockApplyToClub = async (data: {
   }
 }
 
+// 模拟撤销申请
+export const mockCancelApplication = async (applicationId: string)
+: Promise<{ data: ApiResponse<null> }> => {
+  await delay(400)
+  const application = mockApplications.find((app) => app.id === applicationId)
+  const club = mockClubs.find((c) => c.id === application?.clubId)
+  if (!club) {
+    throw new Error('社团不存在')
+  }
+  club.status = 'not_applied'
+  if (!application) {
+    throw new Error('申请不存在')
+  }
+  const filteredApplications = mockApplications.filter((app) => app.id !== applicationId)
+  mockApplications.length = 0
+  mockApplications.push(...filteredApplications)
+  return {
+    data: {
+      code: 200,
+      message: '撤销申请成功',
+      data: null,
+    },
+  }
+}
 // 模拟收藏社团
 export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
@@ -264,40 +304,25 @@ export const mockGetUserApplications = async (
     page?: number
     pageSize?: number
     status?: string
+    category?: string
+    keyword?: string
   } = {},
 ): Promise<{ data: ApiResponse<PaginatedData<any>> }> => {
   await delay(500)
 
-  // 模拟申请记录
-  const applications = [
-    {
-      id: '1',
-      clubId: mockClubs[0].id,
-      clubName: mockClubs[0].name,
-      status: 'pending',
-      reason: '希望能够加入学习相关技术',
-      applyReason: '对技术很感兴趣',
-      createdAt: new Date().toISOString(),
-      clubCategory: mockClubs[0].category,
-      feedback: '欢迎加入我们，请等待审核',
-    },
-    {
-      id: '2',
-      clubId: mockClubs[1].id,
-      clubName: mockClubs[1].name,
-      status: 'approved',
-      reason: '',
-      applyReason: '想要参与文艺活动',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      reviewedAt: new Date().toISOString(),
-      clubCategory: mockClubs[1].category,
-      feedback: '欢迎加入我们，请等待审核',
-    },
-  ]
+  let filteredApplications = mockApplications
 
-  let filteredApplications = applications
   if (params.status) {
-    filteredApplications = applications.filter((app) => app.status === params.status)
+    filteredApplications = filteredApplications.filter((app) => app.status === params.status)
+  }
+
+  if (params.category) {
+    filteredApplications = filteredApplications.filter((app) => app.clubCategory == params.category)
+  }
+
+  if (params.keyword) {
+    const keyword = params.keyword.toLowerCase()
+    filteredApplications = filteredApplications.filter((app) => app.clubName.toLowerCase().includes(keyword) || app.clubCategory.toLowerCase().includes(keyword))
   }
 
   const page = params.page || 1

@@ -97,6 +97,13 @@ export const applyToClub = async (data: {
     : await request.post('/clubs/apply', data)
 }
 
+// 撤销申请
+export const cancelApplication = async (applicationId: string): Promise<{ data: ApiResponse<null> }> => {
+  return getIsUsingMockAPI()
+    ? await mockClub.mockCancelApplication(applicationId)
+    : await request.delete(`/clubs/applications/${applicationId}`)
+}
+
 // 收藏社团
 export const favoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
@@ -143,6 +150,8 @@ export const getUserApplications = async (
     page?: number
     pageSize?: number
     status?: string
+    category?: string
+    keyword?: string
   } = {},
 ): Promise<{ data: ApiResponse<PaginatedData<Application>> }> => {
   if (getIsUsingMockAPI()) {

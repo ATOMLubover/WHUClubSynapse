@@ -4,12 +4,18 @@
       <span>© 2024 武汉大学社团联盟</span>
       <span class="divider">|</span>
       <span>让社团生活更精彩</span>
+      <span class="divider">|</span>
+      <span @click="aboutUs" class="about-us">关于我们</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-//
+import { useRouter } from 'vue-router'
+const router = useRouter()
+const aboutUs = () => {
+  router.push('/about')
+}
 </script>
 
 <style scoped>
@@ -30,5 +36,9 @@
 
 .divider {
   margin: 0 12px;
+}
+.about-us {
+  cursor: pointer;
+  color: #409eff;
 }
 </style>

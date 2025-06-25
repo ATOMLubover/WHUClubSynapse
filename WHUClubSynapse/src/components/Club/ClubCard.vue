@@ -123,8 +123,10 @@ const toggleFavorite = () => {
 
   if (isFavorited.value) {
     clubStore.unfavoriteClub(props.club.id)
+    props.club.isFavorite = false
   } else {
     clubStore.favoriteClub(props.club.id)
+    props.club.isFavorite = true
   }
 }
 

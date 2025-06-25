@@ -1,4 +1,4 @@
-import type { Club, User } from '@/types'
+import type { Application, Club, User } from '@/types'
 
 // 模拟社团数据
 export const mockClubs: Club[] = [
@@ -15,7 +15,7 @@ export const mockClubs: Club[] = [
     maxMembers: 100,
     tags: ['编程', '算法', '竞赛'],
     isHot: true,
-    status: 'approved',
+    status: 'pending',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z',
     qq: '1234567890',
@@ -50,11 +50,11 @@ export const mockClubs: Club[] = [
     category: '文艺体育',
     adminId: 'admin2',
     adminName: '李四',
-    currentMembers: 42,
+    currentMembers: 60,
     maxMembers: 60,
     tags: ['摄影', '艺术', '创作'],
     isHot: false,
-    status: 'rejected',
+    status: 'not_applied',
     createdAt: '2024-01-10T14:00:00Z',
     updatedAt: '2024-01-18T09:15:00Z',
     qq: '1234567890',
@@ -88,11 +88,11 @@ export const mockClubs: Club[] = [
     category: '志愿服务',
     adminId: 'admin3',
     adminName: '王五',
-    currentMembers: 128,
+    currentMembers: 150,
     maxMembers: 150,
     tags: ['志愿', '公益', '服务'],
     isHot: true,
-    status: 'pending',
+    status: 'not_applied',
     createdAt: '2024-01-08T16:30:00Z',
     updatedAt: '2024-01-22T11:45:00Z',
     qq: '1234567890',
@@ -130,7 +130,7 @@ export const mockClubs: Club[] = [
     maxMembers: 50,
     tags: ['创业', '创新', '商业'],
     isHot: false,
-    status: 'pending',
+    status: 'not_applied',
     createdAt: '2024-01-12T08:00:00Z',
     updatedAt: '2024-01-19T14:20:00Z',
     qq: '1234567890',
@@ -168,7 +168,7 @@ export const mockClubs: Club[] = [
     maxMembers: 80,
     tags: ['篮球', '运动', '团队'],
     isHot: true,
-    status: 'pending',
+    status: 'not_applied',
     createdAt: '2024-01-05T20:00:00Z',
     updatedAt: '2024-01-25T16:10:00Z',
     qq: '1234567890',
@@ -206,7 +206,7 @@ export const mockClubs: Club[] = [
     maxMembers: 40,
     tags: ['机器人', '人工智能', '科技'],
     isHot: false,
-    status: 'pending',
+    status: 'not_applied',
     createdAt: '2024-01-18T12:30:00Z',
     updatedAt: '2024-01-24T10:05:00Z',
     qq: '1234567890',
@@ -245,7 +245,7 @@ export const mockClubs: Club[] = [
     maxMembers: 70,
     tags: ['音乐', '演出', '艺术'],
     isHot: false,
-    status: 'pending',
+    status: 'not_applied',
     createdAt: '2024-01-07T19:15:00Z',
     updatedAt: '2024-01-21T13:40:00Z',
     isFavorite: false,
@@ -336,3 +336,21 @@ export const mockCategories = {
   创新创业: 12,
   其他: 8,
 }
+
+
+export const mockApplications: Application[] = [
+  {
+    id: '1',
+    userId: 'user1',
+    clubId: '1',
+    clubName: '计算机科学协会',
+    clubCoverImage: mockClubs[0].coverImage,
+    status: 'pending',
+    reason: '希望能够加入学习相关技术',
+    applyReason: '对技术很感兴趣',
+    createdAt: '2024-01-01T00:00:00Z',
+    reviewedAt: '2024-01-01T00:00:00Z',
+    clubCategory: '学术科技',
+    feedback: '欢迎加入我们，请等待审核',
+  },
+]

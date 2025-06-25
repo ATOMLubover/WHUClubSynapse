@@ -21,7 +21,6 @@
               <el-option label="待审核" value="pending" />
               <el-option label="已通过" value="approved" />
               <el-option label="已拒绝" value="rejected" />
-              <el-option label="已撤销" value="cancelled" />
             </el-select>
           </el-col>
           <el-col :span="6">
@@ -124,7 +123,7 @@
               <div class="application-content">
                 <!-- 社团信息 -->
                 <div class="club-info">
-                  <el-avatar :size="60" class="club-logo">
+                  <el-avatar :size="50" :src="application.clubCoverImage" class="club-avatar">
                     <el-icon><UserFilled /></el-icon>
                   </el-avatar>
                   <div class="club-details">
@@ -177,15 +176,6 @@
                       @click="cancelApplication(application.id)"
                     >
                       撤销申请
-                    </el-button>
-
-                    <el-button
-                      v-if="application.status === 'rejected'"
-                      size="small"
-                      type="primary"
-                      @click="reapplyToClub(application.clubId)"
-                    >
-                      重新申请
                     </el-button>
 
                     <el-dropdown
@@ -257,9 +247,11 @@ import { Search, Refresh, UserFilled, ArrowDown } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { getUserApplications, applyToClub } from '@/api/club'
 import type { Application, Club } from '@/types'
+import { useClubStore } from '@/stores/club'
 
 // 路由
 const router = useRouter()
+const clubStore = useClubStore()
 
 // 响应式数据
 const loading = ref(false)
@@ -413,6 +405,7 @@ const cancelApplication = async (applicationId: string) => {
     })
 
     // TODO: 调用撤销申请API
+    await clubStore.cancelApplication(applicationId)
     ElMessage.success('申请已撤销')
     loadApplications()
   } catch (error) {
