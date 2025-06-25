@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockCategories } from '@/utils/mockData'
+import { mockClubs } from '@/utils/mockData'
 import { config } from '@/config'
 
 // 模拟延迟
@@ -158,11 +158,22 @@ export const mockGetClubCategories = async (): Promise<{
 }> => {
   await delay(200)
 
+  // 根据实际社团数据动态计算每个分类的数量
+  const categories: Record<string, number> = {}
+  
+  mockClubs.forEach(club => {
+    if (categories[club.category]) {
+      categories[club.category]++
+    } else {
+      categories[club.category] = 1
+    }
+  })
+
   return {
     data: {
       code: 200,
       message: 'success',
-      data: mockCategories,
+      data: categories,
     },
   }
 }
