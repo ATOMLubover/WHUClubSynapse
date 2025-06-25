@@ -76,7 +76,6 @@ export const useClubStore = defineStore('club', () => {
       searchResult.value = data.list
       total.value = data.total
       currentPage.value = 1
-      searchParams.value.keyword = keyword
 
       return data
     } catch (error) {

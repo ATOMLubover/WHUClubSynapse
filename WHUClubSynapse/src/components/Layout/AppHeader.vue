@@ -71,6 +71,10 @@
                 <el-icon><Star /></el-icon>
                 我的收藏
               </el-dropdown-item>
+              <el-dropdown-item command="create-clubs">
+                <el-icon><Plus /></el-icon>
+                创建社团
+              </el-dropdown-item>
               <el-dropdown-item divided command="logout">
                 <el-icon><SwitchButton /></el-icon>
                 退出登录
@@ -104,8 +108,16 @@ import {
   Star,
   SwitchButton,
   ArrowDown,
+  Plus,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+
+interface Notification {
+  id: number | string
+  title: string
+  content: string
+  time: string
+}
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -117,7 +129,7 @@ const searchKeyword = ref('')
 const notificationCount = ref(0)
 const notificationDialogVisible = ref(false)
 //TODO: 获取通知列表,美化UI
-const notificationList = ref([])
+const notificationList = ref<Notification[]>([])
 
 // 搜索处理
 const handleSearch = () => {
@@ -153,6 +165,9 @@ const handleUserMenuCommand = (command: string) => {
       break
     case 'favorites':
       router.push('/user/favorites')
+      break
+    case 'create-clubs':
+      router.push('/user/createclubs')
       break
     case 'logout':
       authStore.logout()
