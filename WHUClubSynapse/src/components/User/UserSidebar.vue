@@ -46,12 +46,7 @@
           <el-menu-item index="managed-clubs">管理的社团</el-menu-item>
         </el-sub-menu>
 
-        <el-menu-item index="user-activities">
-          <el-icon><Calendar /></el-icon>
-          <span>参与活动</span>
-        </el-menu-item>
 
-        <el-divider />
 
         <el-menu-item index="user-settings">
           <el-icon><Setting /></el-icon>
@@ -59,13 +54,7 @@
         </el-menu-item>
       </el-menu>
 
-      <!-- 快捷操作 -->
-      <div class="quick-actions">
-        <el-button type="primary" size="small" @click="goToDiscover" block>
-          <el-icon><Search /></el-icon>
-          发现社团
-        </el-button>
-      </div>
+
     </el-card>
   </div>
 </template>

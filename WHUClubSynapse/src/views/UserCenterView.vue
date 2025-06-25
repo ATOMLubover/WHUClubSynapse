@@ -112,18 +112,6 @@
               </el-col>
             </el-row>
 
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="邮箱" prop="email">
-                  <el-input v-model="editableUserInfo.email" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="手机号" prop="phone">
-                  <el-input v-model="editableUserInfo.phone" />
-                </el-form-item>
-              </el-col>
-            </el-row>
 
             <el-form-item label="个人简介" prop="bio">
               <el-input

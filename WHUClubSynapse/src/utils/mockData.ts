@@ -328,14 +328,7 @@ export const mockUser: User = {
   bio: ''
 }
 
-// 分类统计数据
-export const mockCategories = {
-  学术科技: 15,
-  文艺体育: 23,
-  志愿服务: 18,
-  创新创业: 12,
-  其他: 8,
-}
+
 
 
 export const mockApplications: Application[] = [
