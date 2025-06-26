@@ -17,7 +17,7 @@
             {{ getUserRoleText(userInfo?.role) }}
           </el-tag>
         </p>
-        <p class="user-college">{{ userInfo?.college }}</p>
+        <p class="user-college">{{ userInfo?.major }}</p>
         <p class="user-join-time">加入时间：{{ formatDate(userInfo?.createdAt) }}</p>
       </div>
 

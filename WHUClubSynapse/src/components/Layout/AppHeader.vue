@@ -47,7 +47,7 @@
         <!-- 用户菜单 -->
         <el-dropdown @command="handleUserMenuCommand">
           <div class="user-info">
-            <el-avatar :src="authStore.user?.avatar" :size="32">
+            <el-avatar :src="authStore.user?.avatar_url" :size="32">
               {{ authStore.user?.realName?.charAt(0) }}
             </el-avatar>
             <span class="username">{{ authStore.user?.realName }}</span>
