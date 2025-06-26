@@ -1,7 +1,7 @@
 from pydantic_settings import  BaseSettings
 
 class Settings(BaseSettings):
-    # vLLM OpenAI-Compatible API 端口
+    # vLLM OpenAI格式兼容 API 端口
     VLLM_API_BASE: str = "http://localhost:8000/v1"
     VLLM_API_KEY: str = "sk-xxx"  # 离线部署随便写一个，只是需要它来通过 api key 的验证
     MODEL_NAME: str = "Qwen3-8B"
@@ -16,4 +16,4 @@ class Settings(BaseSettings):
     VECTRO_DB_COLLECTION: str = "club_management_rag"
 
 # 读取配置
-settings = Settgings()
+settings = Settings()
