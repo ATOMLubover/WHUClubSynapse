@@ -3,6 +3,7 @@ import torch
 from app.config import settings
 import chromadb
 from functools import reduce
+from typing import List
 
 # 加载模型和分词器
 model_dir = settings.EMBEDDING_MODEL_DIR
@@ -12,7 +13,7 @@ model = AutoModel.from_pretrained(model_dir)
 '''
 从输入获取嵌入向量
 '''
-def tokenize_inputs(texts: str):
+def tokenize_inputs(texts: List[str]):
     return tokenizer(texts, return_tensors='pt', padding=True, truncation=True)
 
 def move_to_device(inputs, device):
@@ -25,7 +26,7 @@ def get_model_outputs(inputs):
 def compute_embeddings(outputs: torch.tensor) -> torch.tensor:  # [batch_size, hidden_size]
     return outputs.last_hidden_state.mean(dim=1)
 
-def get_embeddings(texts: str):
+def get_embeddings(texts: List[str]):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
