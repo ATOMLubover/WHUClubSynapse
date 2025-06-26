@@ -7,6 +7,7 @@
         @click="authStore.isLoggedIn ? (showCreate = true) : ElMessage.warning('请先登录')"
         class="post-btn"
         plain
+        :disabled="!club || !authStore.isLoggedIn"
       >
         <el-icon><Plus /></el-icon> 发帖
       </el-button>
@@ -69,10 +70,13 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getClubPosts, createClubPost } from '@/api/club'
 import { useAuthStore } from '@/stores/auth'
-import type { ClubPost } from '@/types'
+import type { ClubPost, Club } from '@/types'
 import { Plus, ChatLineRound, ArrowRightBold } from '@element-plus/icons-vue'
 
-const props = defineProps<{ clubId: string }>()
+const props = defineProps<{ 
+  clubId: string
+  club?: Club | null 
+}>()
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -87,21 +91,43 @@ const createForm = ref({ title: '', content: '' })
 const createLoading = ref(false)
 
 const fetchPosts = async () => {
+  // 如果社团不存在，不获取帖子
+  if (!props.club) {
+    posts.value = []
+    total.value = 0
+    return
+  }
+  
   loading.value = true
   try {
     const res = await getClubPosts(props.clubId, page.value, pageSize)
     posts.value = res.data.data.list
     total.value = res.data.data.total
+  } catch (error) {
+    console.error('获取帖子失败:', error)
+    posts.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
 }
 
 const goToPost = (row: ClubPost) => {
+  // 如果社团不存在，不允许跳转到帖子详情
+  if (!props.club) {
+    ElMessage.warning('社团不存在')
+    return
+  }
   router.push(`/club/${props.clubId}/post/${row.id}`)
 }
 
 const handleCreate = async () => {
+  // 如果社团不存在，不允许发帖
+  if (!props.club) {
+    ElMessage.warning('社团不存在，无法发帖')
+    return
+  }
+  
   if (!createForm.value.title.trim() || !createForm.value.content.trim()) {
     ElMessage.warning('标题和内容不能为空')
     return
@@ -121,6 +147,9 @@ const handleCreate = async () => {
     createForm.value.title = ''
     createForm.value.content = ''
     fetchPosts()
+  } catch (error) {
+    console.error('发帖失败:', error)
+    ElMessage.error('发帖失败，请重试')
   } finally {
     createLoading.value = false
   }
@@ -165,6 +194,16 @@ onMounted(fetchPosts)
 .post-btn:hover {
   box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
   opacity: 0.92;
+}
+.post-btn:disabled {
+  background: #f5f7fa;
+  color: #c0c4cc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.post-btn:disabled:hover {
+  box-shadow: none;
+  opacity: 1;
 }
 .post-list {
   display: flex;

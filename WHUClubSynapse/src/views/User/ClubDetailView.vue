@@ -170,7 +170,7 @@
       </el-empty>
     </div>
     <div class="club-detail-bottom">
-      <ClubPostArea :club-id="clubId" />
+      <ClubPostArea :club-id="clubId" :club="club" />
     </div>
   </div>
 </template>
