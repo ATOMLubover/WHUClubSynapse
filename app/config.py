@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # 向量数据库配置
     VECTOR_DB_PATH: str = "/root/autodl-tmp/chroma_db"
     VECTRO_DB_COLLECTION: str = "club_management_rag"
+    STATIC_DOC_PATH: str = "/root/autodl-tmp/static_doc"
 
 # 读取配置
 settings = Settings()
