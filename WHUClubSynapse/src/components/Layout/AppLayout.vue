@@ -52,11 +52,11 @@ onMounted(async () => {
 }
 
 .app-header {
-  padding: 0;
+  margin-bottom: 0;
   background-color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  position: fixed;
+  position: sticky;
   top: 0;
   width: 100%;
 }
