@@ -6,7 +6,8 @@ import type {
   VerifyEmailRequest,
   UserListParams,
   RegisterResponse,
-  ApiResponse
+  ApiResponse,
+  UserPreferences
 } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockAuth from './mock/auth'
@@ -175,20 +176,8 @@ export const resetPassword = async (data: {
 }
 
 // TODO:更新用户偏好设置
-export const updateUserPreferences = async (preferences: {
-  interestedCategories: string[]
-  emailNotifications: boolean
-  applicationNotifications: boolean
-  activityNotifications: boolean
-  profilePublic: boolean
-  showJoinedClubs: boolean
-  tags?: string[]
-}): Promise<{ data: ApiResponse<null> }> => {
-  return Promise.resolve({
-    data: {
-      code: 200,
-      message: '用户偏好设置更新成功',
-      data: null,
-    },
-  })
+export const updateUserPreferences = async (preferences: UserPreferences): Promise<{ data:User }> => {
+  return getIsUsingMockAPI()
+    ? await mockAuth.mockUpdateUserPreferences(preferences)
+    : (await request.put('/auth/preferences', preferences)).data
 }

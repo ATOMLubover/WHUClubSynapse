@@ -29,19 +29,25 @@ const handlePreferenceSave = async (preferences: UserPreferences) => {
 }
 
 // 监听登录状态变化
-watch(() => authStore.isLoggedIn, (isLoggedIn) => {
-  if (isLoggedIn) {
-    // 延迟检查，确保用户信息已加载
-    setTimeout(checkPreferenceSetup, 500)
-  }
-})
+watch(
+  () => authStore.isLoggedIn,
+  (isLoggedIn) => {
+    if (isLoggedIn) {
+      // 延迟检查，确保用户信息已加载
+      setTimeout(checkPreferenceSetup, 500)
+    }
+  },
+)
 
 // 监听用户信息变化
-watch(() => authStore.user, (user) => {
-  if (user && !user.hasCompletedPreferences) {
-    showPreferenceDialog.value = true
-  }
-})
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user && !user.hasCompletedPreferences) {
+      showPreferenceDialog.value = true
+    }
+  },
+)
 
 // 初始化
 onMounted(async () => {
@@ -52,12 +58,9 @@ onMounted(async () => {
 
 <template>
   <RouterView />
-  
+
   <!-- 偏好设置弹窗 -->
-  <PreferenceSetupDialog
-    v-model="showPreferenceDialog"
-    @save="handlePreferenceSave"
-  />
+  <PreferenceSetupDialog v-model="showPreferenceDialog" @save="handlePreferenceSave" />
 </template>
 
 <style>

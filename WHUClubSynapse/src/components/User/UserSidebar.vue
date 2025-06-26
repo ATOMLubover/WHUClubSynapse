@@ -3,7 +3,7 @@
     <el-card>
       <!-- 用户信息卡片 -->
       <div class="user-profile-card">
-        <el-avatar :size="64" :src="userInfo?.avatar" class="user-avatar">
+        <el-avatar :size="64" :src="userInfo?.avatar_url" class="user-avatar">
           <el-icon><User /></el-icon>
         </el-avatar>
         <h3 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h3>
@@ -113,7 +113,7 @@ const loadUserStats = async () => {
   try {
     // TODO: 调用API获取用户统计数据
     // 这里使用模拟数据
-    userInfo.value = (await getCurrentUser()).data.data
+    userInfo.value = await getCurrentUser()
   } catch (error) {
     console.error('加载用户统计失败:', error)
   }

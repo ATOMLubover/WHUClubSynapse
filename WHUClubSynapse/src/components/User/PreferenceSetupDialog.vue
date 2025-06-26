@@ -2,8 +2,7 @@
   <el-dialog
     v-model="visible"
     title="设置你的偏好"
-    width="90%"
-    max-width="800px"
+    width="520px"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="false"
@@ -16,8 +15,8 @@
         <p>请选择你感兴趣的社团类型，我们将为你推荐相关内容</p>
       </div>
 
-      <el-form :model="preferences" label-width="140px" class="preference-form">
-        <el-form-item label="感兴趣的社团类型" required>
+      <el-form :model="preferences" label-width="100px" class="preference-form" size="small">
+        <el-form-item label="感兴趣类型" required>
           <div class="category-selection">
             <el-checkbox-group v-model="preferences.interestedCategories" class="category-group">
               <div class="category-item" v-for="category in categories" :key="category">
@@ -32,7 +31,7 @@
           </div>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            <span>你可以选择多个感兴趣的社团类型</span>
+            <span>可选择多个类型</span>
           </div>
         </el-form-item>
 
@@ -41,16 +40,19 @@
             <el-switch
               v-model="preferences.emailNotifications"
               active-text="邮件通知"
+              size="small"
               class="notification-item"
             />
             <el-switch
               v-model="preferences.applicationNotifications"
-              active-text="申请状态通知"
+              active-text="申请通知"
+              size="small"
               class="notification-item"
             />
             <el-switch
               v-model="preferences.activityNotifications"
               active-text="活动推送"
+              size="small"
               class="notification-item"
             />
           </div>
@@ -60,18 +62,20 @@
           <div class="privacy-settings">
             <el-switch
               v-model="preferences.profilePublic"
-              active-text="公开个人资料"
+              active-text="公开资料"
+              size="small"
               class="privacy-item"
             />
             <el-switch
               v-model="preferences.showJoinedClubs"
-              active-text="显示已加入社团"
+              active-text="显示社团"
+              size="small"
               class="privacy-item"
             />
           </div>
         </el-form-item>
 
-        <el-form-item label="特质/爱好标签" required>
+        <el-form-item label="个人标签" required>
           <div class="tag-selection">
             <el-select
               v-model="preferences.tags"
@@ -82,7 +86,8 @@
               :reserve-keyword="false"
               :filter-method="filterTag"
               :collapse-tags="false"
-              placeholder="请选择你的特质/爱好标签（可自定义，限4字以内）"
+              placeholder="选择特质/爱好标签（限4字以内）"
+              size="small"
               class="tag-group"
             >
               <el-option
@@ -95,7 +100,7 @@
           </div>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            <span>你可以选择多个特质/爱好标签</span>
+            <span>可自定义标签</span>
           </div>
         </el-form-item>
       </el-form>
@@ -103,8 +108,14 @@
 
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="handleSkip" class="skip-button">跳过</el-button>
-        <el-button type="primary" @click="handleSave" :loading="loading" :disabled="!isValid">
+        <el-button @click="handleSkip" class="skip-button" size="small">跳过</el-button>
+        <el-button
+          type="primary"
+          @click="handleSave"
+          :loading="loading"
+          :disabled="!isValid"
+          size="small"
+        >
           保存并继续
         </el-button>
       </div>
@@ -129,7 +140,7 @@ const props = defineProps<Props>()
 // Emits
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'save': [preferences: UserPreferences]
+  save: [preferences: UserPreferences]
 }>()
 
 // 响应式数据
@@ -144,13 +155,13 @@ const preferences = reactive<UserPreferences>({
   activityNotifications: false,
   profilePublic: true,
   showJoinedClubs: true,
-  tags: []
+  tags: [],
 })
 
 // 计算属性
 const visible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => emit('update:modelValue', value),
 })
 
 const isValid = computed(() => {
@@ -163,9 +174,9 @@ const filteredTags = computed(() => {
   // 只显示未被选中的、包含输入内容的标签
   const input = tagInput.value.trim()
   const selected = preferences.tags || []
-  let base = allUserTags.filter(tag => !selected.includes(tag))
+  let base = allUserTags.filter((tag) => !selected.includes(tag))
   if (input) {
-    base = base.filter(tag => tag.includes(input))
+    base = base.filter((tag) => tag.includes(input))
   }
   // 如果输入4字以内且不在已有标签和已选中标签中，则允许自定义
   if (
@@ -187,11 +198,11 @@ const filterTag = (query: string) => {
 // 方法
 const getCategoryDescription = (category: ClubCategory): string => {
   const descriptions: Record<ClubCategory, string> = {
-    '学术科技': '编程、算法、科研等学术类社团',
-    '文艺体育': '音乐、舞蹈、运动等文体类社团',
-    '志愿服务': '公益、志愿、服务等社会类社团',
-    '创新创业': '创业、创新、商业等实践类社团',
-    '其他': '其他类型的社团'
+    学术科技: '编程、算法、科研等学术类社团',
+    文艺体育: '音乐、舞蹈、运动等文体类社团',
+    志愿服务: '公益、志愿、服务等社会类社团',
+    创新创业: '创业、创新、商业等实践类社团',
+    其他: '其他类型的社团',
   }
   return descriptions[category]
 }
@@ -223,73 +234,106 @@ const handleSkip = () => {
 
 <style scoped>
 .preference-dialog :deep(.el-dialog) {
-  max-height: 90vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.preference-dialog :deep(.el-dialog__header) {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: 0;
+}
+
+.preference-dialog :deep(.el-dialog__title) {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .preference-dialog :deep(.el-dialog__body) {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 30px;
+  padding: 16px 20px;
+  background: #fafafa;
 }
 
 .preference-setup {
-  padding: 10px 0;
+  padding: 0;
 }
 
 .setup-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .setup-icon {
-  font-size: 40px;
+  font-size: 32px;
   color: #409eff;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .setup-header h3 {
-  margin: 0 0 6px 0;
-  font-size: 18px;
+  margin: 0 0 4px 0;
+  font-size: 16px;
   color: #303133;
+  font-weight: 500;
 }
 
 .setup-header p {
   margin: 0;
   color: #606266;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .preference-form {
-  margin-top: 15px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.preference-form :deep(.el-form-item) {
+  margin-bottom: 16px;
 }
 
 .preference-form :deep(.el-form-item__label) {
   white-space: nowrap;
   font-weight: 500;
+  font-size: 13px;
+  color: #303133;
 }
 
 .category-selection {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .category-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
 }
 
 .category-item {
   border: 1px solid #e4e7ed;
   border-radius: 6px;
-  padding: 12px;
+  padding: 8px 10px;
   transition: all 0.3s;
+  background: #fafbfc;
 }
 
 .category-item:hover {
   border-color: #409eff;
-  background-color: #f5f7fa;
+  background-color: #f0f9ff;
+  transform: translateY(-1px);
 }
 
 .category-checkbox {
@@ -299,23 +343,23 @@ const handleSkip = () => {
 
 .category-checkbox :deep(.el-checkbox__label) {
   width: 100%;
-  padding-left: 6px;
+  padding-left: 4px;
 }
 
 .category-content {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .category-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #303133;
 }
 
 .category-description {
-  font-size: 11px;
+  font-size: 10px;
   color: #909399;
   line-height: 1.3;
 }
@@ -323,61 +367,111 @@ const handleSkip = () => {
 .form-tip {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   color: #909399;
-  font-size: 11px;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.form-tip .el-icon {
+  font-size: 12px;
 }
 
 .notification-settings,
 .privacy-settings {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .notification-item,
 .privacy-item {
-  margin-bottom: 6px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.notification-item :deep(.el-switch__label),
+.privacy-item :deep(.el-switch__label) {
+  font-size: 12px;
+}
+
+.tag-selection {
+  margin-bottom: 8px;
+}
+
+.tag-group {
+  width: 100%;
 }
 
 .dialog-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding: 12px 20px;
+  background: white;
+  border-top: 1px solid #e4e7ed;
 }
 
 .skip-button {
   color: #909399;
+  border: none;
+  background: none;
+  padding: 6px 12px;
 }
 
 .skip-button:hover {
   color: #606266;
+  background: #f5f7fa;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .preference-dialog :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
   .category-group {
     grid-template-columns: 1fr;
   }
-  
+
+  .notification-settings,
+  .privacy-settings {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .notification-item,
+  .privacy-item {
+    min-width: auto;
+  }
+
   .preference-form :deep(.el-form-item__label) {
-    font-size: 13px;
-  }
-  
-  .setup-header h3 {
-    font-size: 16px;
-  }
-  
-  .setup-header p {
     font-size: 12px;
+  }
+
+  .setup-header h3 {
+    font-size: 14px;
+  }
+
+  .setup-header p {
+    font-size: 11px;
   }
 }
 
-.tag-selection {
-  margin-bottom: 12px;
+/* 动画效果 */
+.preference-dialog :deep(.el-dialog) {
+  animation: slideInDown 0.3s ease-out;
 }
-.tag-group {
-  width: 100%;
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-</style> 
+</style>

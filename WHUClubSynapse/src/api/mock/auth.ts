@@ -5,7 +5,8 @@ import type {
   VerifyEmailRequest,
   UserListParams,
   RegisterResponse,
-  ApiResponse
+  ApiResponse,
+  UserPreferences
 } from '@/types'
 import { config } from '@/config'
 
@@ -138,6 +139,15 @@ export const mockLogout = async (): Promise<ApiResponse<null>> => {
     message: '退出成功',
     data: null,
   }
+}
+
+//模拟更新用户偏好
+export const mockUpdateUserPreferences=async(preferences: UserPreferences)=>{
+  await delay(300)
+  mockUser.hasCompletedPreferences=true;
+  mockUser.preferences=preferences;
+  return {data:mockUser}
+
 }
 
 

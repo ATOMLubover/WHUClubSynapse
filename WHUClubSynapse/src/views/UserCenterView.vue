@@ -1,72 +1,102 @@
 <template>
   <!-- 主内容区 -->
   <div class="user-main">
-    <!-- 用户头部信息 -->
-    <div class="user-header">
-      <div class="user-avatar-section">
-        <el-avatar :size="80" :src="userInfo?.avatar_url || ''" class="user-avatar">
-          <el-icon><User /></el-icon>
-        </el-avatar>
-        <el-button size="small" @click="showAvatarUpload = true">更换头像</el-button>
-      </div>
-
-      <div class="user-basic-info">
-        <h2 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h2>
-        <p class="user-role">
-          <el-tag :type="userInfo?.role === 'admin' ? 'danger' : 'primary'">
-            {{ getUserRoleText(userInfo?.role) }}
-          </el-tag>
-        </p>
-        <p class="user-college">{{ userInfo?.major }}</p>
-        <p class="user-join-time">加入时间：{{ formatDate(userInfo?.createdAt) }}</p>
-      </div>
-
-      <div class="user-stats">
-        <div class="stat-item">
-          <div class="stat-number">{{ userInfo?.stats?.appliedClubs || 0 }}</div>
-          <div class="stat-label">申请社团</div>
+    <!-- 用户信息卡片 -->
+    <el-card class="profile-card" shadow="hover">
+      <div class="profile-header">
+        <div class="avatar-section">
+          <div class="avatar-container" @click="showAvatarUpload = true">
+            <el-avatar :size="100" :src="userInfo?.avatar_url || ''" class="user-avatar">
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <div class="avatar-overlay">
+              <el-icon><Plus /></el-icon>
+            </div>
+          </div>
+          <div class="user-info">
+            <h2 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h2>
+            <div class="user-meta">
+              <el-tag
+                :type="userInfo?.role === 'admin' ? 'danger' : 'primary'"
+                effect="light"
+                class="role-tag"
+              >
+                {{ getUserRoleText(userInfo?.role) }}
+              </el-tag>
+              <span class="user-college">{{ userInfo?.major }}</span>
+            </div>
+            <p class="user-join-time">
+              <el-icon><Calendar /></el-icon>
+              加入时间：{{ formatDate(userInfo?.createdAt) }}
+            </p>
+          </div>
         </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ userInfo?.stats?.favoriteClubs || 0 }}</div>
-          <div class="stat-label">收藏社团</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ userInfo?.stats?.joinedClubs || 0 }}</div>
-          <div class="stat-label">已加入</div>
+
+        <div class="stats-section">
+          <div class="stat-card" v-for="(stat, index) in statsData" :key="index">
+            <div class="stat-icon">
+              <el-icon :color="stat.color">
+                <component :is="stat.icon" />
+              </el-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ stat.value }}</div>
+              <div class="stat-label">{{ stat.label }}</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </el-card>
 
-    <!-- 功能导航 -->
-    <div class="user-nav">
-      <el-button-group>
-        <el-button :type="activeTab === 'info' ? 'primary' : ''" @click="activeTab = 'info'">
-          个人信息
-        </el-button>
-        <el-button
-          :type="activeTab === 'security' ? 'primary' : ''"
-          @click="activeTab = 'security'"
-        >
-          安全设置
-        </el-button>
-        <el-button
-          :type="activeTab === 'preferences' ? 'primary' : ''"
-          @click="activeTab = 'preferences'"
-        >
-          偏好设置
-        </el-button>
-      </el-button-group>
-    </div>
+    <!-- 导航标签页 -->
+    <el-card class="nav-card" shadow="never">
+      <el-tabs v-model="activeTab" class="user-tabs">
+        <el-tab-pane label="个人信息" name="info">
+          <template #label>
+            <div class="tab-label">
+              <el-icon><User /></el-icon>
+              <span>个人信息</span>
+            </div>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane label="安全设置" name="security">
+          <template #label>
+            <div class="tab-label">
+              <el-icon><Lock /></el-icon>
+              <span>安全设置</span>
+            </div>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane label="偏好设置" name="preferences">
+          <template #label>
+            <div class="tab-label">
+              <el-icon><Setting /></el-icon>
+              <span>偏好设置</span>
+            </div>
+          </template>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
 
     <!-- 内容区域 -->
-    <div class="user-content">
+    <div class="content-area">
       <!-- 个人信息编辑 -->
-      <div v-if="activeTab === 'info'" class="content-section">
-        <el-card>
+      <div v-show="activeTab === 'info'" class="content-section">
+        <el-card class="form-card" shadow="hover">
           <template #header>
-            <div class="card-header">
-              <span>个人信息</span>
-              <el-button :type="editMode ? 'success' : 'primary'" @click="handleEditToggle">
+            <div class="section-header">
+              <div class="header-info">
+                <el-icon class="header-icon"><User /></el-icon>
+                <div>
+                  <h3>个人信息</h3>
+                  <p>管理你的基本信息</p>
+                </div>
+              </div>
+              <el-button
+                :type="editMode ? 'success' : 'primary'"
+                :icon="editMode ? 'Check' : 'Edit'"
+                @click="handleEditToggle"
+              >
                 {{ editMode ? '保存' : '编辑' }}
               </el-button>
             </div>
@@ -76,120 +106,178 @@
             ref="userFormRef"
             :model="editableUserInfo"
             :rules="userInfoRules"
-            label-width="100px"
+            label-width="0"
             :disabled="!editMode"
+            class="modern-form"
           >
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="用户名" prop="username">
-                  <el-input v-model="editableUserInfo.username" disabled />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="真实姓名" prop="realName">
-                  <el-input v-model="editableUserInfo.realName" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <div class="form-grid">
+              <div class="form-item">
+                <label class="form-label">用户名</label>
+                <el-input
+                  v-model="editableUserInfo.username"
+                  disabled
+                  class="form-input"
+                  placeholder="用户名"
+                >
+                  <template #prefix>
+                    <el-icon><User /></el-icon>
+                  </template>
+                </el-input>
+              </div>
 
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="学号" prop="studentId">
-                  <el-input v-model="editableUserInfo.studentId" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="学院" prop="college">
-                  <el-select v-model="editableUserInfo.college" placeholder="请选择学院">
-                    <el-option
-                      v-for="college in colleges"
-                      :key="college"
-                      :label="college"
-                      :value="college"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+              <div class="form-item">
+                <label class="form-label">真实姓名</label>
+                <el-input
+                  v-model="editableUserInfo.realName"
+                  class="form-input"
+                  placeholder="请输入真实姓名"
+                >
+                  <template #prefix>
+                    <el-icon><Avatar /></el-icon>
+                  </template>
+                </el-input>
+              </div>
 
-            <el-form-item label="个人简介" prop="bio">
+              <div class="form-item">
+                <label class="form-label">学号</label>
+                <el-input
+                  v-model="editableUserInfo.studentId"
+                  class="form-input"
+                  placeholder="请输入学号"
+                >
+                  <template #prefix>
+                    <el-icon><CreditCard /></el-icon>
+                  </template>
+                </el-input>
+              </div>
+
+              <div class="form-item">
+                <label class="form-label">学院</label>
+                <el-select
+                  v-model="editableUserInfo.college"
+                  placeholder="请选择学院"
+                  class="form-input"
+                >
+                  <el-option
+                    v-for="college in colleges"
+                    :key="college"
+                    :label="college"
+                    :value="college"
+                  />
+                </el-select>
+              </div>
+            </div>
+
+            <div class="form-item full-width">
+              <label class="form-label">个人简介</label>
               <el-input
                 v-model="editableUserInfo.bio"
                 type="textarea"
-                :rows="3"
+                :rows="4"
                 placeholder="介绍一下自己吧..."
+                class="form-textarea"
               />
-            </el-form-item>
+            </div>
           </el-form>
         </el-card>
       </div>
 
       <!-- 安全设置 -->
-      <div v-if="activeTab === 'security'" class="content-section">
-        <el-card>
+      <div v-show="activeTab === 'security'" class="content-section">
+        <el-card class="form-card" shadow="hover">
           <template #header>
-            <span>安全设置</span>
+            <div class="section-header">
+              <div class="header-info">
+                <el-icon class="header-icon"><Lock /></el-icon>
+                <div>
+                  <h3>安全设置</h3>
+                  <p>保护你的账户安全</p>
+                </div>
+              </div>
+            </div>
           </template>
 
-          <div class="security-items">
-            <!-- 密码修改项 -->
-            <div class="security-item">
+          <div class="security-content">
+            <div class="security-card">
+              <div class="security-icon">
+                <el-icon color="#409eff"><Lock /></el-icon>
+              </div>
               <div class="security-info">
                 <h4>登录密码</h4>
                 <p>建议定期更换密码以保护账户安全</p>
               </div>
               <div class="security-actions">
-                <el-button @click="showPasswordDialog = true">修改密码</el-button>
+                <el-button type="primary" plain @click="showPasswordDialog = true">
+                  修改密码
+                </el-button>
               </div>
             </div>
 
-            <el-divider />
-
-            <!-- 邮箱验证项 -->
-            <div class="security-item">
+            <div class="security-card">
+              <div class="security-icon">
+                <el-icon color="#67c23a"><Message /></el-icon>
+              </div>
               <div class="security-info">
                 <h4>邮箱验证</h4>
-                <p>
-                  {{ userInfo?.email }}
-                  <el-tag :type="userInfo?.emailVerified ? 'success' : 'warning'" size="small">
+                <div class="info-row">
+                  <span>{{ userInfo?.email }}</span>
+                  <el-tag
+                    :type="userInfo?.emailVerified ? 'success' : 'warning'"
+                    size="small"
+                    effect="light"
+                  >
                     {{ userInfo?.emailVerified ? '已验证' : '未验证' }}
                   </el-tag>
-                </p>
+                </div>
               </div>
               <div class="security-actions">
                 <el-button
                   v-if="!userInfo?.emailVerified"
+                  type="success"
+                  plain
                   @click="sendVerificationEmail"
                   :loading="verificationLoading"
+                  size="small"
                 >
                   发送验证邮件
                 </el-button>
-                <el-button @click="handleChangeEmail"> 更换邮箱 </el-button>
+                <el-button type="primary" plain size="small" @click="handleChangeEmail">
+                  更换邮箱
+                </el-button>
               </div>
             </div>
 
-            <el-divider />
-
-            <!-- 手机验证项 -->
-            <div class="security-item">
+            <div class="security-card">
+              <div class="security-icon">
+                <el-icon color="#f56c6c"><Phone /></el-icon>
+              </div>
               <div class="security-info">
                 <h4>手机验证</h4>
-                <p>
-                  {{ userInfo?.phone || '未绑定' }}
+                <div class="info-row">
+                  <span>{{ userInfo?.phone || '未绑定' }}</span>
                   <el-tag
                     v-if="userInfo?.phone"
                     :type="userInfo?.phoneVerified ? 'success' : 'warning'"
                     size="small"
+                    effect="light"
                   >
                     {{ userInfo?.phoneVerified ? '已验证' : '未验证' }}
                   </el-tag>
-                </p>
+                </div>
               </div>
               <div class="security-actions">
-                <el-button v-if="!userInfo?.phone" @click="showPhoneDialog = true">
+                <el-button
+                  v-if="!userInfo?.phone"
+                  type="warning"
+                  plain
+                  size="small"
+                  @click="showPhoneDialog = true"
+                >
                   绑定手机号
                 </el-button>
-                <el-button v-else @click="handleChangePhone"> 更换手机号 </el-button>
+                <el-button v-else type="primary" plain size="small" @click="handleChangePhone">
+                  更换手机号
+                </el-button>
               </div>
             </div>
           </div>
@@ -197,41 +285,96 @@
       </div>
 
       <!-- 偏好设置 -->
-      <div v-if="activeTab === 'preferences'" class="content-section">
-        <el-card>
+      <div v-show="activeTab === 'preferences'" class="content-section">
+        <el-card class="form-card" shadow="hover">
           <template #header>
-            <span>偏好设置</span>
+            <div class="section-header">
+              <div class="header-info">
+                <el-icon class="header-icon"><Setting /></el-icon>
+                <div>
+                  <h3>偏好设置</h3>
+                  <p>个性化你的使用体验</p>
+                </div>
+              </div>
+              <el-button type="primary" @click="savePreferences" :loading="preferencesLoading">
+                保存设置
+              </el-button>
+            </div>
           </template>
 
-          <el-form label-width="140px" class="preference-form">
-            <el-form-item label="感兴趣的社团类型">
-              <el-checkbox-group v-model="preferences.interestedCategories">
-                <el-checkbox label="学术科技">学术科技</el-checkbox>
-                <el-checkbox label="文艺体育">文艺体育</el-checkbox>
-                <el-checkbox label="志愿服务">志愿服务</el-checkbox>
-                <el-checkbox label="创新创业">创新创业</el-checkbox>
-                <el-checkbox label="其他">其他</el-checkbox>
+          <div class="preferences-content">
+            <div class="preference-section">
+              <h4 class="preference-title">
+                <el-icon><Star /></el-icon>
+                感兴趣的社团类型
+              </h4>
+              <el-checkbox-group v-model="preferences.interestedCategories" class="checkbox-grid">
+                <el-checkbox label="学术科技" class="checkbox-item">学术科技</el-checkbox>
+                <el-checkbox label="文艺体育" class="checkbox-item">文艺体育</el-checkbox>
+                <el-checkbox label="志愿服务" class="checkbox-item">志愿服务</el-checkbox>
+                <el-checkbox label="创新创业" class="checkbox-item">创新创业</el-checkbox>
+                <el-checkbox label="其他" class="checkbox-item">其他</el-checkbox>
               </el-checkbox-group>
-            </el-form-item>
+            </div>
 
-            <el-form-item label="通知设置">
-              <el-switch v-model="preferences.emailNotifications" active-text="邮件通知" />
-              <br /><br />
-              <el-switch
-                v-model="preferences.applicationNotifications"
-                active-text="申请状态通知"
-              />
-              <br /><br />
-              <el-switch v-model="preferences.activityNotifications" active-text="活动推送" />
-            </el-form-item>
+            <div class="preference-section">
+              <h4 class="preference-title">
+                <el-icon><Bell /></el-icon>
+                通知设置
+              </h4>
+              <div class="switch-grid">
+                <div class="switch-item">
+                  <div class="switch-info">
+                    <span class="switch-label">邮件通知</span>
+                    <span class="switch-desc">接收重要信息的邮件提醒</span>
+                  </div>
+                  <el-switch v-model="preferences.emailNotifications" />
+                </div>
+                <div class="switch-item">
+                  <div class="switch-info">
+                    <span class="switch-label">申请状态通知</span>
+                    <span class="switch-desc">社团申请状态变化时通知</span>
+                  </div>
+                  <el-switch v-model="preferences.applicationNotifications" />
+                </div>
+                <div class="switch-item">
+                  <div class="switch-info">
+                    <span class="switch-label">活动推送</span>
+                    <span class="switch-desc">接收感兴趣的活动推荐</span>
+                  </div>
+                  <el-switch v-model="preferences.activityNotifications" />
+                </div>
+              </div>
+            </div>
 
-            <el-form-item label="隐私设置">
-              <el-switch v-model="preferences.profilePublic" active-text="公开个人资料" />
-              <br /><br />
-              <el-switch v-model="preferences.showJoinedClubs" active-text="显示已加入社团" />
-            </el-form-item>
+            <div class="preference-section">
+              <h4 class="preference-title">
+                <el-icon><View /></el-icon>
+                隐私设置
+              </h4>
+              <div class="switch-grid">
+                <div class="switch-item">
+                  <div class="switch-info">
+                    <span class="switch-label">公开个人资料</span>
+                    <span class="switch-desc">允许其他用户查看你的基本信息</span>
+                  </div>
+                  <el-switch v-model="preferences.profilePublic" />
+                </div>
+                <div class="switch-item">
+                  <div class="switch-info">
+                    <span class="switch-label">显示已加入社团</span>
+                    <span class="switch-desc">在个人资料中显示你加入的社团</span>
+                  </div>
+                  <el-switch v-model="preferences.showJoinedClubs" />
+                </div>
+              </div>
+            </div>
 
-            <el-form-item label="特质/爱好">
+            <div class="preference-section">
+              <h4 class="preference-title">
+                <el-icon><Price-tag /></el-icon>
+                特质标签
+              </h4>
               <el-select
                 v-model="preferences.tags"
                 multiple
@@ -241,19 +384,17 @@
                 :reserve-keyword="false"
                 :filter-method="filterTag"
                 :collapse-tags="false"
-                placeholder="请输入关键词搜索或自定义（限4字以内）"
-                class="tag-group"
+                placeholder="添加个人特质标签，让别人更了解你"
+                class="tag-selector"
               >
                 <el-option v-for="tag in filteredTags" :key="tag" :label="tag" :value="tag" />
               </el-select>
-            </el-form-item>
-
-            <el-form-item>
-              <el-button type="primary" @click="savePreferences" :loading="preferencesLoading"
-                >保存偏好设置</el-button
-              >
-            </el-form-item>
-          </el-form>
+              <div class="tag-hint">
+                <el-icon><Info-filled /></el-icon>
+                <span>标签限制4字以内，最多可添加8个标签</span>
+              </div>
+            </div>
+          </div>
         </el-card>
       </div>
     </div>
@@ -313,7 +454,26 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { User, Plus } from '@element-plus/icons-vue'
+import {
+  User,
+  Plus,
+  Calendar,
+  Lock,
+  Setting,
+  Edit,
+  Check,
+  Avatar,
+  CreditCard,
+  Star,
+  Trophy,
+  Collection,
+  Message,
+  Phone,
+  Bell,
+  View,
+  PriceTag,
+  InfoFilled,
+} from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
@@ -592,6 +752,8 @@ const loadUserData = async () => {
       userInfo.value = currentUser
     }
 
+    console.log(userInfo.value)
+
     if (!userInfo.value) {
       throw new Error('无法获取用户信息')
     }
@@ -609,7 +771,9 @@ const loadUserData = async () => {
 
     // 加载用户偏好设置（如果存在）
     if (userInfo.value.preferences) {
+      console.log(userInfo.value.preferences)
       Object.assign(preferences, userInfo.value.preferences)
+      console.log(preferences)
     }
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户信息失败')
@@ -651,6 +815,28 @@ const filteredTags = computed(() => {
   return base
 })
 
+// 统计数据
+const statsData = computed(() => [
+  {
+    label: '申请社团',
+    value: userInfo.value?.stats?.appliedClubs || 0,
+    icon: 'Star',
+    color: '#409eff',
+  },
+  {
+    label: '收藏社团',
+    value: userInfo.value?.stats?.favoriteClubs || 0,
+    icon: 'Collection',
+    color: '#f56c6c',
+  },
+  {
+    label: '已加入',
+    value: userInfo.value?.stats?.joinedClubs || 0,
+    icon: 'Trophy',
+    color: '#67c23a',
+  },
+])
+
 const filterTag = (query: string) => {
   tagInput.value = query
 }
@@ -663,90 +849,536 @@ onMounted(() => {
 <style scoped>
 .user-main {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
-.user-header {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  padding: 30px;
+/* 个人资料卡片 */
+.profile-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  border: none;
+  overflow: hidden;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
-  margin-bottom: 30px;
 }
 
-.user-avatar-section {
+.profile-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.profile-header {
+  padding: 32px;
+  color: white;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.avatar-container {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.avatar-container:hover {
+  transform: scale(1.05);
+}
+
+.avatar-container:hover .avatar-overlay {
+  opacity: 1;
 }
 
 .user-avatar {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.user-basic-info {
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 24px;
+}
+
+.user-info {
   flex: 1;
 }
 
 .user-name {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 600;
+  margin: 0 0 12px 0;
+  font-size: 32px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.user-role {
-  margin: 8px 0;
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.role-tag {
+  font-weight: 500;
 }
 
 .user-college {
-  margin: 4px 0;
-  opacity: 0.9;
   font-size: 16px;
+  opacity: 0.9;
 }
 
 .user-join-time {
-  margin: 4px 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
   opacity: 0.8;
   font-size: 14px;
 }
 
-.user-stats {
+.stats-section {
   display: flex;
-  gap: 30px;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
-.stat-item {
-  text-align: center;
+.stat-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.stat-content {
+  flex: 1;
 }
 
 .stat-number {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
+  line-height: 1;
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 14px;
   opacity: 0.9;
+  font-weight: 500;
 }
 
-.user-nav {
-  text-align: center;
-  margin-bottom: 30px;
+/* 导航卡片 */
+.nav-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  border: none;
+}
+
+.nav-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.user-tabs :deep(.el-tabs__header) {
+  margin: 0;
+  background: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.user-tabs :deep(.el-tabs__nav-wrap) {
+  padding: 0 32px;
+}
+
+.user-tabs :deep(.el-tabs__item) {
+  padding: 20px 0;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 内容区域 */
+.content-area {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .content-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.card-header {
+.form-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 24px 32px;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.header-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.header-info p {
+  margin: 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+/* 现代表单样式 */
+.modern-form {
+  padding: 32px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  border-radius: 12px;
+}
+
+.form-input :deep(.el-input__wrapper) {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.form-input :deep(.el-input__wrapper:hover) {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.form-input :deep(.el-input__wrapper.is-focus) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea :deep(.el-textarea__inner) {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.form-textarea :deep(.el-textarea__inner:hover) {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.form-textarea :deep(.el-textarea__inner:focus) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 安全设置样式 */
+.security-content {
+  padding: 32px;
+}
+
+.security-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.security-card:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.security-card:last-child {
+  margin-bottom: 0;
+}
+
+.security-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.security-info {
+  flex: 1;
+}
+
+.security-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.security-info p {
+  margin: 0;
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-row span {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.security-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 偏好设置样式 */
+.preferences-content {
+  padding: 32px;
+}
+
+.preference-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.preference-section:last-child {
+  margin-bottom: 0;
+}
+
+.preference-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.preference-title .el-icon {
+  color: #667eea;
+  font-size: 20px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.checkbox-item :deep(.el-checkbox__label) {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.checkbox-item :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.switch-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.switch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.switch-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.switch-info {
+  flex: 1;
+}
+
+.switch-label {
+  display: block;
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.switch-desc {
+  display: block;
+  color: #718096;
+  font-size: 14px;
+}
+
+.switch-item .el-switch {
+  margin-left: 16px;
+}
+
+.switch-item .el-switch :deep(.el-switch__core) {
+  border-color: #667eea;
+}
+
+.switch-item .el-switch.is-checked :deep(.el-switch__core) {
+  background-color: #667eea;
+}
+
+.tag-selector {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.tag-selector :deep(.el-select__wrapper) {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  min-height: 80px;
+  padding: 12px;
+}
+
+.tag-selector :deep(.el-select__wrapper:hover) {
+  border-color: #667eea;
+}
+
+.tag-selector :deep(.el-select__wrapper.is-focused) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.tag-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #718096;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.tag-hint .el-icon {
+  color: #a0aec0;
 }
 
 /* .security-items {
@@ -813,37 +1445,124 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media (max-width: 768px) {
-  .user-header {
+@media (max-width: 1024px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 32px;
+  }
+
+  .avatar-section {
     flex-direction: column;
     text-align: center;
-    gap: 20px;
   }
 
-  .user-stats {
-    gap: 20px;
+  .stats-section {
+    justify-content: center;
   }
 
-  .security-item {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-main {
+    padding: 16px;
+  }
+
+  .profile-header {
+    padding: 24px;
+  }
+
+  .user-name {
+    font-size: 24px;
+  }
+
+  .stats-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .stat-card {
+    min-width: 200px;
+  }
+
+  .security-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .security-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .switch-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  .security-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 0;
+
+  .switch-item .el-switch {
+    margin-left: 0;
+    align-self: flex-end;
   }
 
-  .security-actions {
-    display: flex;
-    gap: 10px;
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-info {
+    width: 100%;
+  }
+
+  .modern-form,
+  .security-content,
+  .preferences-content {
+    padding: 20px;
+  }
+
+  .preference-section {
+    padding: 16px;
   }
 }
 
-.preference-form :deep(.el-form-item__label) {
-  white-space: nowrap;
-  font-weight: 500;
+@media (max-width: 480px) {
+  .user-main {
+    padding: 12px;
+  }
+
+  .profile-header {
+    padding: 20px;
+  }
+
+  .user-name {
+    font-size: 20px;
+  }
+
+  .user-tabs :deep(.el-tabs__nav-wrap) {
+    padding: 0 16px;
+  }
+
+  .tab-label span {
+    display: none;
+  }
+
+  .modern-form,
+  .security-content,
+  .preferences-content {
+    padding: 16px;
+  }
 }
 </style>

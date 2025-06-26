@@ -100,8 +100,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loading.value = true
       const response = await authApi.updateUserPreferences(preferences)
-      user.value = response.data.data
-      return response.data.data
+      user.value = response.data
+      return response
     } catch (error) {
       console.error('更新偏好设置失败:', error)
       throw error
