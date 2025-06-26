@@ -191,28 +191,47 @@ export const mockApplyToClub = async (data: {
     throw new Error('社团不存在')
   }
 
-  club.status = 'pending'
+  // 检查用户是否已经加入该社团
+  if (userJoinedClubIds.includes(data.clubId)) {
+    throw new Error('您已经加入该社团')
+  }
 
+  // 检查社团是否已满员
+  if (club.currentMembers >= club.maxMembers) {
+    throw new Error('社团已满员')
+  }
+
+  // 将用户添加到已加入社团列表
+  userJoinedClubIds.push(data.clubId)
+
+  // 更新社团成员数量
+  club.currentMembers++
+
+  // 更新社团状态为已加入
+  club.status = 'approved'
+
+  // 添加到申请记录
   mockApplications.push({
     id: (mockApplications.length + 1).toString(),
     userId: 'user1',
     clubId: club.id,
     clubName: club.name,
     clubCoverImage: club.coverImage,
-    status: 'pending',
+    status: 'approved', // 直接批准加入
     reason: data.reason,
     applyReason: data.reason,
     createdAt: new Date().toISOString(),
     clubCategory: club.category,
-    feedback: '欢迎加入我们，请等待审核',
+    feedback: '申请已通过，欢迎加入我们！',
   });
 
-  mockUser.stats!.appliedClubs++
+  // 更新用户统计信息
+  mockUser.stats!.joinedClubs++
 
   return {
     data: {
       code: 200,
-      message: '申请提交成功，请等待审核',
+      message: '申请提交成功，已自动加入社团',
       data: null,
     },
   }
@@ -391,7 +410,7 @@ export const mockCreateClub = async (data: {
     maxMembers: data.maxMembers,
     tags: data.tags,
     isHot: false,
-    status: 'pending', // 新创建的社团需要审核
+    status: 'approved', // 创建者创建的社团直接为已加入状态
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     qq: '1234567890',
@@ -418,7 +437,7 @@ export const mockCreateClub = async (data: {
   return {
     data: {
       code: 200,
-      message: '社团创建成功，等待审核',
+      message: '社团创建成功',
       data: newClub,
     },
   }

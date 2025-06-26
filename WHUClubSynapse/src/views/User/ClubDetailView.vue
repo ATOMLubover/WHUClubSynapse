@@ -198,6 +198,7 @@ import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
+import { userJoinedClubIds } from '@/utils/mockData'
 
 const route = useRoute()
 const router = useRouter()
@@ -212,17 +213,29 @@ const showApplyDialog = ref(false)
 const createLoading = ref(false)
 const hasApplied = ref(false) // 添加一个标记是否已申请的状态
 
+// 检查用户是否已加入该社团
+const isUserJoined = computed(() => {
+  if (!authStore.isLoggedIn || !club.value) return false
+  return userJoinedClubIds.includes(club.value.id)
+})
+
+// 检查用户是否管理该社团
+const isUserManaged = computed(() => {
+  if (!authStore.isLoggedIn || !club.value) return false
+  // 这里可以添加检查用户是否管理该社团的逻辑
+  return club.value.adminId === 'user1' // 假设当前用户ID为user1
+})
+
 // 将 isDisabled 改为计算属性
 const isDisabled = computed(() => {
   if (!authStore.isLoggedIn) return false
   if (!club.value) return true
 
+  // 如果用户已加入该社团，禁用申请按钮
+  if (isUserJoined.value) return true
+
   // 如果已经申请过了，就禁用
   if (hasApplied.value) return true
-
-  // 根据社团状态判断
-  if (club.value.status === 'pending') return true
-  if (club.value.status === 'approved') return true
 
   // 如果社团已满员
   if (club.value.currentMembers >= club.value.maxMembers) return true
@@ -319,8 +332,13 @@ const confirmApply = async () => {
   try {
     createLoading.value = true
     await clubStore.applyToClub(club.value!.id, reason.value)
+    
+    // 申请成功后，将用户添加到已加入社团列表
+    if (!userJoinedClubIds.includes(club.value.id)) {
+      userJoinedClubIds.push(club.value.id)
+    }
+    
     ElMessage.success('申请已提交，请等待审核')
-    // fetchClubDetail()
     showApplyDialog.value = false
     reason.value = ''
     hasApplied.value = true // 标记为已申请
@@ -336,12 +354,13 @@ const getApplyButtonText = () => {
   if (!authStore.isLoggedIn) return '登录后申请'
   if (!club.value) return '加载中...'
 
+  // 如果用户已加入该社团
+  if (isUserJoined.value) return '已加入'
+
   // 如果已经申请过了
   if (hasApplied.value) return '等待审核中'
 
-  // 根据社团状态返回对应文本
-  if (club.value.status === 'pending') return '等待审核中'
-  if (club.value.status === 'approved') return '已加入'
+  // 如果社团已满员
   if (club.value.currentMembers >= club.value.maxMembers) return '已满员'
 
   return '申请加入'
