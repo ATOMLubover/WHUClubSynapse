@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '@/components/Layout/AppLayout.vue'
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '@/views/User/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { nextTick } from 'vue'
 
@@ -32,52 +32,52 @@ const router = createRouter({
         {
           path: '/club/:id',
           name: 'club-detail',
-          component: () => import('@/views/ClubDetailView.vue'),
+          component: () => import('@/views/User/ClubDetailView.vue'),
         },
         {
           path: '/club/:clubId/post/:postId',
           name: 'club-post-detail',
-          component: () => import('@/views/ClubPostDetailView.vue'),
+          component: () => import('@/views/User/ClubPostDetailView.vue'),
         },
         {
           path: '/search',
           name: 'search',
-          component: () => import('@/views/SearchView.vue'),
+          component: () => import('@/views/User/SearchView.vue'),
         },
         {
           path: '/user',
           name: 'user',
-          component: () => import('@/views/UserView.vue'),
+          component: () => import('@/views/User/UserView.vue'),
           meta: { requiresAuth: true },
           children: [
             {
               path: '/user/center',
               name: 'user-center',
-              component: () => import('@/views/UserCenterView.vue'),
+              component: () => import('@/views/User/UserCenterView.vue'),
               meta: { requiresAuth: true },
             },
             {
               path: '/user/applications',
               name: 'user-applications',
-              component: () => import('@/views/MyApplicationsView.vue'),
+              component: () => import('@/views/User/MyApplicationsView.vue'),
               meta: { requiresAuth: true },
             },
             {
               path: '/user/favorites',
               name: 'user-favorites',
-              component: () => import('@/views/MyFavoritesView.vue'),
+              component: () => import('@/views/User/MyFavoritesView.vue'),
               meta: { requiresAuth: true },
             },
             {
               path: '/user/clubs/joined',
               name: 'user-clubs-joined',
-              component: () => import('@/views/JoinedClubs.vue'),
+              component: () => import('@/views/User/JoinedClubs.vue'),
               meta: { requiresAuth: true },
             },
             {
               path: '/user/clubs/managed',
               name: 'user-clubs-managed',
-              component: () => import('@/views/ManagedClubs.vue'),
+              component: () => import('@/views/User/ManagedClubs.vue'),
               meta: { requiresAuth: true },
             },
             {
@@ -94,12 +94,12 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue'),
+      component: () => import('@/views/Login/LoginView.vue'),
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('@/views/RegisterView.vue'),
+      component: () => import('@/views/Login/RegisterView.vue'),
     },
   ],
 })
