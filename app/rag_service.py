@@ -17,7 +17,7 @@ def tokenize_inputs(texts: List[str]):
     return tokenizer(texts, return_tensors='pt', padding=True, truncation=True)
 
 def move_to_device(inputs, device):
-    return {key: value.to(device) for key, value in inputs.items()}
+        return {key: value.to(device) for key, value in inputs.items()}
 
 def get_model_outputs(inputs):
     with torch.no_grad():
@@ -33,13 +33,13 @@ def get_embeddings(texts: List[str]):
     # 定义流水线步骤
     pipeline = [
         lambda x: tokenize_inputs(x),
-        lambda x: move_to_device(x),
+        lambda x: move_to_device(x, device),
         lambda x: get_model_outputs(x),
         lambda x: compute_embeddings(x)
     ]
     # 使用流水线。参数的含义分别是：累计值，每个步骤如何处理累计值，处理步骤列表，初始值
     embeddings = reduce(lambda acc, f: f(acc), pipeline, texts)
 
-    return embeddings.cpu().numpy()
+    return embeddings.cpu().numpy() if isinstance(embeddings, torch.Tensor) else np.array(embeddings)
 
 

@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import torch
+import numpy as np
 from app.rag_service import get_embeddings, tokenize_inputs, move_to_device, get_model_outputs, compute_embeddings
 from app.config import settings
 
@@ -31,7 +32,8 @@ class TestGetEmbeddings(unittest.TestCase):
         mock_move_to_device.assert_called_once_with(mock_tokenized_inputs, torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         mock_get_model_outputs.assert_called_once_with(mock_device_inputs)
         mock_compute_embeddings.assert_called_once_with(mock_model_outputs)
-        self.assertTrue(torch.equal(result, mock_embeddings.cpu().numpy()))
+        self.assertIsInstance(result, np.ndarray)
+        np.testing.assert_array_equal(result, mock_embeddings.cpu().numpy())
 
     @patch('app.rag_service.tokenize_inputs')
     @patch('app.rag_service.move_to_device')
@@ -58,7 +60,8 @@ class TestGetEmbeddings(unittest.TestCase):
         mock_move_to_device.assert_called_once_with(mock_tokenized_inputs, torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         mock_get_model_outputs.assert_called_once_with(mock_device_inputs)
         mock_compute_embeddings.assert_called_once_with(mock_model_outputs)
-        self.assertTrue(torch.equal(result, mock_embeddings.cpu().numpy()))
+        self.assertIsInstance(result, np.ndarray)
+        np.testing.assert_array_equal(result, mock_embeddings.cpu().numpy())
 
     @patch('app.rag_service.tokenize_inputs')
     @patch('app.rag_service.move_to_device')
@@ -85,7 +88,8 @@ class TestGetEmbeddings(unittest.TestCase):
         mock_move_to_device.assert_called_once_with(mock_tokenized_inputs, torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         mock_get_model_outputs.assert_called_once_with(mock_device_inputs)
         mock_compute_embeddings.assert_called_once_with(mock_model_outputs)
-        self.assertTrue(torch.equal(result, mock_embeddings.cpu().numpy()))
+        self.assertIsInstance(result, np.ndarray)
+        np.testing.assert_array_equal(result, mock_embeddings.cpu().numpy())
 
     @patch('app.rag_service.tokenize_inputs')
     @patch('app.rag_service.move_to_device')
@@ -112,7 +116,8 @@ class TestGetEmbeddings(unittest.TestCase):
         mock_move_to_device.assert_called_once_with(mock_tokenized_inputs, torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         mock_get_model_outputs.assert_called_once_with(mock_device_inputs)
         mock_compute_embeddings.assert_called_once_with(mock_model_outputs)
-        self.assertTrue(torch.equal(result, mock_embeddings.cpu().numpy()))
+        self.assertIsInstance(result, np.ndarray)
+        np.testing.assert_array_equal(result, mock_embeddings.cpu().numpy())
 
     @patch('app.rag_service.tokenize_inputs')
     @patch('app.rag_service.move_to_device')
