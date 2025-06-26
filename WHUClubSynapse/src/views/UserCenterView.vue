@@ -231,6 +231,28 @@
               <el-switch v-model="preferences.showJoinedClubs" active-text="显示已加入社团" />
             </el-form-item>
 
+            <el-form-item label="特质/爱好">
+              <el-select
+                v-model="preferences.tags"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                :reserve-keyword="false"
+                :filter-method="filterTag"
+                :collapse-tags="false"
+                placeholder="请输入关键词搜索或自定义（限4字以内）"
+                class="tag-group"
+              >
+                <el-option
+                  v-for="tag in filteredTags"
+                  :key="tag"
+                  :label="tag"
+                  :value="tag"
+                />
+              </el-select>
+            </el-form-item>
+
             <el-form-item>
               <el-button type="primary" @click="savePreferences" :loading="preferencesLoading">保存偏好设置</el-button>
             </el-form-item>
@@ -292,7 +314,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
@@ -300,6 +322,7 @@ import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
 import type { User as UserType, UserStats, UserPreferences, ClubCategory } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
+import { allUserTags } from '@/utils/mockData'
 
 // Stores
 const authStore = useAuthStore()
@@ -314,6 +337,9 @@ const verificationLoading = ref(false)
 const passwordLoading = ref(false)
 const preferencesLoading = ref(false)
 const uploadedAvatar = ref('')
+const tagLoading = ref(false)
+const tagOptions = ref<string[]>([])
+const tagInput = ref('')
 
 // 用户信息
 const userInfo = ref<UserType | null>(null)
@@ -337,6 +363,7 @@ const preferences = reactive<UserPreferences>({
   activityNotifications: false,
   profilePublic: true,
   showJoinedClubs: true,
+  tags: []
 })
 
 // 密码修改表单
@@ -531,6 +558,7 @@ const savePreferences = async () => {
     preferencesLoading.value = false
   }
 }
+
 //更换邮箱手机号
 
 // 更换手机号逻辑
@@ -580,6 +608,7 @@ const handleChangeEmail = async () => {
     ElMessage.info('已取消更换邮箱')
   }
 }
+
 // 加载用户数据
 const loadUserData = async () => {
   try {
@@ -603,6 +632,45 @@ const loadUserData = async () => {
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户信息失败')
   }
+}
+
+const searchTags = async (query: string) => {
+  if (query.length < 2) {
+    tagOptions.value = []
+    return
+  }
+
+  try {
+    tagLoading.value = true
+    tagOptions.value = allUserTags.filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
+  } catch (error: any) {
+    ElMessage.error(error.message || '搜索标签失败')
+  } finally {
+    tagLoading.value = false
+  }
+}
+
+const filteredTags = computed(() => {
+  const input = tagInput.value.trim()
+  const selected = preferences.tags || []
+  let base = allUserTags.filter(tag => !selected.includes(tag))
+  if (input) {
+    base = base.filter(tag => tag.includes(input))
+  }
+  if (
+    input &&
+    input.length > 0 &&
+    input.length <= 4 &&
+    !allUserTags.includes(input) &&
+    !selected.includes(input)
+  ) {
+    return [input, ...base]
+  }
+  return base
+})
+
+const filterTag = (query: string) => {
+  tagInput.value = query
 }
 
 onMounted(() => {

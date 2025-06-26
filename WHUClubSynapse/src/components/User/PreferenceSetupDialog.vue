@@ -70,6 +70,34 @@
             />
           </div>
         </el-form-item>
+
+        <el-form-item label="特质/爱好标签" required>
+          <div class="tag-selection">
+            <el-select
+              v-model="preferences.tags"
+              multiple
+              filterable
+              allow-create
+              default-first-option
+              :reserve-keyword="false"
+              :filter-method="filterTag"
+              :collapse-tags="false"
+              placeholder="请选择你的特质/爱好标签（可自定义，限4字以内）"
+              class="tag-group"
+            >
+              <el-option
+                v-for="tag in filteredTags"
+                :key="tag"
+                :label="tag"
+                :value="tag"
+              ></el-option>
+            </el-select>
+          </div>
+          <div class="form-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>你可以选择多个特质/爱好标签</span>
+          </div>
+        </el-form-item>
       </el-form>
     </div>
 
@@ -89,6 +117,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Setting, InfoFilled } from '@element-plus/icons-vue'
 import type { ClubCategory, UserPreferences } from '@/types'
+import { allUserTags } from '@/utils/mockData'
 
 // Props
 interface Props {
@@ -115,6 +144,7 @@ const preferences = reactive<UserPreferences>({
   activityNotifications: false,
   profilePublic: true,
   showJoinedClubs: true,
+  tags: []
 })
 
 // 计算属性
@@ -126,6 +156,33 @@ const visible = computed({
 const isValid = computed(() => {
   return preferences.interestedCategories.length > 0
 })
+
+const tagInput = ref('')
+
+const filteredTags = computed(() => {
+  // 只显示未被选中的、包含输入内容的标签
+  const input = tagInput.value.trim()
+  const selected = preferences.tags || []
+  let base = allUserTags.filter(tag => !selected.includes(tag))
+  if (input) {
+    base = base.filter(tag => tag.includes(input))
+  }
+  // 如果输入4字以内且不在已有标签和已选中标签中，则允许自定义
+  if (
+    input &&
+    input.length > 0 &&
+    input.length <= 4 &&
+    !allUserTags.includes(input) &&
+    !selected.includes(input)
+  ) {
+    return [input, ...base]
+  }
+  return base
+})
+
+const filterTag = (query: string) => {
+  tagInput.value = query
+}
 
 // 方法
 const getCategoryDescription = (category: ClubCategory): string => {
@@ -315,5 +372,12 @@ const handleSkip = () => {
   .setup-header p {
     font-size: 12px;
   }
+}
+
+.tag-selection {
+  margin-bottom: 12px;
+}
+.tag-group {
+  width: 100%;
 }
 </style> 

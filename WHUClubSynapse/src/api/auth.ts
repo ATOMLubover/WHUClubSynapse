@@ -97,6 +97,7 @@ export const updateUserPreferences = async (preferences: {
   activityNotifications: boolean
   profilePublic: boolean
   showJoinedClubs: boolean
+  tags?: string[]
 }): Promise<{ data: ApiResponse<User> }> => {
   return getIsUsingMockAPI()
     ? await mockAuth.mockUpdateUserPreferences(preferences)

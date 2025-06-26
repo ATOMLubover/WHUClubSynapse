@@ -207,15 +207,18 @@ export const mockUpdateUserPreferences = async (preferences: {
   activityNotifications: boolean
   profilePublic: boolean
   showJoinedClubs: boolean
+  tags?: string[]
 }): Promise<{ data: ApiResponse<User> }> => {
   await delay(800)
 
   // 更新mockUser的偏好设置
   mockUser.preferences = {
     ...preferences,
-    interestedCategories: preferences.interestedCategories as any[]
+    interestedCategories: preferences.interestedCategories as any[],
+    tags: preferences.tags || []
   }
   mockUser.hasCompletedPreferences = true
+  mockUser.tags = preferences.tags || []
 
   return {
     data: {

@@ -19,6 +19,7 @@ export interface User {
   preferences?: UserPreferences
   // 是否已完成偏好设置
   hasCompletedPreferences?: boolean
+  tags?: string[] // 用户特质/爱好标签
 }
 
 // 用户统计信息类型
@@ -136,4 +137,5 @@ export interface UserPreferences {
   activityNotifications: boolean
   profilePublic: boolean
   showJoinedClubs: boolean
+  tags?: string[] // 用户特质/爱好标签
 }
