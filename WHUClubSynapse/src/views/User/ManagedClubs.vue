@@ -86,6 +86,7 @@
                 :sm="12"
                 :md="8"
                 :lg="6"
+                :xl="4"
                 class="club-card-col"
               >
                 <div class="club-card">
@@ -107,8 +108,8 @@
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="editClub(club)"> 编辑信息 </el-button>
-                    <el-button size="small" @click="manageMembers(club)"> 成员管理 </el-button>
+                    <el-button size="small" @click="editClub(club)">编辑信息</el-button>
+                    <el-button size="small" @click="manageMembers(club)">成员管理</el-button>
                     <el-button size="small" type="danger" @click="handledelete(club)">
                       删除社团
                     </el-button>
@@ -622,7 +623,21 @@ onMounted(() => {
 .club-actions {
   padding: 0 16px 16px;
   display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.club-actions .el-button {
+  width: 100%;
+  min-height: 38px;
+  font-size: 15px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  margin: 0;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 .pagination-section {
@@ -638,6 +653,43 @@ onMounted(() => {
 @media (max-width: 768px) {
   .card-view .el-col {
     width: 100%;
+  }
+  
+  .club-actions {
+    padding: 0 12px 12px;
+  }
+  
+  .club-info {
+    padding: 12px;
+  }
+  
+  .club-name {
+    font-size: 14px;
+  }
+  
+  .club-category,
+  .club-members,
+  .favorite-time {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-favorites {
+    padding: 10px;
+  }
+  
+  .page-header h1 {
+    font-size: 24px;
+  }
+  
+  .page-header p {
+    font-size: 14px;
+  }
+  
+  .club-actions .el-button {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 </style>
