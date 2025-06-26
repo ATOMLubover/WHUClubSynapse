@@ -460,7 +460,7 @@ const confirmCreate = async () => {
       coverImage: '',
     }
     // 重新加载列表
-    loadManagedClubs()
+    await loadManagedClubs()
   } catch (error) {
     console.error('创建社团失败:', error)
   } finally {
@@ -479,9 +479,10 @@ const confirmDelete = async () => {
     showDeleteDialog.value = false
     deleteClub.value = null
     // 重新加载列表
-    loadManagedClubs()
+    await loadManagedClubs()
   } catch (error) {
     console.error('删除社团失败:', error)
+    ElMessage.error('删除社团失败，请重试')
   } finally {
     deleteLoading.value = false
   }

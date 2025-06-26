@@ -331,7 +331,7 @@ export const mockUser: User = {
     appliedClubs: 1,
     favoriteClubs: 1,
     joinedClubs: 3,
-    managedClubs: 0
+    managedClubs: 1
   },
   // 用户偏好设置
   preferences: {
@@ -346,6 +346,12 @@ export const mockUser: User = {
   hasCompletedPreferences: true,
   tags: [],
 }
+
+// 用户加入的社团ID列表（用于管理状态）
+export const userJoinedClubIds: string[] = ['1', '2', '3']
+
+// 用户管理的社团ID列表
+export const userManagedClubIds: string[] = ['1']
 
 export const mockApplications: Application[] = [
   {

@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies } from '@/utils/mockData'
+import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds } from '@/utils/mockData'
 import { config } from '@/config'
 import type { ClubPost, ClubPostReply } from '@/types'
 
@@ -374,29 +374,46 @@ export const mockCreateClub = async (data: {
   tags: string[]
   coverImage?: string
 }): Promise<{ data: ApiResponse<Club> }> => {
-  await delay(800)
+  await delay(600)
 
+  // 生成新的社团ID
+  const newId = (mockClubs.length + 1).toString()
+
+  // 创建新社团对象
   const newClub: Club = {
-    id: 'club_' + Date.now(),
+    id: newId,
     name: data.name,
     description: data.description,
-    coverImage: data.coverImage || 'https://via.placeholder.com/400x240',
     category: data.category as any,
-    adminId: 'admin_1',
-    adminName: '管理员',
-    currentMembers: 1,
+    adminId: 'user1', // 假设当前用户ID为user1
+    adminName: '测试用户',
+    currentMembers: 1, // 创建者自动成为成员
     maxMembers: data.maxMembers,
     tags: data.tags,
     isHot: false,
-    status: 'pending',
+    status: 'pending', // 新创建的社团需要审核
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    qq: '1234567890',
+    details: data.description,
     activities: [],
-    location: '',
-    qq: '',
-    details: '',
-    isFavorite: false
+    location: `武汉大学${data.name}`,
+    isFavorite: false,
+    coverImage: data.coverImage || `https://picsum.photos/400/240?random=${newId}`,
   }
+
+  // 添加到社团列表
+  mockClubs.push(newClub)
+
+  // 添加到用户管理的社团列表
+  userManagedClubIds.push(newId)
+
+  // 添加到用户加入的社团列表（创建者自动加入）
+  userJoinedClubIds.push(newId)
+
+  // 更新用户统计信息
+  mockUser.stats!.managedClubs++
+  mockUser.stats!.joinedClubs++
 
   return {
     data: {
@@ -442,19 +459,6 @@ export const mockUpdateClub = async (
   }
 }
 
-// 模拟删除社团
-export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<null> }> => {
-  await delay(500)
-
-  return {
-    data: {
-      code: 200,
-      message: '社团删除成功',
-      data: null,
-    },
-  }
-}
-
 // 模拟获取用户已加入的社团
 export const mockGetJoinedClubs = async (
   params: {
@@ -464,11 +468,13 @@ export const mockGetJoinedClubs = async (
 ): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
   await delay(500)
 
-  // 模拟已加入的社团（前3个社团）
-  const joinedClubs = mockClubs.slice(0, 3).map(club => ({
-    ...club,
-    isFavorite: false
-  }))
+  // 根据用户加入的社团ID列表获取社团
+  const joinedClubs = mockClubs
+    .filter(club => userJoinedClubIds.includes(club.id))
+    .map(club => ({
+      ...club,
+      isFavorite: false
+    }))
 
   const page = params.page || 1
   const pageSize = params.pageSize || 12
@@ -499,11 +505,13 @@ export const mockGetManagedClubs = async (
 ): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
   await delay(500)
 
-  // 模拟管理的社团（第1个社团）
-  const managedClubs = [mockClubs[0]].map(club => ({
-    ...club,
-    isFavorite: false
-  }))
+  // 根据用户管理的社团ID列表获取社团
+  const managedClubs = mockClubs
+    .filter(club => userManagedClubIds.includes(club.id))
+    .map(club => ({
+      ...club,
+      isFavorite: false
+    }))
 
   const page = params.page || 1
   const pageSize = params.pageSize || 12
@@ -534,10 +542,75 @@ export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<
     throw new Error('社团不存在')
   }
 
+  // 检查用户是否已加入该社团
+  if (!userJoinedClubIds.includes(clubId)) {
+    throw new Error('您未加入该社团')
+  }
+
+  // 从用户加入的社团列表中移除
+  const index = userJoinedClubIds.indexOf(clubId)
+  if (index > -1) {
+    userJoinedClubIds.splice(index, 1)
+  }
+
+  // 更新社团成员数量
+  if (club.currentMembers > 0) {
+    club.currentMembers--
+  }
+
+  // 更新用户统计信息
+  mockUser.stats!.joinedClubs--
+
   return {
     data: {
       code: 200,
       message: '退出社团成功',
+      data: null,
+    },
+  }
+}
+
+// 模拟删除社团
+export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<null> }> => {
+  await delay(500)
+
+  const club = mockClubs.find((c) => c.id === id)
+  if (!club) {
+    throw new Error('社团不存在')
+  }
+
+  // 检查用户是否管理该社团
+  if (!userManagedClubIds.includes(id)) {
+    throw new Error('您无权删除该社团')
+  }
+
+  // 从用户管理的社团列表中移除
+  const managedIndex = userManagedClubIds.indexOf(id)
+  if (managedIndex > -1) {
+    userManagedClubIds.splice(managedIndex, 1)
+  }
+
+  // 从用户加入的社团列表中移除（如果用户也加入了该社团）
+  const joinedIndex = userJoinedClubIds.indexOf(id)
+  if (joinedIndex > -1) {
+    userJoinedClubIds.splice(joinedIndex, 1)
+    // 更新用户统计信息
+    mockUser.stats!.joinedClubs--
+  }
+
+  // 更新用户统计信息
+  mockUser.stats!.managedClubs--
+
+  // 从社团列表中移除（实际项目中应该标记为删除状态）
+  const clubIndex = mockClubs.findIndex(c => c.id === id)
+  if (clubIndex > -1) {
+    mockClubs.splice(clubIndex, 1)
+  }
+
+  return {
+    data: {
+      code: 200,
+      message: '社团删除成功',
       data: null,
     },
   }

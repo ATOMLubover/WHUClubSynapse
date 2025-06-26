@@ -300,12 +300,14 @@ const confirmQuit = async () => {
   try {
     quitLoading.value = true
     await clubStore.quitClub(quitClub.value.id)
+    ElMessage.success('退出社团成功')
     showQuitDialog.value = false
     quitClub.value = null
     // 重新加载列表
-    loadJoinedClubs()
+    await loadJoinedClubs()
   } catch (error) {
     console.error('退出社团失败:', error)
+    ElMessage.error('退出社团失败，请重试')
   } finally {
     quitLoading.value = false
   }
