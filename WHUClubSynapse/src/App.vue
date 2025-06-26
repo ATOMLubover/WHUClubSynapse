@@ -4,6 +4,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import PreferenceSetupDialog from '@/components/User/PreferenceSetupDialog.vue'
 import type { UserPreferences } from '@/types'
+import { ElNotification } from 'element-plus'
 
 // 认证store
 const authStore = useAuthStore()
@@ -53,6 +54,13 @@ watch(
 onMounted(async () => {
   await authStore.initialize()
   checkPreferenceSetup()
+
+  ElNotification({
+    title: '欢迎访问',
+    message: 'WHU Club Synapse - 武汉大学社团管理系统',
+    type: 'success',
+    duration: 3000,
+  })
 })
 </script>
 
