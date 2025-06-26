@@ -1,6 +1,7 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications, mockUser } from '@/utils/mockData'
+import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies } from '@/utils/mockData'
 import { config } from '@/config'
+import type { ClubPost, ClubPostReply } from '@/types'
 
 // 模拟延迟
 const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -540,4 +541,104 @@ export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<
       data: null,
     },
   }
+}
+
+export const mockGetClubPosts = async (
+  clubId: string,
+  page = 1,
+  pageSize = 5
+): Promise<{ data: ApiResponse<PaginatedData<ClubPost>> }> => {
+  const all = mockClubPosts.filter(p => p.clubId === clubId)
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = all.slice(start, end)
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: 'success',
+      data: {
+        list,
+        total: all.length,
+        page,
+        pageSize
+      }
+    }
+  })
+}
+
+export const mockGetClubPostDetail = async (
+  postId: string
+): Promise<{ data: ApiResponse<ClubPost> }> => {
+  const post = mockClubPosts.find(p => p.id === postId)
+  if (!post) throw new Error('帖子不存在')
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: 'success',
+      data: post
+    }
+  })
+}
+
+export const mockGetClubPostReplies = async (
+  postId: string,
+  page = 1,
+  pageSize = 10
+): Promise<{ data: ApiResponse<PaginatedData<ClubPostReply>> }> => {
+  const all = mockClubPostReplies.filter(r => r.postId === postId)
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = all.slice(start, end)
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: 'success',
+      data: {
+        list,
+        total: all.length,
+        page,
+        pageSize
+      }
+    }
+  })
+}
+
+export const mockCreateClubPost = async (
+  post: Omit<ClubPost, 'id' | 'createdAt' | 'replyCount'>
+): Promise<{ data: ApiResponse<ClubPost> }> => {
+  const newPost: ClubPost = {
+    ...post,
+    id: 'p' + (mockClubPosts.length + 1),
+    createdAt: new Date().toISOString(),
+    replyCount: 0
+  }
+  mockClubPosts.unshift(newPost)
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '发帖成功',
+      data: newPost
+    }
+  })
+}
+
+export const mockReplyClubPost = async (
+  reply: Omit<ClubPostReply, 'id' | 'createdAt'>
+): Promise<{ data: ApiResponse<ClubPostReply> }> => {
+  const newReply: ClubPostReply = {
+    ...reply,
+    id: 'r' + (mockClubPostReplies.length + 1),
+    createdAt: new Date().toISOString()
+  }
+  mockClubPostReplies.push(newReply)
+  // 更新主贴回复数
+  const post = mockClubPosts.find(p => p.id === reply.postId)
+  if (post) post.replyCount++
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '回复成功',
+      data: newReply
+    }
+  })
 }

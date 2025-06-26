@@ -168,6 +168,9 @@
         <el-button type="primary" @click="$router.push('/')"> 返回首页 </el-button>
       </el-empty>
     </div>
+    <div class="club-detail-bottom">
+      <ClubPostArea :club-id="clubId" />
+    </div>
   </div>
 </template>
 
@@ -193,6 +196,7 @@ import {
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
+import ClubPostArea from '@/components/Club/ClubPostArea.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -339,6 +343,8 @@ const getApplyButtonText = () => {
 
   return '申请加入'
 }
+
+const clubId = String(route.params.id)
 
 onMounted(async () => {
   window.scrollTo(0, 0)

@@ -3,6 +3,7 @@ import request from '@/utils/request'
 import type { Club, PaginatedData, SearchParams, ApiResponse, Application } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockClub from './mock/club'
+import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost } from './mock/club'
 
 // 获取动态配置
 const getIsUsingMockAPI = () => {
@@ -272,3 +273,9 @@ export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null
     ? await mockClub.mockQuitClub(clubId)
     : await request.delete(`/user/joined-clubs/${clubId}`)
 }
+
+export const getClubPosts = mockGetClubPosts
+export const getClubPostDetail = mockGetClubPostDetail
+export const getClubPostReplies = mockGetClubPostReplies
+export const createClubPost = mockCreateClubPost
+export const replyClubPost = mockReplyClubPost
