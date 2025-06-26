@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"strconv"
 	"time"
-	"whuclubsynapse-server/internal/auth_server/authconfig"
+	"whuclubsynapse-server/internal/base_server/baseconfig"
 	"whuclubsynapse-server/internal/shared/rediscli"
 
 	"github.com/redis/go-redis/v9"
@@ -27,7 +27,7 @@ type sRedisClientService struct {
 }
 
 func NewRedisClientService(
-	cfg *authconfig.Config,
+	cfg *baseconfig.Config,
 	logger *slog.Logger,
 ) RedisClientService {
 	client := rediscli.NewRedisClient(

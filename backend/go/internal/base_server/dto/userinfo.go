@@ -1,7 +1,7 @@
 package dto
 
 type UserInfo struct {
-	Id         uint   `json:"id"`
+	UserId     uint   `json:"user_id"`
 	Username   string `json:"username"`
 	Email      string `json:"email"`
 	AvatarUrl  string `json:"avatar_url"`

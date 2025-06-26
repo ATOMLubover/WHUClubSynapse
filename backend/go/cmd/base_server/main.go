@@ -4,13 +4,13 @@ import (
 	"log/slog"
 	"time"
 
-	"whuclubsynapse-server/internal/auth_server/authconfig"
-	"whuclubsynapse-server/internal/auth_server/grpcimpl"
-	"whuclubsynapse-server/internal/auth_server/handler"
-	"whuclubsynapse-server/internal/auth_server/model"
-	"whuclubsynapse-server/internal/auth_server/redisimpl"
-	"whuclubsynapse-server/internal/auth_server/repo"
-	"whuclubsynapse-server/internal/auth_server/service"
+	authconfig "whuclubsynapse-server/internal/base_server/baseconfig"
+	"whuclubsynapse-server/internal/base_server/grpcimpl"
+	"whuclubsynapse-server/internal/base_server/handler"
+	"whuclubsynapse-server/internal/base_server/model"
+	"whuclubsynapse-server/internal/base_server/redisimpl"
+	"whuclubsynapse-server/internal/base_server/repo"
+	"whuclubsynapse-server/internal/base_server/service"
 	"whuclubsynapse-server/internal/shared/config"
 	"whuclubsynapse-server/internal/shared/jwtutil"
 	"whuclubsynapse-server/internal/shared/logger"
@@ -27,7 +27,7 @@ func main() {
 
 	globalController := mvc.New(app.Party("/"))
 
-	config := LoadConfig("../../config/auth_config.json")
+	config := LoadConfig("../../config/basic_config.json")
 
 	logger := CreateLogger(config)
 	database := ConnectDatabase(config)

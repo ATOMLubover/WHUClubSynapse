@@ -1,4 +1,4 @@
-package authconfig
+package baseconfig
 
 type Config struct {
 	EnvLevel    string `mapstructure:"env_level"`

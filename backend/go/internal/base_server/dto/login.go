@@ -6,7 +6,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Id         int    `json:"id"`
+	UserId     int    `json:"user_id"`
 	Username   string `json:"username"`
 	Email      string `json:"email"`
 	AvatarUrl  string `json:"avatar_url"`

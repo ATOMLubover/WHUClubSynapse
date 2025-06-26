@@ -1,4 +1,4 @@
-package model
+package dbstruct
 
 import (
 	"time"
@@ -31,7 +31,7 @@ type Club struct {
 	LeaderId     uint      `gorm:"not null"`
 	CategoryId   uint      `gorm:"not null"`
 	Description  string    `gorm:"type:text;not null"`
-	LogoURL      string    `gorm:"size:255"`
+	LogoUrl      string    `gorm:"size:255"`
 	MemberCount  int       `gorm:"default:0;not null"`
 	Status       string    `gorm:"size:20;default:'pending';not null"`
 	Requirements string    `gorm:"type:text"`
@@ -60,7 +60,7 @@ type ClubMember struct {
 func (ClubMember) TableName() string { return "club_members" }
 
 type CreateClubApplication struct {
-	JoinAppliId    uint      `gorm:"primaryKey;column:join_appli_id"`
+	CreateAppliId  uint      `gorm:"primaryKey;column:join_appli_id"`
 	UserId         uint      `gorm:"not null"`
 	AppliedAt      time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	Status         string    `gorm:"size:20;default:'pending';not null"`
@@ -103,7 +103,7 @@ type ClubPost struct {
 	ClubId       uint      `gorm:"not null"`
 	UserId       uint      `gorm:"not null"`
 	Title        string    `gorm:"size:120;not null"`
-	Content      string    `gorm:"type:text;not null"`
+	ContentUrl   string    `gorm:"type:text;not null"`
 	Visibility   int16     `gorm:"default:0;not null"` // 0=公开, 1=社团成员, 2=管理员
 	IsPinned     bool      `gorm:"default:false;not null"`
 	CommentCount int       `gorm:"default:0;not null"`

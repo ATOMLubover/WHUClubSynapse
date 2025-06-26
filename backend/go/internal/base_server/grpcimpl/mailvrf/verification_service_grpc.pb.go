@@ -2,12 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v6.30.0
-// source: internal/auth_server/grpcimpl/mailvrf/verification_service.proto
+// source: internal/base_server/grpcimpl/mailvrf/verification_service.proto
 
 package mailvrf
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -101,5 +102,5 @@ var VerificationService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/auth_server/grpcimpl/mailvrf/verification_service.proto",
+	Metadata: "internal/base_server/grpcimpl/mailvrf/verification_service.proto",
 }

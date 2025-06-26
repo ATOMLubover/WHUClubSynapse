@@ -8,6 +8,6 @@ type RegisterRequest struct {
 }
 
 type RegisterResponse struct {
-	Id       uint   `json:"id"`
+	UserId   uint   `json:"user_id"`
 	Username string `json:"username"`
 }

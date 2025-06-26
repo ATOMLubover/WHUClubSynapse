@@ -6,20 +6,16 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"whuclubsynapse-server/internal/auth_server/dto"
-	"whuclubsynapse-server/internal/auth_server/grpcimpl"
-	"whuclubsynapse-server/internal/auth_server/model"
-	"whuclubsynapse-server/internal/auth_server/redisimpl"
-	"whuclubsynapse-server/internal/auth_server/service"
+	"whuclubsynapse-server/internal/base_server/dto"
+	"whuclubsynapse-server/internal/base_server/grpcimpl"
+	"whuclubsynapse-server/internal/base_server/model"
+	"whuclubsynapse-server/internal/base_server/redisimpl"
+	"whuclubsynapse-server/internal/base_server/service"
 	"whuclubsynapse-server/internal/shared/jwtutil"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	kBearerPrefix = "Bearer "
 )
 
 type UserHandler struct {
@@ -34,16 +30,18 @@ type UserHandler struct {
 
 func (h *UserHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/{id:int}", "GetUserInfo")
+	b.Handle("GET", "/userlist", "GetUserList")
+
 	b.Handle("POST", "/verify", "PostSendVrfEmail")
 }
 
 func (h *UserHandler) PostLogin(ctx iris.Context) {
 	var reqBody dto.LoginRequest
 	if err := ctx.ReadJSON(&reqBody); err != nil {
-		h.Logger.Debug(fmt.Sprintf("LoginRequest 结构体字段: %+v",
+		h.Logger.Info(fmt.Sprintf("LoginRequest 结构体字段: %+v",
 			reflect.VisibleFields(reflect.TypeOf(dto.LoginRequest{}))))
 
-		h.Logger.Debug("Login请求格式错误", "error", err)
+		h.Logger.Info("Login请求格式错误", "error", err)
 
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.Text("请求格式错误")
@@ -52,7 +50,7 @@ func (h *UserHandler) PostLogin(ctx iris.Context) {
 
 	userDetail, ok := h.UserService.Login(reqBody.Username, reqBody.Password)
 	if !ok {
-		h.Logger.Debug("用户名或密码错误")
+		h.Logger.Info("用户名或密码错误")
 
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.Text("用户名或密码错误")
@@ -64,7 +62,7 @@ func (h *UserHandler) PostLogin(ctx iris.Context) {
 		UserId: int(userDetail.UserId),
 	})
 	if err != nil {
-		h.Logger.Debug("生成token失败",
+		h.Logger.Info("生成token失败",
 			"error", err, "user_id", userDetail.UserId,
 		)
 
@@ -76,7 +74,7 @@ func (h *UserHandler) PostLogin(ctx iris.Context) {
 	ctx.Header("Authorization", kBearerPrefix+token)
 
 	resLoginConfirm := dto.LoginResponse{
-		Id:         int(userDetail.UserId),
+		UserId:     int(userDetail.UserId),
 		Username:   userDetail.Username,
 		Email:      userDetail.Email,
 		Role:       userDetail.Role,
@@ -102,7 +100,7 @@ func (h *UserHandler) PostSendVrfEmail(ctx iris.Context) {
 	}
 
 	if err := h.MailvrfService.RequestVerify(reqBody.Email); err != nil {
-		h.Logger.Debug("发送验证码失败",
+		h.Logger.Info("发送验证码失败",
 			"error", err, "email", reqBody.Email,
 		)
 
@@ -136,7 +134,7 @@ func (h *UserHandler) PostRegister(ctx iris.Context) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		h.Logger.Debug("bcrypt加密密码失败",
+		h.Logger.Info("bcrypt加密密码失败",
 			"error", err, "encrypted_password", reqBody.EncryptedPassword,
 		)
 
@@ -151,7 +149,7 @@ func (h *UserHandler) PostRegister(ctx iris.Context) {
 		string(hashedBytes),
 	)
 	if err != nil {
-		h.Logger.Debug("用户注册失败",
+		h.Logger.Info("用户注册失败",
 			"error", err, "reqBody", reqBody,
 		)
 
@@ -161,7 +159,7 @@ func (h *UserHandler) PostRegister(ctx iris.Context) {
 	}
 
 	resRegConfirm := dto.RegisterResponse{
-		Id:       newUser.UserId,
+		UserId:   newUser.UserId,
 		Username: newUser.Username,
 	}
 
@@ -175,9 +173,9 @@ func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
 		return
 	}
 
-	user, err := h.UserService.GetUserById(uint(id))
+	user, err := h.UserService.GetUserById(id)
 	if err != nil {
-		h.Logger.Debug(
+		h.Logger.Info(
 			"GetUserInfo失败",
 			"error", err, "id", id,
 		)
@@ -188,7 +186,7 @@ func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
 	}
 
 	resUserInfo := dto.UserInfo{
-		Id:         user.UserId,
+		UserId:     user.UserId,
 		Email:      user.Email,
 		Role:       user.Role,
 		Username:   user.Username,
@@ -208,7 +206,7 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 	claims := strings.TrimPrefix(authHeader, kBearerPrefix)
 	userClaims, err := h.JwtFactory.ParseToken(claims)
 	if err != nil {
-		h.Logger.Debug("claims反序列化错误",
+		h.Logger.Info("claims反序列化错误",
 			"error", err, "authHeader", authHeader,
 		)
 
@@ -237,7 +235,7 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 
 	userList, err := h.UserService.GetUserList(offset, num)
 	if err != nil {
-		h.Logger.Debug("获取用户列表失败",
+		h.Logger.Info("获取用户列表失败",
 			"error", err, "offset", offset, "num", num,
 		)
 
@@ -249,7 +247,7 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 	resUserList := make([]dto.UserInfo, len(userList))
 	for _, userModel := range userList {
 		resUserList = append(resUserList, dto.UserInfo{
-			Id:         userModel.UserId,
+			UserId:     userModel.UserId,
 			Email:      userModel.Email,
 			LastActive: userModel.LastActive.Format(time.DateTime),
 			Role:       userModel.Role,
@@ -270,7 +268,7 @@ func (h *UserHandler) GetPing(ctx iris.Context) {
 	claims := strings.TrimPrefix(authHeader, kBearerPrefix)
 	userClaims, err := h.JwtFactory.ParseToken(claims)
 	if err != nil {
-		h.Logger.Debug("claims反序列化错误",
+		h.Logger.Info("claims反序列化错误",
 			"error", err, "authHeader", authHeader,
 		)
 
@@ -278,8 +276,8 @@ func (h *UserHandler) GetPing(ctx iris.Context) {
 		return
 	}
 
-	if err := h.UserService.KeepUserActive(uint(userClaims.UserId), userClaims.Role); err != nil {
-		h.Logger.Debug("更新用户状态失败",
+	if err := h.UserService.KeepUserActive(userClaims.UserId, userClaims.Role); err != nil {
+		h.Logger.Info("更新用户状态失败",
 			"error", err, "user_id", userClaims.UserId,
 		)
 

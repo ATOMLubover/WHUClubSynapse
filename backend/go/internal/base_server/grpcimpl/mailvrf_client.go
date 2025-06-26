@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"strconv"
 	"time"
-	"whuclubsynapse-server/internal/auth_server/authconfig"
-	"whuclubsynapse-server/internal/auth_server/grpcimpl/mailvrf"
+	"whuclubsynapse-server/internal/base_server/baseconfig"
+	"whuclubsynapse-server/internal/base_server/grpcimpl/mailvrf"
 
 	grpcpool "github.com/processout/grpc-go-pool"
 	"google.golang.org/grpc"
@@ -24,7 +24,7 @@ type sMailvrfClientService struct {
 }
 
 func NewMailvrfClientService(
-	cfg *authconfig.Config,
+	cfg *baseconfig.Config,
 	logger *slog.Logger,
 ) MailvrfClientService {
 	addr := cfg.GrpcHost + ":" + strconv.FormatUint(uint64(cfg.GrpcPort), 10)
