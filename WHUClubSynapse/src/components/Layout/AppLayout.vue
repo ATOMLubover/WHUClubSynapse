@@ -2,12 +2,12 @@
   <el-container class="app-container">
     <!-- 顶部导航栏 -->
     <el-header class="app-header">
-      <AppHeader />
+      <AppHeader :clearSearch="clearsearch" @update:clearSearch="update" />
     </el-header>
 
     <!-- 主要内容区域 -->
     <el-main class="app-main">
-      <router-view />
+      <router-view @clearSearch="clearSearch" />
     </el-main>
 
     <!-- 底部 -->
@@ -21,13 +21,23 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import AppHeader from '@/components/Layout/AppHeader.vue'
 import AppFooter from '@/components/Layout/AppFooter.vue'
 import ApiModeSwitch from '@/components/Layout/ApiModeSwitch.vue'
 
 const authStore = useAuthStore()
+
+const clearsearch = ref(false)
+const clearSearch = () => {
+  console.log('clearSearch')
+  clearsearch.value = true
+}
+
+const update = (value: boolean) => {
+  clearsearch.value = value
+}
 
 // 初始化应用
 onMounted(async () => {

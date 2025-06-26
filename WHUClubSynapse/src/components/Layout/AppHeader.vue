@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   House,
@@ -122,8 +122,33 @@ interface Notification {
 const router = useRouter()
 const authStore = useAuthStore()
 
+const props = defineProps({
+  clearSearch: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(['update:clearSearch'])
+
+// 或者监听 count.value
+watch(
+  () => props.clearSearch,
+  (newValue, oldValue) => {
+    if (newValue) {
+      searchKeyword.value = ''
+      emit('update:clearSearch', false)
+    }
+  },
+)
 // 搜索关键词
 const searchKeyword = ref('')
+
+// 搜索框清空
+const clearSearch = () => {
+  searchKeyword.value = ''
+}
+
 // 通知数量（模拟）
 // TODO: 获取通知数量
 const notificationCount = ref(0)

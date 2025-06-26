@@ -168,12 +168,15 @@ const handlePageChange = async (page: number) => {
   await performSearch()
 }
 
+const emit = defineEmits(['clearSearch'])
+
 // 清空搜索
 const clearSearch = async () => {
   searchKeyword.value = ''
   activeCategory.value = ''
   sortBy.value = 'relevance'
   clubStore.resetSearch()
+  emit('clearSearch')
 }
 
 // 执行搜索请求
