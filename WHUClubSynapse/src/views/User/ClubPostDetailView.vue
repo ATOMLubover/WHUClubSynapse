@@ -105,7 +105,7 @@ const handleReply = async () => {
   try {
     await replyClubPost({
       postId,
-      authorId: authStore.user?.id.toString() || '1',
+      authorId: authStore.user?.id || 0,
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || defaultAvatar,
       content: replyContent.value,

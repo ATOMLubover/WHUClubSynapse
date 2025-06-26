@@ -112,7 +112,7 @@ const handleCreate = async () => {
       clubId: props.clubId,
       title: createForm.value.title,
       content: createForm.value.content,
-      authorId: authStore.user?.id.toString() || '1',
+      authorId: authStore.user?.id || 0,
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || '',
     })

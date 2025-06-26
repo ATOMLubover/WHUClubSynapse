@@ -382,7 +382,7 @@ export const mockClubPosts: ClubPost[] = [
     clubId: '1',
     title: '新学期社团纳新活动讨论',
     content: '大家对今年的纳新活动有什么建议？欢迎留言讨论！',
-    authorId: 'user1',
+    authorId: 1,
     authorName: '小明',
     authorAvatar: '',
     createdAt: '2024-06-01T10:00:00Z',
@@ -393,7 +393,7 @@ export const mockClubPosts: ClubPost[] = [
     clubId: '1',
     title: '编程比赛组队贴',
     content: '有想参加编程比赛的小伙伴吗？可以在这里留言组队！',
-    authorId: 'user2',
+    authorId: 2,
     authorName: '小红',
     authorAvatar: '',
     createdAt: '2024-06-02T12:00:00Z',
@@ -404,7 +404,7 @@ export const mockClubPosts: ClubPost[] = [
     clubId: '2',
     title: '摄影外拍活动报名',
     content: '本周末有摄影外拍活动，欢迎大家报名参加！',
-    authorId: 'user3',
+    authorId: 3,
     authorName: '小刚',
     authorAvatar: '',
     createdAt: '2024-06-03T09:00:00Z',
@@ -415,23 +415,23 @@ export const mockClubPosts: ClubPost[] = [
 export const mockClubPostReplies: ClubPostReply[] = [
   // p1
   {
-    id: 'r1', postId: 'p1', authorId: 'user2', authorName: '小红', authorAvatar: '', content: '我觉得可以多做一些线上宣传！', createdAt: '2024-06-01T11:00:00Z'
+    id: 'r1', postId: 'p1', authorId: 2, authorName: '小红', authorAvatar: '', content: '我觉得可以多做一些线上宣传！', createdAt: '2024-06-01T11:00:00Z'
   },
   {
-    id: 'r2', postId: 'p1', authorId: 'user3', authorName: '小刚', authorAvatar: '', content: '建议邀请学长学姐分享经验。', createdAt: '2024-06-01T12:00:00Z'
+    id: 'r2', postId: 'p1', authorId: 3, authorName: '小刚', authorAvatar: '', content: '建议邀请学长学姐分享经验。', createdAt: '2024-06-01T12:00:00Z'
   },
   // p2
   {
-    id: 'r3', postId: 'p2', authorId: 'user1', authorName: '小明', authorAvatar: '', content: '我报名！', createdAt: '2024-06-02T13:00:00Z'
+    id: 'r3', postId: 'p2', authorId: 1, authorName: '小明', authorAvatar: '', content: '我报名！', createdAt: '2024-06-02T13:00:00Z'
   },
   // p3
   {
-    id: 'r4', postId: 'p3', authorId: 'user2', authorName: '小红', authorAvatar: '', content: '我也想参加！', createdAt: '2024-06-03T10:00:00Z'
+    id: 'r4', postId: 'p3', authorId: 2, authorName: '小红', authorAvatar: '', content: '我也想参加！', createdAt: '2024-06-03T10:00:00Z'
   },
   {
-    id: 'r5', postId: 'p3', authorId: 'user1', authorName: '小明', authorAvatar: '', content: '请问需要自带相机吗？', createdAt: '2024-06-03T10:30:00Z'
+    id: 'r5', postId: 'p3', authorId: 3, authorName: '小明', authorAvatar: '', content: '请问需要自带相机吗？', createdAt: '2024-06-03T10:30:00Z'
   },
   {
-    id: 'r6', postId: 'p3', authorId: 'user3', authorName: '小刚', authorAvatar: '', content: '可以自带，也可以现场借用。', createdAt: '2024-06-03T11:00:00Z'
+    id: 'r6', postId: 'p3', authorId: 3, authorName: '小刚', authorAvatar: '', content: '可以自带，也可以现场借用。', createdAt: '2024-06-03T11:00:00Z'
   }
 ]
