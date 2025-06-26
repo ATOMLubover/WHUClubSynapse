@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
@@ -15,9 +15,19 @@ export const useClubStore = defineStore('club', () => {
   const currentClub = ref<Club | null>(null)
 
   // 分页和搜索状态
-  const total = ref(0)
-  const currentPage = ref(1)
-  const pageSize = ref(6)
+
+  const globalPageData=reactive({
+    total:0,
+    currentPage:1,
+    pageSize:6,
+  })
+
+  const searchPageData=reactive({
+    total:0,
+    currentPage:1,
+    pageSize:6,
+  })
+
   const loading = ref(false)
   const searchParams = ref<SearchParams>({
     keyword: '',
@@ -29,8 +39,8 @@ export const useClubStore = defineStore('club', () => {
   const activeCategory = ref<string>('')
 
   // 计算属性
-  const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
-  const hasMore = computed(() => currentPage.value < totalPages.value)
+  const totalPages = computed(() => Math.ceil(globalPageData.total / globalPageData.pageSize))
+  const hasMore = computed(() => globalPageData.currentPage < totalPages.value)
 
   // 获取社团列表
   const fetchClubs = async (params?: Partial<SearchParams>) => {
@@ -39,16 +49,16 @@ export const useClubStore = defineStore('club', () => {
       const queryParams = {
         ...searchParams.value,
         ...params,
-        page: currentPage.value,
-        pageSize: pageSize.value,
+        page: globalPageData.currentPage,
+        pageSize: globalPageData.pageSize,
       }
 
       const response = await clubApi.getClubList(queryParams)
       const data = response.data.data
 
       clubs.value = data.list
-      total.value = data.total
-      currentPage.value = data.page
+      globalPageData.total = data.total
+      globalPageData.currentPage = data.page
 
       return data
     } catch (error) {
@@ -67,15 +77,16 @@ export const useClubStore = defineStore('club', () => {
       const queryParams = {
         ...params,
         page: 1,
-        pageSize: pageSize.value,
+        pageSize: globalPageData.pageSize,
       }
 
       const response = await clubApi.searchClubs(keyword, queryParams)
       const data = response.data.data
 
       searchResult.value = data.list
-      total.value = data.total
-      currentPage.value = 1
+      searchPageData.total = data.total
+      console.log("searchPageData.total",searchPageData.total)
+      searchPageData.currentPage = data.page
 
       return data
     } catch (error) {
@@ -322,19 +333,28 @@ export const useClubStore = defineStore('club', () => {
       category: '',
       sortBy: 'hot',
     }
-    currentPage.value = 1
+    globalPageData.currentPage = 1
   }
 
   // 分页
-  const setPage = (page: number) => {
-    currentPage.value = page
+  const setGlobalPage = (page: number) => {
+    globalPageData.currentPage = page
+  }
+  const setSearchPage = (page: number) => {
+    searchPageData.currentPage = page
+  }
+
+  const setSearchPageSize = (size: number) => {
+    searchPageData.pageSize = size
+    searchPageData.currentPage = 1
   }
 
   // 设置页面大小
   const setPageSize = (size: number) => {
-    pageSize.value = size
-    currentPage.value = 1
+    globalPageData.pageSize = size
+    globalPageData.currentPage = 1
   }
+
 
   return {
     // 状态
@@ -345,9 +365,8 @@ export const useClubStore = defineStore('club', () => {
     recommendedClubs,
     categories,
     currentClub,
-    total,
-    currentPage,
-    pageSize,
+    globalPageData,
+    searchPageData,
     loading,
     searchParams,
     activeCategory,
@@ -365,7 +384,9 @@ export const useClubStore = defineStore('club', () => {
     setSearchParams,
     setActiveCategory,
     resetSearch,
-    setPage,
+    setGlobalPage,
+    setSearchPage,
+    setSearchPageSize,
     setPageSize,
     favoriteClub,
     unfavoriteClub,

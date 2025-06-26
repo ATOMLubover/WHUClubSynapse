@@ -49,7 +49,7 @@
       <div class="result-header">
         <div class="result-info">
           <span v-if="searchKeyword" class="search-term"> "{{ searchKeyword }}" 的搜索结果 </span>
-          <span class="result-count"> 共找到 {{ clubStore.total }} 个社团 </span>
+          <span class="result-count"> 共找到 {{ clubStore.searchPageData.total }} 个社团 </span>
         </div>
 
         <div class="sort-controls">
@@ -84,11 +84,11 @@
       </el-empty>
 
       <!-- 分页 -->
-      <div v-if="clubStore.total > 0" class="pagination-container">
+      <div v-if="clubStore.searchPageData.total > 0" class="pagination-container">
         <el-pagination
-          v-model:current-page="clubStore.currentPage"
-          :page-size="clubStore.pageSize"
-          :total="clubStore.total"
+          v-model:current-page="clubStore.searchPageData.currentPage"
+          :page-size="clubStore.searchPageData.pageSize"
+          :total="clubStore.searchPageData.total"
           layout="prev, pager, next, jumper, total"
           @current-change="handlePageChange"
         />
@@ -164,7 +164,7 @@ const handleSortChange = async () => {
 
 // 分页切换
 const handlePageChange = async (page: number) => {
-  clubStore.setPage(page)
+  clubStore.setSearchPage(page)
   await performSearch()
 }
 
@@ -173,10 +173,7 @@ const clearSearch = async () => {
   searchKeyword.value = ''
   activeCategory.value = ''
   sortBy.value = 'relevance'
-
-  await router.push({ path: '/search' })
   clubStore.resetSearch()
-  await clubStore.fetchClubs()
 }
 
 // 执行搜索请求
@@ -185,8 +182,8 @@ const performSearch = async () => {
     keyword: searchKeyword.value,
     category: activeCategory.value || undefined,
     sortBy: sortBy.value === 'relevance' ? 'hot' : sortBy.value,
-    page: clubStore.currentPage,
-    pageSize: clubStore.pageSize,
+    page: clubStore.searchPageData.currentPage,
+    pageSize: clubStore.searchPageData.pageSize,
   }
 
   try {

@@ -61,7 +61,7 @@
             </el-select>
           </div>
           <div class="filter-right">
-            <span class="result-count"> 共找到 {{ clubStore.total }} 个社团 </span>
+            <span class="result-count"> 共找到 {{ clubStore.globalPageData.total }} 个社团 </span>
           </div>
         </div>
 
@@ -80,11 +80,11 @@
         />
 
         <!-- 分页 -->
-        <div v-if="clubStore.total > 0" class="pagination-container">
+        <div v-if="clubStore.globalPageData.total > 0" class="pagination-container">
           <el-pagination
-            v-model:current-page="clubStore.currentPage"
-            :page-size="clubStore.pageSize"
-            :total="clubStore.total"
+            v-model:current-page="clubStore.globalPageData.currentPage"
+            :page-size="clubStore.globalPageData.pageSize"
+            :total="clubStore.globalPageData.total"
             layout="prev, pager, next, jumper, total"
             @current-change="handlePageChange"
           />
@@ -289,7 +289,7 @@ const handleSortChange = (sort: string) => {
 
 // 处理分页切换
 const handlePageChange = (page: number) => {
-  clubStore.setPage(page)
+  clubStore.setGlobalPage(page)
   clubStore.fetchClubs()
 }
 
