@@ -15,7 +15,7 @@
       </div>
 
       <!-- 导航菜单 -->
-      <el-menu :default-active="activeMenu" class="user-menu" @select="handleMenuSelect">
+      <el-menu :default-active="activeMenu" class="user-menu" @select="handleMenuSelect" :default-openeds="['user-clubs']">
         <el-menu-item index="user-center">
           <el-icon><User /></el-icon>
           <span>个人中心</span>

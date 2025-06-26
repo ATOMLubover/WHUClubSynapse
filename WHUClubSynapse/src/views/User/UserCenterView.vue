@@ -33,7 +33,12 @@
         </div>
 
         <div class="stats-section">
-          <div class="stat-card" v-for="(stat, index) in statsData" :key="index">
+          <div
+            class="stat-card clickable"
+            v-for="(stat, index) in statsData"
+            :key="index"
+            @click="handleStatClick(index)"
+          >
             <div class="stat-icon">
               <el-icon :color="stat.color">
                 <component :is="stat.icon" />
@@ -480,6 +485,7 @@ import { getCurrentUser, changePassword } from '@/api/auth'
 import type { User as UserType, UserStats, UserPreferences, ClubCategory } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 import { allUserTags } from '@/utils/mockData'
+import { useRouter } from 'vue-router'
 
 // Stores
 const authStore = useAuthStore()
@@ -841,6 +847,18 @@ const filterTag = (query: string) => {
   tagInput.value = query
 }
 
+const router = useRouter()
+
+const handleStatClick = (index: number) => {
+  if (index === 0) {
+    router.push('/user/applications')
+  } else if (index === 1) {
+    router.push('/user/favorites')
+  } else if (index === 2) {
+    router.push('/user/clubs/joined')
+  }
+}
+
 onMounted(() => {
   loadUserData()
 })
@@ -1024,16 +1042,48 @@ onMounted(() => {
   margin: 0;
   background: white;
   border-radius: 16px 16px 0 0;
-}
-
-.user-tabs :deep(.el-tabs__nav-wrap) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 0 32px;
 }
 
+.user-tabs :deep(.el-tabs__nav) {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
 .user-tabs :deep(.el-tabs__item) {
+  flex: 1 1 0;
+  text-align: center;
   padding: 20px 0;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 18px;
+  border-radius: 16px;
+  margin: 0 16px;
+  background: linear-gradient(135deg, #f8fafc 60%, #e3e6f3 100%);
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(64,158,255,0.04);
+  cursor: pointer;
+}
+
+.user-tabs :deep(.el-tabs__item.is-active) {
+  background: linear-gradient(135deg, #667eea 60%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
+  transform: scale(1.08);
+}
+
+.user-tabs :deep(.el-tabs__item):hover {
+  background: linear-gradient(135deg, #e0e7ff 60%, #c7d2fe 100%);
+  color: #5a67d8;
+  box-shadow: 0 4px 16px rgba(64,158,255,0.12);
+  transform: scale(1.04);
+}
+
+.user-tabs :deep(.el-tabs__nav-wrap) {
+  padding: 0;
 }
 
 .tab-label {
@@ -1564,5 +1614,14 @@ onMounted(() => {
   .preferences-content {
     padding: 16px;
   }
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.stat-card.clickable:hover {
+  background: rgba(255,255,255,0.3);
+  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
 }
 </style>
