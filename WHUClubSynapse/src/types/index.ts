@@ -165,7 +165,7 @@ export interface ClubPost {
   clubId: string
   title: string
   content: string
-  authorId: string
+  authorId: number
   authorName: string
   authorAvatar?: string
   createdAt: string
@@ -176,7 +176,7 @@ export interface ClubPost {
 export interface ClubPostReply {
   id: string
   postId: string
-  authorId: string
+  authorId: number
   authorName: string
   authorAvatar?: string
   content: string
