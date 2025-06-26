@@ -42,6 +42,7 @@
                 {{ getApplyButtonText() }}
               </el-button>
               <el-button
+                v-if="authStore.isLoggedIn"
                 :icon="isFavorited ? StarFilled : Star"
                 size="large"
                 @click="toggleFavorite"
@@ -213,6 +214,7 @@ const hasApplied = ref(false) // 添加一个标记是否已申请的状态
 
 // 将 isDisabled 改为计算属性
 const isDisabled = computed(() => {
+  if (!authStore.isLoggedIn) return false
   if (!club.value) return true
 
   // 如果已经申请过了，就禁用
@@ -331,6 +333,7 @@ const confirmApply = async () => {
 }
 
 const getApplyButtonText = () => {
+  if (!authStore.isLoggedIn) return '登录后申请'
   if (!club.value) return '加载中...'
 
   // 如果已经申请过了

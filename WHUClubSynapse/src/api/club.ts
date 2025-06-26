@@ -2,6 +2,7 @@
 import request from '@/utils/request'
 import type { Club, PaginatedData, SearchParams, ApiResponse, Application } from '@/types'
 import { useConfigStore } from '@/stores/config'
+import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
 import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost } from './mock/club'
 
@@ -19,6 +20,7 @@ export const getClubList = async (
     return await mockClub.mockGetClubList(params)
   }
 
+  const authStore = useAuthStore()
   const queryParams = new URLSearchParams()
 
   if (params.keyword) {
@@ -36,11 +38,23 @@ export const getClubList = async (
   if (params.pageSize) {
     queryParams.append('pageSize', params.pageSize.toString())
   }
+  
+  // 添加登录状态参数，告诉后端是否需要返回用户相关的数据
+  if (authStore.isLoggedIn) {
+    queryParams.append('includeUserData', 'true')
+  }
 
   const queryString = queryParams.toString()
   const url = queryString ? `/clubs?${queryString}` : '/clubs'
 
-  return await request.get(url)
+  // 根据登录状态使用不同的请求头
+  const config = authStore.isLoggedIn ? {
+    headers: {
+      'Authorization': `Bearer ${authStore.token}`,
+    }
+  } : {}
+
+  return await request.get(url, config)
 }
 
 // 获取社团详情

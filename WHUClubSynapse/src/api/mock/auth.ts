@@ -9,19 +9,11 @@ import type {
   UserPreferences
 } from '@/types'
 import { config } from '@/config'
+import { mockUser } from '@/utils/mockData'
 
 // 模拟延迟
 const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 模拟用户数据
-const mockUser: User = {
-  id: 2233,
-  username: 'test_user',
-  email: 'user@example.com',
-  avatar_url: 'https://example.com/avatar.jpg',
-  role: 'user',
-  last_active: '2025-06-25 15:04:05'
-}
 
 // 模拟管理员用户
 const mockAdmin: User = {

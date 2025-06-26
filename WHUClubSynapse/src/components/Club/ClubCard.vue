@@ -13,8 +13,9 @@
       <!-- 热门标签 -->
       <el-tag v-if="club.isHot" type="danger" class="hot-tag" size="small"> 热门 </el-tag>
 
-      <!-- 收藏按钮 -->
+      <!-- 收藏按钮 - 仅登录用户显示 -->
       <el-button
+        v-if="authStore.isLoggedIn"
         :icon="isFavorited ? StarFilled : Star"
         class="favorite-btn"
         circle
@@ -56,9 +57,16 @@
 
       <!-- 操作按钮 -->
       <div class="club-actions">
-        <el-button type="primary" size="small" @click.stop="handleApply" :disabled="isDisabled">
-          {{ getApplyButtonText() }}
-        </el-button>
+        <!-- 登录用户显示申请按钮和加入状态 -->
+        <template v-if="authStore.isLoggedIn">
+          <el-button type="primary" size="small" @click.stop="handleApply" :disabled="isDisabled">
+            {{ getApplyButtonText() }}
+          </el-button>
+        </template>
+        <!-- 未登录用户显示登录提示 -->
+        <template v-else>
+          <el-button type="primary" size="small" @click.stop="goToLogin"> 登录后申请 </el-button>
+        </template>
         <el-button size="small" @click.stop="goToDetail"> 查看详情 </el-button>
       </div>
     </div>
@@ -83,10 +91,15 @@ const emit = defineEmits(['update:favorited'])
 const router = useRouter()
 const authStore = useAuthStore()
 const clubStore = useClubStore()
-const isFavorited = computed(() => props.club.isFavorite)
+
+// 收藏状态 - 仅对登录用户有意义
+const isFavorited = computed(() => {
+  return authStore.isLoggedIn ? props.club.isFavorite : false
+})
 
 const isDisabled = computed(() => {
   if (!props.club) return true
+  if (!authStore.isLoggedIn) return true
 
   // 根据社团状态判断
   if (props.club.status === 'pending') return true
@@ -97,6 +110,7 @@ const isDisabled = computed(() => {
 
   return false
 })
+
 // 获取分类对应的标签类型
 const getCategoryType = (category: ClubCategory) => {
   const typeMap: Record<ClubCategory, string> = {
@@ -112,6 +126,11 @@ const getCategoryType = (category: ClubCategory) => {
 // 跳转到详情页
 const goToDetail = () => {
   router.push(`/club/${props.club.id}`)
+}
+
+// 跳转到登录页
+const goToLogin = () => {
+  router.push('/login')
 }
 
 // 切换收藏状态
@@ -148,6 +167,7 @@ const handleApply = () => {
 
 const getApplyButtonText = () => {
   if (!props.club) return '加载中...'
+  if (!authStore.isLoggedIn) return '登录后申请'
 
   // 根据社团状态返回对应文本
   if (props.club.status === 'pending') return '等待审核中'

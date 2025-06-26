@@ -24,7 +24,7 @@
             </div>
             <div class="reply-content">{{ reply.content }}</div>
           </div>
-          <div class="reply-floor">#{{ (page-1)*pageSize + idx + 1 }}</div>
+          <div class="reply-floor">#{{ (page - 1) * pageSize + idx + 1 }}</div>
         </div>
         <div class="pagination" v-if="total > pageSize">
           <el-pagination
@@ -47,7 +47,9 @@
           placeholder="说点什么吧..."
           class="reply-input"
         />
-        <el-button type="primary" @click="handleReply" :loading="replyLoading" class="reply-btn">回复</el-button>
+        <el-button type="primary" @click="handleReply" :loading="replyLoading" class="reply-btn"
+          >回复</el-button
+        >
       </div>
     </el-card>
   </div>
@@ -91,6 +93,10 @@ const fetchReplies = async () => {
   }
 }
 const handleReply = async () => {
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
   if (!replyContent.value.trim()) {
     ElMessage.warning('回复内容不能为空')
     return
@@ -99,10 +105,10 @@ const handleReply = async () => {
   try {
     await replyClubPost({
       postId,
-      authorId: authStore.user?.id || 'user1',
+      authorId: authStore.user?.id.toString() || '1',
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || defaultAvatar,
-      content: replyContent.value
+      content: replyContent.value,
     })
     ElMessage.success('回复成功')
     replyContent.value = ''
@@ -129,7 +135,7 @@ onMounted(() => {
 .post-main {
   margin-bottom: 28px;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(64,158,255,0.08);
+  box-shadow: 0 4px 24px rgba(64, 158, 255, 0.08);
   background: linear-gradient(135deg, #f8fafc 60%, #e6f0ff 100%);
   padding: 32px 28px 24px 28px;
 }
@@ -150,7 +156,7 @@ onMounted(() => {
 }
 .post-avatar {
   border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(64,158,255,0.08);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.08);
 }
 .meta-info {
   display: flex;
@@ -175,7 +181,7 @@ onMounted(() => {
 .reply-area {
   margin-top: 8px;
   border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(64,158,255,0.06);
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.06);
   padding: 28px 20px 20px 20px;
 }
 .reply-header {
@@ -195,7 +201,7 @@ onMounted(() => {
   gap: 14px;
   background: #f8fafc;
   border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   padding: 14px 18px 14px 14px;
   position: relative;
   border: 1px solid #f0f0f0;
@@ -243,7 +249,7 @@ onMounted(() => {
   gap: 8px;
   background: #f4f8ff;
   border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(64,158,255,0.04);
+  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.04);
   padding: 16px 12px 12px 12px;
 }
 .reply-input {
@@ -259,11 +265,11 @@ onMounted(() => {
   font-weight: 500;
   border-radius: 20px;
   padding: 0 22px;
-  box-shadow: 0 2px 8px rgba(64,158,255,0.08);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.08);
   transition: box-shadow 0.2s;
 }
 .reply-btn:hover {
-  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
   opacity: 0.92;
 }
 .pagination {
@@ -287,4 +293,4 @@ onMounted(() => {
     font-size: 15px;
   }
 }
-</style> 
+</style>

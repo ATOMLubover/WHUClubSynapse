@@ -2,27 +2,31 @@
   <div class="club-post-area">
     <div class="post-header">
       <h2>社团帖子区</h2>
-      <el-button type="primary" @click="showCreate = true" class="post-btn" plain>
+      <el-button
+        type="primary"
+        @click="authStore.isLoggedIn ? (showCreate = true) : ElMessage.warning('请先登录')"
+        class="post-btn"
+        plain
+      >
         <el-icon><Plus /></el-icon> 发帖
       </el-button>
     </div>
     <el-empty v-if="!posts.length && !loading" description="暂无帖子" />
     <div v-else class="post-list">
-      <div
-        v-for="post in posts"
-        :key="post.id"
-        class="post-card"
-        @click="goToPost(post)"
-      >
+      <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPost(post)">
         <div class="post-card-main">
           <div class="post-title">{{ post.title }}</div>
           <div class="post-meta">
             <el-avatar :size="28" :src="post.authorAvatar || ''" />
             <span class="author">{{ post.authorName }}</span>
             <span class="time">{{ formatDate(post.createdAt) }}</span>
-            <span class="reply"><el-icon><ChatLineRound /></el-icon> {{ post.replyCount }}</span>
+            <span class="reply"
+              ><el-icon><ChatLineRound /></el-icon> {{ post.replyCount }}</span
+            >
           </div>
-          <div class="post-abstract">{{ post.content.slice(0, 50) }}<span v-if="post.content.length > 50">...</span></div>
+          <div class="post-abstract">
+            {{ post.content.slice(0, 50) }}<span v-if="post.content.length > 50">...</span>
+          </div>
         </div>
         <el-icon class="arrow"><ArrowRightBold /></el-icon>
       </div>
@@ -42,7 +46,13 @@
           <el-input v-model="createForm.title" maxlength="30" show-word-limit />
         </el-form-item>
         <el-form-item label="内容">
-          <el-input v-model="createForm.content" type="textarea" :rows="5" maxlength="500" show-word-limit />
+          <el-input
+            v-model="createForm.content"
+            type="textarea"
+            :rows="5"
+            maxlength="500"
+            show-word-limit
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -102,7 +112,7 @@ const handleCreate = async () => {
       clubId: props.clubId,
       title: createForm.value.title,
       content: createForm.value.content,
-      authorId: authStore.user?.id || 'user1',
+      authorId: authStore.user?.id.toString() || '1',
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || '',
     })
@@ -128,7 +138,7 @@ onMounted(fetchPosts)
   margin-top: 40px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   padding: 32px 24px 24px 24px;
 }
 .post-header {
@@ -149,11 +159,11 @@ onMounted(fetchPosts)
   font-weight: 500;
   border-radius: 20px;
   padding: 0 22px;
-  box-shadow: 0 2px 8px rgba(64,158,255,0.08);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.08);
   transition: box-shadow 0.2s;
 }
 .post-btn:hover {
-  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
   opacity: 0.92;
 }
 .post-list {
@@ -166,16 +176,19 @@ onMounted(fetchPosts)
   align-items: center;
   background: #f8fafc;
   border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   padding: 18px 20px;
   cursor: pointer;
-  transition: box-shadow 0.2s, background 0.2s, transform 0.1s;
+  transition:
+    box-shadow 0.2s,
+    background 0.2s,
+    transform 0.1s;
   position: relative;
   border: 1px solid #f0f0f0;
 }
 .post-card:hover {
   background: #e6f0ff;
-  box-shadow: 0 4px 16px rgba(64,158,255,0.12);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.12);
   transform: translateY(-2px) scale(1.01);
 }
 .post-card-main {
@@ -237,4 +250,4 @@ onMounted(fetchPosts)
     padding: 12px 8px;
   }
 }
-</style> 
+</style>
