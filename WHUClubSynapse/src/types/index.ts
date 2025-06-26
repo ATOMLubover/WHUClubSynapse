@@ -158,3 +158,27 @@ export interface UserPreferences {
   showJoinedClubs: boolean
   tags?: string[] // 用户特质/爱好标签
 }
+
+// 社团帖子类型
+export interface ClubPost {
+  id: string
+  clubId: string
+  title: string
+  content: string
+  authorId: string
+  authorName: string
+  authorAvatar?: string
+  createdAt: string
+  replyCount: number
+}
+
+// 帖子回复类型
+export interface ClubPostReply {
+  id: string
+  postId: string
+  authorId: string
+  authorName: string
+  authorAvatar?: string
+  content: string
+  createdAt: string
+}

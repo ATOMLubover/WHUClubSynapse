@@ -35,6 +35,11 @@ const router = createRouter({
           component: () => import('@/views/ClubDetailView.vue'),
         },
         {
+          path: '/club/:clubId/post/:postId',
+          name: 'club-post-detail',
+          component: () => import('@/views/ClubPostDetailView.vue'),
+        },
+        {
           path: '/search',
           name: 'search',
           component: () => import('@/views/SearchView.vue'),
