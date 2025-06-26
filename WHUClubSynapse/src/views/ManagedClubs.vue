@@ -109,7 +109,7 @@
                   <div class="club-actions">
                     <el-button size="small" @click="editClub(club)"> 编辑信息 </el-button>
                     <el-button size="small" @click="manageMembers(club)"> 成员管理 </el-button>
-                    <el-button size="small" type="danger" @click="handledelete()">
+                    <el-button size="small" type="danger" @click="handledelete(club)">
                       删除社团
                     </el-button>
                   </div>
@@ -394,7 +394,7 @@ const manageMembers = (club: Club) => {
 }
 
 // 处理删除社团
-const handledelete = () => {
+const handledelete = (club: Club) => {
   showDeleteDialog.value = true
   deleteClub.value = club
 }

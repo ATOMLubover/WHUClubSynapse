@@ -1,18 +1,19 @@
 // 用户类型
 export interface User {
-  id: string
+  id: number
   username: string
   email: string
-  avatar?: string
-  role: 'student' | 'admin' | 'club_admin'
+  avatar_url: string
+  role: 'user' | 'admin'
+  last_active: string
   studentId?: string
-  realName: string
-  college: string
+  realName?: string
+  major?: string
   phone?: string
-  createdAt: string
-  emailVerified: string
-  phoneVerified: string
-  bio: string
+  createdAt?: string
+  emailVerified?: string
+  phoneVerified?: string
+  bio?: string
   // 用户统计信息
   stats?: UserStats
   // 用户偏好设置
@@ -88,7 +89,7 @@ export interface Favorite {
   createdAt: string
 }
 
-// API响应类型
+// API响应类型（保持原有，但很多接口不使用这个格式）
 export interface ApiResponse<T = any> {
   code: number
   message: string
@@ -118,15 +119,33 @@ export interface LoginRequest {
   password: string
 }
 
-// 注册请求
+// 注册请求（根据接口文档）
 export interface RegisterRequest {
   username: string
-  password: string
   email: string
-  realName: string
-  studentId: string
-  college: string
+  password: string  // 前端加密后的密码
+  vrf_code: string  // 邮箱收到的 4 位验证码
+  realName?: string
+  studentId?: string
+  major?: string
   phone?: string
+}
+
+// 发送验证码请求
+export interface VerifyEmailRequest {
+  email: string
+}
+
+// 用户列表查询参数（管理员接口）
+export interface UserListParams {
+  offset: number  // 分页起始位置
+  num: number     // 每页数量
+}
+
+// 注册成功响应
+export interface RegisterResponse {
+  id: number
+  username: string
 }
 
 // 用户偏好设置类型

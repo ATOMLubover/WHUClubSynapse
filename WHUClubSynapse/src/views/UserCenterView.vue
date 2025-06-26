@@ -4,7 +4,7 @@
     <!-- 用户头部信息 -->
     <div class="user-header">
       <div class="user-avatar-section">
-        <el-avatar :size="80" :src="userInfo?.avatar || ''" class="user-avatar">
+        <el-avatar :size="80" :src="userInfo?.avatar_url || ''" class="user-avatar">
           <el-icon><User /></el-icon>
         </el-avatar>
         <el-button size="small" @click="showAvatarUpload = true">更换头像</el-button>
@@ -244,17 +244,14 @@
                 placeholder="请输入关键词搜索或自定义（限4字以内）"
                 class="tag-group"
               >
-                <el-option
-                  v-for="tag in filteredTags"
-                  :key="tag"
-                  :label="tag"
-                  :value="tag"
-                />
+                <el-option v-for="tag in filteredTags" :key="tag" :label="tag" :value="tag" />
               </el-select>
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="savePreferences" :loading="preferencesLoading">保存偏好设置</el-button>
+              <el-button type="primary" @click="savePreferences" :loading="preferencesLoading"
+                >保存偏好设置</el-button
+              >
             </el-form-item>
           </el-form>
         </el-card>
@@ -363,7 +360,7 @@ const preferences = reactive<UserPreferences>({
   activityNotifications: false,
   profilePublic: true,
   showJoinedClubs: true,
-  tags: []
+  tags: [],
 })
 
 // 密码修改表单
@@ -478,31 +475,9 @@ const handleEditToggle = async () => {
 }
 
 const handlePasswordChange = async () => {
-  if (!passwordFormRef.value) return
-
-  try {
-    await passwordFormRef.value.validate()
-    passwordLoading.value = true
-
-    await changePassword({
-      oldPassword: passwordForm.oldPassword,
-      newPassword: passwordForm.newPassword,
-    })
-
-    ElMessage.success('密码修改成功')
-    showPasswordDialog.value = false
-
-    // 重置表单
-    Object.assign(passwordForm, {
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    })
-  } catch (error: any) {
-    ElMessage.error(error.message || '密码修改失败')
-  } finally {
-    passwordLoading.value = false
-  }
+  // 注意：根据接口文档，后端暂时没有提供修改密码接口
+  ElMessage.warning('修改密码功能暂未开放，请联系管理员')
+  showPasswordDialog.value = false
 }
 
 const sendVerificationEmail = async () => {
@@ -541,22 +516,17 @@ const uploadAvatar = (params: any) => {
 
 const confirmAvatarUpload = () => {
   // TODO: 上传头像到服务器
-  userInfo.value!.avatar = uploadedAvatar.value
+  if (userInfo.value) {
+    userInfo.value.avatar_url = uploadedAvatar.value
+  }
   showAvatarUpload.value = false
   uploadedAvatar.value = ''
   ElMessage.success('头像更新成功')
 }
 
 const savePreferences = async () => {
-  try {
-    preferencesLoading.value = true
-    await authStore.updatePreferences(preferences)
-    ElMessage.success('偏好设置已保存')
-  } catch (error: any) {
-    ElMessage.error(error.message || '保存偏好设置失败')
-  } finally {
-    preferencesLoading.value = false
-  }
+  // 注意：根据接口文档，后端暂时没有提供更新偏好设置接口
+  ElMessage.warning('偏好设置功能暂未开放，请联系管理员')
 }
 
 //更换邮箱手机号
@@ -612,20 +582,32 @@ const handleChangeEmail = async () => {
 // 加载用户数据
 const loadUserData = async () => {
   try {
-    userInfo.value = (await getCurrentUser()).data.data
+    // 使用 authStore 中的用户信息，而不是调用已删除的 getCurrentUser API
+    const currentUser = authStore.user
+    if (!currentUser) {
+      // 如果没有用户信息，尝试重新获取
+      await authStore.fetchUserInfo()
+      userInfo.value = authStore.user
+    } else {
+      userInfo.value = currentUser
+    }
+
+    if (!userInfo.value) {
+      throw new Error('无法获取用户信息')
+    }
 
     // 复制到可编辑对象
     Object.assign(editableUserInfo, {
       username: userInfo.value.username,
       realName: userInfo.value.realName || '',
       studentId: userInfo.value.studentId || '',
-      college: userInfo.value.college || '',
+      college: userInfo.value.major || '', // 注意：使用 major 而不是 college
       email: userInfo.value.email || '',
       phone: userInfo.value.phone || '',
       bio: userInfo.value.bio || '',
     })
 
-    // 加载用户偏好设置
+    // 加载用户偏好设置（如果存在）
     if (userInfo.value.preferences) {
       Object.assign(preferences, userInfo.value.preferences)
     }
@@ -642,7 +624,7 @@ const searchTags = async (query: string) => {
 
   try {
     tagLoading.value = true
-    tagOptions.value = allUserTags.filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
+    tagOptions.value = allUserTags.filter((tag) => tag.toLowerCase().includes(query.toLowerCase()))
   } catch (error: any) {
     ElMessage.error(error.message || '搜索标签失败')
   } finally {
@@ -653,9 +635,9 @@ const searchTags = async (query: string) => {
 const filteredTags = computed(() => {
   const input = tagInput.value.trim()
   const selected = preferences.tags || []
-  let base = allUserTags.filter(tag => !selected.includes(tag))
+  let base = allUserTags.filter((tag) => !selected.includes(tag))
   if (input) {
-    base = base.filter(tag => tag.includes(input))
+    base = base.filter((tag) => tag.includes(input))
   }
   if (
     input &&

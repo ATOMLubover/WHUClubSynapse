@@ -1,230 +1,143 @@
-import type { User, LoginRequest, RegisterRequest, ApiResponse } from '@/types'
-import { mockUser } from '@/utils/mockData'
+import type { 
+  User, 
+  LoginRequest, 
+  RegisterRequest, 
+  VerifyEmailRequest,
+  UserListParams,
+  RegisterResponse,
+  ApiResponse
+} from '@/types'
 import { config } from '@/config'
 
 // 模拟延迟
 const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 模拟用户登录
+// 模拟用户数据
+const mockUser: User = {
+  id: 2233,
+  username: 'test_user',
+  email: 'user@example.com',
+  avatar_url: 'https://example.com/avatar.jpg',
+  role: 'user',
+  last_active: '2025-06-25 15:04:05'
+}
+
+// 模拟管理员用户
+const mockAdmin: User = {
+  id: 1,
+  username: 'admin',
+  email: 'admin@example.com',
+  avatar_url: 'https://example.com/admin-avatar.jpg',
+  role: 'admin',
+  last_active: '2025-06-25 16:00:00'
+}
+
+// 1. 模拟用户登录
 export const mockLogin = async (
   data: LoginRequest,
-): Promise<{ data: ApiResponse<{ user: User; token: string }> }> => {
+): Promise<{ data: User; token: string }> => {
   await delay()
 
   // 简单的模拟验证
   if (data.username === 'demo' && data.password === '123456') {
     return {
-      data: {
-        code: 200,
-        message: '登录成功',
-        data: {
-          user: mockUser,
-          token: 'mock_jwt_token_' + Date.now(),
-        },
-      },
+      data: mockUser,
+      token: 'mock_jwt_token_' + Date.now(),
+    }
+  } else if (data.username === 'admin' && data.password === 'admin123') {
+    return {
+      data: mockAdmin,
+      token: 'mock_jwt_token_admin_' + Date.now(),
     }
   } else {
     throw new Error('用户名或密码错误')
   }
 }
 
-// 模拟用户注册
+// 2. 模拟发送邮箱验证码
+export const mockSendVerifyEmail = async (
+  data: VerifyEmailRequest,
+): Promise<string> => {
+  await delay(800)
+  
+  // 模拟已存在验证码的情况（返回202状态码的模拟）
+  if (data.email === 'existing@example.com') {
+    throw new Error('验证码已存在')
+  }
+  
+  return `邮件已发送至${data.email}`
+}
+
+// 3. 模拟用户注册
 export const mockRegister = async (
   data: RegisterRequest,
-): Promise<{ data: ApiResponse<{ user: User; token: string }> }> => {
+): Promise<RegisterResponse> => {
   await delay(1200)
 
-  const newUser: User = {
-    id: 'user_' + Date.now(),
-    username: data.username,
-    email: data.email,
-    role: 'student',
-    studentId: data.studentId,
-    realName: data.realName,
-    college: data.college,
-    phone: data.phone,
-    createdAt: new Date().toISOString(),
-    emailVerified: 'true',
-    phoneVerified: 'false',
-    bio: '',
-    // 新用户的初始统计信息
-    stats: {
-      appliedClubs: 0,
-      favoriteClubs: 0,
-      joinedClubs: 0,
-      managedClubs: 0
-    },
-    // 新用户未完成偏好设置
-    hasCompletedPreferences: false
+  // 模拟验证码验证
+  if (data.vrf_code !== '1234') {
+    throw new Error('验证码错误或失效')
+  }
+
+  // 模拟用户名或邮箱已存在
+  if (data.username === 'admin' || data.email === 'admin@example.com') {
+    throw new Error('用户名或邮箱已存在')
   }
 
   return {
-    data: {
-      code: 200,
-      message: '注册成功',
-      data: {
-        user: newUser,
-        token: 'mock_jwt_token_' + Date.now(),
-      },
-    },
+    id: Date.now(),
+    username: data.username,
   }
+}
+
+// 4. 模拟根据ID获取用户信息
+export const mockGetUserById = async (id: number): Promise<User> => {
+  await delay(500)
+
+  if (id === 1) {
+    return mockAdmin
+  } else if (id === 2233) {
+    return mockUser
+  } else {
+    throw new Error('用户不存在')
+  }
+}
+
+// 5. 模拟管理员获取用户列表
+export const mockGetUserList = async (params: UserListParams): Promise<User[]> => {
+  await delay(600)
+
+  // 模拟权限检查
+  // 在实际使用中，这个检查应该在请求拦截器中处理
+  
+  // 模拟分页返回
+  const allUsers = [mockAdmin, mockUser]
+  const start = params.offset
+  const end = start + params.num
+  
+  return allUsers.slice(start, end)
+}
+
+// 6. 模拟ping
+export const mockPing = async (): Promise<string> => {
+  await delay(100)
+  return 'pong'
 }
 
 // 模拟获取当前用户信息
-export const mockGetCurrentUser = async (): Promise<{ data: ApiResponse<User> }> => {
+export const mockGetCurrentUser = async (): Promise<User> => {
   await delay(500)
-
-  return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: mockUser,
-    },
-  }
+  return mockUser
 }
 
 // 模拟用户退出登录
-export const mockLogout = async (): Promise<{ data: ApiResponse<null> }> => {
+export const mockLogout = async (): Promise<ApiResponse<null>> => {
   await delay(300)
-
   return {
-    data: {
-      code: 200,
-      message: '退出登录成功',
-      data: null,
-    },
+    code: 200,
+    message: '退出成功',
+    data: null,
   }
 }
 
-// 模拟检查用户名是否可用
-export const mockCheckUsername = async (
-  username: string,
-): Promise<{ data: ApiResponse<{ available: boolean }> }> => {
-  await delay(400)
 
-  // 模拟已存在的用户名
-  const existingUsernames = ['admin', 'test', 'user', 'demo']
-  const available = !existingUsernames.includes(username.toLowerCase())
-
-  return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: { available },
-    },
-  }
-}
-
-// 模拟检查邮箱是否可用
-export const mockCheckEmail = async (
-  email: string,
-): Promise<{ data: ApiResponse<{ available: boolean }> }> => {
-  await delay(400)
-
-  // 模拟已存在的邮箱
-  const existingEmails = ['admin@example.com', 'test@example.com', 'user@example.com']
-  const available = !existingEmails.includes(email.toLowerCase())
-
-  return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: { available },
-    },
-  }
-}
-
-// 模拟刷新token
-export const mockRefreshToken = async (): Promise<{ data: ApiResponse<{ token: string }> }> => {
-  await delay(300)
-
-  return {
-    data: {
-      code: 200,
-      message: 'Token刷新成功',
-      data: {
-        token: 'mock_jwt_token_' + Date.now(),
-      },
-    },
-  }
-}
-
-// 模拟修改密码
-export const mockChangePassword = async (data: {
-  oldPassword: string
-  newPassword: string
-}): Promise<{ data: ApiResponse<null> }> => {
-  await delay(600)
-
-  // 简单验证
-  if (data.oldPassword === '123456') {
-    return {
-      data: {
-        code: 200,
-        message: '密码修改成功',
-        data: null,
-      },
-    }
-  } else {
-    throw new Error('原密码错误')
-  }
-}
-
-// 模拟忘记密码
-export const mockForgotPassword = async (email: string): Promise<{ data: ApiResponse<null> }> => {
-  await delay(800)
-
-  return {
-    data: {
-      code: 200,
-      message: '重置密码邮件已发送',
-      data: null,
-    },
-  }
-}
-
-// 模拟重置密码
-export const mockResetPassword = async (data: {
-  token: string
-  newPassword: string
-}): Promise<{ data: ApiResponse<null> }> => {
-  await delay(600)
-
-  return {
-    data: {
-      code: 200,
-      message: '密码重置成功',
-      data: null,
-    },
-  }
-}
-
-// 模拟更新用户偏好设置
-export const mockUpdateUserPreferences = async (preferences: {
-  interestedCategories: string[]
-  emailNotifications: boolean
-  applicationNotifications: boolean
-  activityNotifications: boolean
-  profilePublic: boolean
-  showJoinedClubs: boolean
-  tags?: string[]
-}): Promise<{ data: ApiResponse<User> }> => {
-  await delay(800)
-
-  // 更新mockUser的偏好设置
-  mockUser.preferences = {
-    ...preferences,
-    interestedCategories: preferences.interestedCategories as any[],
-    tags: preferences.tags || []
-  }
-  mockUser.hasCompletedPreferences = true
-  mockUser.tags = preferences.tags || []
-
-  return {
-    data: {
-      code: 200,
-      message: '偏好设置更新成功',
-      data: mockUser,
-    },
-  }
-}

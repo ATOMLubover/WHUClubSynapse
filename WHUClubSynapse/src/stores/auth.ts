@@ -13,21 +13,19 @@ export const useAuthStore = defineStore('auth', () => {
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
-  const isClubAdmin = computed(() => user.value?.role === 'club_admin')
 
   // 登录
   const login = async (loginData: LoginRequest) => {
     try {
       loading.value = true
       const response = await authApi.login(loginData)
-      const { user: userInfo, token: userToken } = response.data.data
+      
+      // 新的API格式：{ data: User, token: string }
+      user.value = response.data
+      token.value = response.token
+      localStorage.setItem('token', response.token)
 
-      user.value = userInfo
-      token.value = userToken
-      localStorage.setItem('token', userToken)
-
-      // ElMessage.success('登录成功')
-      return userInfo
+      return response.data
     } catch (error) {
       console.error('登录失败:', error)
       throw error
@@ -41,14 +39,10 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loading.value = true
       const response = await authApi.register(registerData)
-      const { user: userInfo, token: userToken } = response.data.data
-
-      user.value = userInfo
-      token.value = userToken
-      localStorage.setItem('token', userToken)
-
-      ElMessage.success('注册成功')
-      return userInfo
+      
+      // 注册成功后需要重新登录获取完整用户信息
+      // 因为注册接口只返回 { id, username }
+      return response
     } catch (error) {
       console.error('注册失败:', error)
       throw error
@@ -62,9 +56,9 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
 
     try {
-      const response = await authApi.getCurrentUser()
-      user.value = response.data.data
-      return response.data.data
+      const userInfo = await authApi.getCurrentUser()
+      user.value = userInfo
+      return userInfo
     } catch (error) {
       console.error('获取用户信息失败:', error)
       // 如果token无效，清除登录状态
@@ -101,7 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // 更新用户偏好设置
+  // TODO:更新用户偏好设置
   const updatePreferences = async (preferences: UserPreferences) => {
     try {
       loading.value = true
@@ -124,7 +118,6 @@ export const useAuthStore = defineStore('auth', () => {
     // 计算属性
     isLoggedIn,
     isAdmin,
-    isClubAdmin,
     // 方法
     login,
     register,

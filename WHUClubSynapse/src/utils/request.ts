@@ -35,16 +35,16 @@ request.interceptors.request.use(
 
 // 响应拦截器
 request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const { data } = response
-
-    // TODO:根据后端返回的接口来修改
-    // 业务错误处理
-    if (data.code !== 200) {
-      ElMessage.error(data.message || '请求失败')
-      return Promise.reject(new Error(data.message))
-    }
-
+  (response: AxiosResponse) => {
+    // 根据接口文档，后端接口返回格式不统一：
+    // - 登录接口：直接返回用户对象，token在Header中
+    // - 注册接口：返回 { id, username }
+    // - ping接口：返回文本 "pong"
+    // - 用户信息接口：直接返回用户对象
+    // - 验证码接口：返回文本消息
+    // - 用户列表接口：返回用户数组
+    
+    // 直接返回响应，让各个API函数自己处理数据格式
     return response
   },
   (error) => {
@@ -55,6 +55,9 @@ request.interceptors.response.use(
       const { status, data } = error.response
 
       switch (status) {
+        case 400:
+          ElMessage.error(data?.message || '请求参数错误')
+          break
         case 401:
           ElMessage.error('未授权，请重新登录')
           localStorage.removeItem('token')
@@ -68,6 +71,9 @@ request.interceptors.response.use(
           break
         case 500:
           ElMessage.error('服务器内部错误')
+          break
+        case 503:
+          ElMessage.error('服务不可用')
           break
         default:
           ElMessage.error(data?.message || '网络错误')

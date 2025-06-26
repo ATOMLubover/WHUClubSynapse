@@ -31,8 +31,8 @@
           <el-input v-model="registerForm.studentId" placeholder="请输入学号" clearable />
         </el-form-item>
 
-        <el-form-item label="学院" prop="college">
-          <el-select v-model="registerForm.college" placeholder="请选择学院" style="width: 100%">
+        <el-form-item label="学院" prop="major">
+          <el-select v-model="registerForm.major" placeholder="请选择学院" style="width: 100%">
             <el-option
               v-for="college in colleges"
               :key="college"
@@ -51,13 +51,25 @@
           />
         </el-form-item>
 
-        <el-form-item label="手机号" prop="phone">
-          <el-input
-            v-model="registerForm.phone"
-            placeholder="请输入手机号（可选）"
-            :prefix-icon="Phone"
-            clearable
-          />
+        <el-form-item label="验证码" prop="vrf_code">
+          <div class="verify-code-group">
+            <el-input
+              v-model="registerForm.vrf_code"
+              placeholder="请输入4位验证码"
+              :prefix-icon="Key"
+              clearable
+              maxlength="4"
+            />
+            <el-button
+              type="primary"
+              :loading="sendingCode"
+              :disabled="!canSendCode"
+              @click="sendVerifyCode"
+              class="send-code-btn"
+            >
+              {{ codeButtonText }}
+            </el-button>
+          </div>
         </el-form-item>
 
         <el-form-item label="密码" prop="password">
@@ -132,7 +144,7 @@
     <el-dialog v-model="privacyVisible" title="隐私政策" width="600px" :before-close="handleClose">
       <div class="privacy-content">
         <h4>1. 信息收集</h4>
-        <p>我们仅收集必要的用户信息，包括姓名、学号、邮箱等基本信息。</p>
+        <p>我们仅收集必要的用户信息，包括用户名、邮箱等基本信息。</p>
 
         <h4>2. 信息使用</h4>
         <p>收集的信息仅用于提供社团服务，不会用于其他商业用途。</p>
@@ -151,12 +163,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, Message, Phone } from '@element-plus/icons-vue'
+import { User, Lock, Message, Key } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import * as authApi from '@/api/auth'
 import type { RegisterRequest } from '@/types'
 
 const router = useRouter()
@@ -166,6 +179,9 @@ const registerFormRef = ref<FormInstance>()
 const agreeTerms = ref(false)
 const termsVisible = ref(false)
 const privacyVisible = ref(false)
+const sendingCode = ref(false)
+const countdown = ref(0)
+const timer = ref<number | null>(null)
 
 // 学院列表
 const colleges = ref([
@@ -204,13 +220,27 @@ const colleges = ref([
 // 注册表单
 const registerForm = reactive<RegisterRequest & { confirmPassword: string }>({
   username: '',
-  password: '',
-  confirmPassword: '',
   email: '',
+  password: '',
+  vrf_code: '',
+  confirmPassword: '',
   realName: '',
   studentId: '',
-  college: '',
+  major: '',
   phone: '',
+})
+
+// 计算属性
+const canSendCode = computed(() => {
+  return (
+    registerForm.email &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email) &&
+    countdown.value === 0
+  )
+})
+
+const codeButtonText = computed(() => {
+  return countdown.value > 0 ? `重新发送(${countdown.value}s)` : '发送验证码'
 })
 
 // 确认密码验证
@@ -224,33 +254,55 @@ const validateConfirmPassword = (rule: any, value: any, callback: any) => {
   }
 }
 
-// 表单验证规则
+// 表单验证规则 - 根据接口文档简化
 const registerRules: FormRules<RegisterRequest & { confirmPassword: string }> = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
     { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线', trigger: 'blur' },
   ],
-  realName: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' },
-    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' },
-  ],
-  studentId: [
-    { required: true, message: '请输入学号', trigger: 'blur' },
-    { pattern: /^\d{10}$/, message: '学号必须是10位数字', trigger: 'blur' },
-  ],
-  college: [{ required: true, message: '请选择学院', trigger: 'change' }],
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
   ],
-  phone: [{ pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }],
+  vrf_code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { pattern: /^\d{4}$/, message: '验证码必须是4位数字', trigger: 'blur' },
+  ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' },
     { pattern: /^(?=.*[a-zA-Z])(?=.*\d)/, message: '密码必须包含字母和数字', trigger: 'blur' },
   ],
   confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+}
+
+// 发送验证码
+const sendVerifyCode = async () => {
+  if (!registerForm.email) {
+    ElMessage.warning('请先输入邮箱地址')
+    return
+  }
+
+  try {
+    sendingCode.value = true
+    const message = await authApi.sendVerifyEmail({ email: registerForm.email })
+    ElMessage.success(message)
+
+    // 开始倒计时
+    countdown.value = 60
+    timer.value = window.setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer.value!)
+        timer.value = null
+      }
+    }, 1000)
+  } catch (error: any) {
+    ElMessage.error(error.message || '发送验证码失败')
+  } finally {
+    sendingCode.value = false
+  }
 }
 
 // 处理注册
@@ -266,11 +318,14 @@ const handleRegister = async () => {
     }
 
     const { confirmPassword, ...registerData } = registerForm
-    await authStore.register(registerData)
+    const result = await authStore.register(registerData)
 
-    ElMessage.success('注册成功')
-    router.push('/')
-  } catch (error) {
+    ElMessage.success(`注册成功！用户ID: ${result.id}`)
+
+    // 注册成功后跳转到登录页面
+    router.push('/login')
+  } catch (error: any) {
+    ElMessage.error(error.message || '注册失败')
     console.error('注册失败:', error)
   }
 }
@@ -294,6 +349,14 @@ const showPrivacy = () => {
 const handleClose = (done: () => void) => {
   done()
 }
+
+// 组件销毁时清理定时器
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (timer.value) {
+    clearInterval(timer.value)
+  }
+})
 </script>
 
 <style scoped>
@@ -335,6 +398,20 @@ const handleClose = (done: () => void) => {
 
 .register-form {
   margin-bottom: 24px;
+}
+
+.verify-code-group {
+  display: flex;
+  gap: 12px;
+}
+
+.verify-code-group .el-input {
+  flex: 1;
+}
+
+.send-code-btn {
+  white-space: nowrap;
+  min-width: 120px;
 }
 
 .register-btn {
@@ -381,6 +458,14 @@ const handleClose = (done: () => void) => {
 
   .register-form :deep(.el-form-item__label) {
     width: 70px !important;
+  }
+
+  .verify-code-group {
+    flex-direction: column;
+  }
+
+  .send-code-btn {
+    min-width: auto;
   }
 }
 </style>

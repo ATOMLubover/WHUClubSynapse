@@ -1,5 +1,13 @@
 import request from '@/utils/request'
-import type { User, LoginRequest, RegisterRequest, ApiResponse } from '@/types'
+import type { 
+  User, 
+  LoginRequest, 
+  RegisterRequest, 
+  VerifyEmailRequest,
+  UserListParams,
+  RegisterResponse,
+  ApiResponse
+} from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockAuth from './mock/auth'
 
@@ -9,87 +17,164 @@ const getIsUsingMockAPI = () => {
   return configStore.isUsingMockAPI
 }
 
-// 用户登录
+// 1. 用户登录
 export const login = async (
   data: LoginRequest,
-): Promise<{ data: ApiResponse<{ user: User; token: string }> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockLogin(data)
-    : await request.post('/auth/login', data)
+): Promise<{ data: User; token: string }> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockLogin(data)
+  }
+  
+  const response = await request.post('/api/v1/auth/login', data)
+  // 后端直接返回用户对象，token在Header中
+  const token = response.headers.authorization?.replace('Bearer ', '') || ''
+  
+  return {
+    data: response.data,
+    token: token
+  }
 }
 
-// 用户注册
+// 2. 发送邮箱验证码
+export const sendVerifyEmail = async (
+  data: VerifyEmailRequest,
+): Promise<string> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockSendVerifyEmail(data)
+  }
+  
+  const response = await request.post('/api/v1/auth/verify', data)
+  // 返回文本消息，如："邮件已发送至{email}"
+  return response.data
+}
+
+// 3. 用户注册
 export const register = async (
   data: RegisterRequest,
-): Promise<{ data: ApiResponse<{ user: User; token: string }> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockRegister(data)
-    : await request.post('/auth/register', data)
+): Promise<RegisterResponse> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockRegister(data)
+  }
+  
+  const response = await request.post('/api/v1/auth/register', data)
+  // 返回 { "id": 2, "username": "new_user" }
+  return response.data
 }
 
-// 获取当前用户信息
-export const getCurrentUser = async (): Promise<{ data: ApiResponse<User> }> => {
-  return getIsUsingMockAPI() ? await mockAuth.mockGetCurrentUser() : await request.get('/auth/user')
+// 4. 根据用户ID查询用户信息
+export const getUserById = async (
+  id: number,
+): Promise<User> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockGetUserById(id)
+  }
+  
+  const response = await request.get(`/api/v1/auth/user/${id}`)
+  // 直接返回用户对象
+  return response.data
 }
 
-// 用户退出登录
-export const logout = async (): Promise<{ data: ApiResponse<null> }> => {
+// 5. 管理员获取用户列表
+export const getUserList = async (
+  params: UserListParams,
+): Promise<User[]> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockGetUserList(params)
+  }
+  
+  const response = await request.get('/api/v1/auth/users', { params })
+  // 返回用户数组
+  return response.data
+}
+
+// 6. 用户活跃状态刷新（心跳检测）
+export const ping = async (): Promise<string> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockPing()
+  }
+  
+  const response = await request.get('/api/v1/auth/ping')
+  // 返回 "pong"
+  return response.data
+}
+
+// 获取当前用户信息（基于token）
+export const getCurrentUser = async (): Promise<User> => {
+  if (getIsUsingMockAPI()) {
+    return await mockAuth.mockGetCurrentUser()
+  }
+  // TODO:这个接口可能需要后端补充，或者使用getUserById结合token解析
+  // 暂时使用mock实现
+  return await mockAuth.mockGetCurrentUser()
+}
+// TODO:用户退出登录
+export const logout = async (): Promise<ApiResponse<null>> => {
   return getIsUsingMockAPI() ? await mockAuth.mockLogout() : await request.post('/auth/logout')
 }
 
-// 检查用户名是否可用
+//TODO:检查用户名是否可用
 export const checkUsername = async (
   username: string,
-): Promise<{ data: ApiResponse<{ available: boolean }> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockCheckUsername(username)
-    : await request.get(`/auth/check-username?username=${encodeURIComponent(username)}`)
+): Promise<{  }> => {
+  return Promise.resolve({})
 }
 
-// 检查邮箱是否可用
+// TODO:检查邮箱是否可用
 export const checkEmail = async (
   email: string,
-): Promise<{ data: ApiResponse<{ available: boolean }> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockCheckEmail(email)
-    : await request.get(`/auth/check-email?email=${encodeURIComponent(email)}`)
+): Promise<{ available: boolean }> => {
+  return Promise.resolve({
+    available: true,
+  })
 }
 
-// 刷新token
-export const refreshToken = async (): Promise<{ data: ApiResponse<{ token: string }> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockRefreshToken()
-    : await request.post('/auth/refresh')
+// TODO:刷新token
+export const refreshToken = async (): Promise<{ token: string }> => {
+  return Promise.resolve({
+    token: 'mock_jwt_token_' + Date.now(),
+  })
 }
 
-// 修改密码
+// TODO:修改密码
 export const changePassword = async (data: {
   oldPassword: string
   newPassword: string
 }): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockChangePassword(data)
-    : await request.post('/auth/change-password', data)
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '密码修改成功',
+      data: null,
+    },
+  })
 }
 
-// 忘记密码
+// TODO:忘记密码
 export const forgotPassword = async (email: string): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockForgotPassword(email)
-    : await request.post('/auth/forgot-password', { email })
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '密码重置邮件已发送',
+      data: null,
+    },
+  })
 }
 
-// 重置密码
+// TODO:重置密码
 export const resetPassword = async (data: {
   token: string
   newPassword: string
 }): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockResetPassword(data)
-    : await request.post('/auth/reset-password', data)
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '密码重置成功',
+      data: null,
+    },
+  })
 }
 
-// 更新用户偏好设置
+// TODO:更新用户偏好设置
 export const updateUserPreferences = async (preferences: {
   interestedCategories: string[]
   emailNotifications: boolean
@@ -98,8 +183,12 @@ export const updateUserPreferences = async (preferences: {
   profilePublic: boolean
   showJoinedClubs: boolean
   tags?: string[]
-}): Promise<{ data: ApiResponse<User> }> => {
-  return getIsUsingMockAPI()
-    ? await mockAuth.mockUpdateUserPreferences(preferences)
-    : await request.put('/auth/preferences', preferences)
+}): Promise<{ data: ApiResponse<null> }> => {
+  return Promise.resolve({
+    data: {
+      code: 200,
+      message: '用户偏好设置更新成功',
+      data: null,
+    },
+  })
 }

@@ -313,14 +313,14 @@ export const mockClubs: Club[] = [
 
 // 模拟用户数据
 export const mockUser: User = {
-  id: 'user1',
+  id: 1,
   username: 'testuser',
   email: 'test@example.com',
-  avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
-  role: 'student',
-  studentId: '2021301111',
+  avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+  role: 'user',
+  last_active: '2024-01-01T00:00:00Z',
   realName: '测试用户',
-  college: '计算机学院',
+  major: '计算机学院',
   phone: '13800138000',
   createdAt: '2024-01-01T00:00:00Z',
   emailVerified: '',
