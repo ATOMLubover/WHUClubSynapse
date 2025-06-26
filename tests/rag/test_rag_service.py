@@ -11,12 +11,14 @@ from app.rag_service import (
     rag_pipeline
 )
 
+
 # ---- Fixtures ----
 @pytest.fixture
 def mock_tokenizer():
     tokenizer = MagicMock()
     tokenizer.return_value = {"input_ids": torch.tensor([[1, 2, 3]]), "attention_mask": torch.tensor([[1, 1, 1]])}
     return tokenizer
+
 
 @pytest.fixture
 def mock_model():
@@ -25,6 +27,7 @@ def mock_model():
     mock_output.last_hidden_state = torch.rand(1, 3, 768)  # [batch_size, seq_len, hidden_size]
     model.return_value = mock_output
     return model
+
 
 @pytest.fixture
 def mock_collection():
@@ -35,11 +38,13 @@ def mock_collection():
     }
     return collection
 
+
 @pytest.fixture
 def mock_llm():
     llm = MagicMock()
     llm.invoke.return_value = "Mocked LLM response"
     return llm
+
 
 """
 # def test_tokenize_inputs(mock_tokenizer):
@@ -73,15 +78,17 @@ def mock_llm():
 #         get_embeddings([])
 """
 
+
 # ---- Test Cases ----
 def test_retrieve(mock_collection):
     with patch('app.rag_service.collection', mock_collection), \
-         patch('app.rag_service.get_embeddings', return_value=np.random.rand(768)):
+            patch('app.rag_service.get_embeddings', return_value=np.random.rand(768)):
         results = retrieve("test query", 2)
         assert len(results) == 2
         assert "content" in results[0]
         assert "metadata" in results[0]
         mock_collection.query.assert_called_once()
+
 
 def test_retrieve_empty_results(mock_collection):
     mock_collection.query.return_value = {"documents": [[]], "metadatas": [[]]}
@@ -100,6 +107,7 @@ def test_format_context():
     assert "doc2" in context
     assert "文档 1" in context
     assert "文档 2" in context
+
 
 def test_format_context_empty_input():
     assert format_context([]) == ""
@@ -130,14 +138,16 @@ def test_generate_response(mock_llm):
         )
         mock_chain.invoke.assert_called_once_with("formatted_prompt")
 
+
 def test_rag_pipeline(mock_collection, mock_llm):
     with patch('app.rag_service.collection', mock_collection), \
-         patch('app.rag_service.get_embeddings', return_value=np.random.rand(768)):
+            patch('app.rag_service.get_embeddings', return_value=np.random.rand(768)):
         result = rag_pipeline("test query", mock_llm)
         assert "answer" in result
         assert "source_documents" in result
         assert "context" in result
         assert len(result["source_documents"]) == 2
+
 
 def test_rag_pipeline_empty_retrieval(mock_collection, mock_llm):
     mock_collection.query.return_value = {"documents": [[]], "metadatas": [[]]}
