@@ -14,7 +14,7 @@ embedding_model = AutoModel.from_pretrained(settings.EMBEDDING_MODEL_DIR)
 
 def init_vector_db(pdf_dir: str, collection_name: str):
     vector_db = Chroma(
-        embedding_function=embedding_model,  # 替换为实际的 embedding 函数
+        embedding_function=embedding_model,
         persist_directory=settings.VECTOR_DB_PATH,
         collection_name=collection_name
     )
