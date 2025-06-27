@@ -9,12 +9,17 @@ class Settings(BaseSettings):
 
     # 嵌入模型配置
     EMBEDDING_MODEL_NAME: str = "moka-ai/m3e-base"
-    EMBEDDING_MODEL_DIR: str = "/root/autodl-tmp/AI-ModelScope/m3e-base"
+    EMBEDDING_MODEL_DIR: str = "/root/autodl-tmp/AI-ModelScope/all-MiniLM-L6-v2"
 
     # 向量数据库配置
     VECTOR_DB_PATH: str = "/root/autodl-tmp/chroma_db"
     VECTRO_DB_COLLECTION: str = "club_management_rag"
     STATIC_DOC_PATH: str = "/root/autodl-tmp/static_doc"
+
+    # Redis 连接配置
+    REDIS_HOST: str = "8.141.92.242"
+    REDIS_PORT: str = "6379"
+    REDIS_PASSWORD: str = "admin"
 
 # 读取配置
 settings = Settings()

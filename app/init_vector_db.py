@@ -1,7 +1,7 @@
 import os
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from app.config import settings
 from transformers import AutoModel
 
