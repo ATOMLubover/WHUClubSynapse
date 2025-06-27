@@ -90,6 +90,7 @@ def print_api_endpoints():
     print(f"   GET  /config              - 配置信息")
     print(f"   POST /generate/introduction - 社团介绍生成接口")
     print(f"   POST /generate/Slogan     - 社团口号生成接口")
+    print(f"   GET  /reload_config       - 配置重载接口")
     print(f"   GET  /docs                - API文档 (Swagger UI)")
     print(f"   GET  /redoc               - API文档 (ReDoc)")
 

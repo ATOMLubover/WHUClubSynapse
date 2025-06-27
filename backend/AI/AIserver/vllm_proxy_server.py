@@ -545,6 +545,17 @@ async def get_config():
         }
     }
 
+@app.get("/reload_config")
+async def reload_config_endpoint():
+    """重载配置文件"""
+    try:
+        config.reload()
+        logger.info("配置文件已成功重载")
+        return {"message": "配置文件已成功重载", "status": "success"}
+    except Exception as e:
+        logger.error(f"重载配置文件失败: {e}")
+        raise HTTPException(status_code=500, detail=f"重载配置文件失败: {e}")
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")

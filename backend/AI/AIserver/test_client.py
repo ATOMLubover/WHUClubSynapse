@@ -508,6 +508,18 @@ def test_generate_slogan():
         print(f"AI社团口号生成测试错误: {e}")
         return False
 
+def test_reload_config():
+    """测试配置重载接口"""
+    print("\n=== 测试配置重载接口 ===")
+    try:
+        response = requests.get(f"{PROXY_SERVER_URL}/reload_config")
+        print(f"状态码: {response.status_code}")
+        print(f"响应: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
+        return response.status_code == 200 and response.json().get("status") == "success"
+    except Exception as e:
+        print(f"配置重载测试错误: {e}")
+        return False
+
 def main():
     """运行所有测试"""
     print("开始测试vLLM代理服务器...")
@@ -525,7 +537,8 @@ def main():
         ("通义总结 (流式)", test_summarize_tongyi_streaming),
         ("多轮对话", test_conversation),
         ("社团介绍生成", test_generate_introduction),
-        ("社团口号生成", test_generate_slogan)
+        ("社团口号生成", test_generate_slogan),
+        ("配置重载", test_reload_config)
     ]
     
     results = []

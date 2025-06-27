@@ -279,25 +279,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
           }'
         ```
 
-### 9. 模型列表
-
-*   **GET** `/models`
-    *   **描述**: 获取 vLLM 服务器可用的模型列表。
-    *   **响应示例**: (实际响应取决于 vLLM 服务器)
-        ```json
-        {
-          "data": [
-            {
-              "id": "Qwen/Qwen3-8B-AWQ",
-              "object": "model",
-              "created": 0,
-              "owned_by": "vllm"
-            }
-          ]
-        }
-        ```
-
-### 10. 配置信息
+### 9. 配置信息
 
 *   **GET** `/config`
     *   **描述**: 获取当前服务器配置（不包含敏感信息）。
@@ -324,6 +306,36 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
           "security": {
             "enable_cors": true
           }
+        }
+        ```
+
+### 10. 配置重载接口
+
+*   **GET** `/reload_config`
+    *   **描述**: 重新加载服务器配置，使`config.json`中的更改生效而无需重启服务器。
+    *   **响应示例**:
+        ```json
+        {
+          "message": "配置文件已成功重载",
+          "status": "success"
+        }
+        ```
+
+### 11. 模型列表
+
+*   **GET** `/models`
+    *   **描述**: 获取 vLLM 服务器可用的模型列表。
+    *   **响应示例**: (实际响应取决于 vLLM 服务器)
+        ```json
+        {
+          "data": [
+            {
+              "id": "Qwen/Qwen3-8B-AWQ",
+              "object": "model",
+              "created": 0,
+              "owned_by": "vllm"
+            }
+          ]
         }
         ```
 
