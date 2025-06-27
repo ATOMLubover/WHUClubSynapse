@@ -10,7 +10,7 @@ import type { ApiResponse } from '@/types'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: "http://localhost:8080",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -56,27 +56,27 @@ request.interceptors.response.use(
 
       switch (status) {
         case 400:
-          ElMessage.error(data?.message || '请求参数错误')
+          ElMessage.error(data || '请求参数错误')
           break
         case 401:
-          ElMessage.error('未授权，请重新登录')
-          localStorage.removeItem('token')
-          window.location.href = '/login'
+          ElMessage.error(data||'未授权，请重新登录')
+          // localStorage.removeItem('token')
+          // window.location.href = '/login'
           break
         case 403:
-          ElMessage.error('权限不足')
+          ElMessage.error(data || '权限不足')
           break
         case 404:
-          ElMessage.error('请求的资源不存在')
+          ElMessage.error(data||'请求的资源不存在')
           break
         case 500:
-          ElMessage.error('服务器内部错误')
+          ElMessage.error(data||'服务器内部错误')
           break
         case 503:
-          ElMessage.error('服务不可用')
+          ElMessage.error(data||'服务不可用')
           break
         default:
-          ElMessage.error(data?.message || '网络错误')
+          ElMessage.error(data||'网络错误')
       }
     } else if (error.request) {
       ElMessage.error('网络连接失败')

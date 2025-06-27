@@ -26,7 +26,7 @@ export const login = async (
     return await mockAuth.mockLogin(data)
   }
   
-  const response = await request.post('/api/v1/auth/login', data)
+  const response = await request.post('/user/login', data)
   // 后端直接返回用户对象，token在Header中
   const token = response.headers.authorization?.replace('Bearer ', '') || ''
   
@@ -44,7 +44,7 @@ export const sendVerifyEmail = async (
     return await mockAuth.mockSendVerifyEmail(data)
   }
   
-  const response = await request.post('/api/v1/auth/verify', data)
+  const response = await request.post('/user/verify', data)
   // 返回文本消息，如："邮件已发送至{email}"
   return response.data
 }
@@ -57,7 +57,7 @@ export const register = async (
     return await mockAuth.mockRegister(data)
   }
   
-  const response = await request.post('/api/v1/auth/register', data)
+  const response = await request.post('/user/register', data)
   // 返回 { "id": 2, "username": "new_user" }
   return response.data
 }
