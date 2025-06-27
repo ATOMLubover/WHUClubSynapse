@@ -7,12 +7,21 @@
         @click="authStore.isLoggedIn ? (showCreate = true) : ElMessage.warning('请先登录')"
         class="post-btn"
         plain
-        :disabled="!club || !authStore.isLoggedIn"
+        :disabled="!authStore.isLoggedIn"
       >
         <el-icon><Plus /></el-icon> 发帖
       </el-button>
     </div>
-    <el-empty v-if="!posts.length && !loading" description="暂无帖子" />
+    
+    <!-- 调试信息 -->
+    <div v-if="loading" style="text-align: center; padding: 20px; color: #666;">
+      正在加载帖子...
+    </div>
+    
+    <div v-else-if="!posts.length" style="text-align: center; padding: 20px; color: #666;">
+      暂无帖子 (总数: {{ total }})
+    </div>
+    
     <div v-else class="post-list">
       <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPost(post)">
         <div class="post-card-main">
@@ -32,6 +41,7 @@
         <el-icon class="arrow"><ArrowRightBold /></el-icon>
       </div>
     </div>
+    
     <div class="pagination" v-if="total > pageSize">
       <el-pagination
         v-model:current-page="page"
@@ -41,6 +51,7 @@
         @current-change="fetchPosts"
       />
     </div>
+    
     <el-dialog v-model="showCreate" title="发新帖" width="400px">
       <el-form :model="createForm" label-width="60px">
         <el-form-item label="标题">
@@ -91,20 +102,16 @@ const createForm = ref({ title: '', content: '' })
 const createLoading = ref(false)
 
 const fetchPosts = async () => {
-  // 如果社团不存在，不获取帖子
-  if (!props.club) {
-    posts.value = []
-    total.value = 0
-    return
-  }
-  
   loading.value = true
   try {
+    console.log('正在获取社团帖子，clubId:', props.clubId)
     const res = await getClubPosts(props.clubId, page.value, pageSize)
+    console.log('获取到的帖子数据:', res.data.data)
     posts.value = res.data.data.list
     total.value = res.data.data.total
   } catch (error) {
     console.error('获取帖子失败:', error)
+    ElMessage.error('获取帖子失败')
     posts.value = []
     total.value = 0
   } finally {
@@ -113,21 +120,10 @@ const fetchPosts = async () => {
 }
 
 const goToPost = (row: ClubPost) => {
-  // 如果社团不存在，不允许跳转到帖子详情
-  if (!props.club) {
-    ElMessage.warning('社团不存在')
-    return
-  }
   router.push(`/club/${props.clubId}/post/${row.id}`)
 }
 
 const handleCreate = async () => {
-  // 如果社团不存在，不允许发帖
-  if (!props.club) {
-    ElMessage.warning('社团不存在，无法发帖')
-    return
-  }
-  
   if (!createForm.value.title.trim() || !createForm.value.content.trim()) {
     ElMessage.warning('标题和内容不能为空')
     return
