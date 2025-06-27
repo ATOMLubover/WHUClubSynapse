@@ -18,7 +18,7 @@ except ImportError as e:
     sys.exit(1)
 
 # 代理服务器的ngrok公网地址
-PROXY_SERVER_URL = "https://dc19-91-103-121-49.ngrok-free.app"
+PROXY_SERVER_URL = "https://4e08-125-220-159-5.ngrok-free.app"
 
 def test_health_check():
     """测试健康检查接口"""

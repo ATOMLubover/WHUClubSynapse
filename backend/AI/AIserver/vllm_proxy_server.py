@@ -10,6 +10,7 @@ import os
 import sys
 import summary
 from openai import OpenAI
+from fastapi.responses import StreamingResponse
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -70,6 +71,18 @@ class TongyiSummaryRequest(BaseModel):
     max_tokens: Optional[int] = 1024
     presence_penalty: Optional[float] = 0.0
     top_p: Optional[float] = 1.0
+
+class ContentGenerationRequest(BaseModel):
+    content: Optional[str] = None
+    style: Optional[str] = None
+    expection: Optional[str] = None
+    target_people: Optional[str] = None
+
+class SloganGenerationRequest(BaseModel):
+    theme: str
+
+class ContentGenerationResponse(BaseModel):
+    generated_text: str
 
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
@@ -135,7 +148,7 @@ async def health_check():
         }
     }
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat(request: ChatRequest):
     """
     接收聊天请求并转发给vLLM服务器
@@ -172,56 +185,102 @@ async def chat(request: ChatRequest):
         logger.info(f"消息数量: {len(request.messages)}")
         
         # 发送请求到vLLM服务器
-        response = requests.post(
-            config.vllm_api_url, 
-            headers=headers, 
-            json=payload, 
-            timeout=config.request_timeout
-        )
-        
-        if response.status_code != 200:
-            logger.error(f"vLLM服务器返回错误: {response.status_code} - {response.text}")
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f"vLLM服务器错误: {response.text}"
+        # 根据是否流式传输，处理响应
+        if request.stream:
+            def generate():
+                try:
+                    response = requests.post(
+                        config.vllm_api_url, 
+                        headers=headers, 
+                        json=payload, 
+                        timeout=config.request_timeout,
+                        stream=True # 启用流式传输
+                    )
+                    logger.info(f"vLLM流式响应状态码: {response.status_code}")
+                    response.raise_for_status() # 检查HTTP错误
+
+                    for line in response.iter_lines():
+                        if line:
+                            # Log the raw line for debugging
+                            logger.debug(f"接收到vLLM流式原始数据: {line}")
+                            # vLLM通常返回SSE格式，直接转发即可
+                            # Ensure it's a data line before yielding
+                            if line.startswith(b"data:"):
+                                yield line + b"\n\n" # 确保每个事件以双换行符结束
+                            else:
+                                logger.warning(f"接收到非SSE格式行: {line.decode('utf-8')}")
+
+                except requests.exceptions.Timeout:
+                    logger.error("请求vLLM服务器超时")
+                    yield json.dumps({"error": "请求超时，模型可能需要更长时间来生成回复"}).encode('utf-8') + b"\n\n"
+                except requests.exceptions.HTTPError as e: # Catch HTTPError specifically
+                    logger.error(f"vLLM服务器返回HTTP错误: {e.response.status_code} - {e.response.text}")
+                    yield json.dumps({"error": f"vLLM服务器错误: {e.response.text}"}).encode('utf-8') + b"\n\n"
+                except requests.exceptions.ConnectionError as e: # Catch ConnectionError
+                    logger.error(f"连接vLLM服务器时发生错误: {e}")
+                    yield json.dumps({"error": f"无法连接到vLLM服务器: {str(e)}"}).encode('utf-8') + b"\n\n"
+                except requests.exceptions.RequestException as e: # Catch other RequestExceptions
+                    error_detail = str(e)
+                    if hasattr(e, 'response') and e.response is not None:
+                        error_detail += f" - Response Text: {e.response.text}"
+                    logger.error(f"请求vLLM服务器时发生未知RequestException: {error_detail}")
+                    yield json.dumps({"error": f"请求vLLM服务器时发生未知错误: {str(e)}"}).encode('utf-8') + b"\n\n"
+                except Exception as e:
+                    logger.error(f"处理请求时发生未知错误: {e}")
+                    yield json.dumps({"error": f"服务器内部错误: {str(e)}"}).encode('utf-8') + b"\n\n"
+
+            return StreamingResponse(generate(), media_type="text/event-stream")
+        else:
+            response = requests.post(
+                config.vllm_api_url, 
+                headers=headers, 
+                json=payload, 
+                timeout=config.request_timeout
             )
-        
-        result = response.json()
-        
-        # 检查API响应中是否有错误信息
-        if "error" in result:
-            logger.error(f"vLLM API返回错误: {result['error']}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"vLLM API错误: {result['error']}"
-            )
-        
-        # 提取响应内容
-        if result.get("choices") and len(result["choices"]) > 0:
-            choice = result["choices"][0]
-            if "message" in choice and "content" in choice["message"]:
-                response_text = choice["message"]["content"]
-                
-                # 构造响应
-                chat_response = ChatResponse(
-                    response=response_text,
-                    model=request.model,
-                    usage=result.get("usage")
+            
+            if response.status_code != 200:
+                logger.error(f"vLLM服务器返回错误: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"vLLM服务器错误: {response.text}"
                 )
-                
-                logger.info(f"成功生成响应，长度: {len(response_text)}")
-                return chat_response
+            
+            result = response.json()
+            
+            # 检查API响应中是否有错误信息
+            if "error" in result:
+                logger.error(f"vLLM API返回错误: {result['error']}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"vLLM API错误: {result['error']}"
+                )
+            
+            # 提取响应内容
+            if result.get("choices") and len(result["choices"]) > 0:
+                choice = result["choices"][0]
+                if "message" in choice and "content" in choice["message"]:
+                    response_text = choice["message"]["content"]
+                    
+                    # 构造响应
+                    chat_response = ChatResponse(
+                        response=response_text,
+                        model=request.model,
+                        usage=result.get("usage")
+                    )
+                    
+                    logger.info(f"成功生成响应，长度: {len(response_text)}")
+                    return chat_response
+                else:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="vLLM响应格式错误：缺少message或content字段"
+                    )
             else:
                 raise HTTPException(
                     status_code=500,
-                    detail="vLLM响应格式错误：缺少message或content字段"
+                    detail="vLLM响应中没有有效的choices"
                 )
-        else:
-            raise HTTPException(
-                status_code=500,
-                detail="vLLM响应中没有有效的choices"
-            )
-            
+                
     except requests.exceptions.Timeout:
         logger.error("请求vLLM服务器超时")
         raise HTTPException(
@@ -283,27 +342,144 @@ async def summarize_with_tongyi(req: TongyiSummaryRequest):
         包含总结结果的响应对象
     """
     try:
-        full_summary = ""
-        # tongyi_chat_embedded 函数返回一个生成器，需要遍历以获取所有内容
-        for chunk in tongyi_chat_embedded(
-            messages=req.text,
-            temperature=req.temperature,
-            max_tokens=req.max_tokens,
-            presence_penalty=req.presence_penalty,
-            top_p=req.top_p
-        ):
-            if chunk.get("type") == "content":
-                full_summary += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "未知错误"))
+        def generate_summary_stream():
+            for chunk in tongyi_chat_embedded(
+                messages=req.text,
+                temperature=req.temperature,
+                max_tokens=req.max_tokens,
+                presence_penalty=req.presence_penalty,
+                top_p=req.top_p
+            ):
+                if chunk.get("type") == "content":
+                    # 将内容封装为SSE格式的JSON
+                    yield f'data: {json.dumps({"summary": chunk.get("content", "")})}\n\n'.encode('utf-8')
+                elif chunk.get("type") == "error":
+                    logger.error(f"通义千问流式总结错误: {chunk.get('content')}")
+                    # 将错误信息封装为SSE格式的JSON
+                    yield f'data: {json.dumps({"error": chunk.get("content", "未知错误")})}\n\n'.encode('utf-8')
+            # 发送结束标记
+            yield b"data: [DONE]\n\n"
+        
+        return StreamingResponse(generate_summary_stream(), media_type="text/event-stream")
 
-        if not full_summary.strip():
-            raise ValueError("通义千问未返回有效的总结内容。")
-            
-        return {"summary": full_summary.strip()}
     except Exception as e:
         logger.error(f"调用通义千问总结失败: {e}")
         raise HTTPException(status_code=500, detail=f"通义千问总结失败: {e}")
+
+@app.post("/generate/content", response_model=ContentGenerationResponse)
+async def generate_content(request: ContentGenerationRequest):
+    """
+    根据关键词和内容类型，使用AI生成活动宣传或新闻稿。
+    
+    Args:
+        request: 包含关键词、内容类型和语气的请求体。
+        
+    Returns:
+        ContentGenerationResponse: 包含生成的文本。
+    """
+    try:
+        base_prompt = """你是一位文案创作大师，擅长运用多种文体风格进行改写。请根据我提供的原始文案{content}，将其以一种不同的、具有鲜明{style}特征的文体进行改写，并确保每种改写后的内容都达到{expection}的效果。"""
+        
+        # 格式化Prompt
+        full_prompt = base_prompt.format(
+            content=request.content,
+            style=request.style,
+            expection=request.expection
+        )
+        
+        logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        generated_text = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                generated_text += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not generated_text.strip():
+            raise ValueError("AI未返回有效的生成内容。")
+            
+        return ContentGenerationResponse(generated_text=generated_text.strip())
+
+    except Exception as e:
+        logger.error(f"AI内容生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
+
+@app.post("/generate/introduction", response_model=ContentGenerationResponse)
+async def generate_content(request: ContentGenerationRequest):
+    """
+    根据关键词和内容类型，使用AI生成社团介绍。
+    
+    Args:
+        request: 包含关键词、内容类型和语气的请求体。
+        
+    Returns:
+        ContentGenerationResponse: 包含生成的文本。
+    """
+    try:
+        base_prompt = """你是一位文案创作大师，擅长运用多种文体风格进行改写。请根据我提供的原始文案{content}，将其以一种不同的、具有鲜明{style}特征的文体进行改写，并确保每种改写后的内容都能对{target_people}产生吸引力。"""
+        
+        # 格式化Prompt
+        full_prompt = base_prompt.format(
+            content=request.content,
+            style=request.style,
+            target_people=request.target_people
+        )
+        
+        logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        generated_text = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                generated_text += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not generated_text.strip():
+            raise ValueError("AI未返回有效的生成内容。")
+            
+        return ContentGenerationResponse(generated_text=generated_text.strip())
+
+    except Exception as e:
+        logger.error(f"AI内容生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
+
+@app.post("/generate/Slogan", response_model=ContentGenerationResponse)
+async def generate_content(request: SloganGenerationRequest):
+    """
+    根据关键词和内容类型，使用AI生成社团口号。
+    
+    Args:
+        request: 包含关键词、内容类型和语气的请求体。
+        
+    Returns:
+        ContentGenerationResponse: 包含生成的文本。
+    """
+    try:
+        base_prompt = """你擅长写宣传口号：1.简短有力；2.突出亮点；3.引发共鸣。 现在你需要根据以下需求写宣传口号：${theme}。"""
+        
+        # 格式化Prompt
+        full_prompt = base_prompt.format(
+            theme=request.theme
+        )
+        
+        logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        generated_text = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                generated_text += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not generated_text.strip():
+            raise ValueError("AI未返回有效的生成内容。")
+            
+        return ContentGenerationResponse(generated_text=generated_text.strip())
+
+    except Exception as e:
+        logger.error(f"AI内容生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
 
 @app.get("/models")
 async def list_models():
@@ -378,6 +554,7 @@ if __name__ == "__main__":
     print(f"聊天接口: http://{config.server_host}:{config.server_port}/chat")
     print(f"简化接口: http://{config.server_host}:{config.server_port}/simple_chat")
     print(f"通义总结接口: http://{config.server_host}:{config.server_port}/summarize_tongyi")
+    print(f"生成内容接口: http://{config.server_host}:{config.server_port}/generate/content")
     print(f"模型列表: http://{config.server_host}:{config.server_port}/models")
     print(f"配置信息: http://{config.server_host}:{config.server_port}/config")
     
