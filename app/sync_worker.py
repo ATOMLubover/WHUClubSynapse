@@ -4,10 +4,11 @@ import logging
 import json
 import time
 import signal
+import uuid
 from typing import List, Dict, Tuple
 import chromadb
 from app.rag_service import get_embeddings
-import uuid
+from app.utils.db_clients import chroma_collection, redis_pool  # 从工具文件中引入向量数据库集合 和 redis连接池
 
 # 日志和全局标志位
 logging.basicConfig(
@@ -25,22 +26,6 @@ def handle_shutdown(signum, frame):
     if not SHUTDOWN_REQUESTED:
         log.warning("Shutdown signal received. Finishing current batch before exiting...")
         SHUTDOWN_REQUESTED = True
-
-# 客户端和连接池初始化
-redis_pool = ConnectionPool(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    db=0,
-    password=settings.REDIS_PASSWORD,
-    decode_responses=True
-)
-
-# chromadb 客户端
-client = chromadb.HttpClient(
-    host=settings.CHROMA_SERVER_HOST,
-    port=settings.CHROMA_SERVER_PORT
-)
-collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
 
 # 批量消息处理
 def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
@@ -92,7 +77,7 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
         batch_embeddings = get_embeddings(batch_documents)
 
         # 批量写入向量数据库
-        collection.upsert(
+        chroma_collection.upsert(
             ids=batch_ids,
             embeddings=batch_embeddings,
             metadatas=batch_metadatas,

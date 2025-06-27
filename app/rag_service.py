@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 # 初始化向量数据库客户端
 client = chromadb.HttpClient(
     host=settings.CHROMA_SERVER_HOST,
-    port=settings.CHROMA_SERVER_PROT
+    port=settings.CHROMA_SERVER_PORT
 )
 collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
 

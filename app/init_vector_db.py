@@ -1,11 +1,12 @@
 import os
-from langchain.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from app.config import settings
 from app.rag_service import get_embeddings
 import chromadb
 import logging
+from app.utils.db_clients import chroma_collection
 
 # 日志
 logging.basicConfig(
@@ -20,14 +21,7 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200,
     length_function=len
 )
-
-client = chromadb.HttpClient(
-    host=settings.CHROMA_SERVER_HOST,
-    port=settings.CHROMA_SERVER_PORT
-)
-collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
-
-def init_vector_db(pdf_dir: str, collection_name: str):
+def init_vector_db(pdf_dir: str):
     """
     从PDF目录初始化向量数据库，通过HTTP客户端连接。
     """
@@ -66,8 +60,8 @@ def init_vector_db(pdf_dir: str, collection_name: str):
                 log.info(f"Generating embeddings for batch {i // batch_size + 1} of file {filename}...")
                 batch_embeddings = get_embeddings(batch_texts)
 
-                # d. 核心步骤：通过HTTP客户端批量上传数据
-                collection.upsert(
+                # d. 通过HTTP客户端批量上传数据
+                chroma_collection.upsert(
                     ids=batch_ids,
                     embeddings=batch_embeddings,
                     documents=batch_texts,
@@ -81,4 +75,4 @@ def init_vector_db(pdf_dir: str, collection_name: str):
     log.info("Finished processing all PDF files.")
 
 if __name__ == "__main__":
-    init_vector_db(settings.STATIC_DOC_PATH, settings.CHROMA_RAG_COLLECTION_NAME)
+    init_vector_db(settings.STATIC_DOC_PATH)
