@@ -1,8 +1,5 @@
-import torch
-import numpy as np
 import chromadb
 from app.config import settings
-from functools import reduce
 from typing import List, Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -18,15 +15,19 @@ collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION
 # 加载模型
 st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
 
-'''从输入文本获取嵌入向量'''
-def get_embeddings(texts: List[str]) -> np.ndarray:
-    return np.array(st_model.encode(texts, normalize_embeddings=True)).tolist()
+def get_embeddings(texts: List[str]) -> List[List[float]]:
+    """
+    接收一个文本列表，使用已加载的 st_model 进行向量化，
+    并返回一个Python的向量列表。
+    """
+    embeddings = st_model.encode(texts, normalize_embeddings=True)
+    return embeddings.tolist()
 
 '''检索最相关的文档片段'''
 def retrieve(query: str, n_results: int = 3) -> List[Dict[str, Any]]:
     query_embedding = get_embeddings(query if isinstance(query, List) else [query])
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_embeddings=query_embedding,
         n_results=n_results
     )
     return [

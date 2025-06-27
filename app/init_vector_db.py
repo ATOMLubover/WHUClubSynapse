@@ -3,7 +3,7 @@ from langchain.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from app.config import settings
-from sentence_transformers import SentenceTransformer
+from app.rag_service import get_embeddings
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
@@ -16,8 +16,6 @@ def init_vector_db(pdf_dir: str, collection_name: str):
         persist_directory=settings.VECTOR_DB_PATH,
         collection_name=collection_name
     )
-    # 初始化SentenceTransformer
-    st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
 
     for filename in os.listdir(pdf_dir):
         if filename.endswith(".pdf"):
@@ -27,7 +25,7 @@ def init_vector_db(pdf_dir: str, collection_name: str):
 
             # 提取文本并生成向量
             texts = [doc.page_content for doc in chunks]
-            embeddings = st_model.encode(texts, normalize_embeddings=True)
+            embeddings = get_embeddings(texts)
 
             # 添加文档和预计算向量
             vector_db.add_documents(
