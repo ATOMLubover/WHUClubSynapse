@@ -555,6 +555,8 @@ if __name__ == "__main__":
     print(f"简化接口: http://{config.server_host}:{config.server_port}/simple_chat")
     print(f"通义总结接口: http://{config.server_host}:{config.server_port}/summarize_tongyi")
     print(f"生成内容接口: http://{config.server_host}:{config.server_port}/generate/content")
+    print(f"社团介绍接口: http://{config.server_host}:{config.server_port}/generate/introduction")
+    print(f"社团口号接口: http://{config.server_host}:{config.server_port}/generate/Slogan")
     print(f"模型列表: http://{config.server_host}:{config.server_port}/models")
     print(f"配置信息: http://{config.server_host}:{config.server_port}/config")
     

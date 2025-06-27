@@ -220,7 +220,66 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
           }'
         ```
 
-### 6. 模型列表
+### 6. AI内容生成接口
+
+*   **POST** `/generate/content`
+    *   **描述**: 根据关键词和内容类型，使用AI生成活动宣传或新闻稿。
+    *   **请求体 (JSON)**: `ContentGenerationRequest`
+        *   `content` (Optional[str]): 原始文案草稿。
+        *   `style` (Optional[str]): 文体风格 (如 "enthusiastic", "formal")。
+        *   `expection` (Optional[str]): 预期效果。
+    *   **响应体 (JSON)**: `ContentGenerationResponse`
+        *   `generated_text` (str): 生成的文本。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate/content \
+          -H "Content-Type: application/json" \
+          -d '{
+            "content": "本周五晚7点，A栋101教室，举办Python入门讲座，面向全校师生",
+            "style": "enthusiastic",
+            "expection": "吸引更多人参与活动，激发读者热情"
+          }'
+        ```
+
+### 7. AI社团介绍生成接口
+
+*   **POST** `/generate/introduction`
+    *   **描述**: 根据关键词和内容类型，使用AI生成社团介绍。
+    *   **请求体 (JSON)**: `ContentGenerationRequest`
+        *   `content` (Optional[str]): 原始文案草稿。
+        *   `style` (Optional[str]): 文体风格 (如 "humorous", "formal")。
+        *   `target_people` (Optional[str]): 目标人群 (如 "新生", "对编程感兴趣的同学")。
+    *   **响应体 (JSON)**: `ContentGenerationResponse`
+        *   `generated_text` (str): 生成的社团介绍文本。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate/introduction \
+          -H "Content-Type: application/json" \
+          -d '{
+            "content": "这是一个关于我们社团的草稿：我们是一个热爱编程的社团，经常组织编程比赛和技术分享。",
+            "style": "humorous",
+            "target_people": "新生，对编程感兴趣的同学"
+          }'
+        ```
+
+### 8. AI社团口号生成接口
+
+*   **POST** `/generate/Slogan`
+    *   **描述**: 根据关键词使用AI生成社团口号。
+    *   **请求体 (JSON)**: `SloganGenerationRequest`
+        *   `theme` (str): 口号主题。
+    *   **响应体 (JSON)**: `ContentGenerationResponse`
+        *   `generated_text` (str): 生成的社团口号文本。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate/Slogan \
+          -H "Content-Type: application/json" \
+          -d '{
+            "theme": "编程社，创新，活力"
+          }'
+        ```
+
+### 9. 模型列表
 
 *   **GET** `/models`
     *   **描述**: 获取 vLLM 服务器可用的模型列表。
@@ -238,7 +297,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         }
         ```
 
-### 7. 配置信息
+### 10. 配置信息
 
 *   **GET** `/config`
     *   **描述**: 获取当前服务器配置（不包含敏感信息）。
