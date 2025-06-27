@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     REDIS_BLOCK_TIMEOUT_MS: int = 10000
 
     # 日志配置
-    LOG_LEVEL: str = "ERROR"
+    LOG_LEVEL: str = "DEBUG"
 
 # 读取配置
 settings = Settings()

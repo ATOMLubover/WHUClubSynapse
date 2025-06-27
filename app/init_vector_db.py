@@ -6,12 +6,12 @@ from app.config import settings
 from app.rag_service import get_embeddings
 import chromadb
 import logging
-from app.utils.db_clients import chroma_collection
+from app.utils.singleton import chroma_collection
 
 # 日志
 logging.basicConfig(
     level=settings.LOG_LEVEL,
-    format='%(asctime)s - %(name)s - %(levelname)s - [MessageID: %(msg_id)s] - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
 log = logging.getLogger(__name__)
@@ -74,5 +74,25 @@ def init_vector_db(pdf_dir: str):
 
     log.info("Finished processing all PDF files.")
 
+def check_collection_data(collection):
+    """
+    检查集合中是否有数据。
+    """
+    # 查询集合中的所有数据
+    results = collection.query(
+        query_embeddings=[0.0] * len(get_embeddings([""])[0]),  # 空查询，返回所有数据
+        n_results=10  # 返回前10条数据
+    )
+    # 输出文档
+    if results and results.get("documents"):
+        log.info(f"Collection contains {len(results['documents'])} documents.")
+        for i, doc in enumerate(results["documents"]):
+            log.info(f"Document {i+1}: {doc}")
+    else:
+        log.warning("No documents found in the collection.")
+
+
+
 if __name__ == "__main__":
     init_vector_db(settings.STATIC_DOC_PATH)
+    check_collection_data(chroma_collection)

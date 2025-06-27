@@ -8,12 +8,12 @@ import uuid
 from typing import List, Dict, Tuple
 import chromadb
 from app.rag_service import get_embeddings
-from app.utils.db_clients import chroma_collection, redis_pool  # 从工具文件中引入向量数据库集合 和 redis连接池
+from app.utils.singleton import chroma_collection, redis_pool  # 从工具文件中引入向量数据库集合 和 redis连接池
 
 # 日志和全局标志位
 logging.basicConfig(
     level=settings.LOG_LEVEL,
-    format='%(asctime)s - %(name)s - %(levelname)s - [MessageID: %(msg_id)s] - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
 log = logging.getLogger(__name__)

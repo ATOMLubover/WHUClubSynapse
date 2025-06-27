@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 
 # --- ChromaDB Client Singleton ---
 log.info(f"Initializing ChromaDB client to connect to {settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}")
+
 try:
     # 这个对象在模块第一次被导入时创建，之后会被所有导入者复用
     chroma_client = chromadb.HttpClient(
@@ -16,9 +17,9 @@ try:
 
     # 我们可以把 collection 的获取也放在这里，因为它也是共享的
     chroma_collection = chroma_client.get_or_create_collection(
-        name=settings.VECTOR_DB_COLLECTION
+        name=settings.CHROMA_RAG_COLLECTION_NAME
     )
-    log.info(f"Successfully connected to ChromaDB and got collection '{settings.VECTOR_DB_COLLECTION}'")
+    log.info(f"Successfully connected to ChromaDB and got collection '{settings.CHROMA_RAG_COLLECTION_NAME}'")
 
 except Exception as e:
     log.critical(f"Failed to initialize ChromaDB client. Exiting. Error: {e}", exc_info=True)
