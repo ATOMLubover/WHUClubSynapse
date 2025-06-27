@@ -20,7 +20,7 @@ st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
 
 '''从输入文本获取嵌入向量'''
 def get_embeddings(texts: List[str]) -> np.ndarray:
-    return np.array(st_model.encode(texts, normalize_embeddings=True))
+    return np.array(st_model.encode(texts, normalize_embeddings=True)).tolist()
 
 '''检索最相关的文档片段'''
 def retrieve(query: str, n_results: int = 3) -> List[Dict[str, Any]]:

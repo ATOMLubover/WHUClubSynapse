@@ -1,4 +1,4 @@
-from redis import ConnectionPool, Redis
+from redis import ConnectionPool, Redis, exceptions
 from app.config import settings
 import logging
 import json
@@ -7,8 +7,9 @@ import signal
 from app.rag_service import get_embeddings
 from typing import List, Dict, Any
 import chromadb
+from sentence_transformers import SentenceTransformer
 
-# 日志记录设置
+# --- 1. 日志和全局标志位 ---
 logging.basicConfig(
     level=settings.LOG_LEVEL,
     format='%(asctime)s - %(name)s - %(levelname)s - [MessageID: %(msg_id)s] - %(message)s'
@@ -16,7 +17,16 @@ logging.basicConfig(
 
 log = logging.getLogger(__name__)
 
-# redia连接池，只在脚本启动时创建一次
+SHUTDOWN_REQUESTED = False
+
+def handle_shutdown(signum, frame):
+    """【优化】优雅停机信号处理器"""
+    global SHUTDOWN_REQUESTED
+    if not SHUTDOWN_REQUESTED:
+        log.warning("Shutdown signal received. Finishing current batch before exiting...")
+        SHUTDOWN_REQUESTED = True
+
+# --- 2. 客户端和连接池初始化 ---
 redis_pool = ConnectionPool(
     host=settings.REDIS_HOST,
     port=settings.REDIS_PORT,
@@ -32,42 +42,68 @@ client = chromadb.HttpClient(
 )
 collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
 
-# 消息处理
-def process_message(msg_id, msg_data):
+# 3. 嵌入模型
+st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
+
+# 批量消息处理
+def process_messages_batch(messages: List[Dict[str, Any]]):
+    """一次性处理一批消息，以提高效率"""
+    batch_ids, batch_embeddings, batch_metadatas, batch_documents = [], [], [], []
+    processed_msg_ids = []
+
+    for msg_id, msg_data in messages:
+        try:
+            data = json.loads(msg_data['data'])
+            source_id = data.get('source_id')
+            content = data.get('content')
+
+            if not all([source_id, content]):
+                raise ValueError("Message is missing 'source_id' or 'content'")
+
+            batch_ids.append(source_id)
+            batch_documents.append(content)
+            batch_metadatas.append(data.get('metadata', {}))
+            processed_msg_ids.append(msg_id)
+
+        except Exception as e:
+            log.error(f"Failed to parse message. Error: {e}", extra={"msg_id": msg_id})
+
+    if not batch_documents:
+        return []  # 如果所有消息都解析失败，直接返回
+
     try:
-        data = json.loads(msg_data['data'])
-        source_id = data.get('source_id')
-        content = data.get('content')
-        metadata = data.get('metadata', {})
+        # 批量向量化
+        embeddings_list = st_model.encode(batch_documents, normalize_embeddings=True).tolist()  # 假设函数能处理列表
 
-        if not all([source_id, content]):
-            raise ValueError("Message is missing 'source_id' or 'content'")
+        # 批量写入向量数据库
+        collection.upsert(
+            ids=batch_ids,
+            embeddings=embeddings_list,  # 直接使用返回的向量列表
+            metadatas=batch_metadatas,
+            documents=batch_documents
+        )
+        log.info(f"Successfully processed and upserted a batch of {len(batch_ids)} messages.")
+        return processed_msg_ids
 
-        # 向量化
-        embeddings = get_embeddings(content)
-        # 写入向量数据库
-        collection.upsert(ids=[source_id], embeddings=[embeddings], metadatas=[metadata], documents=[content])
-
-        return True
     except Exception as e:
-        log.error(f"Failed to process message. Error: {e}", extra={"msg_id": msg_id})
-        return False
+        log.error(f"Failed to process batch. Error: {e}", extra={"msg_id": "batch_operation"})
+        return []  # 批量处理失败，这批消息都算失败
 
 # 主运行循环
 def run_sync_worker():
-    r = redis.Redis(connection_pool=redis_pool)
+    r = Redis(connection_pool=redis_pool)
     # 确保 Strean 和消费者组存在
     try:
         r.xgroup_create(
             name=settings.REDIS_STREAM_NAME,
-            group_name=settings.REDIS_CONSUMER_GROUP_NAME,
+            groupname=settings.REDIS_CONSUMER_GROUP_NAME,
             id='0-0',
             mkstream=True
         )
-    except redis.exceptions.ResponseError as e:
+    except exceptions.ResponseError as e:
         if "BUSYGROUP" not in str(e):
             raise
-    while True:
+    while not SHUTDOWN_REQUESTED:
         try:
             # 从 Stream 拉取一批新消息
             messages = r.xreadgroup(
@@ -79,13 +115,17 @@ def run_sync_worker():
             )
             if not messages:
                 continue
-            # 处理拉取到的消息
-            for stream, msgs in messages:
-                for msg_id, msg_data in msgs:
-                    process_message(msg_id, msg_data)
-                    # 无论成功与否都 ACK，防止格式错误/处理失败的“毒丸消息”反复投递，阻塞队列
-                    r.xack(settings.REDIS_STREAM_NAME, settings.REDIS_CONSUMER_GROUP_NAME, msg_id)
-        except redis.exceptions.ConnectionError as e:
+            # messages[0] 是 stream name, messages[0][1] 是消息列表
+            message_list = messages[0][1]
+
+            # 调用批量处理函数
+            successfully_processed_ids = process_messages_batch(message_list)
+
+            # 只ACK成功处理的消息，或全部ACK，取决于业务需求。这里选择全部ACK以防止毒丸消息
+            all_ids_to_ack = [msg_id for msg_id, _ in message_list]
+            if all_ids_to_ack:
+                r.xack(settings.REDIS_STREAM_NAME, settings.REDIS_CONSUMER_GROUP_NAME, *all_ids_to_ack)
+        except exceptions.ConnectionError as e:
             # 对于连接错误，打印日志并等待一段时间后重试
             log.error(f"Redis connection error: {e}. Retrying in 5 seconds...", extra={'msg_id': 'N/A'})
             time.sleep(5)
@@ -95,4 +135,8 @@ def run_sync_worker():
             time.sleep(5)
 
 if __name__ == "__main__":
+    # 注册信号处理器
+    signal.signal(signal.SIGINT, handle_shutdown)
+    signal.signal(signal.SIGTERM, handle_shutdown)
+
     run_sync_worker()
