@@ -36,6 +36,8 @@ export interface Activity {
   title: string
   description: string
   time: string
+  // 新增字段用于编辑
+  isNew?: boolean // 标记是否为新增的动态
 }
 
 // 社团类型
@@ -59,6 +61,19 @@ export interface Club {
   location: string
   qq: string
   details: string
+  // 新增字段用于编辑功能
+  introduction?: string // 社团详细介绍
+  contactInfo?: {
+    qq?: string
+    wechat?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  announcements?: string[] // 社团公告
+  requirements?: string // 加入要求
+  meetingTime?: string // 例会时间
+  meetingLocation?: string // 例会地点
 }
 
 // 社团分类

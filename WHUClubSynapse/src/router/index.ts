@@ -81,6 +81,12 @@ const router = createRouter({
               meta: { requiresAuth: true },
             },
             {
+              path: '/user/edit-club/:id',
+              name: 'edit-club',
+              component: () => import('@/views/User/EditClubView.vue'),
+              meta: { requiresAuth: true },
+            },
+            {
               path: '/user/clubs',
               name: 'user-clubs',
               redirect:'/user/clubs/joined',

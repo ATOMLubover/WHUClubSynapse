@@ -67,7 +67,29 @@
                 </template>
                 <div class="club-description">
                   <p>{{ club.description }}</p>
-                  <p>{{ club.details }}</p>
+                  <div v-if="club.introduction" class="club-introduction">
+                    <h4>详细介绍</h4>
+                    <p>{{ club.introduction }}</p>
+                  </div>
+                  <div v-if="club.requirements" class="club-requirements">
+                    <h4>加入要求</h4>
+                    <p>{{ club.requirements }}</p>
+                  </div>
+                </div>
+              </el-card>
+
+              <!-- 社团公告 -->
+              <el-card v-if="club.announcements && club.announcements.length > 0" class="content-card">
+                <template #header>
+                  <h3>
+                    <el-icon><Bell /></el-icon> 社团公告
+                  </h3>
+                </template>
+                <div class="announcements-list">
+                  <div v-for="(announcement, index) in club.announcements" :key="index" class="announcement-item">
+                    <el-icon class="announcement-icon"><InfoFilled /></el-icon>
+                    <span class="announcement-text">{{ announcement }}</span>
+                  </div>
                 </div>
               </el-card>
 
@@ -75,19 +97,26 @@
               <el-card class="content-card">
                 <template #header>
                   <h3>
-                    <el-icon><Bell /></el-icon> 最新动态
+                    <el-icon><Calendar /></el-icon> 最新动态
                   </h3>
                 </template>
-                <el-timeline>
-                  <el-timeline-item
-                    v-for="activity in club.activities"
-                    :key="activity.id"
-                    :timestamp="activity.time"
-                  >
-                    <h4>{{ activity.title }}</h4>
-                    <p>{{ activity.description }}</p>
-                  </el-timeline-item>
-                </el-timeline>
+                <div v-if="club.activities && club.activities.length > 0">
+                  <el-timeline>
+                    <el-timeline-item
+                      v-for="activity in club.activities"
+                      :key="activity.id"
+                      :timestamp="activity.time"
+                    >
+                      <h4>{{ activity.title }}</h4>
+                      <p>{{ activity.description }}</p>
+                    </el-timeline-item>
+                  </el-timeline>
+                </div>
+                <div v-else class="empty-activities">
+                  <el-empty description="暂无动态" :image-size="80">
+                    <el-button v-if="isUserManaged" type="primary" @click="goToEdit">添加动态</el-button>
+                  </el-empty>
+                </div>
               </el-card>
             </el-col>
 
@@ -127,17 +156,53 @@
                   </h3>
                 </template>
                 <div class="contact-info">
-                  <div class="contact-item">
+                  <div v-if="club.contactInfo?.qq" class="contact-item">
+                    <el-icon><Message /></el-icon>
+                    <span>QQ群：{{ club.contactInfo.qq }}</span>
+                  </div>
+                  <div v-if="club.contactInfo?.wechat" class="contact-item">
+                    <el-icon><ChatDotRound /></el-icon>
+                    <span>微信号：{{ club.contactInfo.wechat }}</span>
+                  </div>
+                  <div v-if="club.contactInfo?.email" class="contact-item">
+                    <el-icon><Message /></el-icon>
+                    <span>邮箱：{{ club.contactInfo.email }}</span>
+                  </div>
+                  <div v-if="club.contactInfo?.phone" class="contact-item">
+                    <el-icon><Phone /></el-icon>
+                    <span>电话：{{ club.contactInfo.phone }}</span>
+                  </div>
+                  <div v-if="club.contactInfo?.address" class="contact-item">
+                    <el-icon><Location /></el-icon>
+                    <span>地址：{{ club.contactInfo.address }}</span>
+                  </div>
+                  <!-- 兼容旧数据 -->
+                  <div v-if="club.qq && !club.contactInfo?.qq" class="contact-item">
                     <el-icon><Message /></el-icon>
                     <span>QQ群：{{ club.qq }}</span>
                   </div>
-                  <div class="contact-item">
-                    <el-icon><ChatDotRound /></el-icon>
-                    <span>微信群：扫码加入</span>
-                  </div>
-                  <div class="contact-item">
+                  <div v-if="club.location && !club.contactInfo?.address" class="contact-item">
                     <el-icon><Location /></el-icon>
                     <span>活动地点：{{ club.location }}</span>
+                  </div>
+                </div>
+              </el-card>
+
+              <!-- 例会信息 -->
+              <el-card v-if="club.meetingTime || club.meetingLocation" class="content-card">
+                <template #header>
+                  <h3>
+                    <el-icon><Calendar /></el-icon> 例会信息
+                  </h3>
+                </template>
+                <div class="meeting-info">
+                  <div v-if="club.meetingTime" class="meeting-item">
+                    <el-icon><Clock /></el-icon>
+                    <span>例会时间：{{ club.meetingTime }}</span>
+                  </div>
+                  <div v-if="club.meetingLocation" class="meeting-item">
+                    <el-icon><Location /></el-icon>
+                    <span>例会地点：{{ club.meetingLocation }}</span>
                   </div>
                 </div>
               </el-card>
@@ -193,6 +258,8 @@ import {
   Message,
   ChatDotRound,
   Location,
+  InfoFilled,
+  Clock,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
@@ -299,6 +366,13 @@ const handleShare = () => {
     // 复制链接到剪贴板
     navigator.clipboard.writeText(window.location.href)
     ElMessage.success('链接已复制到剪贴板')
+  }
+}
+
+// 跳转到编辑页面
+const goToEdit = () => {
+  if (club.value) {
+    router.push(`/user/edit-club/${club.value.id}`)
   }
 }
 
@@ -515,6 +589,72 @@ onMounted(async () => {
 
 .club-description li {
   margin: 8px 0;
+}
+
+.club-introduction,
+.club-requirements {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.club-introduction h4,
+.club-requirements h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.announcements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.announcement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
+}
+
+.announcement-icon {
+  color: #409eff;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.announcement-text {
+  flex: 1;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.empty-activities {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.meeting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meeting-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #606266;
+}
+
+.meeting-item .el-icon {
+  margin-right: 8px;
+  color: #409eff;
 }
 
 .stats-grid {

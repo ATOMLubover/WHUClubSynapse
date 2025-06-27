@@ -384,8 +384,7 @@ const goToClubDetail = (clubId: string) => {
 
 // 编辑社团
 const editClub = (club: Club) => {
-  // TODO: 跳转到编辑页面
-  ElMessage.info('编辑功能开发中...')
+  router.push(`/user/edit-club/${club.id}`)
 }
 
 // 成员管理

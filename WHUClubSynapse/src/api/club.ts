@@ -215,6 +215,24 @@ export const updateClub = async (
     maxMembers: number
     tags: string[]
     coverImage: string
+    introduction: string
+    contactInfo: {
+      qq?: string
+      wechat?: string
+      email?: string
+      phone?: string
+      address?: string
+    }
+    announcements: string[]
+    requirements: string
+    meetingTime: string
+    meetingLocation: string
+    activities: Array<{
+      id: number
+      title: string
+      description: string
+      time: string
+    }>
   }>,
 ): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
