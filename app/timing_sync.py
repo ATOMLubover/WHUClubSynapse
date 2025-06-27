@@ -5,6 +5,8 @@ import json
 import time
 import signal
 from app.rag_service import get_embeddings
+from typing import List, Dict, Any
+import chromadb
 
 # 日志记录设置
 logging.basicConfig(
@@ -23,11 +25,12 @@ redis_pool = ConnectionPool(
     decode_responses=True
 )
 
-class VectorDBClient:
-    def upsert(self, vector_id: str, vector: list, metadata: dict):
-        pass
-
-vector_db = VectorDBClient()
+# chromadb 客户端
+client = chromadb.HttpClient(
+    host=settings.CHROMA_SERVER_HOST,
+    port=settings.CHROMA_SERVER_PORT
+)
+collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
 
 # 消息处理
 def process_message(msg_id, msg_data):
@@ -35,14 +38,15 @@ def process_message(msg_id, msg_data):
         data = json.loads(msg_data['data'])
         source_id = data.get('source_id')
         content = data.get('content')
+        metadata = data.get('metadata', {})
 
         if not all([source_id, content]):
             raise ValueError("Message is missing 'source_id' or 'content'")
 
         # 向量化
-        vector = get_embeddings(content)
+        embeddings = get_embeddings(content)
         # 写入向量数据库
-        vector_db.upsert(vector_id=source_id, vector=vector, metadata=data.get('metadata', {}))
+        collection.upsert(ids=[source_id], embeddings=[embeddings], metadatas=[metadata], documents=[content])
 
         return True
     except Exception as e:
@@ -51,7 +55,7 @@ def process_message(msg_id, msg_data):
 
 # 主运行循环
 def run_sync_worker():
-    r = redis.Redis(ConnectionPool=redis_pool)
+    r = redis.Redis(connection_pool=redis_pool)
     # 确保 Strean 和消费者组存在
     try:
         r.xgroup_create(

@@ -9,16 +9,16 @@ from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import SentenceTransformer
 
 # 初始化向量数据库客户端
-persist_path = settings.VECTOR_DB_PATH
-client = chromadb.PersistentClient(path=persist_path)
-collection = client.get_or_create_collection(name=settings.VECTRO_DB_COLLECTION)
+client = chromadb.HttpClient(
+    host=settings.CHROMA_SERVER_HOST,
+    port=settings.CHROMA_SERVER_PROT
+)
+collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION_NAME)
 
 # 加载模型
 st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
 
-'''
-从输入文本获取嵌入向量
-'''
+'''从输入文本获取嵌入向量'''
 def get_embeddings(texts: List[str]) -> np.ndarray:
     return np.array(st_model.encode(texts, normalize_embeddings=True))
 

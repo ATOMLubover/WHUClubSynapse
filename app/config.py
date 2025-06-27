@@ -13,8 +13,10 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL_DIR: str = "/root/autodl-tmp/AI-ModelScope/all-MiniLM-L6-v2"
 
     # 向量数据库配置
-    VECTOR_DB_PATH: str = "/root/autodl-tmp/chroma_db"
-    VECTRO_DB_COLLECTION: str = "club_management_rag"
+    CHROMA_SERVER_HOST: str = "127.0.0.1"
+    CHROMA_SERVER_PORT: int = 8040
+    CHROMA_SERVER_SSL: bool = False  # 是否启用 HTTPS
+    CHROMA_RAG_COLLECTION_NAME: str = "club_management_rag"
     STATIC_DOC_PATH: str = "/root/autodl-tmp/static_doc"
 
     # Redis 连接配置
