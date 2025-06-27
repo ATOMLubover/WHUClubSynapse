@@ -7,6 +7,7 @@ import signal
 from typing import List, Dict, Tuple
 import chromadb
 from app.rag_service import get_embeddings
+import uuid
 
 # 日志和全局标志位
 logging.basicConfig(
@@ -44,6 +45,11 @@ collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION
 # 批量消息处理
 def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
     """一次性处理一批消息，以提高效率"""
+    """
+    【临时测试版】
+    一次性处理一批消息，使用随机UUID作为ID。
+    注意：此版本不支持更新或删除。
+    """
     first_msg_id = messages[0][0]
     last_msg_id = messages[-1][0]
     log.debug(f"Parsing batch of {len(messages)} messages from {first_msg_id} to {last_msg_id}.")
@@ -56,10 +62,20 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
             source_id = data.get('source_id')
             content = data.get('content')
 
-            if not all([source_id, content]):
-                raise ValueError("Message is missing 'source_id' or 'content'")
+            # 这里是正常实现
+            # if not all([source_id, content]):
+            #     raise ValueError("Message is missing 'source_id' or 'content'")
+            # batch_ids.append(source_id)
 
-            batch_ids.append(source_id)
+
+            # FIX: 以下是测试内容，测试完毕请删除
+            if not content: # 在这个临时版本中，我们只关心content
+                raise ValueError("Message is missing 'content'")
+            random_id = str(uuid.uuid4())
+            batch_ids.append(random_id)
+
+
+            # 以下不动
             batch_documents.append(content)
             batch_metadatas.append(data.get('metadata', {}))
             processed_msg_ids.append(msg_id)
