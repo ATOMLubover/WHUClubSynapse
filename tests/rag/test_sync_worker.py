@@ -81,8 +81,8 @@ def send_mock_message(r: redis.Redis):
         log.info(f"Successfully sent message to stream '{settings.REDIS_STREAM_NAME}'. Message ID: {message_id}")
         log.info(f"  > Content: \"{message_to_send['content'][:50]}...\"")
 
-    except Exception as e:
-        log.error(f"Failed to send message to Redis. Error: {e}")
+    except Exception as error:
+        log.error(f"Failed to send message to Redis. Error: {error}")
 
 
 if __name__ == "__main__":

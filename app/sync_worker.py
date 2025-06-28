@@ -27,14 +27,24 @@ def handle_shutdown(signum, frame):
         log.warning("Shutdown signal received. Finishing current batch before exiting...")
         SHUTDOWN_REQUESTED = True
 
+def sanitize_metadata_value(value):
+    """
+    【工具函数】
+    如果值是列表或字典，将其JSON序列化为字符串。
+    否则，按原样返回。
+    """
+    if isinstance(value, (list, dict)):
+        try:
+            # 使用紧凑的格式，不带不必要的空格
+            return json.dumps(value, ensure_ascii=False, separators=(',', ':'))
+        except TypeError:
+            # 如果JSON序列化失败，将其转换为字符串作为最后的保障
+            return str(value)
+    return value
+
 # 批量消息处理
 def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
     """一次性处理一批消息，以提高效率"""
-    """
-    【临时测试版】
-    一次性处理一批消息，使用随机UUID作为ID。
-    注意：此版本不支持更新或删除。
-    """
     first_msg_id = messages[0][0]
     last_msg_id = messages[-1][0]
     log.debug(f"Parsing batch of {len(messages)} messages from {first_msg_id} to {last_msg_id}.")
@@ -48,21 +58,25 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
             content = data.get('content')
 
             # 这里是正常实现
-            # if not all([source_id, content]):
-            #     raise ValueError("Message is missing 'source_id' or 'content'")
-            # batch_ids.append(source_id)
+            if not all([source_id, content]):
+                raise ValueError("Message is missing 'source_id' or 'content'")
+            batch_ids.append(source_id)
 
 
             # FIX: 以下是测试内容，测试完毕请删除
-            if not content: # 在这个临时版本中，我们只关心content
-                raise ValueError("Message is missing 'content'")
-            random_id = str(uuid.uuid4())
-            batch_ids.append(random_id)
+            # if not content: # 在这个临时版本中，我们只关心content
+            #     raise ValueError("Message is missing 'content'")
+            # random_id = str(uuid.uuid4())
+            # batch_ids.append(random_id)
 
+            raw_metadata = data.get('metadata', {})
+            sanitized_metadata = {
+                key: sanitize_metadata_value(value) for key, value in raw_metadata.items()
+            }
 
             # 以下不动
             batch_documents.append(content)
-            batch_metadatas.append(data.get('metadata', {}))
+            batch_metadatas.append(sanitized_metadata)
             processed_msg_ids.append(msg_id)
 
 
@@ -91,7 +105,7 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
         return []  # 批量处理失败，这批消息都算失败
 
 # 主运行循环
-def run_sync_worker():
+def run_sync_worker(batch_size: int):
     r = Redis(connection_pool=redis_pool)
     # 确保 Stream 和消费者组存在
     try:

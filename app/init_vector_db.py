@@ -1,4 +1,5 @@
 import os
+import random
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -27,7 +28,7 @@ def init_vector_db(pdf_dir: str):
     """
     log.info(f"Starting to process PDF files from directory: {pdf_dir}")
     # 定义批处理大小，避免一次性向量化上万个条目，提高稳健性
-    batch_size = 100
+    batch_size = 64
 
     for filename in os.listdir(pdf_dir):
         if not filename.endswith(".pdf"):
@@ -80,7 +81,7 @@ def check_collection_data(collection):
     """
     # 查询集合中的所有数据
     results = collection.query(
-        query_embeddings=[0.0] * len(get_embeddings([""])[0]),  # 空查询，返回所有数据
+        query_embeddings=[random.random() for _ in range(len(get_embeddings([""])[0]))],
         n_results=10  # 返回前10条数据
     )
     # 输出文档
@@ -94,5 +95,5 @@ def check_collection_data(collection):
 
 
 if __name__ == "__main__":
-    init_vector_db(settings.STATIC_DOC_PATH)
-    check_collection_data(chroma_collection)
+    # init_vector_db(settings.STATIC_DOC_PATH)
+    check_collection_data(chroma_collection)  # 测试向量数据库初始化是否正常的函数，生产环境请注释
