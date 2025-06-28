@@ -44,6 +44,7 @@ export const useClubStore = defineStore('club', () => {
   const hasMore = computed(() => globalPageData.currentPage < totalPages.value)
 
   // 获取社团列表
+  //TODO: 提醒后端传回社团总数和每个社团的成员数
   const fetchClubs = async (params?: Partial<SearchParams>) => {
     try {
       loading.value = true
@@ -56,12 +57,12 @@ export const useClubStore = defineStore('club', () => {
 
       const response = await clubApi.getClubList(queryParams)
       const data = response
-      clubs.value = response as Club[]
+      clubs.value = data.list
       clubs.value.forEach((club) => {
         club.maxMembers = 50
       })
-      globalPageData.total = data.length
-      globalPageData.currentPage = 1
+      globalPageData.total = data.total
+      globalPageData.currentPage = data.page
 
       return data
     } catch (error) {
@@ -84,7 +85,7 @@ export const useClubStore = defineStore('club', () => {
       }
 
       const response = await clubApi.searchClubs(keyword, queryParams)
-      const data = response.data.data
+      const data = response
 
       searchResult.value = data.list
       searchPageData.total = data.total
@@ -286,14 +287,15 @@ export const useClubStore = defineStore('club', () => {
   }
 
   // 创建社团
-  const createClub = async (data: {
-    name: string
-    description: string
-    category: string
-    maxMembers: number
-    tags: string[]
-    coverImage?: string
-  }) => {
+  const createClub = async (data:  {
+  name: string
+  description: string
+  requirements: string
+  category?: string
+  maxMembers?: number
+  tags?: string[]
+  coverImage?: string
+}) => {
     try {
       const response = await clubApi.createClub(data)
       return response.data.data

@@ -15,9 +15,9 @@ const getIsUsingMockAPI = () => {
 // 获取社团列表
 export const getClubList = async (
   params: SearchParams = {},
-): Promise< Club[]> => {
+): Promise< PaginatedData<Club>> => {
   if (getIsUsingMockAPI()) {
-    // return await mockClub.mockGetClubList(params)
+    return await mockClub.mockGetClubList(params)
   }
 
   const authStore = useAuthStore()
@@ -41,7 +41,12 @@ export const getClubList = async (
   const queryString = queryParams.toString()
   const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
   const response = await request.get(url)
-  return response.data
+  return {
+    list: response.data,
+    total: response.data.length,
+    page: params.page || 1,
+    pageSize: params.pageSize || 10,
+  }
 }
 
 // 获取社团详情
@@ -76,7 +81,7 @@ export const getRecommendedClubs = async (limit = 10): Promise<{ data: ApiRespon
 export const searchClubs = async (
   keyword: string,
   params: Partial<SearchParams> = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise<PaginatedData<Club>> => {
   return getClubList({ ...params, keyword })
 }
 

@@ -259,12 +259,9 @@ const getApplyButtonText = () => {
   font-size: 14px;
   color: #606266;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
-  min-height: 40px;
+  height: 40px;
 }
 
 .club-details {

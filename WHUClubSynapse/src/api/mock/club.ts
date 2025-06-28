@@ -9,7 +9,7 @@ const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTim
 // 模拟获取社团列表
 export const mockGetClubList = async (
   params: SearchParams = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise<PaginatedData<Club>> => {
   await delay()
 
   let filteredClubs = [...mockClubs]
@@ -60,16 +60,10 @@ export const mockGetClubList = async (
   console.log(list);
 
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
-        list,
-        total: filteredClubs.length,
-        page,
-        pageSize,
-      },
-    },
+    list,
+    total: filteredClubs.length,
+    page,
+    pageSize,
   }
 }
 
@@ -149,7 +143,7 @@ export const mockGetRecommendedClubs = async (
 export const mockSearchClubs = async (
   keyword: string,
   params: Partial<SearchParams> = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise<PaginatedData<Club>> => {
   return mockGetClubList({ ...params, keyword })
 }
 
