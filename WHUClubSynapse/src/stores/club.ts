@@ -9,6 +9,7 @@ export const useClubStore = defineStore('club', () => {
   const clubs = ref<Club[]>([])
   const searchResult=ref<Club[]>([])
   const hotClubs = ref<Club[]>([])
+  const favoriteClubs = ref<Club[]>([])
   const latestClubs = ref<Club[]>([])
   const recommendedClubs = ref<Club[]>([])
   const categories = ref<Record<string, number>>({})
@@ -200,7 +201,16 @@ export const useClubStore = defineStore('club', () => {
   //获取收藏列表
   const fetchFavoriteClubs=async()=>{
     try{
+      await fetchClubs()
       const response=await clubApi.getFavoriteClubs();
+
+      favoriteClubs.value = response.data.data.list
+      favoriteClubs.value.forEach((club) => {
+        const clubIndex = clubs.value.findIndex((c) => c.id === club.id)
+        if (clubIndex !== -1) {
+          clubs.value[clubIndex].isFavorite = true
+        }
+      })
       return response.data.data;
     }
     catch (error){
@@ -399,6 +409,7 @@ export const useClubStore = defineStore('club', () => {
     clubs,
     searchResult,
     hotClubs,
+    favoriteClubs,
     latestClubs,
     recommendedClubs,
     categories,

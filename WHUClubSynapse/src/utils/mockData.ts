@@ -39,7 +39,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学计算机科学协会',
-    isFavorite: true,
   },
   {
     id: '2',
@@ -78,7 +77,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学摄影艺术社',
-    isFavorite: false,
   },
   {
     id: '3',
@@ -116,7 +114,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学青年志愿者协会',
-    isFavorite: false,
   },
   {
     id: '4',
@@ -154,7 +151,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学创业实践社',
-    isFavorite: false,
   },
   {
     id: '5',
@@ -192,7 +188,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学篮球社',
-    isFavorite: false,
   },
   {
     id: '6',
@@ -230,7 +225,6 @@ export const mockClubs: Club[] = [
       time: '2024-01-18 15:30',
     },],
     location: '武汉大学机器人研究社',
-    isFavorite: false,
   },
   {
     id: '7',
@@ -248,7 +242,6 @@ export const mockClubs: Club[] = [
     status: 'not_applied',
     createdAt: '2024-01-07T19:15:00Z',
     updatedAt: '2024-01-21T13:40:00Z',
-    isFavorite: false,
     qq: '1234567890',
     details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
     activities:  [ {
@@ -286,7 +279,6 @@ export const mockClubs: Club[] = [
     status: 'approved',
     createdAt: '2024-01-14T11:20:00Z',
     updatedAt: '2024-01-23T17:25:00Z',
-    isFavorite: false,
     qq: '1234567890',
     details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
     activities:  [ {
@@ -324,7 +316,6 @@ export const mockClubs: Club[] = [
     status: 'not_applied',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
-    isFavorite: false,
     qq: '1234567890',
     details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
     activities:  [ {
@@ -351,7 +342,6 @@ export const mockClubs: Club[] = [
     status: 'not_applied',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
-    isFavorite: false,
     qq: '1234567890',
     details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
     activities:  [ {
@@ -377,8 +367,7 @@ export const mockClubs: Club[] = [
     isHot: false,
     status: 'not_applied',
     createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-    isFavorite: false,
+    updatedAt: '2024-01-01T00:00:00Z',  
     qq: '1234567890',
     details: '加入我们，你将获得：专业的技能培训和指导、丰富的实践项目机会、志同道合的伙伴和导师、个人能力的全面提升',
     activities:  [ {
@@ -398,7 +387,7 @@ export const mockUser: User = {
   id: 1,
   username: 'testuser',
   email: 'test@example.com',
-  avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+  avatar_url: 'https://avatars.githubusercontent.com/u/1?v=3',
   role: 'user',
   last_active: '2024-01-01T00:00:00Z',
   realName: '测试用户',
@@ -429,11 +418,14 @@ export const mockUser: User = {
   tags: [],
 }
 
+//用户收藏的社团
+export const userFavoriteClubIds: string[] = ['1','3','5']
+
 // 用户加入的社团ID列表（用于管理状态）
-export const userJoinedClubIds: string[] = ['1', '2', '3']
+export const userJoinedClubIds: string[] = [ '2', '3','4']
 
 // 用户管理的社团ID列表
-export const userManagedClubIds: string[] = ['1']
+export const userManagedClubIds: string[] = ['5']
 
 export const mockApplications: Application[] = [
   {

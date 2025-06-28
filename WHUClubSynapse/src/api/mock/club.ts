@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds } from '@/utils/mockData'
+import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds } from '@/utils/mockData'
 import { config } from '@/config'
 import type { ClubPost, ClubPostReply } from '@/types'
 
@@ -272,6 +272,7 @@ export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiRespo
     throw new Error('社团不存在')
   }
   club.isFavorite = true
+  userFavoriteClubIds.push(clubId)
 
   mockUser.stats!.favoriteClubs++
 
@@ -295,7 +296,10 @@ export const mockUnfavoriteClub = async (clubId: string): Promise<{ data: ApiRes
   club.isFavorite = false
 
   mockUser.stats!.favoriteClubs--
-
+  const index = userFavoriteClubIds.indexOf(clubId)
+  if (index > -1) {
+    userFavoriteClubIds.splice(index, 1)
+  }
   return {
     data: {
       code: 200,
@@ -314,7 +318,7 @@ export const mockGetFavoriteClubs = async (
 ): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
   await delay(500)
 
-  const favoriteClubs = mockClubs.filter((club) => club.isFavorite)
+  const favoriteClubs = userFavoriteClubIds.map((id) => mockClubs.find((club) => club.id === id))
   const page = params.page || 1
   const pageSize = params.pageSize || 12
   const start = (page - 1) * pageSize
@@ -328,7 +332,7 @@ export const mockGetFavoriteClubs = async (
       code: 200,
       message: 'success',
       data: {
-        list,
+        list: list.filter((club): club is Club => club !== undefined),
         total: favoriteClubs.length,
         page,
         pageSize,

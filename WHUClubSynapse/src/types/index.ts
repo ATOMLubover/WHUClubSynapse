@@ -53,14 +53,14 @@ export interface Club {
   maxMembers: number
   tags: string[]
   isHot: boolean
-  isFavorite: boolean
-  status: 'pending' | 'approved' | 'not_applied'
+  isFavorite?: boolean
+  status?: 'pending' | 'approved' | 'not_applied'
   createdAt: string
   updatedAt: string
-  activities: Activity[]
-  location: string
-  qq: string
-  details: string
+  activities?: Activity[]
+  location?: string
+  qq?: string
+  details?: string
   // 新增字段用于编辑功能
   introduction?: string // 社团详细介绍
   contactInfo?: {
