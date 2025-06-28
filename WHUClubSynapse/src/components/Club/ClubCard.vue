@@ -125,7 +125,14 @@ const getCategoryType = (category: ClubCategory) => {
 
 // 跳转到详情页
 const goToDetail = () => {
-  router.push(`/club/${props.club.id}`)
+  console.log('点击社团卡片，准备跳转到详情页:', props.club.id)
+  console.log('当前路由:', router.currentRoute.value.path)
+  try {
+    router.push(`/club/${props.club.id}`)
+    console.log('路由跳转成功')
+  } catch (error) {
+    console.error('路由跳转失败:', error)
+  }
 }
 
 // 跳转到登录页
@@ -170,8 +177,8 @@ const getApplyButtonText = () => {
   if (!authStore.isLoggedIn) return '登录后申请'
 
   // 根据社团状态返回对应文本
-  if (props.club.status === 'pending') return '等待审核中'
   if (props.club.status === 'approved') return '已加入'
+  if (props.club.status === 'pending') return '等待审核中'
   if (props.club.currentMembers >= props.club.maxMembers) return '已满员'
 
   return '立即申请'

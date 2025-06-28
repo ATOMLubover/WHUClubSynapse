@@ -35,7 +35,7 @@
             >
           </div>
           <div class="post-abstract">
-            {{ post.content.slice(0, 50) }}<span v-if="post.content.length > 50">...</span>
+            {{ stripMarkdown(post.content).slice(0, 80) }}<span v-if="stripMarkdown(post.content).length > 80">...</span>
           </div>
         </div>
         <el-icon class="arrow"><ArrowRightBold /></el-icon>
@@ -52,18 +52,17 @@
       />
     </div>
     
-    <el-dialog v-model="showCreate" title="发新帖" width="400px">
+    <el-dialog v-model="showCreate" title="发新帖" width="800px">
       <el-form :model="createForm" label-width="60px">
         <el-form-item label="标题">
-          <el-input v-model="createForm.title" maxlength="30" show-word-limit />
+          <el-input v-model="createForm.title" maxlength="50" show-word-limit />
         </el-form-item>
         <el-form-item label="内容">
-          <el-input
+          <MarkdownEditor
             v-model="createForm.content"
-            type="textarea"
-            :rows="5"
-            maxlength="500"
-            show-word-limit
+            :rows="8"
+            placeholder="请输入帖子内容..."
+            :maxlength="2000"
           />
         </el-form-item>
       </el-form>
@@ -83,6 +82,7 @@ import { getClubPosts, createClubPost } from '@/api/club'
 import { useAuthStore } from '@/stores/auth'
 import type { ClubPost, Club } from '@/types'
 import { Plus, ChatLineRound, ArrowRightBold } from '@element-plus/icons-vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 
 const props = defineProps<{ 
   clubId: string
@@ -153,6 +153,35 @@ const handleCreate = async () => {
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleString('zh-CN')
+}
+
+const stripMarkdown = (text: string) => {
+  if (!text) return ''
+  
+  return text
+    // 移除HTML标签
+    .replace(/<[^>]+>/g, '')
+    // 移除Markdown链接 [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // 移除行内代码 `code` -> code
+    .replace(/`([^`]+)`/g, '$1')
+    // 移除粗体 **text** -> text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    // 移除斜体 *text* -> text
+    .replace(/\*([^*]+)\*/g, '$1')
+    // 移除标题标记 # ## ###
+    .replace(/^#{1,6}\s+/gm, '')
+    // 移除列表标记 - * 1.
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    // 移除引用标记 >
+    .replace(/^>\s+/gm, '')
+    // 移除数学公式
+    .replace(/\$[^$\n]+\$/g, '')
+    .replace(/\$\$[^$\n]+\$\$/g, '')
+    // 移除多余的空行和空格
+    .replace(/\n\s*\n/g, '\n')
+    .trim()
 }
 
 onMounted(fetchPosts)
