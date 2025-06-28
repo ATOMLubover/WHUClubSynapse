@@ -1,22 +1,13 @@
 import json
-import logging
 import signal
 import time
 from typing import List, Dict, Tuple
 
 from redis import Redis, exceptions
 
-from app.config import settings
-from app.rag_service import get_embeddings
-from app.utils.singleton import chroma_collection, redis_pool  # 从工具文件中引入向量数据库集合 和 redis连接池
-
-# 日志和全局标志位
-logging.basicConfig(
-    level=settings.LOG_LEVEL,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-log = logging.getLogger(__name__)
+from app.configs.config import settings
+from app.rag.rag_service import get_embeddings
+from app.utils.singleton import chroma_collection, redis_pool, logger  # 从工具文件中引入向量数据库集合 和 redis连接池
 
 SHUTDOWN_REQUESTED = False
 
@@ -25,7 +16,7 @@ def handle_shutdown(signum, frame):
     """停机信号处理器"""
     global SHUTDOWN_REQUESTED
     if not SHUTDOWN_REQUESTED:
-        log.warning("Shutdown signal received. Finishing current batch before exiting...")
+        logger.warning("Shutdown signal received. Finishing current batch before exiting...")
         SHUTDOWN_REQUESTED = True
 
 
@@ -50,7 +41,7 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
     """一次性处理一批消息，以提高效率"""
     first_msg_id = messages[0][0]
     last_msg_id = messages[-1][0]
-    log.debug(f"Parsing batch of {len(messages)} messages from {first_msg_id} to {last_msg_id}.")
+    logger.debug(f"Parsing batch of {len(messages)} messages from {first_msg_id} to {last_msg_id}.")
     batch_ids, batch_embeddings, batch_metadatas, batch_documents = [], [], [], []
     processed_msg_ids = []
 
@@ -83,7 +74,7 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
 
 
         except Exception as e:
-            log.error(f"Failed to parse message. Error: {e}", extra={"msg_id": msg_id})
+            logger.error(f"Failed to parse message. Error: {e}", extra={"msg_id": msg_id})
 
     if not batch_documents:
         return []  # 如果所有消息都解析失败，直接返回
@@ -99,11 +90,11 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
             metadatas=batch_metadatas,
             documents=batch_documents
         )
-        log.info(f"Successfully processed and upserted a batch of {len(batch_ids)} messages.")
+        logger.info(f"Successfully processed and upserted a batch of {len(batch_ids)} messages.")
         return processed_msg_ids
 
     except Exception as e:
-        log.error(f"Failed to process batch. Error: {e}", extra={"msg_id": "batch_operation"})
+        logger.error(f"Failed to process batch. Error: {e}", extra={"msg_id": "batch_operation"})
         return []  # 批量处理失败，这批消息都算失败
 
 
@@ -146,11 +137,11 @@ def run_sync_worker():
                 r.xack(settings.REDIS_STREAM_NAME, settings.REDIS_CONSUMER_GROUP_NAME, *all_ids_to_ack)
         except exceptions.ConnectionError as e:
             # 对于连接错误，打印日志并等待一段时间后重试
-            log.error(f"Redis connection error: {e}. Retrying in 5 seconds...", extra={'msg_id': 'N/A'})
+            logger.error(f"Redis connection error: {e}. Retrying in 5 seconds...", extra={'msg_id': 'N/A'})
             time.sleep(5)
         except Exception as e:
             # 对于其他未知循环错误，同样记录并重试
-            log.error(f"An unexpected error occurred in the main loop: {e}", extra={'msg_id': 'N/A'})
+            logger.error(f"An unexpected error occurred in the main loop: {e}", extra={'msg_id': 'N/A'})
             time.sleep(5)
 
 

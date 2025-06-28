@@ -1,11 +1,9 @@
 from typing import List, Dict, Any
 
 import chromadb
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 from sentence_transformers import SentenceTransformer
 
-from app.config import settings
+from app.configs.config import settings
 
 # 初始化向量数据库客户端
 client = chromadb.HttpClient(
@@ -52,32 +50,31 @@ def format_context(retrieved_docs: List[Dict]) -> str:
         """ for i, doc in enumerate(retrieved_docs)
     )
 
-
-'''生成最终回答'''
-
-
-def generate_response(query: str, context: str, llm: Any) -> str:
-    prompt_template = ChatPromptTemplate.from_template(
-        "根据以下上下文（主要）和你的知识（如果上下文不足，再参考），回答问题：\n{context}\n\n问题：{question}"
-    )
-    prompt = prompt_template.format(context=context, question=query)
-
-    chain = llm | StrOutputParser()
-    return chain.invoke(prompt)
-
-
-'''
-rag 全流程
-'''
+# '''生成最终回答'''
+#
+#
+# def generate_response(query: str, context: str, llm: Any) -> str:
+#     prompt_template = ChatPromptTemplate.from_template(
+#         "根据以下上下文（主要）和你的知识（如果上下文不足，再参考），简介、准确地回答问题：\n{context}\n\n问题：{question}"
+#     )
+#     prompt = prompt_template.format(context=context, question=query)
+#
+#     chain = llm | StrOutputParser()
+#     return chain.invoke(prompt)
 
 
-def rag_pipeline(query: str, llm: Any, n_retrieve: int = 3) -> Dict[str, Any]:
-    retrieved = retrieve(query, n_retrieve)
-    context = format_context(retrieved)
-    answer = generate_response(query, context, llm)
-
-    return {
-        "answer": answer,
-        "source_documents": retrieved,
-        "context": context
-    }
+# '''
+# rag 全流程
+# '''
+#
+#
+# def rag_pipeline(query: str, llm: Any, n_retrieve: int = 3) -> Dict[str, Any]:
+#     retrieved = retrieve(query, n_retrieve)
+#     context = format_context(retrieved)
+#     answer = generate_response(query, context, llm)
+#
+#     return {
+#         "answer": answer,
+#         "source_documents": retrieved,
+#         "context": context
+#     }

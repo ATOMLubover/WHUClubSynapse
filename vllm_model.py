@@ -22,6 +22,9 @@ def get_completion(prompts, model, tokenizer=None, temperature=0.6, top_p=0.95, 
 
 
 if __name__ == "__main__":
+    '''
+    集成式方法，不建议作为服务使用
+    '''
     # 初始化 vLLM 推理引擎
     model = '/root/autodl-tmp/Qwen/Qwen3-8B'  # 指定模型路径
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)  # 加载分词器

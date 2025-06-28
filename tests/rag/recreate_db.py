@@ -1,7 +1,7 @@
 # 在您的初始化脚本或一个单独的工具脚本中
 import chromadb
 
-from app.config import settings
+from app.configs.config import settings
 
 client = chromadb.HttpClient(host=settings.CHROMA_SERVER_HOST, port=settings.CHROMA_SERVER_PORT)
 

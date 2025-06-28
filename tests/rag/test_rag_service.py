@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import torch
 
-from app.rag_service import (
+from app.rag.rag_service import (
     retrieve,
     format_context,
     generate_response,

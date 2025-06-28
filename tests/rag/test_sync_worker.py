@@ -5,7 +5,7 @@ import time
 
 import redis
 
-from app.config import settings
+from app.configs.config import settings
 from app.utils.singleton import redis_pool
 
 # --- 日志设置 ---
