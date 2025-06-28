@@ -234,6 +234,9 @@ export interface ClubApplication {
   major?: string
   phone?: string
   email?: string
+  // 新增字段：用户偏好社团和特质标签
+  interestedCategories?: string[] // 偏好社团类型
+  tags?: string[] // 用户特质标签
 }
 
 // 申请审核请求类型

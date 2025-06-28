@@ -21,6 +21,37 @@ export interface ChatResponse {
   usage?: Record<string, any>
 }
 
+// AI审核助手接口类型
+export interface ApplicationScreeningRequest {
+  applicant_data: {
+    name: string
+    major: string
+    skills: string[]
+    experience: string
+  }
+  application_reason: string
+  required_conditions: string[]
+  club_name: string
+}
+
+// 尝试不同的字段名格式
+export interface ApplicationScreeningRequestAlt {
+  applicantData: {
+    name: string
+    major: string
+    skills: string[]
+    experience: string
+  }
+  applicationReason: string
+  requiredConditions: string[]
+  clubName: string
+}
+
+export interface ApplicationScreeningResponse {
+  summary: string
+  suggestion: string
+}
+
 export const chatWithAI = async (requestData: ChatRequest): Promise<ChatResponse> => {
   try {
     console.log('AI聊天请求URL:', getChatApiUrl())
@@ -90,5 +121,86 @@ export const checkAIStatus = async (): Promise<boolean> => {
   } catch (error) {
     console.error('检查AI服务状态失败:', error)
     return false
+  }
+}
+
+// AI审核助手API
+export const screenApplication = async (requestData: ApplicationScreeningRequest): Promise<ApplicationScreeningResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/screen_application`
+    console.log('AI审核助手请求URL:', url)
+    console.log('AI审核助手请求数据:', requestData)
+    
+    // 尝试两种格式：下划线命名和驼峰命名
+    const validatedDataSnake = {
+      applicant_data: {
+        name: requestData.applicant_data.name || '',
+        major: requestData.applicant_data.major || '',
+        skills: requestData.applicant_data.skills || [],
+        experience: requestData.applicant_data.experience || ''
+      },
+      application_reason: requestData.application_reason || '',
+      required_conditions: requestData.required_conditions || [],
+      club_name: requestData.club_name || ''
+    }
+    
+    const validatedDataCamel = {
+      applicantData: {
+        name: requestData.applicant_data.name || '',
+        major: requestData.applicant_data.major || '',
+        skills: requestData.applicant_data.skills || [],
+        experience: requestData.applicant_data.experience || ''
+      },
+      applicationReason: requestData.application_reason || '',
+      requiredConditions: requestData.required_conditions || [],
+      clubName: requestData.club_name || ''
+    }
+    
+    console.log('下划线格式请求数据:', validatedDataSnake)
+    console.log('驼峰格式请求数据:', validatedDataCamel)
+    
+    // 先尝试下划线格式
+    let response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(validatedDataSnake),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('AI审核助手响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('下划线格式失败，尝试驼峰格式:', errorText)
+      
+      // 如果下划线格式失败，尝试驼峰格式
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(validatedDataCamel),
+        signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+      })
+      
+      console.log('驼峰格式响应状态:', response.status)
+      
+      if (!response.ok) {
+        const errorText2 = await response.text()
+        console.error('驼峰格式也失败:', errorText2)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText2}`)
+      }
+    }
+
+    const data = await response.json()
+    console.log('AI审核助手响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('AI审核助手请求失败:', error)
+    throw error
   }
 } 

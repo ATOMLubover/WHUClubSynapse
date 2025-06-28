@@ -129,7 +129,7 @@
               <el-table-column label="专业" prop="major" width="150" />
               <el-table-column label="申请理由" min-width="200">
                 <template #default="{ row }">
-                  <div class="apply-reason">{{ row.applyReason }}</div>
+                  <div class="apply-reason-text">{{ row.applyReason }}</div>
                 </template>
               </el-table-column>
 
@@ -321,44 +321,86 @@
     </el-dialog>
 
     <!-- 申请详情对话框 -->
-    <el-dialog v-model="showApplicationDetailDialog" title="申请详情" width="600px">
-      <div v-if="currentApplication" class="application-detail-content">
-        <div class="member-header">
-          <el-avatar :src="currentApplication.avatar_url" :size="80" />
-          <div class="member-basic-info">
-            <h3 class="member-name">{{ currentApplication.realName || currentApplication.username }}</h3>
-            <p class="member-username">@{{ currentApplication.username }}</p>
-          </div>
-        </div>
-        <el-divider />
-        <div class="member-detail-info">
-          <div class="info-section">
-            <h4>基本信息</h4>
-            <div class="info-grid">
-              <div class="info-item"><span class="label">学号:</span><span class="value">{{ currentApplication.studentId || '未填写' }}</span></div>
-              <div class="info-item"><span class="label">专业:</span><span class="value">{{ currentApplication.major || '未填写' }}</span></div>
-              <div class="info-item"><span class="label">申请时间:</span><span class="value">{{ formatDate(currentApplication.applyTime) }}</span></div>
+    <el-dialog v-model="showApplicationDetailDialog" title="申请详情" width="1200px">
+      <div v-if="currentApplication" class="application-detail-layout">
+        <!-- 左侧：申请者信息 -->
+        <div class="application-info-section">
+          <div class="member-header">
+            <el-avatar :src="currentApplication.avatar_url" :size="80" />
+            <div class="member-basic-info">
+              <h3 class="member-name">{{ currentApplication.realName || currentApplication.username }}</h3>
+              <p class="member-username">@{{ currentApplication.username }}</p>
             </div>
           </div>
-          <div class="info-section">
-            <h4>联系方式</h4>
-            <div class="info-grid">
-              <div class="info-item"><span class="label">手机:</span><span class="value">{{ currentApplication.phone || '未填写' }}</span></div>
-              <div class="info-item"><span class="label">邮箱:</span><span class="value">{{ currentApplication.email || '未填写' }}</span></div>
+          <el-divider />
+          <div class="member-detail-info">
+            <div class="info-section">
+              <h4>基本信息</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">学号:</span><span class="value">{{ currentApplication.studentId || '未填写' }}</span></div>
+                <div class="info-item"><span class="label">专业:</span><span class="value">{{ currentApplication.major || '未填写' }}</span></div>
+                <div class="info-item"><span class="label">申请时间:</span><span class="value">{{ formatDate(currentApplication.applyTime) }}</span></div>
+              </div>
+            </div>
+            <div class="info-section">
+              <h4>联系方式</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">手机:</span><span class="value">{{ currentApplication.phone || '未填写' }}</span></div>
+                <div class="info-item"><span class="label">邮箱:</span><span class="value">{{ currentApplication.email || '未填写' }}</span></div>
+              </div>
+            </div>
+            <div class="info-section">
+              <h4>偏好社团类型</h4>
+              <div class="tags-container">
+                <el-tag
+                  v-for="category in currentApplication.interestedCategories"
+                  :key="category"
+                  type="primary"
+                  class="tag-item"
+                >
+                  {{ category }}
+                </el-tag>
+                <span v-if="!currentApplication.interestedCategories?.length" class="no-data">未设置</span>
+              </div>
+            </div>
+            <div class="info-section">
+              <h4>特质标签</h4>
+              <div class="tags-container">
+                <el-tag
+                  v-for="tag in currentApplication.tags"
+                  :key="tag"
+                  type="success"
+                  class="tag-item"
+                >
+                  {{ tag }}
+                </el-tag>
+                <span v-if="!currentApplication.tags?.length" class="no-data">未设置</span>
+              </div>
+            </div>
+            <div class="info-section">
+              <h4>申请理由</h4>
+              <div class="apply-reason">
+                <p>{{ currentApplication.applyReason }}</p>
+              </div>
             </div>
           </div>
-          <div class="info-section">
-            <h4>申请理由</h4>
-            <div class="info-item"><span class="value">{{ currentApplication.applyReason }}</span></div>
+          <el-divider />
+          <div class="member-actions">
+            <h4>审核操作</h4>
+            <div class="action-buttons">
+              <el-button v-if="currentApplication.status === 'pending'" type="success" @click="approveApplicationFromDetail(currentApplication)">同意</el-button>
+              <el-button v-if="currentApplication.status === 'pending'" type="danger" @click="rejectApplicationFromDetail(currentApplication)">拒绝</el-button>
+            </div>
           </div>
         </div>
-        <el-divider />
-        <div class="member-actions">
-          <h4>审核操作</h4>
-          <div class="action-buttons">
-            <el-button v-if="currentApplication.status === 'pending'" type="success" @click="approveApplicationFromDetail(currentApplication)">同意</el-button>
-            <el-button v-if="currentApplication.status === 'pending'" type="danger" @click="rejectApplicationFromDetail(currentApplication)">拒绝</el-button>
-          </div>
+        
+        <!-- 右侧：AI审核助手 -->
+        <div class="ai-screening-section">
+          <AIApplicationScreening 
+            :application-data="currentApplication"
+            :club-name="currentClub?.name || '未知社团'"
+            :required-conditions="currentClub?.tags || []"
+          />
         </div>
       </div>
     </el-dialog>
@@ -377,6 +419,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
+import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue'
 import {
   getClubMembers,
   getClubApplications,
@@ -456,6 +499,8 @@ const removeRules = {
 
 const currentUserId = computed(() => authStore.user?.id)
 
+const currentClub = computed(() => club.value)
+
 const canManageRole = (member: ClubMember) => {
   return member.userId !== currentUserId.value?.toString()
 }
@@ -467,8 +512,10 @@ const canRemoveMember = (member: ClubMember) => {
 const loadClubInfo = async () => {
   const clubId = route.params.id as string
   try {
+    console.log('开始加载社团信息，ID:', clubId)
     const clubData = await clubStore.fetchClubDetail(clubId)
     club.value = clubData
+    console.log('社团信息加载完成:', clubData)
   } catch (error) {
     console.error('获取社团信息失败:', error)
     ElMessage.error('获取社团信息失败')
@@ -1025,13 +1072,26 @@ onMounted(async () => {
   color: #909399;
 }
 
-.apply-reason {
+.apply-reason-text {
   color: #606266;
   line-height: 1.5;
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.apply-reason {
+  background-color: #f5f7fa;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #409eff;
+}
+
+.apply-reason p {
+  margin: 0;
+  color: #303133;
+  line-height: 1.6;
 }
 
 .application-actions {
@@ -1146,82 +1206,112 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-.application-detail-content {
-  padding: 20px;
+.application-detail-layout {
+  display: flex;
+  gap: 20px;
+  min-height: 600px;
 }
 
-.application-detail-content .member-header {
+.application-info-section {
+  flex: 1;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  overflow-y: auto;
+}
+
+.application-info-section .member-header {
   margin-bottom: 16px;
 }
 
-.application-detail-content .member-basic-info {
+.application-info-section .member-basic-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.application-detail-content .member-basic-info h3 {
+.application-info-section .member-basic-info h3 {
   margin: 0;
   font-size: 20px;
   color: #303133;
 }
 
-.application-detail-content .member-basic-info p {
+.application-info-section .member-basic-info p {
   margin: 0;
   font-size: 14px;
   color: #909399;
 }
 
-.application-detail-content .member-detail-info {
+.application-info-section .member-detail-info {
   margin-bottom: 20px;
 }
 
-.application-detail-content .info-section {
+.application-info-section .info-section {
   margin-bottom: 16px;
 }
 
-.application-detail-content .info-section h4 {
+.application-info-section .info-section h4 {
   margin: 0 0 12px 0;
   font-size: 16px;
   color: #303133;
 }
 
-.application-detail-content .info-grid {
+.application-info-section .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.application-detail-content .info-item {
+.application-info-section .info-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.application-detail-content .info-item .label {
+.application-info-section .info-item .label {
   font-weight: 500;
   color: #606266;
   font-size: 14px;
 }
 
-.application-detail-content .info-item .value {
+.application-info-section .info-item .value {
   color: #303133;
   font-size: 14px;
 }
 
-.application-detail-content .member-actions {
+.application-info-section .member-actions {
   margin-top: 20px;
 }
 
-.application-detail-content .member-actions h4 {
+.application-info-section .member-actions h4 {
   margin: 0 0 12px 0;
   font-size: 16px;
   color: #303133;
 }
 
-.application-detail-content .member-actions .action-buttons {
+.application-info-section .member-actions .action-buttons {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.ai-screening-section {
+  flex: 1;
+  min-height: 600px;
+}
+
+.tags-container {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.tag-item {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.no-data {
+  color: #909399;
+  font-size: 12px;
 }
 </style> 

@@ -432,6 +432,8 @@ export const getClubApplications = async (
         major: '计算机科学与技术',
         phone: '13800138003',
         email: 'applicant1@example.com',
+        interestedCategories: ['学术科技', '创新创业'],
+        tags: ['编程开发', '逻辑清晰', '团队协作', '创新冒险'],
       },
       {
         id: '2',
@@ -447,6 +449,8 @@ export const getClubApplications = async (
         major: '软件工程',
         phone: '13800138004',
         email: 'applicant2@example.com',
+        interestedCategories: ['学术科技', '文艺体育'],
+        tags: ['开朗外向', '善于沟通', '执行力强', '球类运动（篮球 / 足球 / 羽毛球等）'],
       },
       {
         id: '3',
@@ -465,6 +469,8 @@ export const getClubApplications = async (
         major: '信息安全',
         phone: '13800138005',
         email: 'applicant3@example.com',
+        interestedCategories: ['学术科技', '志愿服务'],
+        tags: ['沉稳内敛', '细心周到', '同理心强', '志愿服务'],
       },
       {
         id: '4',
@@ -480,6 +486,8 @@ export const getClubApplications = async (
         major: '计算机科学与技术',
         phone: '13800138006',
         email: 'applicant4@example.com',
+        interestedCategories: ['学术科技'],
+        tags: ['理性冷静', '追求完美', '数学建模', '学术竞赛'],
       },
       {
         id: '5',
@@ -495,6 +503,8 @@ export const getClubApplications = async (
         major: '软件工程',
         phone: '13800138007',
         email: 'applicant5@example.com',
+        interestedCategories: ['学术科技', '创新创业'],
+        tags: ['编程开发', '平面设计', '创新冒险', '目标明确'],
       },
     ]
 
