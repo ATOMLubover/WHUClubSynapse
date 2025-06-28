@@ -43,7 +43,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="最大成员数" prop="maxMembers">
@@ -93,7 +93,9 @@
               <img v-if="basicForm.coverImage" :src="basicForm.coverImage" class="cover-preview" />
               <el-icon v-else class="cover-uploader-icon"><Plus /></el-icon>
             </el-upload>
-            <div class="upload-tip">建议尺寸：400x300px，支持 JPG、PNG 格式，文件大小不超过 2MB</div>
+            <div class="upload-tip">
+              建议尺寸：400x300px，支持 JPG、PNG 格式，文件大小不超过 2MB
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -148,7 +150,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="邮箱" prop="email">
@@ -202,9 +204,13 @@
               <el-button type="primary" @click="addAnnouncement">添加公告</el-button>
             </el-empty>
           </div>
-          
+
           <div v-else class="announcements-list">
-            <div v-for="(announcement, index) in announcements" :key="index" class="announcement-item">
+            <div
+              v-for="(announcement, index) in announcements"
+              :key="index"
+              class="announcement-item"
+            >
               <el-input
                 v-model="announcements[index]"
                 type="textarea"
@@ -213,9 +219,9 @@
                 maxlength="200"
                 show-word-limit
               />
-              <el-button 
-                type="danger" 
-                size="small" 
+              <el-button
+                type="danger"
+                size="small"
                 @click="removeAnnouncement(index)"
                 class="remove-btn"
               >
@@ -223,7 +229,7 @@
                 删除
               </el-button>
             </div>
-            
+
             <el-button type="primary" @click="addAnnouncement" class="add-announcement-btn">
               <el-icon><Plus /></el-icon>
               添加公告
@@ -244,33 +250,29 @@
               <el-button type="primary" @click="addActivity">添加动态</el-button>
             </el-empty>
           </div>
-          
+
           <div v-else class="activities-list">
             <div v-for="(activity, index) in activities" :key="activity.id" class="activity-item">
               <el-card>
                 <template #header>
                   <div class="activity-header">
                     <span>动态 {{ index + 1 }}</span>
-                    <el-button 
-                      type="danger" 
-                      size="small" 
-                      @click="removeActivity(index)"
-                    >
+                    <el-button type="danger" size="small" @click="removeActivity(index)">
                       <el-icon><Delete /></el-icon>
                       删除
                     </el-button>
                   </div>
                 </template>
-                
+
                 <el-form-item label="动态标题" :prop="`activities.${index}.title`">
-                  <el-input 
-                    v-model="activity.title" 
+                  <el-input
+                    v-model="activity.title"
                     placeholder="请输入动态标题"
                     maxlength="100"
                     show-word-limit
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="动态描述" :prop="`activities.${index}.description`">
                   <el-input
                     v-model="activity.description"
@@ -281,7 +283,7 @@
                     show-word-limit
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="动态时间" :prop="`activities.${index}.time`">
                   <el-date-picker
                     v-model="activity.time"
@@ -294,7 +296,7 @@
                 </el-form-item>
               </el-card>
             </div>
-            
+
             <el-button type="primary" @click="addActivity" class="add-activity-btn">
               <el-icon><Plus /></el-icon>
               添加动态
@@ -323,6 +325,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import type { Club, Activity } from '@/types'
+import { categoryMap } from '@/utils/mockData'
 
 const route = useRoute()
 const router = useRouter()
@@ -389,19 +392,19 @@ const loadClubInfo = async () => {
   try {
     loading.value = true
     const club = await clubStore.fetchClubDetail(clubId)
-    
+
     // 填充基本信息
-    basicForm.name = club.name
-    basicForm.description = club.description
-    basicForm.category = club.category
-    basicForm.maxMembers = club.maxMembers
+    basicForm.name = club.club_name
+    basicForm.description = club.desc
+    basicForm.category = categoryMap[club.category]
+    basicForm.maxMembers = club.maxMembers ?? 50
     basicForm.tags = club.tags || []
-    basicForm.coverImage = club.coverImage
-    
+    basicForm.coverImage = club.logo_url
+
     // 填充详细介绍
     detailForm.introduction = club.introduction || ''
     detailForm.requirements = club.requirements || ''
-    
+
     // 填充联系方式
     if (club.contactInfo) {
       contactForm.qq = club.contactInfo.qq || ''
@@ -410,17 +413,16 @@ const loadClubInfo = async () => {
       contactForm.phone = club.contactInfo.phone || ''
       contactForm.address = club.contactInfo.address || ''
     }
-    
+
     // 填充例会信息
     meetingForm.meetingTime = club.meetingTime || ''
     meetingForm.meetingLocation = club.meetingLocation || ''
-    
+
     // 填充公告
     announcements.value = club.announcements || []
-    
+
     // 填充动态
     activities.value = club.activities || []
-    
   } catch (error) {
     console.error('加载社团信息失败:', error)
     ElMessage.error('加载社团信息失败')
@@ -484,9 +486,9 @@ const saveClub = async () => {
   try {
     // 验证基本信息表单
     await basicFormRef.value?.validate()
-    
+
     saving.value = true
-    
+
     const updateData = {
       // 基本信息
       name: basicForm.name,
@@ -495,11 +497,11 @@ const saveClub = async () => {
       maxMembers: basicForm.maxMembers,
       tags: basicForm.tags,
       coverImage: basicForm.coverImage,
-      
+
       // 详细介绍
       introduction: detailForm.introduction,
       requirements: detailForm.requirements,
-      
+
       // 联系方式
       contactInfo: {
         qq: contactForm.qq,
@@ -508,32 +510,31 @@ const saveClub = async () => {
         phone: contactForm.phone,
         address: contactForm.address,
       },
-      
+
       // 例会信息
       meetingTime: meetingForm.meetingTime,
       meetingLocation: meetingForm.meetingLocation,
-      
+
       // 公告
-      announcements: announcements.value.filter(announcement => announcement.trim() !== ''),
-      
+      announcements: announcements.value.filter((announcement) => announcement.trim() !== ''),
+
       // 动态
       activities: activities.value
-        .filter(activity => activity.title.trim() && activity.description.trim())
-        .map(activity => ({
+        .filter((activity) => activity.title.trim() && activity.description.trim())
+        .map((activity) => ({
           id: activity.id,
           title: activity.title.trim(),
           description: activity.description.trim(),
           time: activity.time,
         })),
     }
-    
+
     await clubStore.updateClub(clubId, updateData)
-    
+
     ElMessage.success('社团信息更新成功')
-    
+
     // 返回管理页面
     router.push('/user/clubs/managed')
-    
   } catch (error) {
     console.error('保存社团信息失败:', error)
     ElMessage.error('保存失败，请检查表单信息')
@@ -560,7 +561,7 @@ onMounted(() => {
 
 <style scoped>
 .edit-club-view {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
@@ -742,26 +743,26 @@ onMounted(() => {
   .edit-club-view {
     padding: 10px;
   }
-  
+
   .header-content h1 {
     font-size: 24px;
   }
-  
+
   .edit-form-container {
     max-width: 100%;
   }
-  
+
   .form-section {
     margin-bottom: 30px;
     padding: 15px;
   }
-  
+
   .announcement-item {
     flex-direction: column;
   }
-  
+
   .remove-btn {
     align-self: flex-end;
   }
 }
-</style> 
+</style>

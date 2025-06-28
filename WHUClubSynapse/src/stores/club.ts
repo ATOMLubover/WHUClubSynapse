@@ -9,6 +9,7 @@ export const useClubStore = defineStore('club', () => {
   const clubs = ref<Club[]>([])
   const searchResult=ref<Club[]>([])
   const hotClubs = ref<Club[]>([])
+  const favoriteClubs = ref<Club[]>([])
   const latestClubs = ref<Club[]>([])
   const recommendedClubs = ref<Club[]>([])
   const categories = ref<Record<string, number>>({})
@@ -200,7 +201,16 @@ export const useClubStore = defineStore('club', () => {
   //获取收藏列表
   const fetchFavoriteClubs=async()=>{
     try{
+      await fetchClubs()
       const response=await clubApi.getFavoriteClubs();
+
+      favoriteClubs.value = response.data.data.list
+      favoriteClubs.value.forEach((club) => {
+        const clubIndex = clubs.value.findIndex((c) => c.club_id === club.club_id)
+        if (clubIndex !== -1) {
+          clubs.value[clubIndex].isFavorite = true
+        }
+      })
       return response.data.data;
     }
     catch (error){
@@ -339,14 +349,14 @@ export const useClubStore = defineStore('club', () => {
       ElMessage.success('社团信息更新成功')
       
       // 如果当前正在查看这个社团，更新currentClub数据
-      if (currentClub.value && currentClub.value.id === clubId) {
+      if (currentClub.value && currentClub.value.club_id === clubId) {
         // 只更新允许更新的字段
-        if (data.name) currentClub.value.name = data.name
-        if (data.description) currentClub.value.description = data.description
+        if (data.name) currentClub.value.club_name = data.name
+        if (data.description) currentClub.value.desc = data.description
         if (data.category) currentClub.value.category = data.category as any
         if (data.maxMembers) currentClub.value.maxMembers = data.maxMembers
         if (data.tags) currentClub.value.tags = data.tags
-        if (data.coverImage) currentClub.value.coverImage = data.coverImage
+        if (data.coverImage) currentClub.value.logo_url = data.coverImage
         if (data.introduction) currentClub.value.introduction = data.introduction
         if (data.contactInfo) currentClub.value.contactInfo = data.contactInfo
         if (data.announcements) currentClub.value.announcements = data.announcements
@@ -399,6 +409,7 @@ export const useClubStore = defineStore('club', () => {
     clubs,
     searchResult,
     hotClubs,
+    favoriteClubs,
     latestClubs,
     recommendedClubs,
     categories,

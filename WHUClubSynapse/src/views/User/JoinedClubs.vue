@@ -83,7 +83,7 @@
             <el-row :gutter="20">
               <el-col
                 v-for="club in joinedClubs"
-                :key="club.id"
+                :key="club.club_id"
                 :xs="24"
                 :sm="12"
                 :md="8"
@@ -92,8 +92,8 @@
               >
                 <div class="club-card">
                   <!-- 社团封面 -->
-                  <div class="club-cover" @click="goToClubDetail(club.id)">
-                    <img :src="club.coverImage" :alt="club.name" />
+                  <div class="club-cover" @click="goToClubDetail(club.club_id)">
+                    <img :src="club.logo_url" :alt="club.club_name" />
                     <div class="cover-overlay">
                       <el-button type="primary" size="small">查看详情</el-button>
                     </div>
@@ -101,16 +101,27 @@
 
                   <!-- 社团信息 -->
                   <div class="club-info">
-                    <h3 class="club-name" @click="goToClubDetail(club.id)">{{ club.name }}</h3>
+                    <h3 class="club-name" @click="goToClubDetail(club.club_id)">
+                      {{ club.club_name }}
+                    </h3>
                     <p class="club-category">{{ club.category }}</p>
-                    <p class="club-members">{{ club.currentMembers }}/{{ club.maxMembers }} 人</p>
-                    <p class="favorite-time">加入于 {{ formatDate(club.createdAt) }}</p>
+                    <p class="club-members">{{ club.member_count }}/{{ club.maxMembers }} 人</p>
+                    <p class="favorite-time">加入于 {{ formatDate(club.created_at) }}</p>
                   </div>
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="goToClubDetail(club.id)"> 查看 </el-button>
-                    <el-button size="small" type="danger" @click="showQuitDialog = true; quitClub = club"> 退出社团 </el-button>
+                    <el-button size="small" @click="goToClubDetail(club.club_id)"> 查看 </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="
+                        showQuitDialog = true
+                        quitClub = club
+                      "
+                    >
+                      退出社团
+                    </el-button>
                   </div>
                 </div>
               </el-col>
@@ -137,14 +148,14 @@
     <el-dialog v-model="showQuitDialog" title="退出社团" width="400px">
       <div class="quit-dialog-content">
         <el-icon class="warning-icon" color="#E6A23C"><Warning /></el-icon>
-        <p>确定要退出社团 <strong>{{ quitClub?.name }}</strong> 吗？</p>
+        <p>
+          确定要退出社团 <strong>{{ quitClub?.club_name }}</strong> 吗？
+        </p>
         <p class="warning-text">退出后将无法访问社团内部信息和活动</p>
       </div>
       <template #footer>
         <el-button @click="showQuitDialog = false">取消</el-button>
-        <el-button type="danger" @click="confirmQuit" :loading="quitLoading">
-          确认退出
-        </el-button>
+        <el-button type="danger" @click="confirmQuit" :loading="quitLoading"> 确认退出 </el-button>
       </template>
     </el-dialog>
   </div>
@@ -299,7 +310,7 @@ const confirmQuit = async () => {
 
   try {
     quitLoading.value = true
-    await clubStore.quitClub(quitClub.value.id)
+    await clubStore.quitClub(quitClub.value.club_id)
     ElMessage.success('退出社团成功')
     showQuitDialog.value = false
     quitClub.value = null

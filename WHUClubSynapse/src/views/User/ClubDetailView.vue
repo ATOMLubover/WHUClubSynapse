@@ -5,14 +5,14 @@
         <!-- 社团头部信息 -->
         <div class="club-header">
           <div class="club-cover">
-            <el-image :src="club.coverImage" fit="cover" class="cover-image" />
+            <el-image :src="club.logo_url" fit="cover" class="cover-image" />
             <div class="club-status-badge">
               <el-tag v-if="club.isHot" type="danger" size="large"> 🔥 热门社团 </el-tag>
             </div>
           </div>
 
           <div class="club-info">
-            <h1 class="club-title">{{ club.name }}</h1>
+            <h1 class="club-title">{{ club.club_name }}</h1>
             <div class="club-meta">
               <div class="meta-item">
                 <el-icon><User /></el-icon>
@@ -20,11 +20,11 @@
               </div>
               <div class="meta-item">
                 <el-icon><UserFilled /></el-icon>
-                <span>成员数：{{ club.currentMembers }}/{{ club.maxMembers }}</span>
+                <span>成员数：{{ club.member_count }}/{{ club.maxMembers }}</span>
               </div>
               <div class="meta-item">
                 <el-icon><Calendar /></el-icon>
-                <span>成立时间：{{ formatDate(club.createdAt) }}</span>
+                <span>成立时间：{{ formatDate(club.created_at) }}</span>
               </div>
             </div>
 
@@ -66,7 +66,7 @@
                   </h3>
                 </template>
                 <div class="club-description">
-                  <p>{{ club.description }}</p>
+                  <p>{{ club.desc }}</p>
                   <div v-if="club.introduction" class="club-introduction">
                     <h4>详细介绍</h4>
                     <p>{{ club.introduction }}</p>
@@ -79,14 +79,21 @@
               </el-card>
 
               <!-- 社团公告 -->
-              <el-card v-if="club.announcements && club.announcements.length > 0" class="content-card">
+              <el-card
+                v-if="club.announcements && club.announcements.length > 0"
+                class="content-card"
+              >
                 <template #header>
                   <h3>
                     <el-icon><Bell /></el-icon> 社团公告
                   </h3>
                 </template>
                 <div class="announcements-list">
-                  <div v-for="(announcement, index) in club.announcements" :key="index" class="announcement-item">
+                  <div
+                    v-for="(announcement, index) in club.announcements"
+                    :key="index"
+                    class="announcement-item"
+                  >
                     <el-icon class="announcement-icon"><InfoFilled /></el-icon>
                     <span class="announcement-text">{{ announcement }}</span>
                   </div>
@@ -114,7 +121,9 @@
                 </div>
                 <div v-else class="empty-activities">
                   <el-empty description="暂无动态" :image-size="80">
-                    <el-button v-if="isUserManaged" type="primary" @click="goToEdit">添加动态</el-button>
+                    <el-button v-if="isUserManaged" type="primary" @click="goToEdit"
+                      >添加动态</el-button
+                    >
                   </el-empty>
                 </div>
               </el-card>
@@ -130,7 +139,7 @@
                 </template>
                 <div class="stats-grid">
                   <div class="stat-item">
-                    <div class="stat-number">{{ club.currentMembers }}</div>
+                    <div class="stat-number">{{ club.member_count }}</div>
                     <div class="stat-label">当前成员</div>
                   </div>
                   <div class="stat-item">
@@ -363,19 +372,19 @@ const isDisabled = computed(() => {
   if (hasApplied.value) return true
 
   // 如果社团已满员
-  if (club.value.currentMembers >= club.value.maxMembers) return true
+  if (club.value.member_count >= (club.value.maxMembers ?? 50)) return true
 
   return false
 })
 
 // 获取分类标签类型
-const getCategoryType = (category: ClubCategory) => {
-  const typeMap: Record<ClubCategory, string> = {
-    学术科技: 'primary',
-    文艺体育: 'success',
-    志愿服务: 'warning',
-    创新创业: 'danger',
-    其他: 'info',
+const getCategoryType = (category: number) => {
+  const typeMap: Record<number, string> = {
+    0: 'primary',
+    1: 'success',
+    2: 'warning',
+    3: 'danger',
+    4: 'info',
   }
   return typeMap[category] || 'info'
 }
@@ -404,10 +413,10 @@ const toggleFavorite = () => {
   }
 
   if (isFavorited.value) {
-    clubStore.unfavoriteClub(club.value!.id)
+    clubStore.unfavoriteClub(club.value!.club_id)
     club.value!.isFavorite = false
   } else {
-    clubStore.favoriteClub(club.value!.id)
+    clubStore.favoriteClub(club.value!.club_id)
     club.value!.isFavorite = true
   }
 }
@@ -416,8 +425,8 @@ const toggleFavorite = () => {
 const handleShare = () => {
   if (navigator.share) {
     navigator.share({
-      title: club.value?.name,
-      text: club.value?.description,
+      title: club.value?.club_name,
+      text: club.value?.desc,
       url: window.location.href,
     })
   } else {
@@ -430,7 +439,7 @@ const handleShare = () => {
 // 跳转到编辑页面
 const goToEdit = () => {
   if (club.value) {
-    router.push(`/user/edit-club/${club.value.id}`)
+    router.push(`/user/edit-club/${club.value.club_id}`)
   }
 }
 
@@ -439,7 +448,7 @@ const fetchClubDetail = async () => {
   const clubId = route.params.id as string
   console.log('开始获取社团详情，clubId:', clubId)
   console.log('当前路由参数:', route.params)
-  
+
   if (!clubId) {
     console.error('clubId 为空')
     return
@@ -471,13 +480,13 @@ const confirmApply = async () => {
 
   try {
     createLoading.value = true
-    await clubStore.applyToClub(club.value!.id, reason.value)
-    
+    await clubStore.applyToClub(club.value!.club_id, reason.value)
+
     // 申请成功后，更新社团状态
     if (club.value) {
       club.value.status = 'pending'
     }
-    
+
     ElMessage.success('申请已提交，请等待审核')
     showApplyDialog.value = false
     reason.value = ''
@@ -500,7 +509,7 @@ const getApplyButtonText = () => {
   if (hasApplied.value) return '等待审核中'
 
   // 如果社团已满员
-  if (club.value.currentMembers >= club.value.maxMembers) return '已满员'
+  if (club.value.member_count >= (club.value.maxMembers ?? 50)) return '已满员'
 
   return '申请加入'
 }
@@ -511,9 +520,9 @@ onMounted(async () => {
   console.log('ClubDetailView 组件已挂载')
   console.log('路由参数:', route.params)
   console.log('当前路由:', route.path)
-  
+
   window.scrollTo(0, 0)
-  
+
   try {
     await fetchClubDetail()
     console.log('社团详情获取完成')

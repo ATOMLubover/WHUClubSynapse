@@ -134,12 +134,14 @@ export const unfavoriteClub = async (clubId: string): Promise<{ data: ApiRespons
 }
 
 // 获取用户收藏的社团
-export const getFavoriteClubs = async (
-  params: {
+export const getFavoriteClubs: (
+  params?: {
     page?: number
     pageSize?: number
-  } = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+  }
+) => Promise<{ data: ApiResponse<PaginatedData<Club>> }> = async (
+  params = {},
+) => {
   if (getIsUsingMockAPI()) {
     return await mockClub.mockGetFavoriteClubs(params)
   }

@@ -81,7 +81,7 @@
             <el-row :gutter="20">
               <el-col
                 v-for="club in managedClubs"
-                :key="club.id"
+                :key="club.club_id"
                 :xs="24"
                 :sm="12"
                 :md="8"
@@ -91,8 +91,8 @@
               >
                 <div class="club-card">
                   <!-- 社团封面 -->
-                  <div class="club-cover" @click="goToClubDetail(club.id)">
-                    <img :src="club.coverImage" :alt="club.name" />
+                  <div class="club-cover" @click="goToClubDetail(club.club_id)">
+                    <img :src="club.logo_url" :alt="club.club_name" />
                     <div class="cover-overlay">
                       <el-button type="primary" size="small">查看详情</el-button>
                     </div>
@@ -100,10 +100,12 @@
 
                   <!-- 社团信息 -->
                   <div class="club-info">
-                    <h3 class="club-name" @click="goToClubDetail(club.id)">{{ club.name }}</h3>
+                    <h3 class="club-name" @click="goToClubDetail(club.club_id)">
+                      {{ club.club_name }}
+                    </h3>
                     <p class="club-category">{{ club.category }}</p>
-                    <p class="club-members">{{ club.currentMembers }}/{{ club.maxMembers }} 人</p>
-                    <p class="favorite-time">创建于 {{ formatDate(club.createdAt) }}</p>
+                    <p class="club-members">{{ club.member_count }}/{{ club.maxMembers }} 人</p>
+                    <p class="favorite-time">创建于 {{ formatDate(club.created_at) }}</p>
                   </div>
 
                   <!-- 操作按钮 -->
@@ -205,7 +207,7 @@
       <div class="delete-dialog-content">
         <el-icon class="warning-icon" color="#F56C6C"><Warning /></el-icon>
         <p>
-          确定要删除社团 <strong>{{ deleteClub?.name }}</strong> 吗？
+          确定要删除社团 <strong>{{ deleteClub?.club_name }}</strong> 吗？
         </p>
         <p class="warning-text">删除后将无法恢复，所有成员将被移除</p>
       </div>
@@ -282,7 +284,7 @@ const createRules = {
 const stats = computed(() => {
   const active = managedClubs.value.filter((club) => club.status === 'approved').length
   const pending = managedClubs.value.filter((club) => club.status === 'pending').length
-  const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.currentMembers, 0)
+  const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.member_count, 0)
   const pendingApplications = managedClubs.value.length * 3 // 模拟数据
 
   return {
@@ -384,12 +386,12 @@ const goToClubDetail = (clubId: string) => {
 
 // 编辑社团
 const editClub = (club: Club) => {
-  router.push(`/user/edit-club/${club.id}`)
+  router.push(`/user/edit-club/${club.club_id}`)
 }
 
 // 成员管理
 const manageMembers = (club: Club) => {
-  router.push(`/user/club/${club.id}/members`)
+  router.push(`/user/club/${club.club_id}/members`)
 }
 
 // 处理删除社团
@@ -472,7 +474,7 @@ const confirmDelete = async () => {
 
   try {
     deleteLoading.value = true
-    await clubStore.deleteClub(deleteClub.value.id)
+    await clubStore.deleteClub(deleteClub.value.club_id)
     ElMessage.success('社团删除成功')
     showDeleteDialog.value = false
     deleteClub.value = null
@@ -653,19 +655,19 @@ onMounted(() => {
   .card-view .el-col {
     width: 100%;
   }
-  
+
   .club-actions {
     padding: 0 12px 12px;
   }
-  
+
   .club-info {
     padding: 12px;
   }
-  
+
   .club-name {
     font-size: 14px;
   }
-  
+
   .club-category,
   .club-members,
   .favorite-time {
@@ -677,15 +679,15 @@ onMounted(() => {
   .my-favorites {
     padding: 10px;
   }
-  
+
   .page-header h1 {
     font-size: 24px;
   }
-  
+
   .page-header p {
     font-size: 14px;
   }
-  
+
   .club-actions .el-button {
     font-size: 12px;
     padding: 6px 12px;

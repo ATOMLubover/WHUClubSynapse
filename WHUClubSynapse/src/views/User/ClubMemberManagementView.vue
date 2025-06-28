@@ -7,7 +7,7 @@
           <span>返回</span>
         </div>
         <div class="header-info">
-          <h1>{{ club?.name }} - 成员管理</h1>
+          <h1>{{ club?.club_name }} - 成员管理</h1>
           <p>管理社团成员和审核加入申请</p>
         </div>
       </div>
@@ -32,11 +32,21 @@
                 </el-input>
               </div>
               <div class="filter-section">
-                <el-select v-model="memberRoleFilter" placeholder="角色筛选" clearable @change="handleMemberFilter">
+                <el-select
+                  v-model="memberRoleFilter"
+                  placeholder="角色筛选"
+                  clearable
+                  @change="handleMemberFilter"
+                >
                   <el-option label="管理员" value="admin" />
                   <el-option label="普通成员" value="member" />
                 </el-select>
-                <el-button @click="refreshMembers" :loading="memberLoading" type="primary" size="small">
+                <el-button
+                  @click="refreshMembers"
+                  :loading="memberLoading"
+                  type="primary"
+                  size="small"
+                >
                   <el-icon><Refresh /></el-icon>
                   刷新
                 </el-button>
@@ -100,19 +110,34 @@
                 </el-input>
               </div>
               <div class="filter-section">
-                <el-select v-model="applicationStatusFilter" placeholder="状态筛选" clearable @change="handleApplicationFilter">
+                <el-select
+                  v-model="applicationStatusFilter"
+                  placeholder="状态筛选"
+                  clearable
+                  @change="handleApplicationFilter"
+                >
                   <el-option label="待审核" value="pending" />
                   <el-option label="已通过" value="approved" />
                   <el-option label="已拒绝" value="rejected" />
                 </el-select>
-                <el-button @click="refreshApplications" :loading="applicationLoading" type="primary" size="small">
+                <el-button
+                  @click="refreshApplications"
+                  :loading="applicationLoading"
+                  type="primary"
+                  size="small"
+                >
                   <el-icon><Refresh /></el-icon>
                   刷新
                 </el-button>
               </div>
             </div>
 
-            <el-table v-loading="applicationLoading" :data="applications" style="width: 100%" row-key="id">
+            <el-table
+              v-loading="applicationLoading"
+              :data="applications"
+              style="width: 100%"
+              row-key="id"
+            >
               <el-table-column label="申请人信息" min-width="200">
                 <template #default="{ row }">
                   <div class="applicant-info-button" @click="showApplicationDetail(row)">
@@ -205,7 +230,8 @@
       <div class="remove-dialog-content">
         <el-icon class="warning-icon" color="#F56C6C"><Warning /></el-icon>
         <p>
-          确定要移除成员 <strong>{{ removeMemberData?.realName || removeMemberData?.username }}</strong> 吗？
+          确定要移除成员
+          <strong>{{ removeMemberData?.realName || removeMemberData?.username }}</strong> 吗？
         </p>
         <el-form ref="removeFormRef" :model="removeForm" :rules="removeRules" label-width="100px">
           <el-form-item label="移除原因" prop="reason">
@@ -328,7 +354,9 @@
           <div class="member-header">
             <el-avatar :src="currentApplication.avatar_url" :size="80" />
             <div class="member-basic-info">
-              <h3 class="member-name">{{ currentApplication.realName || currentApplication.username }}</h3>
+              <h3 class="member-name">
+                {{ currentApplication.realName || currentApplication.username }}
+              </h3>
               <p class="member-username">@{{ currentApplication.username }}</p>
             </div>
           </div>
@@ -337,16 +365,31 @@
             <div class="info-section">
               <h4>基本信息</h4>
               <div class="info-grid">
-                <div class="info-item"><span class="label">学号:</span><span class="value">{{ currentApplication.studentId || '未填写' }}</span></div>
-                <div class="info-item"><span class="label">专业:</span><span class="value">{{ currentApplication.major || '未填写' }}</span></div>
-                <div class="info-item"><span class="label">申请时间:</span><span class="value">{{ formatDate(currentApplication.applyTime) }}</span></div>
+                <div class="info-item">
+                  <span class="label">学号:</span
+                  ><span class="value">{{ currentApplication.studentId || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">专业:</span
+                  ><span class="value">{{ currentApplication.major || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">申请时间:</span
+                  ><span class="value">{{ formatDate(currentApplication.applyTime) }}</span>
+                </div>
               </div>
             </div>
             <div class="info-section">
               <h4>联系方式</h4>
               <div class="info-grid">
-                <div class="info-item"><span class="label">手机:</span><span class="value">{{ currentApplication.phone || '未填写' }}</span></div>
-                <div class="info-item"><span class="label">邮箱:</span><span class="value">{{ currentApplication.email || '未填写' }}</span></div>
+                <div class="info-item">
+                  <span class="label">手机:</span
+                  ><span class="value">{{ currentApplication.phone || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">邮箱:</span
+                  ><span class="value">{{ currentApplication.email || '未填写' }}</span>
+                </div>
               </div>
             </div>
             <div class="info-section">
@@ -360,7 +403,9 @@
                 >
                   {{ category }}
                 </el-tag>
-                <span v-if="!currentApplication.interestedCategories?.length" class="no-data">未设置</span>
+                <span v-if="!currentApplication.interestedCategories?.length" class="no-data"
+                  >未设置</span
+                >
               </div>
             </div>
             <div class="info-section">
@@ -388,17 +433,27 @@
           <div class="member-actions">
             <h4>审核操作</h4>
             <div class="action-buttons">
-              <el-button v-if="currentApplication.status === 'pending'" type="success" @click="approveApplicationFromDetail(currentApplication)">同意</el-button>
-              <el-button v-if="currentApplication.status === 'pending'" type="danger" @click="rejectApplicationFromDetail(currentApplication)">拒绝</el-button>
+              <el-button
+                v-if="currentApplication.status === 'pending'"
+                type="success"
+                @click="approveApplicationFromDetail(currentApplication)"
+                >同意</el-button
+              >
+              <el-button
+                v-if="currentApplication.status === 'pending'"
+                type="danger"
+                @click="rejectApplicationFromDetail(currentApplication)"
+                >拒绝</el-button
+              >
             </div>
           </div>
         </div>
-        
+
         <!-- 右侧：AI审核助手 -->
         <div class="ai-screening-section">
-          <AIApplicationScreening 
+          <AIApplicationScreening
             :application-data="currentApplication"
-            :club-name="currentClub?.name || '未知社团'"
+            :club-name="currentClub?.club_name || '未知社团'"
             :required-conditions="currentClub?.tags || []"
           />
         </div>
@@ -411,12 +466,7 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  ArrowLeft,
-  Search,
-  Warning,
-  Refresh,
-} from '@element-plus/icons-vue'
+import { ArrowLeft, Search, Warning, Refresh } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue'
@@ -427,11 +477,7 @@ import {
   removeMember as removeMemberFromClub,
   changeMemberRole,
 } from '@/api/club'
-import type {
-  Club,
-  ClubMember,
-  ClubApplication,
-} from '@/types'
+import type { Club, ClubMember, ClubApplication } from '@/types'
 
 const router = useRouter()
 const route = useRoute()
@@ -527,11 +573,11 @@ const loadMembers = async () => {
 
   try {
     memberLoading.value = true
-    
+
     // 使用 nextTick 确保 DOM 更新完成
     await nextTick()
-    
-    const response = await getClubMembers(club.value.id, {
+
+    const response = await getClubMembers(club.value.club_id, {
       page: memberCurrentPage.value,
       pageSize: memberPageSize.value,
       role: memberRoleFilter.value,
@@ -558,11 +604,11 @@ const loadApplications = async () => {
 
   try {
     applicationLoading.value = true
-    
+
     // 使用 nextTick 确保 DOM 更新完成
     await nextTick()
-    
-    const response = await getClubApplications(club.value.id, {
+
+    const response = await getClubApplications(club.value.club_id, {
       page: applicationCurrentPage.value,
       pageSize: applicationPageSize.value,
       status: applicationStatusFilter.value,
@@ -639,10 +685,10 @@ const approveApplication = async (application: ClubApplication) => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'success',
-      }
+      },
     )
 
-    const response = await reviewApplication(club.value!.id, {
+    const response = await reviewApplication(club.value!.club_id, {
       applicationId: application.id,
       action: 'approve',
     })
@@ -670,7 +716,7 @@ const confirmReject = async () => {
 
   try {
     rejectLoading.value = true
-    const response = await reviewApplication(club.value!.id, {
+    const response = await reviewApplication(club.value!.club_id, {
       applicationId: currentApplication.value.id,
       action: 'reject',
       reason: rejectForm.value.reason,
@@ -678,9 +724,9 @@ const confirmReject = async () => {
 
     if (response.data.code === 200) {
       ElMessage.success('申请已拒绝')
-      
+
       // 立即更新本地数据
-      const index = applications.value.findIndex(app => app.id === currentApplication.value!.id)
+      const index = applications.value.findIndex((app) => app.id === currentApplication.value!.id)
       if (index !== -1) {
         applications.value[index].status = 'rejected'
         applications.value[index].reviewTime = new Date().toISOString()
@@ -688,7 +734,7 @@ const confirmReject = async () => {
         applications.value[index].reviewerName = authStore.user?.username
         applications.value[index].rejectReason = rejectForm.value.reason
       }
-      
+
       showRejectDialog.value = false
       rejectForm.value.reason = ''
       currentApplication.value = null
@@ -710,10 +756,10 @@ const promoteToAdmin = async (member: ClubMember) => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-      }
+      },
     )
 
-    const response = await changeMemberRole(club.value!.id, member.id, 'admin')
+    const response = await changeMemberRole(club.value!.club_id, member.id, 'admin')
     if (response.data.code === 200) {
       ElMessage.success('角色更改成功')
       loadMembers()
@@ -736,10 +782,10 @@ const demoteToMember = async (member: ClubMember) => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-      }
+      },
     )
 
-    const response = await changeMemberRole(club.value!.id, member.id, 'member')
+    const response = await changeMemberRole(club.value!.club_id, member.id, 'member')
     if (response.data.code === 200) {
       ElMessage.success('角色更改成功')
       loadMembers()
@@ -769,7 +815,11 @@ const confirmRemove = async () => {
 
   try {
     removeLoading.value = true
-    const response = await removeMemberFromClub(club.value!.id, removeMemberData.value.id, removeForm.value.reason)
+    const response = await removeMemberFromClub(
+      club.value!.club_id,
+      removeMemberData.value.id,
+      removeForm.value.reason,
+    )
     if (response.data.code === 200) {
       ElMessage.success('成员移除成功')
       showRemoveDialog.value = false
@@ -836,29 +886,29 @@ const approveApplicationFromDetail = async (application: ClubApplication) => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'success',
-      }
+      },
     )
 
-    const response = await reviewApplication(club.value!.id, {
+    const response = await reviewApplication(club.value!.club_id, {
       applicationId: application.id,
       action: 'approve',
     })
 
     if (response.data.code === 200) {
       ElMessage.success('申请已通过')
-      
+
       // 立即更新本地数据，避免重新加载
-      const index = applications.value.findIndex(app => app.id === application.id)
+      const index = applications.value.findIndex((app) => app.id === application.id)
       if (index !== -1) {
         applications.value[index].status = 'approved'
         applications.value[index].reviewTime = new Date().toISOString()
         applications.value[index].reviewerId = authStore.user?.id?.toString()
         applications.value[index].reviewerName = authStore.user?.username
       }
-      
+
       // 关闭详情弹窗
       showApplicationDetailDialog.value = false
-      
+
       // 异步更新成员列表
       setTimeout(() => {
         loadMembers()
@@ -892,27 +942,26 @@ onMounted(async () => {
   try {
     // 先加载社团信息
     await loadClubInfo()
-    
+
     // 并行加载两个标签页的数据，确保切换时数据已准备好
     const loadPromises = []
-    
+
     // 加载成员数据
     loadPromises.push(
-      loadMembers().catch(error => {
+      loadMembers().catch((error) => {
         console.error('加载成员数据失败:', error)
-      })
+      }),
     )
-    
+
     // 加载申请数据
     loadPromises.push(
-      loadApplications().catch(error => {
+      loadApplications().catch((error) => {
         console.error('加载申请数据失败:', error)
-      })
+      }),
     )
-    
+
     // 等待所有数据加载完成
     await Promise.allSettled(loadPromises)
-    
   } catch (error) {
     console.error('页面初始化失败:', error)
     ElMessage.error('页面加载失败，请刷新重试')
@@ -1314,4 +1363,4 @@ onMounted(async () => {
   color: #909399;
   font-size: 12px;
 }
-</style> 
+</style>

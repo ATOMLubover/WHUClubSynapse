@@ -1,5 +1,5 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds } from '@/utils/mockData'
+import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds, categoryMap } from '@/utils/mockData'
 import { config } from '@/config'
 import type { ClubPost, ClubPostReply } from '@/types'
 
@@ -16,7 +16,7 @@ export const mockGetClubList = async (
 
   // 分类筛选
   if (params.category) {
-    filteredClubs = filteredClubs.filter((club) => club.category === params.category)
+    filteredClubs = filteredClubs.filter((club) => categoryMap[club.category] === params.category)
   }
 
   // 关键词搜索
@@ -24,9 +24,9 @@ export const mockGetClubList = async (
     const keyword = params.keyword.toLowerCase()
     filteredClubs = filteredClubs.filter(
       (club) =>
-        club.name.toLowerCase().includes(keyword) ||
-        club.description.toLowerCase().includes(keyword) ||
-        club.tags.some((tag) => tag.toLowerCase().includes(keyword)),
+        club.club_name.toLowerCase().includes(keyword) ||
+        club.desc.toLowerCase().includes(keyword) ||
+        club.tags?.some((tag) => tag.toLowerCase().includes(keyword)),
     )
   }
 
@@ -34,18 +34,18 @@ export const mockGetClubList = async (
   switch (params.sortBy) {
     case 'time':
       filteredClubs.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       )
       break
     case 'members':
-      filteredClubs.sort((a, b) => b.currentMembers - a.currentMembers)
+      filteredClubs.sort((a, b) => b.member_count - a.member_count)
       break
     case 'hot':
     default:
       filteredClubs.sort((a, b) => {
         if (a.isHot && !b.isHot) return -1
         if (!a.isHot && b.isHot) return 1
-        return b.currentMembers - a.currentMembers
+        return b.member_count - a.member_count
       })
       break
   }
@@ -77,7 +77,7 @@ export const mockGetClubList = async (
 export const mockGetClubDetail = async (id: string): Promise<{ data: ApiResponse<Club> }> => {
   await delay(500)
 
-  const club = mockClubs.find((c) => c.id === id)
+  const club = mockClubs.find((c) => c.club_id === id)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -97,7 +97,7 @@ export const mockGetHotClubs = async (limit = 10): Promise<{ data: ApiResponse<C
 
   const hotClubs = mockClubs
     .filter((club) => club.isHot)
-    .sort((a, b) => b.currentMembers - a.currentMembers)
+    .sort((a, b) => b.member_count - a.member_count)
     .slice(0, limit)
 
   return {
@@ -114,7 +114,7 @@ export const mockGetLatestClubs = async (limit = 10): Promise<{ data: ApiRespons
   await delay(300)
 
   const latestClubs = [...mockClubs]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, limit)
 
   return {
@@ -186,7 +186,7 @@ export const mockApplyToClub = async (data: {
 }): Promise<{ data: ApiResponse<null> }> => {
   await delay(600)
 
-  const club = mockClubs.find((c) => c.id === data.clubId)
+  const club = mockClubs.find((c) => c.club_id === data.clubId)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -197,7 +197,7 @@ export const mockApplyToClub = async (data: {
   }
 
   // 检查社团是否已满员
-  if (club.currentMembers >= club.maxMembers) {
+  if (club.member_count >= (club.maxMembers ?? 50)) {
     throw new Error('社团已满员')
   }
 
@@ -205,7 +205,7 @@ export const mockApplyToClub = async (data: {
   userJoinedClubIds.push(data.clubId)
 
   // 更新社团成员数量
-  club.currentMembers++
+  club.member_count++
 
   // 更新社团状态为已加入
   club.status = 'approved'
@@ -214,14 +214,14 @@ export const mockApplyToClub = async (data: {
   mockApplications.push({
     id: (mockApplications.length + 1).toString(),
     userId: 'user1',
-    clubId: club.id,
-    clubName: club.name,
-    clubCoverImage: club.coverImage,
+    clubId: club.club_id,
+    clubName: club.club_name,
+    clubCoverImage: club.logo_url,
     status: 'approved', // 直接批准加入
     reason: data.reason,
     applyReason: data.reason,
     createdAt: new Date().toISOString(),
-    clubCategory: club.category,
+    clubCategory: categoryMap[club.category],
     feedback: '申请已通过，欢迎加入我们！',
   });
 
@@ -242,7 +242,7 @@ export const mockCancelApplication = async (applicationId: string)
 : Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
   const application = mockApplications.find((app) => app.id === applicationId)
-  const club = mockClubs.find((c) => c.id === application?.clubId)
+  const club = mockClubs.find((c) => c.club_id === application?.clubId)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -267,11 +267,12 @@ export const mockCancelApplication = async (applicationId: string)
 export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
 
-  const club = mockClubs.find((c) => c.id === clubId)
+  const club = mockClubs.find((c) => c.club_id === clubId)
   if (!club) {
     throw new Error('社团不存在')
   }
   club.isFavorite = true
+  userFavoriteClubIds.push(clubId)
 
   mockUser.stats!.favoriteClubs++
 
@@ -288,14 +289,17 @@ export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiRespo
 export const mockUnfavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
 
-  const club = mockClubs.find((c) => c.id === clubId)
+  const club = mockClubs.find((c) => c.club_id === clubId)
   if (!club) {
     throw new Error('社团不存在')
   }
   club.isFavorite = false
 
   mockUser.stats!.favoriteClubs--
-
+  const index = userFavoriteClubIds.indexOf(clubId)
+  if (index > -1) {
+    userFavoriteClubIds.splice(index, 1)
+  }
   return {
     data: {
       code: 200,
@@ -314,7 +318,7 @@ export const mockGetFavoriteClubs = async (
 ): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
   await delay(500)
 
-  const favoriteClubs = mockClubs.filter((club) => club.isFavorite)
+  const favoriteClubs = userFavoriteClubIds.map((id) => mockClubs.find((club) => club.club_id === id))
   const page = params.page || 1
   const pageSize = params.pageSize || 12
   const start = (page - 1) * pageSize
@@ -328,7 +332,7 @@ export const mockGetFavoriteClubs = async (
       code: 200,
       message: 'success',
       data: {
-        list,
+        list: list.filter((club): club is Club => club !== undefined),
         total: favoriteClubs.length,
         page,
         pageSize,
@@ -400,25 +404,25 @@ export const mockCreateClub = async (data: {
 
   // 创建新社团对象
   const newClub: Club = {
-    id: newId,
-    name: data.name,
-    description: data.description,
+    club_id: newId,
+    club_name: data.name,
+    desc: data.description,
     category: data.category as any,
     adminId: 'user1', // 假设当前用户ID为user1
     adminName: '测试用户',
-    currentMembers: 1, // 创建者自动成为成员
+    member_count: 1, // 创建者自动成为成员
     maxMembers: data.maxMembers,
     tags: data.tags,
     isHot: false,
     status: 'approved', // 创建者创建的社团直接为已加入状态
-    createdAt: new Date().toISOString(),
+    created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     qq: '1234567890',
     details: data.description,
     activities: [],
     location: `武汉大学${data.name}`,
     isFavorite: false,
-    coverImage: data.coverImage || `https://picsum.photos/400/240?random=${newId}`,
+    logo_url: data.coverImage || `https://picsum.photos/400/240?random=${newId}`,
   }
 
   // 添加到社团列表
@@ -457,7 +461,7 @@ export const mockUpdateClub = async (
 ): Promise<{ data: ApiResponse<Club> }> => {
   await delay(600)
 
-  const club = mockClubs.find((c) => c.id === id)
+  const club = mockClubs.find((c) => c.club_id === id)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -489,7 +493,7 @@ export const mockGetJoinedClubs = async (
 
   // 根据用户加入的社团ID列表获取社团
   const joinedClubs = mockClubs
-    .filter(club => userJoinedClubIds.includes(club.id))
+    .filter(club => userJoinedClubIds.includes(club.club_id))
     .map(club => ({
       ...club,
       isFavorite: false
@@ -526,7 +530,7 @@ export const mockGetManagedClubs = async (
 
   // 根据用户管理的社团ID列表获取社团
   const managedClubs = mockClubs
-    .filter(club => userManagedClubIds.includes(club.id))
+    .filter(club => userManagedClubIds.includes(club.club_id))
     .map(club => ({
       ...club,
       isFavorite: false
@@ -556,7 +560,7 @@ export const mockGetManagedClubs = async (
 export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
 
-  const club = mockClubs.find((c) => c.id === clubId)
+  const club = mockClubs.find((c) => c.club_id === clubId)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -573,8 +577,8 @@ export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<
   }
 
   // 更新社团成员数量
-  if (club.currentMembers > 0) {
-    club.currentMembers--
+  if (club.member_count > 0) {
+    club.member_count--
   }
 
   // 更新用户统计信息
@@ -593,7 +597,7 @@ export const mockQuitClub = async (clubId: string): Promise<{ data: ApiResponse<
 export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(500)
 
-  const club = mockClubs.find((c) => c.id === id)
+  const club = mockClubs.find((c) => c.club_id === id)
   if (!club) {
     throw new Error('社团不存在')
   }
@@ -621,7 +625,7 @@ export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<nu
   mockUser.stats!.managedClubs--
 
   // 从社团列表中移除（实际项目中应该标记为删除状态）
-  const clubIndex = mockClubs.findIndex(c => c.id === id)
+  const clubIndex = mockClubs.findIndex(c => c.club_id === id)
   if (clubIndex > -1) {
     mockClubs.splice(clubIndex, 1)
   }

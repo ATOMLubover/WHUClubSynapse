@@ -1,8 +1,10 @@
 <template>
   <div class="user-center">
+    <UserSidebar style="position: fixed; width: 250px; top: 90px" />
+
     <div class="user-layout">
       <!-- 侧边栏 -->
-      <UserSidebar />
+      <div class="user-sidebar"></div>
       <!-- 主内容区 -->
       <router-view />
     </div>
@@ -24,5 +26,10 @@ import UserSidebar from '@/components/User/UserSidebar.vue'
   display: flex;
   gap: 20px;
   align-items: flex-start;
+}
+
+.user-sidebar {
+  width: 300px;
+  min-height: calc(100vh - 60px);
 }
 </style>

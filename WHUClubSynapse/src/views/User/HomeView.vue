@@ -67,7 +67,7 @@
 
         <!-- 社团列表 -->
         <div v-loading="clubStore.loading" class="club-grid">
-          <div v-for="club in clubStore.clubs" :key="club.id" class="club-item">
+          <div v-for="club in clubStore.clubs" :key="club.club_id" class="club-item">
             <ClubCard :club="club" />
           </div>
         </div>
@@ -104,14 +104,14 @@
           <div class="hot-list">
             <div
               v-for="(club, index) in clubStore.hotClubs"
-              :key="club.id"
+              :key="club.club_id"
               class="hot-item"
-              @click="goToClub(club.id)"
+              @click="goToClub(club.club_id)"
             >
               <div class="hot-rank">{{ index + 1 }}</div>
               <div class="hot-info">
-                <div class="hot-name">{{ club.name }}</div>
-                <div class="hot-members">{{ club.currentMembers }}人</div>
+                <div class="hot-name">{{ club.club_name }}</div>
+                <div class="hot-members">{{ club.member_count }}人</div>
               </div>
             </div>
           </div>
@@ -128,13 +128,13 @@
           <div class="latest-list">
             <div
               v-for="club in clubStore.latestClubs"
-              :key="club.id"
+              :key="club.club_id"
               class="latest-item"
-              @click="goToClub(club.id)"
+              @click="goToClub(club.club_id)"
             >
               <div class="latest-info">
-                <div class="latest-name">{{ club.name }}</div>
-                <div class="latest-time">{{ formatDate(club.createdAt) }}</div>
+                <div class="latest-name">{{ club.club_name }}</div>
+                <div class="latest-time">{{ formatDate(club.created_at) }}</div>
               </div>
             </div>
           </div>
@@ -151,13 +151,13 @@
           <div class="recommend-list">
             <div
               v-for="club in clubStore.recommendedClubs"
-              :key="club.id"
+              :key="club.club_id"
               class="recommend-item"
-              @click="goToClub(club.id)"
+              @click="goToClub(club.club_id)"
             >
-              <el-image :src="club.coverImage" fit="cover" class="recommend-image" />
+              <el-image :src="club.logo_url" fit="cover" class="recommend-image" />
               <div class="recommend-info">
-                <div class="recommend-name">{{ club.name }}</div>
+                <div class="recommend-name">{{ club.club_name }}</div>
                 <el-tag :type="getCategoryType(club.category)" size="small">
                   {{ club.category }}
                 </el-tag>
@@ -249,13 +249,13 @@ const getTotalCount = () => {
 }
 
 // 获取分类标签类型
-const getCategoryType = (category: ClubCategory) => {
-  const typeMap: Record<ClubCategory, string> = {
-    学术科技: 'primary',
-    文艺体育: 'success',
-    志愿服务: 'warning',
-    创新创业: 'danger',
-    其他: 'info',
+const getCategoryType = (category: number) => {
+  const typeMap: Record<number, string> = {
+    0: 'primary',
+    1: 'success',
+    2: 'warning',
+    3: 'danger',
+    4: 'info',
   }
   return typeMap[category] || 'info'
 }
@@ -308,9 +308,13 @@ const goToClub = (clubId: string) => {
 // 初始化数据
 onMounted(async () => {
   try {
+    if (authStore.isLoggedIn) {
+      clubStore.fetchFavoriteClubs()
+    } else {
+      clubStore.fetchClubs()
+    }
     // 并行获取数据
     await Promise.all([
-      clubStore.fetchClubs(),
       clubStore.fetchCategories(),
       clubStore.fetchHotClubs(5),
       clubStore.fetchLatestClubs(5),
