@@ -5,7 +5,6 @@ import pytest
 import torch
 
 from app.rag_service import (
-    tokenize_inputs,
     retrieve,
     format_context,
     generate_response,
