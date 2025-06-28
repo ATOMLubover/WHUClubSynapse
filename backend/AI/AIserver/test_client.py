@@ -530,7 +530,8 @@ def test_screen_application():
                 "experience": "曾参与校内编程竞赛并获得二等奖"
             },
             "application_reason": "我对贵社团的编程氛围和技术挑战非常感兴趣，希望能在社团中提升自己的编程能力并结识志同道合的朋友。我熟悉Python语言，并有Web开发经验。",
-            "required_conditions": ["有编程基础", "对算法有兴趣", "积极参与团队项目"]
+            "required_conditions": ["有编程基础", "对算法有兴趣", "积极参与团队项目"],
+            "club_name": ["编程社"]
         }
         
         print(f"发送申请筛选请求，申请人: {payload['applicant_data']['name']}")
@@ -605,6 +606,51 @@ def test_club_atmosphere():
         print(f"社团氛围透视测试错误: {e}")
         return False
 
+def test_plan_event():
+    """测试智能活动策划参谋接口"""
+    print("\n=== 测试智能活动策划参谋接口 ===")
+    try:
+        payload = {
+            "event_idea": "我们想为50人办一场户外烧烤"
+        }
+        
+        print(f"发送活动策划请求，想法: {payload['event_idea']}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/plan_event",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+        
+        if response.status_code == 200:
+            result = response.json()
+            checklist = result.get('checklist')
+            budget_estimate = result.get('budget_estimate')
+            risk_assessment = result.get('risk_assessment')
+            creative_ideas = result.get('creative_ideas')
+            
+            print(f"策划清单:\n{json.dumps(checklist, indent=2, ensure_ascii=False)}")
+            print(f"预算估算:\n{budget_estimate}")
+            print(f"风险评估与预案:\n{risk_assessment}")
+            print(f"创意点子:\n{json.dumps(creative_ideas, indent=2, ensure_ascii=False)}")
+            
+            return (checklist is not None and len(checklist) > 0 and
+                    budget_estimate is not None and len(budget_estimate.strip()) > 0 and
+                    risk_assessment is not None and len(risk_assessment.strip()) > 0 and
+                    creative_ideas is not None and len(creative_ideas) > 0)
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"智能活动策划测试错误: {e}")
+        return False
+
 def main():
     """运行所有测试"""
     print("开始测试vLLM代理服务器...")
@@ -624,8 +670,9 @@ def main():
         # ("社团介绍生成", test_generate_introduction),
         # ("社团口号生成", test_generate_slogan),
         # ("配置重载", test_reload_config),
-        ("智能申请筛选", test_screen_application),
-        ("社团氛围透视", test_club_atmosphere)
+        # ("智能申请筛选", test_screen_application),
+        ("社团氛围透视", test_club_atmosphere),
+        ("智能活动策划", test_plan_event)
     ]
     
     results = []

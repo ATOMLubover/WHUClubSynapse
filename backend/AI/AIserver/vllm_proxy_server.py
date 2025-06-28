@@ -57,7 +57,7 @@ class ChatRequest(BaseModel):
     max_tokens: Optional[int] = config.default_max_tokens
     temperature: Optional[float] = config.default_temperature
     top_p: Optional[float] = config.default_top_p
-    stream: Optional[bool] = False
+    stream: Optional[bool] = True
     system_prompt: Optional[str] = "You are a helpful assistant."
 
 class ChatResponse(BaseModel):
@@ -102,6 +102,16 @@ class ClubAtmosphereRequest(BaseModel):
 class ClubAtmosphereResponse(BaseModel):
     atmosphere_tags: List[str] # AI生成的氛围标签列表
     culture_summary: str       # AI生成的文化摘要
+
+# 新增活动策划请求和响应模型
+class EventPlanningRequest(BaseModel):
+    event_idea: str # 用户输入的活动想法，如"我们想为50人办一场户外烧烤"
+
+class EventPlanningResponse(BaseModel):
+    checklist: List[str]      # 待办事项清单
+    budget_estimate: str      # 预算智能估算
+    risk_assessment: str      # 风险评估与预案
+    creative_ideas: List[str] # 创意点子推荐
 
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
@@ -614,7 +624,8 @@ async def screen_application(request: ApplicationScreeningRequest):
         full_prompt = prompt_template.format(
             applicant_data=json.dumps(request.applicant_data, ensure_ascii=False, indent=2),
             application_reason=request.application_reason,
-            required_conditions_str=required_conditions_str
+            required_conditions_str=required_conditions_str,
+            club_name=request.club_name
         )
         
         logger.info(f"AI申请筛选Prompt: {full_prompt[:200]}...") # 增加日志长度
@@ -720,6 +731,94 @@ async def club_atmosphere(request: ClubAtmosphereRequest):
         logger.error(f"AI社团氛围透视失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI社团氛围透视失败: {e}")
 
+@app.post("/plan_event", response_model=EventPlanningResponse)
+async def plan_event(request: EventPlanningRequest):
+    """
+    智能活动策划参谋，根据用户输入的活动想法生成完整的策划框架。
+    
+    Args:
+        request: 包含活动想法的请求体。
+        
+    Returns:
+        EventPlanningResponse: 包含AI生成的策划清单、预算估算、风险评估和创意点子。
+    """
+    try:
+        # 构建LLM提示
+        prompt_template = """
+你是一个智能活动策划参谋AI，你的任务是根据用户提供的活动想法，生成一份详尽的策划框架。
+这份框架应包括待办事项清单、预算智能估算、风险评估与预案，以及创意点子推荐。
+
+请按照以下JSON格式返回结果：
+{{
+  "checklist": [
+    "[待办事项1]",
+    "[待办事项2]",
+    "..."
+  ],
+  "budget_estimate": "[预算估算描述]",
+  "risk_assessment": "[风险评估与预案描述]",
+  "creative_ideas": [
+    "[创意点子1]",
+    "[创意点子2]",
+    "..."
+  ]
+}}
+
+--- 活动想法 ---
+{event_idea}
+
+请开始生成活动策划框架。
+"""
+        
+        full_prompt = prompt_template.format(
+            event_idea=request.event_idea
+        )
+        
+        logger.info(f"AI活动策划Prompt: {full_prompt[:200]}...")
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+        
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        # 尝试解析LLM的JSON响应，先移除可能的markdown代码块
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+        
+        try:
+            parsed_response = json.loads(json_string)
+            checklist = parsed_response.get("checklist", [])
+            budget_estimate = parsed_response.get("budget_estimate", "")
+            risk_assessment = parsed_response.get("risk_assessment", "")
+            creative_ideas = parsed_response.get("creative_ideas", [])
+            
+            if not isinstance(checklist, list) or not all(isinstance(item, str) for item in checklist):
+                raise ValueError("AI返回的checklist格式不正确，应为字符串列表。")
+            if not budget_estimate or not risk_assessment:
+                raise ValueError("AI返回的JSON格式不完整，缺少budget_estimate或risk_assessment字段。")
+            if not isinstance(creative_ideas, list) or not all(isinstance(item, str) for item in creative_ideas):
+                raise ValueError("AI返回的creative_ideas格式不正确，应为字符串列表。")
+
+            return EventPlanningResponse(
+                checklist=checklist,
+                budget_estimate=budget_estimate.strip(),
+                risk_assessment=risk_assessment.strip(),
+                creative_ideas=creative_ideas
+            )
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+            
+    except Exception as e:
+        logger.error(f"AI活动策划失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI活动策划失败: {e}")
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")
@@ -735,6 +834,7 @@ if __name__ == "__main__":
     print(f"配置重载接口: http://{config.server_host}:{config.server_port}/reload_config")
     print(f"智能申请筛选接口: http://{config.server_host}:{config.server_port}/screen_application")
     print(f"社团氛围透视接口: http://{config.server_host}:{config.server_port}/club_atmosphere")
+    print(f"智能活动策划接口: http://{config.server_host}:{config.server_port}/plan_event")
     print(f"模型列表: http://{config.server_host}:{config.server_port}/models")
     print(f"配置信息: http://{config.server_host}:{config.server_port}/config")
     

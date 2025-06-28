@@ -93,6 +93,7 @@ def print_api_endpoints():
     print(f"   GET  /reload_config       - 配置重载接口")
     print(f"   POST /screen_application  - 智能申请筛选助手接口")
     print(f"   POST /club_atmosphere      - 社团\"氛围\"透视镜接口")
+    print(f"   POST /plan_event           - 智能活动策划参谋接口")
     print(f"   GET  /docs                - API文档 (Swagger UI)")
     print(f"   GET  /redoc               - API文档 (ReDoc)")
 
