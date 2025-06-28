@@ -46,12 +46,39 @@
         </div>
       </el-card>
     </el-card>
+
+    <el-card class="test-section">
+      <template #header>
+        <h3>AI氛围透视镜测试</h3>
+      </template>
+      
+      <div class="atmosphere-test-layout">
+        <div class="test-info-section">
+          <h4>测试数据</h4>
+          <div class="test-data">
+            <p><strong>社团名称:</strong> 计算机科学协会</p>
+            <p><strong>社团介绍:</strong> 致力于计算机科学技术的推广和学习</p>
+            <p><strong>详细介绍:</strong> 我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。</p>
+            <p><strong>社团公告:</strong> 下周五有编程比赛；欢迎新成员加入</p>
+            <p><strong>社团动态:</strong> 新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会</p>
+            <p><strong>社团标签:</strong> 编程、算法、技术、学术</p>
+          </div>
+        </div>
+        
+        <div class="atmosphere-test-section">
+          <AIClubAtmosphere 
+            :communication-content="testCommunicationContent"
+          />
+        </div>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue'
 import type { ClubApplication } from '@/types'
+import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
 
 // 测试数据
 const testApplicationData: ClubApplication = {
@@ -74,6 +101,16 @@ const testApplicationData: ClubApplication = {
 
 const testClubName = '计算机科学协会'
 const testRequiredConditions = ['有编程基础', '对算法有兴趣', '积极参与团队项目']
+
+const testCommunicationContent = `社团介绍：致力于计算机科学技术的推广和学习
+
+详细介绍：我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。
+
+社团公告：下周五有编程比赛；欢迎新成员加入
+
+社团动态：新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会
+
+社团标签：编程、算法、技术、学术`
 </script>
 
 <style scoped>
@@ -89,34 +126,46 @@ const testRequiredConditions = ['有编程基础', '对算法有兴趣', '积极
 
 .ai-test-layout {
   display: flex;
-  gap: 20px;
-  min-height: 600px;
+  gap: 24px;
+  min-height: 500px;
 }
 
 .test-info-section {
-  flex: 1;
+  flex: 0 0 300px;
   padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
   border: 1px solid #e4e7ed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .test-info-section h4 {
-  margin: 0 0 16px 0;
+  margin: 0 0 20px 0;
   color: #303133;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #409eff;
 }
 
 .test-data p {
-  margin: 8px 0;
-  line-height: 1.5;
+  margin: 12px 0;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
 }
 
 .test-data strong {
-  color: #606266;
+  color: #303133;
+  font-weight: 600;
 }
 
 .ai-test-section {
   flex: 1;
+  min-height: 500px;
 }
 
 .debug-info p {
@@ -126,5 +175,49 @@ const testRequiredConditions = ['有编程基础', '对算法有兴趣', '积极
 
 .debug-info strong {
   color: #606266;
+}
+
+.atmosphere-test-layout {
+  display: flex;
+  gap: 24px;
+  min-height: 500px;
+}
+
+.test-info-section {
+  flex: 0 0 300px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.test-info-section h4 {
+  margin: 0 0 20px 0;
+  color: #303133;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #409eff;
+}
+
+.test-data p {
+  margin: 12px 0;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
+}
+
+.test-data strong {
+  color: #303133;
+  font-weight: 600;
+}
+
+.atmosphere-test-section {
+  flex: 1;
+  min-height: 500px;
 }
 </style>

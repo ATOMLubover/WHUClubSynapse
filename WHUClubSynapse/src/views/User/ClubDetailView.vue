@@ -57,7 +57,7 @@
         <!-- 社团详细信息 -->
         <div class="club-content">
           <el-row :gutter="24">
-            <el-col :span="16">
+            <el-col :span="18">
               <!-- 社团介绍 -->
               <el-card class="content-card">
                 <template #header>
@@ -120,7 +120,7 @@
               </el-card>
             </el-col>
 
-            <el-col :span="8">
+            <el-col :span="6">
               <!-- 社团统计 -->
               <el-card class="content-card">
                 <template #header>
@@ -208,6 +208,24 @@
               </el-card>
             </el-col>
           </el-row>
+
+          <!-- AI氛围透视镜 - 独立一行 -->
+          <el-row :gutter="24" style="margin-top: 24px;">
+            <el-col :span="24">
+              <el-card class="content-card ai-atmosphere-card">
+                <template #header>
+                  <h3>
+                    <el-icon><View /></el-icon> AI氛围透视镜
+                  </h3>
+                </template>
+                <div class="ai-atmosphere-container">
+                  <AIClubAtmosphere 
+                    :communication-content="communicationContent"
+                  />
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
           <el-dialog v-model="showApplyDialog" title="申请加入新社团" width="600px">
             <el-form-item label="申请理由">
               <el-input
@@ -260,11 +278,13 @@ import {
   Location,
   InfoFilled,
   Clock,
+  View,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
+import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -278,6 +298,44 @@ const isFavorited = computed(() => club.value?.isFavorite || false)
 const showApplyDialog = ref(false)
 const createLoading = ref(false)
 const hasApplied = ref(false) // 添加一个标记是否已申请的状态
+
+// 生成社团交流内容用于AI分析
+const communicationContent = computed(() => {
+  if (!club.value) return ''
+  
+  // 构建社团交流内容，包括帖子、公告、动态等
+  const content = []
+  
+  // 添加社团介绍
+  if (club.value.description) {
+    content.push(`社团介绍：${club.value.description}`)
+  }
+  
+  // 添加详细介绍
+  if (club.value.introduction) {
+    content.push(`详细介绍：${club.value.introduction}`)
+  }
+  
+  // 添加公告
+  if (club.value.announcements && club.value.announcements.length > 0) {
+    content.push(`社团公告：${club.value.announcements.join('；')}`)
+  }
+  
+  // 添加动态
+  if (club.value.activities && club.value.activities.length > 0) {
+    const activities = club.value.activities.map(activity => 
+      `${activity.title}：${activity.description}`
+    ).join('；')
+    content.push(`社团动态：${activities}`)
+  }
+  
+  // 添加标签
+  if (club.value.tags && club.value.tags.length > 0) {
+    content.push(`社团标签：${club.value.tags.join('、')}`)
+  }
+  
+  return content.join('\n\n')
+})
 
 // 检查用户是否已加入该社团
 const isUserJoined = computed(() => {
@@ -665,13 +723,21 @@ onMounted(async () => {
 .meeting-item {
   display: flex;
   align-items: center;
-  font-size: 14px;
+  gap: 8px;
+  margin-bottom: 8px;
   color: #606266;
 }
 
-.meeting-item .el-icon {
-  margin-right: 8px;
-  color: #409eff;
+.meeting-item:last-child {
+  margin-bottom: 0;
+}
+
+.ai-atmosphere-container {
+  height: 350px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 16px;
 }
 
 .stats-grid {
@@ -732,5 +798,12 @@ onMounted(async () => {
   .club-actions {
     justify-content: center;
   }
+}
+
+.content-card.ai-atmosphere-card {
+  min-height: 570px;
+}
+.ai-atmosphere-container {
+  min-height: 550px;
 }
 </style>

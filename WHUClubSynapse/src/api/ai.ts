@@ -203,4 +203,48 @@ export const screenApplication = async (requestData: ApplicationScreeningRequest
     console.error('AI审核助手请求失败:', error)
     throw error
   }
+}
+
+// AI氛围透视镜接口类型
+export interface ClubAtmosphereRequest {
+  communication_content: string
+}
+
+export interface ClubAtmosphereResponse {
+  atmosphere_tags: string[]
+  culture_summary: string
+}
+
+// AI氛围透视镜API
+export const analyzeClubAtmosphere = async (requestData: ClubAtmosphereRequest): Promise<ClubAtmosphereResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/club_atmosphere`
+    console.log('AI氛围透视镜请求URL:', url)
+    console.log('AI氛围透视镜请求数据:', requestData)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('AI氛围透视镜响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI氛围透视镜HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('AI氛围透视镜响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('AI氛围透视镜请求失败:', error)
+    throw error
+  }
 } 
