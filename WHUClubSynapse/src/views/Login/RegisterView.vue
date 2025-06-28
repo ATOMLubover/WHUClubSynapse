@@ -55,7 +55,7 @@
           <div class="verify-code-group">
             <el-input
               v-model="registerForm.vrf_code"
-              placeholder="请输入4位验证码"
+              placeholder="请输入4位数字或字母验证码"
               :prefix-icon="Key"
               clearable
               maxlength="4"
@@ -267,7 +267,7 @@ const registerRules: FormRules<RegisterRequest & { confirmPassword: string }> = 
   ],
   vrf_code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
-    { pattern: /^\d{4}$/, message: '验证码必须是4位数字', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]{4}$/, message: '验证码必须是4位数字或字母', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
