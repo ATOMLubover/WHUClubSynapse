@@ -287,32 +287,30 @@ def test_summarize_tongyi_streaming():
 
         full_summary_content = ""
         print("流式总结响应:")
-        for chunk in response.iter_content(chunk_size=8192):
+        for chunk in response.iter_lines(): # 使用iter_lines处理SSE
             if chunk:
-                try:
-                    decoded_chunk = chunk.decode('utf-8')
-                    # 对于summarize_tongyi，响应可能是包含JSON的文本事件流，需要解析
-                    if decoded_chunk.startswith("data:"): # EventSource 格式
-                        try:
-                            json_data = json.loads(decoded_chunk[5:].strip())
-                            if "error" in json_data:
-                                print(f"错误: {json_data['error']}")
-                                return False
-                            elif "summary" in json_data: # 完整的summary一次性返回
-                                print(json_data["summary"], end='')
-                                full_summary_content += json_data["summary"]
-                            else: # 如果是分块返回的，直接打印
-                                print(decoded_chunk, end='')
-                                full_summary_content += decoded_chunk
-                        except json.JSONDecodeError:
-                            print(f"Warning: Could not decode JSON from chunk: {decoded_chunk}")
-                            print(decoded_chunk, end='') # 打印原始数据，以防万一
+                decoded_chunk = chunk.decode('utf-8')
+                if decoded_chunk == "data: [DONE]": # 结束标记
+                    break
+                elif decoded_chunk.startswith("data:"):
+                    try:
+                        json_data = json.loads(decoded_chunk[5:].strip())
+                        if "error" in json_data:
+                            print(f"错误: {json_data['error']}")
+                            stream_success = False
+                            break
+                        elif "summary" in json_data: # 完整的summary一次性返回
+                            content = json_data["summary"]
+                            print(content, end='')
+                            full_summary_content += content
+                        else: # 如果是分块返回的，直接打印
+                            print(decoded_chunk, end='')
                             full_summary_content += decoded_chunk
-                    else:
-                        print(decoded_chunk, end='')
-                        full_summary_content += decoded_chunk
-                except UnicodeDecodeError:
-                    print(f"Warning: Could not decode chunk: {chunk}")
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not decode JSON from chunk: {decoded_chunk}")
+                        # 打印原始数据，以防万一，但不计入full_response_content
+                        print(decoded_chunk)
+                # 忽略其他非data开头的行，如空行或注释
 
         end_time = time.time()
         print(f"\n流式总结完成，响应时间: {end_time - start_time:.2f}秒")
