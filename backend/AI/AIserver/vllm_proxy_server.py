@@ -88,7 +88,8 @@ class ContentGenerationResponse(BaseModel):
 class ApplicationScreeningRequest(BaseModel):
     applicant_data: Dict[str, Any] # 申请者个人资料，如姓名、专业、技能等
     application_reason: str       # 申请理由
-    required_conditions: List[str] # 社团所需条件列表，如 "有编程基础", "热爱摄影"
+    required_conditions: List[str] # 社团标签
+    club_name: str #社团名称
 
 class ApplicationScreeningResponse(BaseModel):
     summary: str    # AI生成的申请摘要
@@ -599,8 +600,10 @@ async def screen_application(request: ApplicationScreeningRequest):
 --- 申请信息 ---
 申请者资料: {applicant_data}
 申请理由: {application_reason}
+--- 社团名称 ---
+{club_name}
 
---- 社团所需条件 ---
+--- 社团特质 ---
 {required_conditions_str}
 
 请开始评估并生成摘要和建议。

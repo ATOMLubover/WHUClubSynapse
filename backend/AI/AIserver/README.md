@@ -336,7 +336,8 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
             }
             ```
         *   `application_reason` (str): 申请理由的文本内容。
-        *   `required_conditions` (List[str]): 社团所需条件列表，例如：`["有编程基础", "对算法有兴趣"]`。
+        *   `required_conditions` (List[str]): 社团特质，例如：`["有编程基础", "主打算法"]`。
+        *   `club_name` (str): 社团名称。
     *   **响应体 (JSON)**:
         *   `summary` (str): AI生成的申请摘要。
         *   `suggestion` (str): AI生成的建议。
