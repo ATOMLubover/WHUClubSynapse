@@ -68,7 +68,7 @@ export const mockRegister = async (
   await delay(1200)
 
   // 模拟验证码验证
-  if (data.vrf_code !== '1234') {
+  if (data.vrfcode !== '1234') {
     throw new Error('验证码错误或失效')
   }
 

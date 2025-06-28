@@ -15,9 +15,9 @@ const getIsUsingMockAPI = () => {
 // 获取社团列表
 export const getClubList = async (
   params: SearchParams = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise< Club[]> => {
   if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetClubList(params)
+    // return await mockClub.mockGetClubList(params)
   }
 
   const authStore = useAuthStore()
@@ -40,15 +40,15 @@ export const getClubList = async (
 
   const queryString = queryParams.toString()
   const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
-
-  return await request.get(url)
+  const response = await request.get(url)
+  return response.data
 }
 
 // 获取社团详情
 export const getClubDetail = async (id: string,post_num:number=5): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetClubDetail(id)
-    : await request.get(`/clubs/${id}?post_num=${post_num}`)
+    : await request.get(`/api/club/${id}/info?post_num=${post_num}`)
 }
 
 // 获取热门社团

@@ -310,16 +310,16 @@ onMounted(async () => {
   try {
     clubStore.fetchClubs()
 
-    if (authStore.isLoggedIn) {
-      clubStore.fetchFavoriteClubs()
-    }
+    // if (authStore.isLoggedIn) {
+    // clubStore.fetchFavoriteClubs()
+    // }
     // 并行获取数据
-    await Promise.all([
-      clubStore.fetchCategories(),
-      clubStore.fetchHotClubs(5),
-      clubStore.fetchLatestClubs(5),
-      authStore.isLoggedIn ? clubStore.fetchRecommendedClubs(3) : Promise.resolve(),
-    ])
+    // await Promise.all([
+    //   clubStore.fetchCategories(),
+    //   clubStore.fetchHotClubs(5),
+    //   clubStore.fetchLatestClubs(5),
+    //   authStore.isLoggedIn ? clubStore.fetchRecommendedClubs(3) : Promise.resolve(),
+    // ])
   } catch (error) {
     console.error('初始化数据失败:', error)
   }

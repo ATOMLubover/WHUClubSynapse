@@ -142,7 +142,7 @@ export interface RegisterRequest {
   username: string
   email: string
   password: string  // 前端加密后的密码
-  vrf_code: string  // 邮箱收到的 4 位验证码
+  vrfcode: string  // 邮箱收到的 4 位验证码
   realName?: string
   studentId?: string
   major?: string

@@ -55,11 +55,13 @@ export const useClubStore = defineStore('club', () => {
       }
 
       const response = await clubApi.getClubList(queryParams)
-      const data = response.data.data
-
-      clubs.value = data.list
-      globalPageData.total = data.total
-      globalPageData.currentPage = data.page
+      const data = response
+      clubs.value = response as Club[]
+      clubs.value.forEach((club) => {
+        club.maxMembers = 50
+      })
+      globalPageData.total = data.length
+      globalPageData.currentPage = 1
 
       return data
     } catch (error) {

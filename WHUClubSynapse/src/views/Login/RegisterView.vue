@@ -51,10 +51,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="验证码" prop="vrf_code">
+        <el-form-item label="验证码" prop="vrfcode">
           <div class="verify-code-group">
             <el-input
-              v-model="registerForm.vrf_code"
+              v-model="registerForm.vrfcode"
               placeholder="请输入4位数字或字母验证码"
               :prefix-icon="Key"
               clearable
@@ -222,7 +222,7 @@ const registerForm = reactive<RegisterRequest & { confirmPassword: string }>({
   username: '',
   email: '',
   password: '',
-  vrf_code: '',
+  vrfcode: '',
   confirmPassword: '',
   realName: '',
   studentId: '',
@@ -265,7 +265,7 @@ const registerRules: FormRules<RegisterRequest & { confirmPassword: string }> = 
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
   ],
-  vrf_code: [
+  vrfcode: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
     { pattern: /^[a-zA-Z0-9]{4}$/, message: '验证码必须是4位数字或字母', trigger: 'blur' },
   ],
@@ -318,6 +318,7 @@ const handleRegister = async () => {
     }
 
     const { confirmPassword, ...registerData } = registerForm
+    console.log(registerData)
     const result = await authStore.register(registerData)
 
     ElMessage.success(`注册成功！用户ID: ${result.id}`)

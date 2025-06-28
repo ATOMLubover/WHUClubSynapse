@@ -10,7 +10,7 @@ import type { ApiResponse } from '@/types'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: "http://7e526c6c1d80.ofalias.net:50065",
+  baseURL: "http://localhost:8080",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ request.interceptors.response.use(
   },
   (error) => {
     console.error('响应错误:', error)
-
+    // console.log(error.response.status)
     // 统一错误处理
     if (error.response) {
       const { status, data } = error.response

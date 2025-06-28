@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { ElMessage } from 'element-plus'
+import { ElMessage, type MessageParamsWithType } from 'element-plus'
 import * as authApi from '@/api/auth'
 import type { User, LoginRequest, RegisterRequest, UserPreferences } from '@/types'
 
@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       // 新的API格式：{ data: User, token: string }
       user.value = response.data
+      console.log(user.value)
       token.value = response.token
       localStorage.setItem('token', response.token)
 

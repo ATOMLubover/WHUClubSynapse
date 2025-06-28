@@ -178,6 +178,7 @@ const goToRegister = () => {
 
 // 用户菜单命令处理
 const handleUserMenuCommand = (command: string) => {
+  console.log(authStore.user)
   switch (command) {
     case 'profile':
       router.push('/user/center')
