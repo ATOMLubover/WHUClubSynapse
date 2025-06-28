@@ -51,16 +51,11 @@ func (s *sUserService) Register(username, email, passwordHash string) (*dbstruct
 		PasswordHash: passwordHash,
 	}
 
-	if err := s.UserRepo.AddUser(newUser); err != nil {
+	if err := s.UserRepo.AddUser(&newUser); err != nil {
 		return nil, err
 	}
 
-	userModel, err := s.UserRepo.GetUserByUsername(username)
-	if err != nil {
-		return nil, err
-	}
-
-	return userModel, nil
+	return &newUser, nil
 }
 
 func (s *sUserService) GetUserById(id int) (*dbstruct.User, error) {

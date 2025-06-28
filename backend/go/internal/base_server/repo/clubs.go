@@ -9,12 +9,13 @@ import (
 )
 
 type ClubRepo interface {
-	AddClub(club dbstruct.Club) error
+	AddClub(club *dbstruct.Club) error
+	AppendClub(tx *gorm.DB, club *dbstruct.Club) error
 	GetClubList(offset, num int) ([]*dbstruct.Club, error)
 	GetClubInfo(id int) (*dbstruct.Club, error)
 	GetClubsByCategory(catId int) ([]*dbstruct.Club, error)
 	GetLatestClubs() ([]*dbstruct.Club, error)
-	UpdateClubInfo(newInfo dbstruct.Club) error
+	UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error
 }
 
 type sClubRepo struct {
@@ -32,8 +33,12 @@ func CreateClubRepo(
 	}
 }
 
-func (r *sClubRepo) AddClub(club dbstruct.Club) error {
-	return r.database.Create(&club).Error
+func (r *sClubRepo) AddClub(club *dbstruct.Club) error {
+	return r.database.Create(club).Error
+}
+
+func (r *sClubRepo) AppendClub(tx *gorm.DB, club *dbstruct.Club) error {
+	return tx.Create(club).Error
 }
 
 func (r *sClubRepo) GetClubList(offset, num int) ([]*dbstruct.Club, error) {
@@ -81,8 +86,8 @@ func (r *sClubRepo) GetLatestClubs() ([]*dbstruct.Club, error) {
 	return clubs, err
 }
 
-func (r *sClubRepo) UpdateClubInfo(newInfo dbstruct.Club) error {
-	return r.database.
+func (r *sClubRepo) UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error {
+	return tx.
 		Where("club_id = ?", newInfo.ClubId).
 		Updates(newInfo).Error
 }

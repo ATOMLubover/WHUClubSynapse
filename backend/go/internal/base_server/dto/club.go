@@ -1,11 +1,12 @@
 package dto
 
 type ClubBasic struct {
-	ClubId   int    `json:"club_id"`
-	ClubName string `json:"club_name"`
-	Category string `json:"category"`
-	LogoUrl  string `json:"logo_url"`
-	Desc     string `json:"desc"`
+	ClubId    int    `json:"club_id"`
+	ClubName  string `json:"club_name"`
+	Category  int    `json:"category"`
+	LogoUrl   string `json:"logo_url"`
+	Desc      string `json:"desc"`
+	CreatedAt string `json:"created_at"`
 }
 
 type ClubDetail struct {

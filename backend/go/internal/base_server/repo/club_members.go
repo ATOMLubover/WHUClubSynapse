@@ -8,7 +8,8 @@ import (
 )
 
 type ClubMemberRepo interface {
-	CreateClubMember(member dbstruct.ClubMember) error
+	CreateClubMember(member *dbstruct.ClubMember) error
+	AppendClubMember(tx *gorm.DB, member *dbstruct.ClubMember) error
 	GetClubMemberList(offset, num int) ([]*dbstruct.ClubMember, error)
 	GetClubMemberInfo(id int) (*dbstruct.ClubMember, error)
 	GetMemberListByClubId(clubId int) ([]*dbstruct.ClubMember, error)
@@ -20,7 +21,7 @@ type sClubMemberRepo struct {
 	logger   *slog.Logger
 }
 
-func NewClubMemberRepo(
+func CreateClubMemberRepo(
 	database *gorm.DB,
 	logger *slog.Logger,
 ) ClubMemberRepo {
@@ -30,8 +31,12 @@ func NewClubMemberRepo(
 	}
 }
 
-func (r *sClubMemberRepo) CreateClubMember(member dbstruct.ClubMember) error {
-	return r.database.Create(&member).Error
+func (r *sClubMemberRepo) CreateClubMember(member *dbstruct.ClubMember) error {
+	return r.database.Create(member).Error
+}
+
+func (r *sClubMemberRepo) AppendClubMember(tx *gorm.DB, member *dbstruct.ClubMember) error {
+	return tx.Create(member).Error
 }
 
 func (r *sClubMemberRepo) GetClubMemberList(offset, num int) ([]*dbstruct.ClubMember, error) {
@@ -69,7 +74,7 @@ func (r *sClubMemberRepo) GetClubListByUserId(userId int) ([]*dbstruct.Club, err
 		return nil, err
 	}
 
-	clubs := make([]*dbstruct.Club, len(members))
+	var clubs []*dbstruct.Club
 	for _, m := range members {
 		clubs = append(clubs, &m.Club)
 	}

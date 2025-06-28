@@ -8,7 +8,7 @@ import (
 )
 
 type CatogoryRepo interface {
-	AddCategory(cat dbstruct.Category) error
+	AddCategory(cat *dbstruct.Category) error
 	GetCategoryList() ([]*dbstruct.Category, error)
 	GetCategoryInfo(id int) (*dbstruct.Category, error)
 }
@@ -28,8 +28,8 @@ func CreateCategoryRepo(
 	}
 }
 
-func (r *sCategoryRepo) AddCategory(cat dbstruct.Category) error {
-	return r.database.Create(&cat).Error
+func (r *sCategoryRepo) AddCategory(cat *dbstruct.Category) error {
+	return r.database.Create(cat).Error
 }
 
 func (r *sCategoryRepo) GetCategoryList() ([]*dbstruct.Category, error) {

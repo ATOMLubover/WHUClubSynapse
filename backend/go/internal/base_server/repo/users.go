@@ -10,11 +10,12 @@ import (
 )
 
 type UserRepo interface {
-	AddUser(user dbstruct.User) error
+	AddUser(user *dbstruct.User) error
 	GetUserById(id int) (*dbstruct.User, error)
 	GetUserByUsername(username string) (*dbstruct.User, error)
 	GetUserList(offset int, num int) ([]*dbstruct.User, error)
 	UpdateUserLastActive(id int) error
+	UpdateUserRole(tx *gorm.DB, id int, role string) error
 }
 
 type sUserRepo struct {
@@ -32,8 +33,8 @@ func CreateUserRepo(
 	}
 }
 
-func (r *sUserRepo) AddUser(user dbstruct.User) error {
-	return r.database.Create(&user).Error
+func (r *sUserRepo) AddUser(user *dbstruct.User) error {
+	return r.database.Create(user).Error
 }
 
 func (r *sUserRepo) GetUserById(id int) (*dbstruct.User, error) {
@@ -67,6 +68,7 @@ func (r *sUserRepo) GetUserList(offset int, num int) ([]*dbstruct.User, error) {
 
 	var users []*dbstruct.User
 	err := r.database.
+		Model(&dbstruct.User{}).
 		Offset(offset).
 		Limit(num).
 		Find(&users).Error
@@ -79,4 +81,11 @@ func (r *sUserRepo) UpdateUserLastActive(id int) error {
 		Model(&dbstruct.User{}).
 		Where("user_id = ?", id).
 		Update("last_active", time.Now()).Error
+}
+
+func (r *sUserRepo) UpdateUserRole(tx *gorm.DB, id int, role string) error {
+	return r.database.
+		Model(&dbstruct.User{}).
+		Where("user_id = ? AND role = 'user'", id).
+		Update("role", role).Error
 }
