@@ -44,7 +44,7 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
     for msg_id, msg_data in messages:
         try:
             data = json.loads(msg_data['data'])
-            source_id = data.get('source_id')
+            source_id = "dynamic::" + data.get('source_id')
             content = data.get('content')
 
             # 这里是正常实现

@@ -1,26 +1,19 @@
-# mock_producer.py
-
-import redis
 import json
-import time
-import random
 import logging
-from typing import Dict, Any
-
-# 假设您的项目结构允许这样导入
-# 这确保了我们使用与worker完全相同的配置
+import random
+import time
+import redis
 from app.config import settings
 from app.utils.singleton import redis_pool
 
 # --- 日志设置 ---
 logging.basicConfig(
-    level="INFO",  # 我们希望看到INFO级别的日志
+    level=settings.LOG_LEVEL,
     format='%(asctime)s - [PRODUCER] - %(levelname)s - %(message)s'
 )
 log = logging.getLogger(__name__)
 
-# --- 模拟的消息模板 ---
-# 我们将从这里随机选择来模拟不同来源的数据
+# 模拟的消息模板, 我们将从这里随机选择来模拟不同来源的数据
 MOCK_MESSAGES_TEMPLATES = [
     {
         "content": "社团招新啦！技术部需要Python和Go开发人员，快来加入我们，一起构建超酷的项目！",
@@ -50,7 +43,6 @@ MOCK_MESSAGES_TEMPLATES = [
     {
         "content": "财务部提醒：请所有项目组在本月底前提交第三季度预算申请。",
         "metadata": {
-            # 这个元数据比较简单
             "source_type": "reminder",
             "department": "finance_dept"
         }
