@@ -91,6 +91,8 @@ def print_api_endpoints():
     print(f"   POST /generate/introduction - 社团介绍生成接口")
     print(f"   POST /generate/Slogan     - 社团口号生成接口")
     print(f"   GET  /reload_config       - 配置重载接口")
+    print(f"   POST /screen_application  - 智能申请筛选助手接口")
+    print(f"   POST /club_atmosphere      - 社团\"氛围\"透视镜接口")
     print(f"   GET  /docs                - API文档 (Swagger UI)")
     print(f"   GET  /redoc               - API文档 (ReDoc)")
 

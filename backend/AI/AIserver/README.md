@@ -321,7 +321,60 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         }
         ```
 
-### 11. 模型列表
+### 11. 智能申请筛选助手接口
+
+*   **POST** `/screen_application`
+    *   **描述**: 智能申请筛选助手，自动分析申请理由和个人资料，生成摘要和建议。
+    *   **请求体 (JSON)**:
+        *   `applicant_data` (Dict[str, Any]): 申请者个人资料，例如：
+            ```json
+            {
+              "name": "李华",
+              "major": "计算机科学与技术",
+              "skills": ["Python编程", "数据结构"],
+              "experience": "曾参与校内编程竞赛并获得二等奖"
+            }
+            ```
+        *   `application_reason` (str): 申请理由的文本内容。
+        *   `required_conditions` (List[str]): 社团所需条件列表，例如：`["有编程基础", "对算法有兴趣"]`。
+    *   **响应体 (JSON)**:
+        *   `summary` (str): AI生成的申请摘要。
+        *   `suggestion` (str): AI生成的建议。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/screen_application \
+          -H "Content-Type: application/json" \
+          -d '{
+            "applicant_data": {
+                "name": "李华",
+                "major": "计算机科学与技术",
+                "skills": ["Python编程", "数据结构", "Web开发"],
+                "experience": "曾参与校内编程竞赛并获得二等奖"
+            },
+            "application_reason": "我对贵社团的编程氛围和技术挑战非常感兴趣，希望能在社团中提升自己的编程能力并结识志同道合的朋友。我熟悉Python语言，并有Web开发经验。",
+            "required_conditions": ["有编程基础", "对算法有兴趣", "积极参与团队项目"]
+          }'
+        ```
+
+### 12. 社团"氛围"透视镜接口
+
+*   **POST** `/club_atmosphere`
+    *   **描述**: 对社团内部交流内容进行情感分析和主题建模，生成"氛围标签"和"文化摘要"。
+    *   **请求体 (JSON)**:
+        *   `communication_content` (str): 社团内部的交流内容，如论坛帖子、聊天记录摘要等。
+    *   **响应体 (JSON)**:
+        *   `atmosphere_tags` (List[str]): AI生成的氛围标签列表。
+        *   `culture_summary` (str): AI生成的文化摘要。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/club_atmosphere \
+          -H "Content-Type: application/json" \
+          -d '{
+            "communication_content": "社团成员A: 今天的编程挑战太难了，我卡住了！\n社团成员B: 别灰心，我来帮你看看！我们可以一起调试。\n社团成员C: 对，大家多交流，互相帮助才能进步！\n社团成员D: 最近有个新算法很有意思，有空我给大家分享一下。\n社团成员E: 期待！正好最近在研究这方面的东西。\n社团管理员: 下周五有一次线下技术交流会，欢迎大家积极参加！"
+          }'
+        ```
+
+### 13. 模型列表
 
 *   **GET** `/models`
     *   **描述**: 获取 vLLM 服务器可用的模型列表。
@@ -468,9 +521,4 @@ python vllm_proxy_server.py
    - 检查vLLM服务器的响应时间
 
 5. **CORS错误**
-   - 在`config.json`中配置正确的`allowed_origins`
-   - 确保客户端请求来自允许的域名
-
-## 许可证
-
-本项目采用MIT许可证。 
+   - 在`config.json`

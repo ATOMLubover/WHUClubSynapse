@@ -518,6 +518,93 @@ def test_reload_config():
         print(f"配置重载测试错误: {e}")
         return False
 
+def test_screen_application():
+    """测试智能申请筛选助手接口"""
+    print("\n=== 测试智能申请筛选助手接口 ===")
+    try:
+        payload = {
+            "applicant_data": {
+                "name": "李华",
+                "major": "计算机科学与技术",
+                "skills": ["Python编程", "数据结构", "Web开发"],
+                "experience": "曾参与校内编程竞赛并获得二等奖"
+            },
+            "application_reason": "我对贵社团的编程氛围和技术挑战非常感兴趣，希望能在社团中提升自己的编程能力并结识志同道合的朋友。我熟悉Python语言，并有Web开发经验。",
+            "required_conditions": ["有编程基础", "对算法有兴趣", "积极参与团队项目"]
+        }
+        
+        print(f"发送申请筛选请求，申请人: {payload['applicant_data']['name']}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/screen_application",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+        
+        if response.status_code == 200:
+            result = response.json()
+            summary = result.get('summary')
+            suggestion = result.get('suggestion')
+            print(f"AI摘要:\n{summary}")
+            print(f"AI建议:\n{suggestion}")
+            return summary is not None and suggestion is not None and len(summary.strip()) > 0 and len(suggestion.strip()) > 0
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"智能申请筛选助手测试错误: {e}")
+        return False
+
+def test_club_atmosphere():
+    """测试社团氛围透视镜接口"""
+    print("\n=== 测试社团氛围透视镜接口 ===")
+    try:
+        payload = {
+            "communication_content": (
+                "社团成员A: 今天的编程挑战太难了，我卡住了！\n"
+                "社团成员B: 别灰心，我来帮你看看！我们可以一起调试。\n"
+                "社团成员C: 对，大家多交流，互相帮助才能进步！\n"
+                "社团成员D: 最近有个新算法很有意思，有空我给大家分享一下。\n"
+                "社团成员E: 期待！正好最近在研究这方面的东西。\n"
+                "社团管理员: 下周五有一次线下技术交流会，欢迎大家积极参加！"
+            )
+        }
+        
+        print(f"发送社团氛围透视请求，内容长度: {len(payload['communication_content'])}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/club_atmosphere",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+        
+        if response.status_code == 200:
+            result = response.json()
+            atmosphere_tags = result.get('atmosphere_tags')
+            culture_summary = result.get('culture_summary')
+            print(f"AI氛围标签: {atmosphere_tags}")
+            print(f"AI文化摘要:\n{culture_summary}")
+            return (atmosphere_tags is not None and isinstance(atmosphere_tags, list) and len(atmosphere_tags) > 0 and 
+                    culture_summary is not None and len(culture_summary.strip()) > 0)
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"社团氛围透视测试错误: {e}")
+        return False
+
 def main():
     """运行所有测试"""
     print("开始测试vLLM代理服务器...")
@@ -526,17 +613,19 @@ def main():
     print("=" * 50)
     
     tests = [
-        ("健康检查", test_health_check),
-        ("简化聊天", test_simple_chat),
-        ("完整聊天", test_chat_completion),
-        ("模型列表", test_models_list),
-        ("配置信息", test_config_endpoint),
-        ("AI内容生成", test_generate_content),
-        ("通义总结 (流式)", test_summarize_tongyi_streaming),
-        ("多轮对话", test_conversation),
-        ("社团介绍生成", test_generate_introduction),
-        ("社团口号生成", test_generate_slogan),
-        ("配置重载", test_reload_config)
+        # ("健康检查", test_health_check),
+        # ("简化聊天", test_simple_chat),
+        # ("完整聊天", test_chat_completion),
+        # ("模型列表", test_models_list),
+        # ("配置信息", test_config_endpoint),
+        # ("AI内容生成", test_generate_content),
+        # ("通义总结 (流式)", test_summarize_tongyi_streaming),
+        # ("多轮对话", test_conversation),
+        # ("社团介绍生成", test_generate_introduction),
+        # ("社团口号生成", test_generate_slogan),
+        # ("配置重载", test_reload_config),
+        ("智能申请筛选", test_screen_application),
+        ("社团氛围透视", test_club_atmosphere)
     ]
     
     results = []

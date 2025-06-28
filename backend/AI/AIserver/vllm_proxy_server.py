@@ -84,6 +84,24 @@ class SloganGenerationRequest(BaseModel):
 class ContentGenerationResponse(BaseModel):
     generated_text: str
 
+# 新增申请筛选助手请求和响应模型
+class ApplicationScreeningRequest(BaseModel):
+    applicant_data: Dict[str, Any] # 申请者个人资料，如姓名、专业、技能等
+    application_reason: str       # 申请理由
+    required_conditions: List[str] # 社团所需条件列表，如 "有编程基础", "热爱摄影"
+
+class ApplicationScreeningResponse(BaseModel):
+    summary: str    # AI生成的申请摘要
+    suggestion: str # AI生成的建议
+
+# 新增社团氛围透视镜请求和响应模型
+class ClubAtmosphereRequest(BaseModel):
+    communication_content: str # 社团内部的交流内容，如论坛帖子、聊天记录摘要等
+
+class ClubAtmosphereResponse(BaseModel):
+    atmosphere_tags: List[str] # AI生成的氛围标签列表
+    culture_summary: str       # AI生成的文化摘要
+
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
 base_url_tongyi="https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -556,6 +574,149 @@ async def reload_config_endpoint():
         logger.error(f"重载配置文件失败: {e}")
         raise HTTPException(status_code=500, detail=f"重载配置文件失败: {e}")
 
+@app.post("/screen_application", response_model=ApplicationScreeningResponse)
+async def screen_application(request: ApplicationScreeningRequest):
+    """
+    智能申请筛选助手，自动分析申请理由和个人资料，生成摘要和建议。
+    
+    Args:
+        request: 包含申请者资料、申请理由和社团所需条件的请求体。
+        
+    Returns:
+        ApplicationScreeningResponse: 包含AI生成的摘要和建议。
+    """
+    try:
+        # 构建详细的LLM提示
+        prompt_template = """
+你是一个智能社团申请筛选助手，你的任务是根据申请者的资料和社团的招新要求，对申请进行评估，并生成简洁的摘要和明确的建议。
+
+请按照以下JSON格式返回结果：
+{{
+  "summary": "[AI生成的申请摘要]",
+  "suggestion": "[AI生成的建议]"
+}}
+
+--- 申请信息 ---
+申请者资料: {applicant_data}
+申请理由: {application_reason}
+
+--- 社团所需条件 ---
+{required_conditions_str}
+
+请开始评估并生成摘要和建议。
+"""
+        
+        required_conditions_str = "\n".join([f"- {cond}" for cond in request.required_conditions])
+
+        full_prompt = prompt_template.format(
+            applicant_data=json.dumps(request.applicant_data, ensure_ascii=False, indent=2),
+            application_reason=request.application_reason,
+            required_conditions_str=required_conditions_str
+        )
+        
+        logger.info(f"AI申请筛选Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+        
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        # 尝试解析LLM的JSON响应，先移除可能的markdown代码块
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+        
+        try:
+            parsed_response = json.loads(json_string)
+            summary = parsed_response.get("summary", "")
+            suggestion = parsed_response.get("suggestion", "")
+            
+            if not summary or not suggestion:
+                raise ValueError("AI返回的JSON格式不完整，缺少summary或suggestion字段。")
+
+            return ApplicationScreeningResponse(summary=summary.strip(), suggestion=suggestion.strip())
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+            
+    except Exception as e:
+        logger.error(f"AI申请筛选失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI申请筛选失败: {e}")
+
+@app.post("/club_atmosphere", response_model=ClubAtmosphereResponse)
+async def club_atmosphere(request: ClubAtmosphereRequest):
+    """
+    社团"氛围"透视镜，对社团内部交流内容进行情感分析和主题建模，生成氛围标签和文化摘要。
+    
+    Args:
+        request: 包含社团内部交流内容的请求体。
+        
+    Returns:
+        ClubAtmosphereResponse: 包含AI生成的氛围标签和文化摘要。
+    """
+    try:
+        # 构建LLM提示
+        prompt_template = """
+你是一个社团氛围透视镜AI，你的任务是根据社团内部的交流内容，分析其情感和主题，并生成社团的"氛围标签"和一段"文化摘要"。
+在保护隐私的前提下，请不要提及具体的人名，只关注整体氛围和趋势。
+
+请按照以下JSON格式返回结果：
+{{
+  "atmosphere_tags": ["标签1", "标签2", "标签3"],
+  "culture_summary": "[AI生成的文化摘要]"
+}}
+
+--- 社团交流内容 ---
+{communication_content}
+
+请开始分析并生成氛围标签和文化摘要。
+"""
+        
+        full_prompt = prompt_template.format(
+            communication_content=request.communication_content
+        )
+        
+        logger.info(f"AI社团氛围透视Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+        
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        # 尝试解析LLM的JSON响应，先移除可能的markdown代码块
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+        
+        try:
+            parsed_response = json.loads(json_string)
+            atmosphere_tags = parsed_response.get("atmosphere_tags", [])
+            culture_summary = parsed_response.get("culture_summary", "")
+            
+            if not isinstance(atmosphere_tags, list) or not all(isinstance(tag, str) for tag in atmosphere_tags):
+                raise ValueError("AI返回的atmosphere_tags格式不正确，应为字符串列表。")
+            if not culture_summary:
+                raise ValueError("AI返回的JSON格式不完整，缺少culture_summary字段。")
+
+            return ClubAtmosphereResponse(atmosphere_tags=atmosphere_tags, culture_summary=culture_summary.strip())
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+            
+    except Exception as e:
+        logger.error(f"AI社团氛围透视失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI社团氛围透视失败: {e}")
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")
@@ -568,6 +729,9 @@ if __name__ == "__main__":
     print(f"生成内容接口: http://{config.server_host}:{config.server_port}/generate/content")
     print(f"社团介绍接口: http://{config.server_host}:{config.server_port}/generate/introduction")
     print(f"社团口号接口: http://{config.server_host}:{config.server_port}/generate/Slogan")
+    print(f"配置重载接口: http://{config.server_host}:{config.server_port}/reload_config")
+    print(f"智能申请筛选接口: http://{config.server_host}:{config.server_port}/screen_application")
+    print(f"社团氛围透视接口: http://{config.server_host}:{config.server_port}/club_atmosphere")
     print(f"模型列表: http://{config.server_host}:{config.server_port}/models")
     print(f"配置信息: http://{config.server_host}:{config.server_port}/config")
     
