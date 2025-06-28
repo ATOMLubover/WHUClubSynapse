@@ -1,6 +1,8 @@
-import chromadb
 import logging
-from redis import ConnectionPool, Redis
+
+import chromadb
+from redis import ConnectionPool
+
 from app.config import settings
 
 log = logging.getLogger(__name__)

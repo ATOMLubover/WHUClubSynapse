@@ -1,4 +1,5 @@
 from openai import OpenAI
+
 openai_api_key = "sk-xxx"
 openai_api_base = "http://localhost:8000/v1"
 

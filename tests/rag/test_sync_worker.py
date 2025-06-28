@@ -2,7 +2,9 @@ import json
 import logging
 import random
 import time
+
 import redis
+
 from app.config import settings
 from app.utils.singleton import redis_pool
 

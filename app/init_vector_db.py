@@ -1,12 +1,12 @@
+import logging
 import os
 import random
-from langchain_community.document_loaders import PyMuPDFLoader
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import PyMuPDFLoader
+
 from app.config import settings
 from app.rag_service import get_embeddings
-import chromadb
-import logging
 from app.utils.singleton import chroma_collection
 
 # 日志
@@ -22,6 +22,8 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200,
     length_function=len
 )
+
+
 def init_vector_db(pdf_dir: str):
     """
     从PDF目录初始化向量数据库，通过HTTP客户端连接。
@@ -75,6 +77,7 @@ def init_vector_db(pdf_dir: str):
 
     log.info("Finished processing all PDF files.")
 
+
 def check_collection_data(collection):
     """
     检查集合中是否有数据。
@@ -88,12 +91,11 @@ def check_collection_data(collection):
     if results and results.get("documents"):
         log.info(f"Collection contains {len(results['documents'])} documents.")
         for i, doc in enumerate(results["documents"]):
-            log.info(f"Document {i+1}: {doc}")
+            log.info(f"Document {i + 1}: {doc}")
     else:
         log.warning("No documents found in the collection.")
 
 
-
 if __name__ == "__main__":
-    # init_vector_db(settings.STATIC_DOC_PATH)
-    check_collection_data(chroma_collection)  # 测试向量数据库初始化是否正常的函数，生产环境请注释
+    init_vector_db(settings.STATIC_DOC_PATH)
+    # check_collection_data(chroma_collection)  # 测试向量数据库初始化是否正常的函数，生产环境请注释

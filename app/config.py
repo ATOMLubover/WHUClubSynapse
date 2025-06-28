@@ -1,5 +1,7 @@
-from pydantic_settings import  BaseSettings
 import os
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # vLLM OpenAI格式兼容 API 端口
@@ -28,11 +30,12 @@ class Settings(BaseSettings):
     REDIS_STREAM_NAME: str = "rag_sync_stream"
     REDIS_CONSUMER_GROUP_NAME: str = "rag_sync_consumer_group0"
     REDIS_CONSUMER_NAME: str = f"sync-worker-{os.uname().nodename}-{os.getpid()}"  # 动态生成消费者名称
-    REDIS_MESSAGES_PER_PULL: int = 10
+    REDIS_MESSAGES_PER_PULL: int = 64
     REDIS_BLOCK_TIMEOUT_MS: int = 10000
 
     # 日志配置
     LOG_LEVEL: str = "DEBUG"
+
 
 # 读取配置
 settings = Settings()

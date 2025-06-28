@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 import torch
+
 from app.rag_service import (
     tokenize_inputs,
-    get_embeddings,
     retrieve,
     format_context,
     generate_response,

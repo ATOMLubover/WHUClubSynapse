@@ -1,12 +1,12 @@
-from redis import ConnectionPool, Redis, exceptions
-from app.config import settings
-import logging
 import json
-import time
+import logging
 import signal
-import uuid
+import time
 from typing import List, Dict, Tuple
-import chromadb
+
+from redis import Redis, exceptions
+
+from app.config import settings
 from app.rag_service import get_embeddings
 from app.utils.singleton import chroma_collection, redis_pool  # 从工具文件中引入向量数据库集合 和 redis连接池
 
@@ -20,12 +20,14 @@ log = logging.getLogger(__name__)
 
 SHUTDOWN_REQUESTED = False
 
+
 def handle_shutdown(signum, frame):
     """停机信号处理器"""
     global SHUTDOWN_REQUESTED
     if not SHUTDOWN_REQUESTED:
         log.warning("Shutdown signal received. Finishing current batch before exiting...")
         SHUTDOWN_REQUESTED = True
+
 
 def sanitize_metadata_value(value):
     """
@@ -41,6 +43,7 @@ def sanitize_metadata_value(value):
             # 如果JSON序列化失败，将其转换为字符串作为最后的保障
             return str(value)
     return value
+
 
 # 批量消息处理
 def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
@@ -61,7 +64,6 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
             if not all([source_id, content]):
                 raise ValueError("Message is missing 'source_id' or 'content'")
             batch_ids.append(source_id)
-
 
             # FIX: 以下是测试内容，测试完毕请删除
             # if not content: # 在这个临时版本中，我们只关心content
@@ -104,8 +106,9 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
         log.error(f"Failed to process batch. Error: {e}", extra={"msg_id": "batch_operation"})
         return []  # 批量处理失败，这批消息都算失败
 
+
 # 主运行循环
-def run_sync_worker(batch_size: int):
+def run_sync_worker():
     r = Redis(connection_pool=redis_pool)
     # 确保 Stream 和消费者组存在
     try:
@@ -149,6 +152,7 @@ def run_sync_worker(batch_size: int):
             # 对于其他未知循环错误，同样记录并重试
             log.error(f"An unexpected error occurred in the main loop: {e}", extra={'msg_id': 'N/A'})
             time.sleep(5)
+
 
 if __name__ == "__main__":
     # 注册信号处理器
