@@ -263,8 +263,8 @@
           <div class="member-basic-info">
             <h3 class="member-name">{{ currentMember.realName || currentMember.username }}</h3>
             <p class="member-username">@{{ currentMember.username }}</p>
-            <el-tag :type="currentMember.role === 'admin' ? 'danger' : 'primary'">
-              {{ currentMember.role === 'admin' ? '管理员' : '成员' }}
+            <el-tag :type="currentMember.role_in_club === 'admin' ? 'danger' : 'primary'">
+              {{ currentMember.role_in_club === 'admin' ? '管理员' : '成员' }}
             </el-tag>
           </div>
         </div>
@@ -285,7 +285,7 @@
               </div>
               <div class="info-item">
                 <span class="label">加入时间:</span>
-                <span class="value">{{ formatDate(currentMember.joinTime) }}</span>
+                <span class="value">{{ formatDate(currentMember.joined_at) }}</span>
               </div>
               <div class="info-item">
                 <span class="label">状态:</span>
@@ -319,7 +319,7 @@
           <h4>管理操作</h4>
           <div class="action-buttons">
             <el-button
-              v-if="currentMember.role === 'member'"
+              v-if="currentMember.role_in_club === 'member'"
               type="primary"
               @click="promoteToAdmin(currentMember)"
               :disabled="!canManageRole(currentMember)"
@@ -327,7 +327,7 @@
               设为管理员
             </el-button>
             <el-button
-              v-if="currentMember.role === 'admin'"
+              v-if="currentMember.role_in_club === 'admin'"
               type="warning"
               @click="demoteToMember(currentMember)"
               :disabled="!canManageRole(currentMember)"
@@ -548,11 +548,11 @@ const currentUserId = computed(() => authStore.user?.id)
 const currentClub = computed(() => club.value)
 
 const canManageRole = (member: ClubMember) => {
-  return member.userId !== currentUserId.value?.toString()
+  return member.user_id !== currentUserId.value?.toString()
 }
 
 const canRemoveMember = (member: ClubMember) => {
-  return member.userId !== currentUserId.value?.toString()
+  return member.user_id !== currentUserId.value?.toString()
 }
 
 const loadClubInfo = async () => {
@@ -759,7 +759,7 @@ const promoteToAdmin = async (member: ClubMember) => {
       },
     )
 
-    const response = await changeMemberRole(club.value!.club_id, member.id, 'admin')
+    const response = await changeMemberRole(club.value!.club_id, member.member_id, 'admin')
     if (response.data.code === 200) {
       ElMessage.success('角色更改成功')
       loadMembers()
@@ -785,7 +785,7 @@ const demoteToMember = async (member: ClubMember) => {
       },
     )
 
-    const response = await changeMemberRole(club.value!.club_id, member.id, 'member')
+    const response = await changeMemberRole(club.value!.club_id, member.member_id, 'member')
     if (response.data.code === 200) {
       ElMessage.success('角色更改成功')
       loadMembers()
@@ -817,7 +817,7 @@ const confirmRemove = async () => {
     removeLoading.value = true
     const response = await removeMemberFromClub(
       club.value!.club_id,
-      removeMemberData.value.id,
+      removeMemberData.value.member_id,
       removeForm.value.reason,
     )
     if (response.data.code === 200) {

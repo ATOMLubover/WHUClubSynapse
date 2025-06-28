@@ -12,36 +12,35 @@
         <el-icon><Plus /></el-icon> 发帖
       </el-button>
     </div>
-    
+
     <!-- 调试信息 -->
-    <div v-if="loading" style="text-align: center; padding: 20px; color: #666;">
-      正在加载帖子...
-    </div>
-    
-    <div v-else-if="!posts.length" style="text-align: center; padding: 20px; color: #666;">
+    <div v-if="loading" style="text-align: center; padding: 20px; color: #666">正在加载帖子...</div>
+
+    <div v-else-if="!posts.length" style="text-align: center; padding: 20px; color: #666">
       暂无帖子 (总数: {{ total }})
     </div>
-    
+
     <div v-else class="post-list">
-      <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPost(post)">
+      <div v-for="post in posts" :key="post.post_id" class="post-card" @click="goToPost(post)">
         <div class="post-card-main">
           <div class="post-title">{{ post.title }}</div>
           <div class="post-meta">
             <el-avatar :size="28" :src="post.authorAvatar || ''" />
             <span class="author">{{ post.authorName }}</span>
-            <span class="time">{{ formatDate(post.createdAt) }}</span>
+            <span class="time">{{ formatDate(post.created_at) }}</span>
             <span class="reply"
-              ><el-icon><ChatLineRound /></el-icon> {{ post.replyCount }}</span
+              ><el-icon><ChatLineRound /></el-icon> {{ post.comment_count }}</span
             >
           </div>
           <div class="post-abstract">
-            {{ stripMarkdown(post.content).slice(0, 80) }}<span v-if="stripMarkdown(post.content).length > 80">...</span>
+            {{ stripMarkdown(post.content || '').slice(0, 80)
+            }}<span v-if="stripMarkdown(post.content || '').length > 80">...</span>
           </div>
         </div>
         <el-icon class="arrow"><ArrowRightBold /></el-icon>
       </div>
     </div>
-    
+
     <div class="pagination" v-if="total > pageSize">
       <el-pagination
         v-model:current-page="page"
@@ -51,7 +50,7 @@
         @current-change="fetchPosts"
       />
     </div>
-    
+
     <el-dialog v-model="showCreate" title="发新帖" width="800px">
       <el-form :model="createForm" label-width="60px">
         <el-form-item label="标题">
@@ -84,9 +83,9 @@ import type { ClubPost, Club } from '@/types'
 import { Plus, ChatLineRound, ArrowRightBold } from '@element-plus/icons-vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 
-const props = defineProps<{ 
+const props = defineProps<{
   clubId: string
-  club?: Club | null 
+  club?: Club | null
 }>()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -120,7 +119,7 @@ const fetchPosts = async () => {
 }
 
 const goToPost = (row: ClubPost) => {
-  router.push(`/club/${props.clubId}/post/${row.id}`)
+  router.push(`/club/${props.clubId}/post/${row.post_id}`)
 }
 
 const handleCreate = async () => {
@@ -131,12 +130,15 @@ const handleCreate = async () => {
   createLoading.value = true
   try {
     await createClubPost({
-      clubId: props.clubId,
+      club_id: props.clubId,
       title: createForm.value.title,
       content: createForm.value.content,
-      authorId: authStore.user?.id || 0,
+      author_id: authStore.user?.id || 0,
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || '',
+      post_id: '',
+      created_at: '',
+      comment_count: 0,
     })
     ElMessage.success('发帖成功')
     showCreate.value = false
@@ -157,31 +159,33 @@ const formatDate = (date: string) => {
 
 const stripMarkdown = (text: string) => {
   if (!text) return ''
-  
-  return text
-    // 移除HTML标签
-    .replace(/<[^>]+>/g, '')
-    // 移除Markdown链接 [text](url) -> text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // 移除行内代码 `code` -> code
-    .replace(/`([^`]+)`/g, '$1')
-    // 移除粗体 **text** -> text
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    // 移除斜体 *text* -> text
-    .replace(/\*([^*]+)\*/g, '$1')
-    // 移除标题标记 # ## ###
-    .replace(/^#{1,6}\s+/gm, '')
-    // 移除列表标记 - * 1.
-    .replace(/^[-*+]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    // 移除引用标记 >
-    .replace(/^>\s+/gm, '')
-    // 移除数学公式
-    .replace(/\$[^$\n]+\$/g, '')
-    .replace(/\$\$[^$\n]+\$\$/g, '')
-    // 移除多余的空行和空格
-    .replace(/\n\s*\n/g, '\n')
-    .trim()
+
+  return (
+    text
+      // 移除HTML标签
+      .replace(/<[^>]+>/g, '')
+      // 移除Markdown链接 [text](url) -> text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // 移除行内代码 `code` -> code
+      .replace(/`([^`]+)`/g, '$1')
+      // 移除粗体 **text** -> text
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      // 移除斜体 *text* -> text
+      .replace(/\*([^*]+)\*/g, '$1')
+      // 移除标题标记 # ## ###
+      .replace(/^#{1,6}\s+/gm, '')
+      // 移除列表标记 - * 1.
+      .replace(/^[-*+]\s+/gm, '')
+      .replace(/^\d+\.\s+/gm, '')
+      // 移除引用标记 >
+      .replace(/^>\s+/gm, '')
+      // 移除数学公式
+      .replace(/\$[^$\n]+\$/g, '')
+      .replace(/\$\$[^$\n]+\$\$/g, '')
+      // 移除多余的空行和空格
+      .replace(/\n\s*\n/g, '\n')
+      .trim()
+  )
 }
 
 onMounted(fetchPosts)

@@ -9,7 +9,7 @@
             <el-avatar :size="40" :src="post?.authorAvatar || defaultAvatar" class="post-avatar" />
             <div class="meta-info">
               <span class="author">{{ post?.authorName }}</span>
-              <span class="time">{{ formatDate(post?.createdAt) }}</span>
+              <span class="time">{{ formatDate(post?.created_at) }}</span>
             </div>
           </div>
           <div class="post-content">
@@ -21,7 +21,11 @@
           <el-empty v-if="!replies.length && !loading" description="暂无回复" />
           <div v-else class="reply-list">
             <div v-for="(reply, idx) in replies" :key="reply.id" class="reply-item">
-              <el-avatar :size="32" :src="reply.authorAvatar || defaultAvatar" class="reply-avatar" />
+              <el-avatar
+                :size="32"
+                :src="reply.authorAvatar || defaultAvatar"
+                class="reply-avatar"
+              />
               <div class="reply-info">
                 <div class="reply-meta">
                   <span class="reply-author">{{ reply.authorName }}</span>
@@ -60,10 +64,7 @@
 
       <!-- 右侧AI聊天窗口 -->
       <div class="ai-chat-area">
-        <AIChatWindow 
-          :post-title="post?.title"
-          :post-content="post?.content"
-        />
+        <AIChatWindow :post-title="post?.title" :post-content="post?.content" />
       </div>
     </div>
   </div>
@@ -472,7 +473,7 @@ onMounted(() => {
   .post-layout {
     flex-direction: column;
   }
-  
+
   .ai-chat-area {
     width: 100%;
     height: 500px;
@@ -484,27 +485,27 @@ onMounted(() => {
   .club-post-detail {
     padding: 0 2vw;
   }
-  
+
   .post-layout {
     gap: 16px;
   }
-  
+
   .post-main {
     padding: 16px 4vw 12px 4vw;
   }
-  
+
   .reply-area {
     padding: 12px 2vw 8px 2vw;
   }
-  
+
   .post-title {
     font-size: 18px;
   }
-  
+
   .reply-header {
     font-size: 15px;
   }
-  
+
   .ai-chat-area {
     height: 400px;
   }

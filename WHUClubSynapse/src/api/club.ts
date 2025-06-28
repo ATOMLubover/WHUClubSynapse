@@ -32,20 +32,14 @@ export const getClubList = async (
   if (params.sortBy) {
     queryParams.append('sortBy', params.sortBy)
   }
-  if (params.page) {
-    queryParams.append('page', params.page.toString())
-  }
-  if (params.pageSize) {
-    queryParams.append('pageSize', params.pageSize.toString())
-  }
-  
-  // 添加登录状态参数，告诉后端是否需要返回用户相关的数据
-  if (authStore.isLoggedIn) {
-    queryParams.append('includeUserData', 'true')
+  if (params.page && params.pageSize) {
+    const offset = (params.page - 1) * params.pageSize
+    queryParams.append('offset', offset.toString())
+    queryParams.append('num', params.pageSize.toString())
   }
 
   const queryString = queryParams.toString()
-  const url = queryString ? `/clubs?${queryString}` : '/clubs'
+  const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
 
   // 根据登录状态使用不同的请求头
   const config = authStore.isLoggedIn ? {
@@ -58,10 +52,10 @@ export const getClubList = async (
 }
 
 // 获取社团详情
-export const getClubDetail = async (id: string): Promise<{ data: ApiResponse<Club> }> => {
+export const getClubDetail = async (id: string,post_num:number=5): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetClubDetail(id)
-    : await request.get(`/clubs/${id}`)
+    : await request.get(`/clubs/${id}?post_num=${post_num}`)
 }
 
 // 获取热门社团
@@ -109,7 +103,7 @@ export const applyToClub = async (data: {
 }): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockApplyToClub(data)
-    : await request.post('/clubs/apply', data)
+    : await request.post(`/api/club/${data.clubId}/join`,{reason:data.reason})
 }
 
 // 撤销申请
@@ -161,6 +155,7 @@ export const getFavoriteClubs: (
   return await request.get(url)
 }
 
+
 // 获取用户申请记录
 export const getUserApplications = async (
   params: {
@@ -197,14 +192,15 @@ export const getUserApplications = async (
 export const createClub = async (data: {
   name: string
   description: string
-  category: string
-  maxMembers: number
-  tags: string[]
+  requirements: string
+  category?: string
+  maxMembers?: number
+  tags?: string[]
   coverImage?: string
 }): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockCreateClub(data)
-    : await request.post('/clubs', data)
+    : await request.post('/api/club/create', data)
 }
 
 // 更新社团信息（社团管理员功能）
@@ -329,49 +325,52 @@ export const getClubMembers = async (
     // 模拟数据
     const mockMembers: ClubMember[] = [
       {
-        id: '1',
-        userId: 'user1',
-        clubId,
+        member_id: '1',
+        user_id: 'user1',
+        club_id: clubId,
         username: 'admin_user',
         realName: '张三',
         avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        role: 'admin',
-        joinTime: '2024-01-01T00:00:00Z',
+        role_in_club: 'admin',
+        joined_at: '2024-01-01T00:00:00Z',
         status: 'active',
         studentId: '2021001001',
         major: '计算机科学与技术',
         phone: '13800138000',
         email: 'admin@example.com',
+        last_active: '2024-01-01T00:00:00Z',
       },
       {
-        id: '2',
-        userId: 'user2',
-        clubId,
+        member_id: '2',
+        user_id: 'user2',
+        club_id: clubId,
         username: 'member1',
         realName: '李四',
         avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        role: 'member',
-        joinTime: '2024-01-15T00:00:00Z',
+        role_in_club: 'member',
+        joined_at: '2024-01-15T00:00:00Z',
         status: 'active',
         studentId: '2021001002',
         major: '软件工程',
         phone: '13800138001',
         email: 'member1@example.com',
+        last_active: '2024-01-15T00:00:00Z',
       },
       {
-        id: '3',
-        userId: 'user3',
-        clubId,
+        member_id: '3',
+        user_id: 'user3',
+        club_id: clubId,
         username: 'member2',
         realName: '王五',
         avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        role: 'member',
-        joinTime: '2024-02-01T00:00:00Z',
+        role_in_club: 'member',
+        joined_at: '2024-02-01T00:00:00Z',
         status: 'active',
         studentId: '2021001003',
         major: '信息安全',
         phone: '13800138002',
         email: 'member2@example.com',
+        last_active: '2024-02-01T00:00:00Z',
       },
     ]
 

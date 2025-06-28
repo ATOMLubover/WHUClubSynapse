@@ -49,14 +49,14 @@ export interface Club {
   category: number
   created_at: string
   member_count: number
-  //
+  //以上是必须包含的，以下是可选的
   adminId?: string
   adminName?: string
   maxMembers?: number
   tags?: string[]
   isHot?: boolean
   isFavorite?: boolean
-  status?: 'pending' | 'approved' | 'not_applied'
+  status?: 'pending' | 'joined' | 'managed' | 'not_applied'
   updatedAt?: string
   activities?: Activity[]
   location?: string
@@ -75,6 +75,8 @@ export interface Club {
   requirements?: string // 加入要求
   meetingTime?: string // 例会时间
   meetingLocation?: string // 例会地点
+  posts?: ClubPost[]
+  members?: ClubMember[]
 }
 
 // 社团分类
@@ -177,15 +179,16 @@ export interface UserPreferences {
 
 // 社团帖子类型
 export interface ClubPost {
-  id: string
-  clubId: string
+  post_id: string
+  club_id: string
   title: string
-  content: string
-  authorId: number
-  authorName: string
+  created_at: string
+  comment_count: number
+  author_id: number
+
+  content?: string
+  authorName?: string
   authorAvatar?: string
-  createdAt: string
-  replyCount: number
 }
 
 // 帖子回复类型
@@ -201,15 +204,17 @@ export interface ClubPostReply {
 
 // 社团成员类型
 export interface ClubMember {
-  id: string
-  userId: string
-  clubId: string
-  username: string
+  member_id: string
+  user_id: string
+  club_id: string
+  joined_at: string
+  role_in_club: 'admin' | 'member' // 在社团中的角色
+  last_active: string
+
+  username?: string
   realName?: string
-  avatar_url: string
-  role: 'admin' | 'member' // 在社团中的角色
-  joinTime: string
-  status: 'active' | 'inactive'
+  avatar_url?: string
+  status?: 'active' | 'inactive'
   studentId?: string
   major?: string
   phone?: string

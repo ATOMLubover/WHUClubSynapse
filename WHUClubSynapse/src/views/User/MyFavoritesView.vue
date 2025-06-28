@@ -225,6 +225,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, ArrowDown, UserFilled } from '@element-plus/icons-vue'
 import { getFavoriteClubs, unfavoriteClub } from '@/api/club'
 import type { Club, ClubCategory } from '@/types'
+import { categoryMap } from '@/utils/mockData'
 
 // 路由
 const router = useRouter()
@@ -261,7 +262,7 @@ const filteredClubs = computed(() => {
 
   // 分类筛选
   if (filterCategory.value) {
-    clubs = clubs.filter((club) => club.category === filterCategory.value)
+    clubs = clubs.filter((club) => categoryMap[club.category] === filterCategory.value)
   }
 
   // 关键词搜索
@@ -316,19 +317,20 @@ watch(
 )
 
 // 方法
-const getCategoryText = (category: string) => {
-  const categoryMap: Record<string, string> = {
-    academic: '学术科技',
-    culture: '文化艺术',
-    sports: '体育运动',
-    volunteer: '志愿服务',
-    practice: '社会实践',
-    innovation: '创新创业',
+const getCategoryText = (category: number) => {
+  const categoryMap: Record<number, string> = {
+    0: '学术科技',
+    1: '文化艺术',
+    2: '体育运动',
+    3: '志愿服务',
+    4: '社会实践',
+    5: '创新创业',
   }
   return categoryMap[category] || category
 }
 
 const formatDate = (date: string) => {
+  console.log(date)
   return new Date(date).toLocaleDateString('zh-CN')
 }
 
@@ -342,9 +344,10 @@ const loadFavorites = async () => {
     })
 
     const list = response.data.data.list
+    //TODO: 这里需要修改，favoriteAt应该是从后端获取的,也许不需要这个字段
     favoriteClubs.value = list.map((item: any) => ({
       ...item,
-      favoriteAt: item.createdAt,
+      favoriteAt: new Date().toISOString(),
     }))
 
     console.log(favoriteClubs)

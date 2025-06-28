@@ -112,14 +112,7 @@
                   <!-- 操作按钮 -->
                   <div class="club-actions">
                     <el-button size="small" @click="goToClubDetail(club.club_id)"> 查看 </el-button>
-                    <el-button
-                      size="small"
-                      type="danger"
-                      @click="
-                        showQuitDialog = true
-                        quitClub = club
-                      "
-                    >
+                    <el-button size="small" type="danger" @click="showQuitDialog = true">
                       退出社团
                     </el-button>
                   </div>

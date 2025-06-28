@@ -23,7 +23,7 @@ export const mockClubs: Club[] = [
     maxMembers: 100,
     tags: ['编程', '算法', '竞赛'],
     isHot: true,
-    status: 'approved',
+    status: 'pending',
     created_at: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z',
     qq: '1234567890',
@@ -61,7 +61,7 @@ export const mockClubs: Club[] = [
     maxMembers: 60,
     tags: ['摄影', '艺术', '创作'],
     isHot: false,
-    status: 'not_applied',
+    status: 'joined',
     created_at: '2024-01-10T14:00:00Z',
     updatedAt: '2024-01-18T09:15:00Z',
     qq: '1234567890',
@@ -98,7 +98,7 @@ export const mockClubs: Club[] = [
     maxMembers: 150,
     tags: ['志愿', '公益', '服务'],
     isHot: true,
-    status: 'not_applied',
+    status: 'joined',
     created_at: '2024-01-08T16:30:00Z',
     updatedAt: '2024-01-22T11:45:00Z',
     qq: '1234567890',
@@ -135,7 +135,7 @@ export const mockClubs: Club[] = [
     maxMembers: 50,
     tags: ['创业', '创新', '商业'],
     isHot: false,
-    status: 'not_applied',
+    status: 'joined',
     created_at: '2024-01-12T08:00:00Z',
     updatedAt: '2024-01-19T14:20:00Z',
     qq: '1234567890',
@@ -172,7 +172,7 @@ export const mockClubs: Club[] = [
     maxMembers: 80,
     tags: ['篮球', '运动', '团队'],
     isHot: true,
-    status: 'not_applied',
+    status: 'managed',
     created_at: '2024-01-05T20:00:00Z',
     updatedAt: '2024-01-25T16:10:00Z',
     qq: '1234567890',
@@ -284,7 +284,7 @@ export const mockClubs: Club[] = [
     maxMembers: 90,
     tags: ['环保', '绿色', '公益'],
     isHot: true,
-    status: 'approved',
+    status: 'not_applied',
     created_at: '2024-01-14T11:20:00Z',
     updatedAt: '2024-01-23T17:25:00Z',
     qq: '1234567890',
@@ -408,7 +408,7 @@ export const mockUser: User = {
   // 用户统计信息
   stats: {
     appliedClubs: 1,
-    favoriteClubs: 1,
+    favoriteClubs: 3,
     joinedClubs: 3,
     managedClubs: 1
   },
@@ -466,37 +466,37 @@ export const allUserTags: string[] = [
 
 export const mockClubPosts: ClubPost[] = [
   {
-    id: 'p1',
-    clubId: '1',
+    post_id: 'p1',
+    club_id: '1',
     title: '新学期社团纳新活动讨论',
     content: '大家对今年的纳新活动有什么建议？欢迎留言讨论！',
-    authorId: 1,
+    author_id: 1,
     authorName: '小明',
     authorAvatar: '',
-    createdAt: '2024-06-01T10:00:00Z',
-    replyCount: 2
+    created_at: '2024-06-01T10:00:00Z',
+    comment_count: 2
   },
   {
-    id: 'p2',
-    clubId: '1',
+    post_id: 'p2',
+    club_id: '1',
     title: '编程比赛组队贴',
     content: '有想参加编程比赛的小伙伴吗？可以在这里留言组队！',
-    authorId: 2,
+    author_id: 2,
     authorName: '小红',
     authorAvatar: '',
-    createdAt: '2024-06-02T12:00:00Z',
-    replyCount: 1
+    created_at: '2024-06-02T12:00:00Z',
+    comment_count: 1
   },
   {
-    id: 'p3',
-    clubId: '2',
+    post_id: 'p3',
+    club_id: '2',
     title: '摄影外拍活动报名',
     content: '本周末有摄影外拍活动，欢迎大家报名参加！',
-    authorId: 3,
+    author_id: 3,
     authorName: '小刚',
     authorAvatar: '',
-    createdAt: '2024-06-03T09:00:00Z',
-    replyCount: 3
+    created_at: '2024-06-03T09:00:00Z',
+    comment_count: 3
   }
 ]
 

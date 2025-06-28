@@ -208,7 +208,7 @@ export const mockApplyToClub = async (data: {
   club.member_count++
 
   // 更新社团状态为已加入
-  club.status = 'approved'
+  club.status = 'joined'
 
   // 添加到申请记录
   mockApplications.push({
@@ -389,12 +389,13 @@ export const mockGetUserApplications = async (
 }
 
 // 模拟创建社团
-export const mockCreateClub = async (data: {
+export const mockCreateClub = async (data:  {
   name: string
   description: string
-  category: string
-  maxMembers: number
-  tags: string[]
+  requirements: string
+  category?: string
+  maxMembers?: number
+  tags?: string[]
   coverImage?: string
 }): Promise<{ data: ApiResponse<Club> }> => {
   await delay(600)
@@ -414,7 +415,7 @@ export const mockCreateClub = async (data: {
     maxMembers: data.maxMembers,
     tags: data.tags,
     isHot: false,
-    status: 'approved', // 创建者创建的社团直接为已加入状态
+    status: 'managed', // 创建者创建的社团直接为管理中状态
     created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     qq: '1234567890',
@@ -649,7 +650,7 @@ export const mockGetClubPosts = async (
   console.log('mockGetClubPosts 被调用，clubId:', clubId)
   console.log('所有帖子数据:', mockClubPosts)
   
-  const all = mockClubPosts.filter(p => p.clubId === clubId)
+  const all = mockClubPosts.filter(p => p.club_id === clubId)
   console.log('过滤后的帖子:', all)
   
   const start = (page - 1) * pageSize
@@ -677,7 +678,7 @@ export const mockGetClubPostDetail = async (
 ): Promise<{ data: ApiResponse<ClubPost> }> => {
   await delay(200)
   
-  const post = mockClubPosts.find(p => p.id === postId)
+  const post = mockClubPosts.find(p => p.post_id === postId)
   if (!post) throw new Error('帖子不存在')
   
   return {
@@ -722,9 +723,9 @@ export const mockCreateClubPost = async (
   
   const newPost: ClubPost = {
     ...post,
-    id: 'p' + (mockClubPosts.length + 1),
-    createdAt: new Date().toISOString(),
-    replyCount: 0
+    post_id: 'p' + (mockClubPosts.length + 1),
+    created_at: new Date().toISOString(),
+    comment_count: 0
   }
   mockClubPosts.unshift(newPost)
   
@@ -749,8 +750,8 @@ export const mockReplyClubPost = async (
   }
   mockClubPostReplies.push(newReply)
   // 更新主贴回复数
-  const post = mockClubPosts.find(p => p.id === reply.postId)
-  if (post) post.replyCount++
+  const post = mockClubPosts.find(p => p.post_id === reply.postId)
+  if (post) post.comment_count++
   
   return {
     data: {

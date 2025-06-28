@@ -48,7 +48,7 @@
       <!-- 社团标签 -->
       <div class="club-tags">
         <el-tag :type="getCategoryType(club.category)" size="small">
-          {{ club.category }}
+          {{ categoryMap[club.category] }}
         </el-tag>
         <el-tag v-for="tag in club.tags?.slice(0, 2)" :key="tag" size="small" plain>
           {{ tag }}
@@ -81,6 +81,7 @@ import { Picture, Star, StarFilled, User, UserFilled } from '@element-plus/icons
 import type { Club, ClubCategory } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import { useClubStore } from '@/stores/club'
+import { categoryMap } from '@/utils/mockData'
 
 interface Props {
   club: Club
@@ -103,7 +104,8 @@ const isDisabled = computed(() => {
 
   // 根据社团状态判断
   if (props.club.status === 'pending') return true
-  if (props.club.status === 'approved') return true
+  if (props.club.status === 'joined') return true
+  if (props.club.status === 'managed') return true
 
   // 如果社团已满员
   if (props.club.member_count >= (props.club.maxMembers ?? 50)) return true
@@ -177,8 +179,9 @@ const getApplyButtonText = () => {
   if (!authStore.isLoggedIn) return '登录后申请'
 
   // 根据社团状态返回对应文本
-  if (props.club.status === 'approved') return '已加入'
+  if (props.club.status === 'joined') return '已加入'
   if (props.club.status === 'pending') return '等待审核中'
+  if (props.club.status === 'managed') return '管理中'
   if (props.club.member_count >= (props.club.maxMembers ?? 50)) return '已满员'
 
   return '立即申请'

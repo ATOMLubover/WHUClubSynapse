@@ -219,7 +219,7 @@
           </el-row>
 
           <!-- AI氛围透视镜 - 独立一行 -->
-          <el-row :gutter="24" style="margin-top: 24px;">
+          <el-row :gutter="24" style="margin-top: 24px">
             <el-col :span="24">
               <el-card class="content-card ai-atmosphere-card">
                 <template #header>
@@ -228,9 +228,7 @@
                   </h3>
                 </template>
                 <div class="ai-atmosphere-container">
-                  <AIClubAtmosphere 
-                    :communication-content="communicationContent"
-                  />
+                  <AIClubAtmosphere :communication-content="communicationContent" />
                 </div>
               </el-card>
             </el-col>
@@ -311,38 +309,38 @@ const hasApplied = ref(false) // 添加一个标记是否已申请的状态
 // 生成社团交流内容用于AI分析
 const communicationContent = computed(() => {
   if (!club.value) return ''
-  
+
   // 构建社团交流内容，包括帖子、公告、动态等
   const content = []
-  
+
   // 添加社团介绍
-  if (club.value.description) {
-    content.push(`社团介绍：${club.value.description}`)
+  if (club.value.desc) {
+    content.push(`社团介绍：${club.value.desc}`)
   }
-  
+
   // 添加详细介绍
   if (club.value.introduction) {
     content.push(`详细介绍：${club.value.introduction}`)
   }
-  
+
   // 添加公告
   if (club.value.announcements && club.value.announcements.length > 0) {
     content.push(`社团公告：${club.value.announcements.join('；')}`)
   }
-  
+
   // 添加动态
   if (club.value.activities && club.value.activities.length > 0) {
-    const activities = club.value.activities.map(activity => 
-      `${activity.title}：${activity.description}`
-    ).join('；')
+    const activities = club.value.activities
+      .map((activity) => `${activity.title}：${activity.description}`)
+      .join('；')
     content.push(`社团动态：${activities}`)
   }
-  
+
   // 添加标签
   if (club.value.tags && club.value.tags.length > 0) {
     content.push(`社团标签：${club.value.tags.join('、')}`)
   }
-  
+
   return content.join('\n\n')
 })
 
@@ -350,7 +348,7 @@ const communicationContent = computed(() => {
 const isUserJoined = computed(() => {
   if (!authStore.isLoggedIn || !club.value) return false
   // 使用club.status来判断，而不是userJoinedClubIds
-  return club.value.status === 'approved'
+  return club.value.status === 'joined'
 })
 
 // 检查用户是否管理该社团
@@ -365,8 +363,9 @@ const isDisabled = computed(() => {
   if (!authStore.isLoggedIn) return false
   if (!club.value) return true
 
-  // 如果用户已加入该社团，禁用申请按钮
-  if (isUserJoined.value) return true
+  if (club.value.status === 'joined') return true
+  if (club.value.status === 'managed') return true
+  if (club.value.status === 'pending') return true
 
   // 如果已经申请过了，就禁用
   if (hasApplied.value) return true
@@ -504,8 +503,9 @@ const getApplyButtonText = () => {
   if (!club.value) return '加载中...'
 
   // 根据社团状态返回对应文本
-  if (club.value.status === 'approved') return '已加入'
+  if (club.value.status === 'joined') return '已加入'
   if (club.value.status === 'pending') return '等待审核中'
+  if (club.value.status === 'managed') return '管理中'
   if (hasApplied.value) return '等待审核中'
 
   // 如果社团已满员
