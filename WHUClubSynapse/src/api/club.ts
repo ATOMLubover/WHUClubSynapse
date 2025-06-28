@@ -41,14 +41,7 @@ export const getClubList = async (
   const queryString = queryParams.toString()
   const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
 
-  // 根据登录状态使用不同的请求头
-  const config = authStore.isLoggedIn ? {
-    headers: {
-      'Authorization': `Bearer ${authStore.token}`,
-    }
-  } : {}
-
-  return await request.get(url, config)
+  return await request.get(url)
 }
 
 // 获取社团详情

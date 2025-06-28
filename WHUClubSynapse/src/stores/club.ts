@@ -48,8 +48,8 @@ export const useClubStore = defineStore('club', () => {
     try {
       loading.value = true
       const queryParams = {
-        ...searchParams.value,
-        ...params,
+        // ...searchParams.value,
+        // ...params,
         page: globalPageData.currentPage,
         pageSize: globalPageData.pageSize,
       }
