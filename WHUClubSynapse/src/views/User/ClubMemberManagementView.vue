@@ -36,6 +36,10 @@
                   <el-option label="管理员" value="admin" />
                   <el-option label="普通成员" value="member" />
                 </el-select>
+                <el-button @click="refreshMembers" :loading="memberLoading" type="primary" size="small">
+                  <el-icon><Refresh /></el-icon>
+                  刷新
+                </el-button>
               </div>
             </div>
 
@@ -101,6 +105,10 @@
                   <el-option label="已通过" value="approved" />
                   <el-option label="已拒绝" value="rejected" />
                 </el-select>
+                <el-button @click="refreshApplications" :loading="applicationLoading" type="primary" size="small">
+                  <el-icon><Refresh /></el-icon>
+                  刷新
+                </el-button>
               </div>
             </div>
 
@@ -365,6 +373,7 @@ import {
   ArrowLeft,
   Search,
   Warning,
+  Refresh,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
@@ -528,14 +537,8 @@ const loadApplications = async () => {
 }
 
 const handleTabChange = () => {
-  // 立即显示加载状态
-  if (activeTab.value === 'members') {
-    memberLoading.value = true
-    loadMembers()
-  } else if (activeTab.value === 'applications') {
-    applicationLoading.value = true
-    loadApplications()
-  }
+  // 数据已经预加载，切换时不需要重新加载
+  // 如果需要刷新数据，可以在这里添加刷新逻辑
 }
 
 const handleMemberSearch = debounce(() => {
@@ -827,22 +830,45 @@ const rejectApplicationFromDetail = (application: ClubApplication) => {
   showRejectDialog.value = true
 }
 
+const refreshMembers = () => {
+  memberCurrentPage.value = 1
+  loadMembers()
+}
+
+const refreshApplications = () => {
+  applicationCurrentPage.value = 1
+  loadApplications()
+}
+
 // 页面加载
 onMounted(async () => {
-  // 并行加载数据，提高加载速度
-  const loadPromises = []
-  
-  // 加载社团信息
-  loadPromises.push(loadClubInfo())
-  
-  // 等待社团信息加载完成后，再加载成员和申请数据
-  await Promise.all(loadPromises)
-  
-  // 根据当前激活的标签页加载对应数据
-  if (activeTab.value === 'members') {
-    loadMembers()
-  } else if (activeTab.value === 'applications') {
-    loadApplications()
+  try {
+    // 先加载社团信息
+    await loadClubInfo()
+    
+    // 并行加载两个标签页的数据，确保切换时数据已准备好
+    const loadPromises = []
+    
+    // 加载成员数据
+    loadPromises.push(
+      loadMembers().catch(error => {
+        console.error('加载成员数据失败:', error)
+      })
+    )
+    
+    // 加载申请数据
+    loadPromises.push(
+      loadApplications().catch(error => {
+        console.error('加载申请数据失败:', error)
+      })
+    )
+    
+    // 等待所有数据加载完成
+    await Promise.allSettled(loadPromises)
+    
+  } catch (error) {
+    console.error('页面初始化失败:', error)
+    ElMessage.error('页面加载失败，请刷新重试')
   }
 })
 </script>
