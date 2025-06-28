@@ -42,21 +42,22 @@ export interface Activity {
 
 // 社团类型
 export interface Club {
-  id: string
-  name: string
-  description: string
-  coverImage: string
-  category: ClubCategory
-  adminId: string
-  adminName: string
-  currentMembers: number
-  maxMembers: number
-  tags: string[]
-  isHot: boolean
+  club_id: string
+  club_name: string
+  desc: string
+  logo_url: string
+  category: number
+  created_at: string
+  member_count: number
+  //
+  adminId?: string
+  adminName?: string
+  maxMembers?: number
+  tags?: string[]
+  isHot?: boolean
   isFavorite?: boolean
   status?: 'pending' | 'approved' | 'not_applied'
-  createdAt: string
-  updatedAt: string
+  updatedAt?: string
   activities?: Activity[]
   location?: string
   qq?: string

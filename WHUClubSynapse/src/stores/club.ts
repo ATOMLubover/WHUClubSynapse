@@ -206,7 +206,7 @@ export const useClubStore = defineStore('club', () => {
 
       favoriteClubs.value = response.data.data.list
       favoriteClubs.value.forEach((club) => {
-        const clubIndex = clubs.value.findIndex((c) => c.id === club.id)
+        const clubIndex = clubs.value.findIndex((c) => c.club_id === club.club_id)
         if (clubIndex !== -1) {
           clubs.value[clubIndex].isFavorite = true
         }
@@ -349,14 +349,14 @@ export const useClubStore = defineStore('club', () => {
       ElMessage.success('社团信息更新成功')
       
       // 如果当前正在查看这个社团，更新currentClub数据
-      if (currentClub.value && currentClub.value.id === clubId) {
+      if (currentClub.value && currentClub.value.club_id === clubId) {
         // 只更新允许更新的字段
-        if (data.name) currentClub.value.name = data.name
-        if (data.description) currentClub.value.description = data.description
+        if (data.name) currentClub.value.club_name = data.name
+        if (data.description) currentClub.value.desc = data.description
         if (data.category) currentClub.value.category = data.category as any
         if (data.maxMembers) currentClub.value.maxMembers = data.maxMembers
         if (data.tags) currentClub.value.tags = data.tags
-        if (data.coverImage) currentClub.value.coverImage = data.coverImage
+        if (data.coverImage) currentClub.value.logo_url = data.coverImage
         if (data.introduction) currentClub.value.introduction = data.introduction
         if (data.contactInfo) currentClub.value.contactInfo = data.contactInfo
         if (data.announcements) currentClub.value.announcements = data.announcements

@@ -101,20 +101,24 @@
             <el-row :gutter="20">
               <el-col
                 v-for="club in paginatedClubs"
-                :key="club.id"
+                :key="club.club_id"
                 :xs="24"
                 :sm="12"
                 :md="8"
                 :lg="6"
                 class="club-card-col"
               >
-                <div class="club-card" :class="{ selected: selectedClubs.includes(club.id) }">
+                <div class="club-card" :class="{ selected: selectedClubs.includes(club.club_id) }">
                   <!-- 选择框 -->
-                  <el-checkbox v-model="selectedClubs" :value="club.id" class="card-checkbox" />
+                  <el-checkbox
+                    v-model="selectedClubs"
+                    :value="club.club_id"
+                    class="card-checkbox"
+                  />
 
                   <!-- 社团封面 -->
-                  <div class="club-cover" @click="viewClubDetail(club.id)">
-                    <img :src="club.coverImage" :alt="club.name" />
+                  <div class="club-cover" @click="viewClubDetail(club.club_id)">
+                    <img :src="club.logo_url" :alt="club.club_name" />
                     <div class="cover-overlay">
                       <el-button type="primary" size="small">查看详情</el-button>
                     </div>
@@ -122,16 +126,18 @@
 
                   <!-- 社团信息 -->
                   <div class="club-info">
-                    <h3 class="club-name" @click="viewClubDetail(club.id)">{{ club.name }}</h3>
+                    <h3 class="club-name" @click="viewClubDetail(club.club_id)">
+                      {{ club.club_name }}
+                    </h3>
                     <p class="club-category">{{ getCategoryText(club.category) }}</p>
-                    <p class="club-members">{{ club.currentMembers }}</p>
+                    <p class="club-members">{{ club.member_count }}</p>
                     <p class="favorite-time">{{ formatDate(club.favoriteAt) }}</p>
                   </div>
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="viewClubDetail(club.id)"> 查看 </el-button>
-                    <el-button size="small" type="danger" @click="removeFavorite(club.id)">
+                    <el-button size="small" @click="viewClubDetail(club.club_id)"> 查看 </el-button>
+                    <el-button size="small" type="danger" @click="removeFavorite(club.club_id)">
                       取消收藏
                     </el-button>
                   </div>
@@ -155,24 +161,26 @@
             <div class="club-list">
               <div
                 v-for="club in paginatedClubs"
-                :key="club.id"
+                :key="club.club_id"
                 class="club-list-item"
-                :class="{ selected: selectedClubs.includes(club.id) }"
+                :class="{ selected: selectedClubs.includes(club.club_id) }"
               >
-                <el-checkbox v-model="selectedClubs" :value="club.id" />
+                <el-checkbox v-model="selectedClubs" :value="club.club_id" />
 
-                <el-avatar :size="50" :src="club.coverImage" class="club-avatar">
+                <el-avatar :size="50" :src="club.logo_url" class="club-avatar">
                   <el-icon><UserFilled /></el-icon>
                 </el-avatar>
 
                 <div class="club-basic-info">
-                  <h4 class="club-name" @click="viewClubDetail(club.id)">{{ club.name }}</h4>
-                  <p class="club-desc">{{ club.description || '暂无描述' }}</p>
+                  <h4 class="club-name" @click="viewClubDetail(club.club_id)">
+                    {{ club.club_name }}
+                  </h4>
+                  <p class="club-desc">{{ club.desc || '暂无描述' }}</p>
                 </div>
 
                 <div class="club-meta">
                   <el-tag size="small">{{ getCategoryText(club.category) }}</el-tag>
-                  <span class="club-members">{{ club.currentMembers }} 人</span>
+                  <span class="club-members">{{ club.member_count }} 人</span>
                 </div>
 
                 <div class="club-favorite-time">
@@ -181,8 +189,10 @@
                 </div>
 
                 <div class="club-list-actions">
-                  <el-button size="small" @click="viewClubDetail(club.id)"> 查看详情 </el-button>
-                  <el-button size="small" type="danger" @click="removeFavorite(club.id)">
+                  <el-button size="small" @click="viewClubDetail(club.club_id)">
+                    查看详情
+                  </el-button>
+                  <el-button size="small" type="danger" @click="removeFavorite(club.club_id)">
                     取消收藏
                   </el-button>
                 </div>
@@ -259,8 +269,8 @@ const filteredClubs = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
     clubs = clubs.filter(
       (club) =>
-        club.name.toLowerCase().includes(keyword) ||
-        club.description?.toLowerCase().includes(keyword),
+        club.club_name.toLowerCase().includes(keyword) ||
+        club.desc?.toLowerCase().includes(keyword),
     )
   }
 
@@ -272,9 +282,9 @@ const filteredClubs = computed(() => {
       case 'createdAt_asc':
         return new Date(a.favoriteAt).getTime() - new Date(b.favoriteAt).getTime()
       case 'name_asc':
-        return a.name.localeCompare(b.name)
+        return a.club_name.localeCompare(b.club_name)
       case 'memberCount_desc':
-        return b.currentMembers - a.currentMembers
+        return b.member_count - a.member_count
       default:
         return 0
     }
@@ -382,7 +392,7 @@ const handleCurrentChange = (page: number) => {
 
 const handleSelectAll = (checked: boolean) => {
   if (checked) {
-    selectedClubs.value = filteredClubs.value.map((club) => club.id)
+    selectedClubs.value = filteredClubs.value.map((club) => club.club_id)
   } else {
     selectedClubs.value = []
   }
@@ -391,7 +401,7 @@ const handleSelectAll = (checked: boolean) => {
 const handleBatchAction = (command: string) => {
   switch (command) {
     case 'selectAll':
-      selectedClubs.value = filteredClubs.value.map((club) => club.id)
+      selectedClubs.value = filteredClubs.value.map((club) => club.club_id)
       break
     case 'selectNone':
       selectedClubs.value = []
@@ -423,7 +433,7 @@ const removeFavorite = async (clubId: string) => {
     ElMessage.success('已取消收藏')
 
     // 从列表中移除
-    favoriteClubs.value = favoriteClubs.value.filter((club) => club.id !== clubId)
+    favoriteClubs.value = favoriteClubs.value.filter((club) => club.club_id !== clubId)
     selectedClubs.value = selectedClubs.value.filter((id) => id !== clubId)
 
     // 更新统计
@@ -455,7 +465,7 @@ const batchRemoveFavorites = async () => {
 
     // 从列表中移除
     favoriteClubs.value = favoriteClubs.value.filter(
-      (club) => !selectedClubs.value.includes(club.id),
+      (club) => !selectedClubs.value.includes(club.club_id),
     )
     selectedClubs.value = []
 

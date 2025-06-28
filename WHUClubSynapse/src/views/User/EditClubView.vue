@@ -325,6 +325,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import type { Club, Activity } from '@/types'
+import { categoryMap } from '@/utils/mockData'
 
 const route = useRoute()
 const router = useRouter()
@@ -393,12 +394,12 @@ const loadClubInfo = async () => {
     const club = await clubStore.fetchClubDetail(clubId)
 
     // 填充基本信息
-    basicForm.name = club.name
-    basicForm.description = club.description
-    basicForm.category = club.category
-    basicForm.maxMembers = club.maxMembers
+    basicForm.name = club.club_name
+    basicForm.description = club.desc
+    basicForm.category = categoryMap[club.category]
+    basicForm.maxMembers = club.maxMembers ?? 50
     basicForm.tags = club.tags || []
-    basicForm.coverImage = club.coverImage
+    basicForm.coverImage = club.logo_url
 
     // 填充详细介绍
     detailForm.introduction = club.introduction || ''

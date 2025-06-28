@@ -2,7 +2,7 @@
   <el-card class="club-card" :body-style="{ padding: '0' }" shadow="hover" @click="goToDetail">
     <!-- 社团封面 -->
     <div class="club-cover">
-      <el-image :src="club.coverImage" fit="cover" class="cover-image" :alt="club.name">
+      <el-image :src="club.logo_url" fit="cover" class="cover-image" :alt="club.club_name">
         <template #error>
           <div class="image-slot">
             <el-icon><Picture /></el-icon>
@@ -28,10 +28,10 @@
     <!-- 社团信息 -->
     <div class="club-info">
       <!-- 社团名称 -->
-      <h3 class="club-name">{{ club.name }}</h3>
+      <h3 class="club-name">{{ club.club_name }}</h3>
 
       <!-- 社团简介 -->
-      <p class="club-description">{{ club.description }}</p>
+      <p class="club-description">{{ club.desc }}</p>
 
       <!-- 社团详情 -->
       <div class="club-details">
@@ -41,7 +41,7 @@
         </div>
         <div class="detail-item">
           <el-icon><UserFilled /></el-icon>
-          <span>成员：{{ club.currentMembers }}/{{ club.maxMembers }}</span>
+          <span>成员：{{ club.member_count }}/{{ club.maxMembers }}</span>
         </div>
       </div>
 
@@ -50,7 +50,7 @@
         <el-tag :type="getCategoryType(club.category)" size="small">
           {{ club.category }}
         </el-tag>
-        <el-tag v-for="tag in club.tags.slice(0, 2)" :key="tag" size="small" plain>
+        <el-tag v-for="tag in club.tags?.slice(0, 2)" :key="tag" size="small" plain>
           {{ tag }}
         </el-tag>
       </div>
@@ -106,29 +106,29 @@ const isDisabled = computed(() => {
   if (props.club.status === 'approved') return true
 
   // 如果社团已满员
-  if (props.club.currentMembers >= props.club.maxMembers) return true
+  if (props.club.member_count >= (props.club.maxMembers ?? 50)) return true
 
   return false
 })
 
 // 获取分类对应的标签类型
-const getCategoryType = (category: ClubCategory) => {
-  const typeMap: Record<ClubCategory, string> = {
-    学术科技: 'primary',
-    文艺体育: 'success',
-    志愿服务: 'warning',
-    创新创业: 'danger',
-    其他: 'info',
+const getCategoryType = (category: number) => {
+  const typeMap: Record<number, string> = {
+    0: 'primary',
+    1: 'success',
+    2: 'warning',
+    3: 'danger',
+    4: 'info',
   }
   return typeMap[category] || 'info'
 }
 
 // 跳转到详情页
 const goToDetail = () => {
-  console.log('点击社团卡片，准备跳转到详情页:', props.club.id)
+  console.log('点击社团卡片，准备跳转到详情页:', props.club.club_id)
   console.log('当前路由:', router.currentRoute.value.path)
   try {
-    router.push(`/club/${props.club.id}`)
+    router.push(`/club/${props.club.club_id}`)
     console.log('路由跳转成功')
   } catch (error) {
     console.error('路由跳转失败:', error)
@@ -148,10 +148,10 @@ const toggleFavorite = () => {
   }
 
   if (isFavorited.value) {
-    clubStore.unfavoriteClub(props.club.id)
+    clubStore.unfavoriteClub(props.club.club_id)
     props.club.isFavorite = false
   } else {
-    clubStore.favoriteClub(props.club.id)
+    clubStore.favoriteClub(props.club.club_id)
     props.club.isFavorite = true
   }
 }
@@ -163,13 +163,13 @@ const handleApply = () => {
     return
   }
 
-  if (props.club.currentMembers >= props.club.maxMembers) {
+  if (props.club.member_count >= (props.club.maxMembers ?? 50)) {
     ElMessage.warning('该社团已满员')
     return
   }
 
   // 跳转到社团详情页并自动打开申请弹窗
-  router.push(`/club/${props.club.id}?isApply=true`)
+  router.push(`/club/${props.club.club_id}?isApply=true`)
 }
 
 const getApplyButtonText = () => {
@@ -179,7 +179,7 @@ const getApplyButtonText = () => {
   // 根据社团状态返回对应文本
   if (props.club.status === 'approved') return '已加入'
   if (props.club.status === 'pending') return '等待审核中'
-  if (props.club.currentMembers >= props.club.maxMembers) return '已满员'
+  if (props.club.member_count >= (props.club.maxMembers ?? 50)) return '已满员'
 
   return '立即申请'
 }
