@@ -15,7 +15,7 @@ export const mockClubs: Club[] = [
     maxMembers: 100,
     tags: ['编程', '算法', '竞赛'],
     isHot: true,
-    status: 'pending',
+    status: 'approved',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z',
     qq: '1234567890',

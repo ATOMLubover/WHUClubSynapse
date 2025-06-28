@@ -197,3 +197,51 @@ export interface ClubPostReply {
   content: string
   createdAt: string
 }
+
+// 社团成员类型
+export interface ClubMember {
+  id: string
+  userId: string
+  clubId: string
+  username: string
+  realName?: string
+  avatar_url: string
+  role: 'admin' | 'member' // 在社团中的角色
+  joinTime: string
+  status: 'active' | 'inactive'
+  studentId?: string
+  major?: string
+  phone?: string
+  email?: string
+}
+
+// 社团申请类型
+export interface ClubApplication {
+  id: string
+  userId: string
+  clubId: string
+  username: string
+  realName?: string
+  avatar_url: string
+  applyReason: string
+  status: 'pending' | 'approved' | 'rejected'
+  applyTime: string
+  reviewTime?: string
+  reviewerId?: string
+  reviewerName?: string
+  rejectReason?: string
+  studentId?: string
+  major?: string
+  phone?: string
+  email?: string
+  // 新增字段：用户偏好社团和特质标签
+  interestedCategories?: string[] // 偏好社团类型
+  tags?: string[] // 用户特质标签
+}
+
+// 申请审核请求类型
+export interface ApplicationReviewRequest {
+  applicationId: string
+  action: 'approve' | 'reject'
+  reason?: string // 拒绝时需要提供原因
+}

@@ -82,8 +82,14 @@ const router = createRouter({
             },
             {
               path: '/user/edit-club/:id',
-              name: 'edit-club',
+              name: 'EditClub',
               component: () => import('@/views/User/EditClubView.vue'),
+              meta: { requiresAuth: true },
+            },
+            {
+              path: '/user/club/:id/members',
+              name: 'ClubMemberManagement',
+              component: () => import('@/views/User/ClubMemberManagementView.vue'),
               meta: { requiresAuth: true },
             },
             {

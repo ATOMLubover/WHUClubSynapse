@@ -265,7 +265,6 @@ import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
-import { userJoinedClubIds } from '@/utils/mockData'
 
 const route = useRoute()
 const router = useRouter()
@@ -283,7 +282,8 @@ const hasApplied = ref(false) // 添加一个标记是否已申请的状态
 // 检查用户是否已加入该社团
 const isUserJoined = computed(() => {
   if (!authStore.isLoggedIn || !club.value) return false
-  return userJoinedClubIds.includes(club.value.id)
+  // 使用club.status来判断，而不是userJoinedClubIds
+  return club.value.status === 'approved'
 })
 
 // 检查用户是否管理该社团
@@ -379,11 +379,19 @@ const goToEdit = () => {
 // 获取社团详情
 const fetchClubDetail = async () => {
   const clubId = route.params.id as string
-  if (!clubId) return
+  console.log('开始获取社团详情，clubId:', clubId)
+  console.log('当前路由参数:', route.params)
+  
+  if (!clubId) {
+    console.error('clubId 为空')
+    return
+  }
 
   try {
     loading.value = true
+    console.log('调用 clubStore.fetchClubDetail...')
     club.value = await clubStore.fetchClubDetail(clubId)
+    console.log('获取社团详情成功:', club.value)
   } catch (error) {
     console.error('获取社团详情失败:', error)
     ElMessage.error('获取社团详情失败')
@@ -407,9 +415,9 @@ const confirmApply = async () => {
     createLoading.value = true
     await clubStore.applyToClub(club.value!.id, reason.value)
     
-    // 申请成功后，将用户添加到已加入社团列表
-    if (!userJoinedClubIds.includes(club.value.id)) {
-      userJoinedClubIds.push(club.value.id)
+    // 申请成功后，更新社团状态
+    if (club.value) {
+      club.value.status = 'pending'
     }
     
     ElMessage.success('申请已提交，请等待审核')
@@ -428,10 +436,9 @@ const getApplyButtonText = () => {
   if (!authStore.isLoggedIn) return '登录后申请'
   if (!club.value) return '加载中...'
 
-  // 如果用户已加入该社团
-  if (isUserJoined.value) return '已加入'
-
-  // 如果已经申请过了
+  // 根据社团状态返回对应文本
+  if (club.value.status === 'approved') return '已加入'
+  if (club.value.status === 'pending') return '等待审核中'
   if (hasApplied.value) return '等待审核中'
 
   // 如果社团已满员
@@ -443,8 +450,18 @@ const getApplyButtonText = () => {
 const clubId = String(route.params.id)
 
 onMounted(async () => {
+  console.log('ClubDetailView 组件已挂载')
+  console.log('路由参数:', route.params)
+  console.log('当前路由:', route.path)
+  
   window.scrollTo(0, 0)
-  await fetchClubDetail()
+  
+  try {
+    await fetchClubDetail()
+    console.log('社团详情获取完成')
+  } catch (error) {
+    console.error('获取社团详情时出错:', error)
+  }
 
   // 检查 URL 参数，如果有 isApply=true，自动打开申请弹窗
   const isApply = route.query.isApply

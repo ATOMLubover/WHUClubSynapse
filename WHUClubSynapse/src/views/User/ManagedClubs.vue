@@ -389,8 +389,7 @@ const editClub = (club: Club) => {
 
 // 成员管理
 const manageMembers = (club: Club) => {
-  // TODO: 跳转到成员管理页面
-  ElMessage.info('成员管理功能开发中...')
+  router.push(`/user/club/${club.id}/members`)
 }
 
 // 处理删除社团

@@ -12,7 +12,9 @@
               <span class="time">{{ formatDate(post?.createdAt) }}</span>
             </div>
           </div>
-          <div class="post-content">{{ post?.content }}</div>
+          <div class="post-content">
+            <MarkdownRenderer :content="post?.content || ''" />
+          </div>
         </el-card>
         <el-card class="reply-area">
           <div class="reply-header">全部回复（{{ total }}）</div>
@@ -25,7 +27,9 @@
                   <span class="reply-author">{{ reply.authorName }}</span>
                   <span class="reply-time">{{ formatDate(reply.createdAt) }}</span>
                 </div>
-                <div class="reply-content">{{ reply.content }}</div>
+                <div class="reply-content">
+                  <MarkdownRenderer :content="reply.content || ''" />
+                </div>
               </div>
               <div class="reply-floor">#{{ (page - 1) * pageSize + idx + 1 }}</div>
             </div>
@@ -41,14 +45,11 @@
           </div>
           <el-divider />
           <div class="reply-input-area">
-            <el-input
+            <MarkdownEditor
               v-model="replyContent"
-              type="textarea"
-              :rows="3"
-              maxlength="300"
-              show-word-limit
+              :rows="4"
               placeholder="说点什么吧..."
-              class="reply-input"
+              :maxlength="500"
             />
             <el-button type="primary" @click="handleReply" :loading="replyLoading" class="reply-btn"
               >回复</el-button
@@ -75,6 +76,8 @@ import { ElMessage } from 'element-plus'
 import { getClubPostDetail, getClubPostReplies, replyClubPost } from '@/api/club'
 import { useAuthStore } from '@/stores/auth'
 import AIChatWindow from '@/components/Chat/AIChatWindow.vue'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import type { ClubPost, ClubPostReply } from '@/types'
 
 const defaultAvatar = 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png'
@@ -214,11 +217,84 @@ onMounted(() => {
 }
 
 .post-content {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.8;
   color: #333;
   margin-bottom: 8px;
-  word-break: break-all;
+  word-break: break-word;
+}
+
+.post-content :deep(.markdown-renderer) {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.post-content :deep(.markdown-renderer h1) {
+  font-size: 1.8em;
+  margin: 1.2em 0 0.6em 0;
+}
+
+.post-content :deep(.markdown-renderer h2) {
+  font-size: 1.5em;
+  margin: 1em 0 0.5em 0;
+}
+
+.post-content :deep(.markdown-renderer h3) {
+  font-size: 1.3em;
+  margin: 0.8em 0 0.4em 0;
+}
+
+.post-content :deep(.markdown-renderer p) {
+  margin: 0.8em 0;
+}
+
+.post-content :deep(.markdown-renderer code) {
+  background-color: #f6f8fa;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.post-content :deep(.markdown-renderer pre) {
+  background-color: #f6f8fa;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.post-content :deep(.markdown-renderer blockquote) {
+  margin: 1em 0;
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5;
+}
+
+.post-content :deep(.markdown-renderer table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.post-content :deep(.markdown-renderer th),
+.post-content :deep(.markdown-renderer td) {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+  text-align: left;
+}
+
+.post-content :deep(.markdown-renderer th) {
+  background-color: #f6f8fa;
+  font-weight: bold;
+}
+
+.post-content :deep(.katex) {
+  font-size: 1.1em;
+}
+
+.post-content :deep(.katex-display) {
+  margin: 1em 0;
+  text-align: center;
 }
 
 .reply-area {
@@ -281,9 +357,66 @@ onMounted(() => {
 
 .reply-content {
   margin-top: 2px;
-  font-size: 15px;
+  font-size: 14px;
   color: #333;
-  word-break: break-all;
+  word-break: break-word;
+}
+
+.reply-content :deep(.markdown-renderer) {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.reply-content :deep(.markdown-renderer h1) {
+  font-size: 1.4em;
+  margin: 0.8em 0 0.4em 0;
+}
+
+.reply-content :deep(.markdown-renderer h2) {
+  font-size: 1.2em;
+  margin: 0.6em 0 0.3em 0;
+}
+
+.reply-content :deep(.markdown-renderer h3) {
+  font-size: 1.1em;
+  margin: 0.5em 0 0.2em 0;
+}
+
+.reply-content :deep(.markdown-renderer p) {
+  margin: 0.4em 0;
+}
+
+.reply-content :deep(.markdown-renderer code) {
+  background-color: #f6f8fa;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.reply-content :deep(.markdown-renderer pre) {
+  background-color: #f6f8fa;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+  font-size: 0.85em;
+}
+
+.reply-content :deep(.markdown-renderer blockquote) {
+  margin: 0.6em 0;
+  padding: 0 0.8em;
+  color: #6a737d;
+  border-left: 0.2em solid #dfe2e5;
+  font-size: 0.9em;
+}
+
+.reply-content :deep(.katex) {
+  font-size: 1em;
+}
+
+.reply-content :deep(.katex-display) {
+  margin: 0.6em 0;
+  text-align: center;
 }
 
 .reply-floor {

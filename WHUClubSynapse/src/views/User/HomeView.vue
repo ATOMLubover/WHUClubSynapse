@@ -295,7 +295,14 @@ const handlePageChange = (page: number) => {
 
 // 跳转到社团详情
 const goToClub = (clubId: string) => {
-  router.push(`/club/${clubId}`)
+  console.log('点击热门/最新社团，准备跳转到详情页:', clubId)
+  console.log('当前路由:', router.currentRoute.value.path)
+  try {
+    router.push(`/club/${clubId}`)
+    console.log('路由跳转成功')
+  } catch (error) {
+    console.error('路由跳转失败:', error)
+  }
 }
 
 // 初始化数据
