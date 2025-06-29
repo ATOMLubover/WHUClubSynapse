@@ -63,7 +63,7 @@ const router = createRouter({
               meta: { requiresAuth: true },
             },
             {
-              path: '/user/favorites',
+              path: '/api/club/my_favorites',
               name: 'user-favorites',
               component: () => import('@/views/User/MyFavoritesView.vue'),
               meta: { requiresAuth: true },
@@ -95,10 +95,10 @@ const router = createRouter({
             {
               path: '/user/clubs',
               name: 'user-clubs',
-              redirect:'/user/clubs/joined',
+              redirect: '/user/clubs/joined',
               meta: { requiresAuth: true },
-            }, 
-            
+            },
+
           ],
         },
       ],
@@ -145,13 +145,13 @@ router.afterEach((to, from) => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
-    
+
     // 如果页面有特殊的滚动容器，也尝试滚动它们
     const mainElement = document.querySelector('.app-main')
     if (mainElement) {
       mainElement.scrollTop = 0
     }
-    
+
     const containerElement = document.querySelector('.app-container')
     if (containerElement) {
       containerElement.scrollTop = 0

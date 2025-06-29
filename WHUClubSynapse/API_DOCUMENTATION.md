@@ -146,7 +146,7 @@
 
 ### 3. 获取热门社团
 
-- **接口**: `GET /clubs/hot?limit={limit}`
+- **接口**: `GET /api/club/latest?limit={limit}`
 
 ### 4. 获取最新社团
 
@@ -199,7 +199,7 @@
 
 ### 10. 获取用户收藏的社团
 
-- **接口**: `GET /user/favorites`
+- **接口**: `GET /api/club/my_favorites`
 - **Headers**: `Authorization: Bearer {token}`
 - **查询参数**:
   - `page`: 页码
@@ -207,7 +207,7 @@
 
 ### 11. 获取用户申请记录
 
-- **接口**: `GET /user/applications`
+- **接口**: `GET /api/club/my_joinapplis`
 - **Headers**: `Authorization: Bearer {token}`
 - **查询参数**:
   - `page`: 页码

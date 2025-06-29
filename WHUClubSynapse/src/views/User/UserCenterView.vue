@@ -853,7 +853,7 @@ const handleStatClick = (index: number) => {
   if (index === 0) {
     router.push('/user/applications')
   } else if (index === 1) {
-    router.push('/user/favorites')
+    router.push('/api/club/my_favorites')
   } else if (index === 2) {
     router.push('/user/clubs/joined')
   }

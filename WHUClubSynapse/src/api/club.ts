@@ -15,7 +15,7 @@ const getIsUsingMockAPI = () => {
 // 获取社团列表
 export const getClubList = async (
   params: SearchParams = {},
-): Promise< PaginatedData<Club>> => {
+): Promise<PaginatedData<Club>> => {
   if (getIsUsingMockAPI()) {
     return await mockClub.mockGetClubList(params)
   }
@@ -50,7 +50,7 @@ export const getClubList = async (
 }
 
 // 获取社团详情
-export const getClubDetail = async (id: string,post_num:number=5): Promise<{ data: ApiResponse<Club> }> => {
+export const getClubDetail = async (id: string, post_num: number = 5): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetClubDetail(id)
     : await request.get(`/api/club/${id}/info?post_num=${post_num}`)
@@ -60,14 +60,14 @@ export const getClubDetail = async (id: string,post_num:number=5): Promise<{ dat
 export const getHotClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetHotClubs(limit)
-    : await request.get(`/clubs/hot?limit=${limit}`)
+    : await request.get(`/api/club/latest?limit=${limit}`)
 }
 
 // 获取最新社团
 export const getLatestClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetLatestClubs(limit)
-    : await request.get(`/clubs/latest?limit=${limit}`)
+    : await request.get(`/api/club/latest?limit=${limit}`)
 }
 
 // 获取推荐社团
@@ -91,7 +91,7 @@ export const getClubCategories = async (): Promise<{
 }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetClubCategories()
-    : await request.get('/clubs/categories')
+    : await request.get('/api/club/categories')
 }
 
 // 申请加入社团
@@ -101,7 +101,7 @@ export const applyToClub = async (data: {
 }): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockApplyToClub(data)
-    : await request.post(`/api/club/${data.clubId}/join`,{reason:data.reason})
+    : await request.post(`/api/club/${data.clubId}/join`, { reason: data.reason })
 }
 
 // 撤销申请
@@ -134,24 +134,24 @@ export const getFavoriteClubs: (
 ) => Promise<{ data: ApiResponse<PaginatedData<Club>> }> = async (
   params = {},
 ) => {
-  if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetFavoriteClubs(params)
+    if (getIsUsingMockAPI()) {
+      return await mockClub.mockGetFavoriteClubs(params)
+    }
+
+    const queryParams = new URLSearchParams()
+
+    if (params.page) {
+      queryParams.append('page', params.page.toString())
+    }
+    if (params.pageSize) {
+      queryParams.append('pageSize', params.pageSize.toString())
+    }
+
+    const queryString = queryParams.toString()
+    const url = queryString ? `/api/club/my_favorites?${queryString}` : '/api/club/my_favorites'
+
+    return await request.get(url)
   }
-
-  const queryParams = new URLSearchParams()
-
-  if (params.page) {
-    queryParams.append('page', params.page.toString())
-  }
-  if (params.pageSize) {
-    queryParams.append('pageSize', params.pageSize.toString())
-  }
-
-  const queryString = queryParams.toString()
-  const url = queryString ? `/user/favorites?${queryString}` : '/user/favorites'
-
-  return await request.get(url)
-}
 
 
 // 获取用户申请记录
@@ -181,7 +181,7 @@ export const getUserApplications = async (
   }
 
   const queryString = queryParams.toString()
-  const url = queryString ? `/user/applications?${queryString}` : '/user/applications'
+  const url = queryString ? `/api/club/my_joinapplis?${queryString}` : '/api/club/my_joinapplis'
 
   return await request.get(url)
 }
@@ -264,7 +264,7 @@ export const getJoinedClubs = async (
   }
 
   const queryString = queryParams.toString()
-  const url = queryString ? `/user/joined-clubs?${queryString}` : '/user/joined-clubs'
+  const url = queryString ? `/api/club/my_clubs?${queryString}` : '/api/club/my_clubs'
 
   return await request.get(url)
 }
@@ -508,17 +508,17 @@ export const getClubApplications = async (
     ]
 
     const { page = 1, pageSize = 10, status, keyword } = params
-    
+
     // 优化过滤逻辑
     let filteredApplications = mockApplications
-    
+
     if (status) {
       filteredApplications = mockApplications.filter(app => app.status === status)
     }
-    
+
     if (keyword) {
       const lowerKeyword = keyword.toLowerCase()
-      filteredApplications = filteredApplications.filter(app => 
+      filteredApplications = filteredApplications.filter(app =>
         (app.realName && app.realName.toLowerCase().includes(lowerKeyword)) ||
         (app.username && app.username.toLowerCase().includes(lowerKeyword)) ||
         (app.studentId && app.studentId.includes(keyword))
