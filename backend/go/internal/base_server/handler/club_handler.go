@@ -27,6 +27,7 @@ func (h *ClubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/{id:int}/info", "GetClubInfo")
 	b.Handle("GET", "/category/{catId:int}", "GetClubsByCategory")
 	b.Handle("GET", "/latest", "GetLatestClubs")
+	b.Handle("GET", "/club_num", "GetClubNum")
 
 	b.Handle("GET", "/my_clubs", "GetMyClubs")
 	b.Handle("GET", "/my_createapplis", "GetMyCreateApplis")
@@ -35,6 +36,9 @@ func (h *ClubHandler) BeforeActivation(b mvc.BeforeActivation) {
 
 	b.Handle("POST", "/{id:int}/join", "PostApplyForJoinClub")
 	b.Handle("POST", "/create", "PostApplyForCreateClub")
+
+	b.Handle("POST", "/favorite", "PostFavoriteClub")
+	b.Handle("POST", "/unfavorite", "PostUnfavoriteClub")
 }
 
 func (h *ClubHandler) GetClubList(ctx iris.Context) {
@@ -56,12 +60,13 @@ func (h *ClubHandler) GetClubList(ctx iris.Context) {
 
 	for _, club := range clubs {
 		resClubList = append(resClubList, dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
+			MemberCount: int(club.MemberCount),
 		})
 	}
 
@@ -150,12 +155,13 @@ func (h *ClubHandler) GetClubInfo(ctx iris.Context, id int) {
 
 	resClub := dto.ClubDetail{
 		ClubBasic: dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
+			MemberCount: int(club.MemberCount),
 		},
 		Members: resClubMems,
 		Posts:   resClubPosts,
@@ -180,12 +186,13 @@ func (h *ClubHandler) GetClubsByCategory(ctx iris.Context, catId int) {
 
 	for _, club := range clubs {
 		resClubsCat = append(resClubsCat, dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
+			MemberCount: int(club.MemberCount),
 		})
 	}
 
@@ -208,16 +215,32 @@ func (h *ClubHandler) GetLatestClubs(ctx iris.Context) {
 
 	for _, club := range clubs {
 		resClubs = append(resClubs, dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
+			MemberCount: int(club.MemberCount),
 		})
 	}
 
 	ctx.JSON(resClubs)
+}
+
+func (h *ClubHandler) GetClubNum(ctx iris.Context) {
+	cnt, err := h.ClubService.GetClubNum()
+	if err != nil {
+		h.Logger.Error("获取社团总数失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("获取社团总数失败")
+		return
+	}
+
+	ctx.JSON(map[string]any{
+		"club_num": cnt,
+	})
 }
 
 func (h *ClubHandler) GetMyClubs(ctx iris.Context) {
@@ -244,12 +267,13 @@ func (h *ClubHandler) GetMyClubs(ctx iris.Context) {
 
 	for _, club := range clubs {
 		resClubs = append(resClubs, dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
+			MemberCount: int(club.MemberCount),
 		})
 	}
 
@@ -314,6 +338,7 @@ func (h *ClubHandler) GetMyJoinApplis(ctx iris.Context) {
 		resApplis = append(resApplis, &dto.JoinClubAppliResponse{
 			AppliId:      int(appli.JoinAppliId),
 			AppliedAt:    appli.AppliedAt.Format(time.RFC3339),
+			Reason:       appli.ApplyReason,
 			RejectReason: appli.RejectedReason,
 			ReviewedAt:   appli.ReviewedAt.Format(time.RFC3339),
 		})
@@ -344,12 +369,13 @@ func (h *ClubHandler) GetMyFavorites(ctx iris.Context) {
 	var resClubList []dto.ClubBasic
 	for _, club := range clubs {
 		resClubList = append(resClubList, dto.ClubBasic{
-			ClubId:    int(club.ClubId),
-			ClubName:  club.Name,
-			Category:  int(club.CategoryId),
-			CreatedAt: club.CreatedAt.Format(time.DateTime),
-			Desc:      club.Description,
-			LogoUrl:   club.LogoUrl,
+			ClubId:      int(club.ClubId),
+			ClubName:    club.Name,
+			Category:    int(club.CategoryId),
+			CreatedAt:   club.CreatedAt.Format(time.DateTime),
+			Desc:        club.Description,
+			LogoUrl:     club.LogoUrl,
+			MemberCount: int(club.MemberCount),
 		})
 	}
 
@@ -357,6 +383,15 @@ func (h *ClubHandler) GetMyFavorites(ctx iris.Context) {
 }
 
 func (h *ClubHandler) PostApplyForJoinClub(ctx iris.Context, id int) {
+	var reqBody dto.JoinClubAppliRequest
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		h.Logger.Error("请求格式错误", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
+		return
+	}
+
 	userId, err := ctx.Values().GetInt("user_claims_user_id")
 	if err != nil {
 		h.Logger.Error("无法获取用户ID", "error", err)
@@ -366,7 +401,9 @@ func (h *ClubHandler) PostApplyForJoinClub(ctx iris.Context, id int) {
 	}
 
 	if err := h.ClubService.ApplyForJoinClub(
-		uint(userId), uint(id)); err != nil {
+		uint(userId), uint(id),
+		reqBody.Reason,
+	); err != nil {
 		h.Logger.Error("申请加入社团失败",
 			"error", err, "user_id", userId, "club_id", id,
 		)
@@ -416,4 +453,64 @@ func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
 	}
 
 	ctx.Text("创建社团申请成功")
+}
+
+func (h *ClubHandler) PostFavoriteClub(ctx iris.Context) {
+	var reqBody dto.FavoriteClubRequest
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		h.Logger.Info("收藏社团请求格式错误", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
+		return
+	}
+
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		h.Logger.Info("获取用户ID失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID获取失败")
+		return
+	}
+
+	if err := h.ClubService.FavouriteClub(userId, reqBody.ClubId); err != nil {
+		h.Logger.Info("收藏社团失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("收藏社团失败")
+		return
+	}
+
+	ctx.Text("收藏社团成功")
+}
+
+func (h *ClubHandler) PostUnfavoriteClub(ctx iris.Context) {
+	var reqBody dto.UnfavoriteClubRequest
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		h.Logger.Info("取消收藏社团请求格式错误", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
+		return
+	}
+
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		h.Logger.Info("获取用户ID失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID获取失败")
+		return
+	}
+
+	if err := h.ClubService.UnfavouriteClub(userId, reqBody.ClubId); err != nil {
+		h.Logger.Info("取消收藏社团失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("取消收藏社团失败")
+		return
+	}
+
+	ctx.Text("取消收藏社团成功")
 }

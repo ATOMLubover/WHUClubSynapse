@@ -187,7 +187,6 @@ func (s *sPostService) CreatePost(
 	defer newFile.Close()
 
 	reader, writer := io.Pipe()
-	defer writer.Close()
 	defer reader.Close()
 
 	go sender(writer)
@@ -195,7 +194,10 @@ func (s *sPostService) CreatePost(
 	if _, err := io.CopyBuffer(
 		newFile, reader,
 		nil); err != nil {
-		return errors.New("写入文件失败，需重试：" + err.Error())
+		if err != io.EOF {
+			return errors.New("写入文件失败，需重试：" + err.Error())
+		}
+		return nil
 	}
 
 	if err := s.clubPostRepo.UpdatePostUrl(int(newPost.PostId), newFilePath); err != nil {

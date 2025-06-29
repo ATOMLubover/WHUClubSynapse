@@ -1,7 +1,10 @@
 package baseconfig
 
 type Config struct {
-	EnvLevel    string `mapstructure:"env_level"`
+	EnvLevel string `mapstructure:"env_level"`
+
+	ServerPort string `mapstructure:"server_port"`
+
 	DatabaseDsn string `mapstructure:"database_dsn"`
 
 	RedisHost       string `mapstructure:"redis_host"`

@@ -31,13 +31,16 @@ func CreateClubFavoriteRepo(database *gorm.DB, logger *slog.Logger) ClubFavourit
 func (r *sClubFavouriteRepo) AddClubFavourite(userId, clubId int) error {
 	var fav dbstruct.ClubFavorite
 	err := r.database.
-		Where("user_id = ? AND club_id = ?", userId, clubId).
+		Where("user_id = ? AND club_id = ?",
+			userId, clubId).
 		First(&fav).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return r.database.Create(&dbstruct.ClubFavorite{
-			UserId: uint(userId),
-			ClubId: uint(clubId),
+			UserId:    uint(userId),
+			ClubId:    uint(clubId),
+			CreatedAt: time.Now(),
+			DeletedAt: time.Time{},
 		}).Error
 
 	default:

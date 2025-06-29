@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"fmt"
 	"log/slog"
-	"reflect"
+	"strconv"
+	"strings"
+	"time"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/grpcimpl"
 	"whuclubsynapse-server/internal/base_server/model"
@@ -14,6 +15,10 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	UUID_ENCRYPT_KEY = "uuid_encrypt_key"
 )
 
 type AuthHandler struct {
@@ -27,15 +32,56 @@ type AuthHandler struct {
 }
 
 func (h *AuthHandler) BeforeActivation(b mvc.BeforeActivation) {
+	b.Handle("GET", "/my_info", "GetMyInfo")
+
 	b.Handle("POST", "/verify", "PostSendVrfEmail")
+}
+
+func (h *AuthHandler) GetMyInfo(ctx iris.Context) {
+	encryptedToken := ctx.GetCookie("uuid")
+	if encryptedToken == "" {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("Cookie UUID获取失败")
+		return
+	}
+
+	strUuid, err := model.Decrypt(
+		[]byte(UUID_ENCRYPT_KEY), encryptedToken,
+	)
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("Cookie UUID无效")
+		return
+	}
+
+	strs := strings.Split(strUuid, ":")
+	userId, _ := strconv.Atoi(strs[0])
+
+	user, err := h.UserService.GetUserById(userId)
+	if err != nil {
+		h.Logger.Info(
+			"用户信息获取失败",
+			"error", err, "id", userId,
+		)
+
+		ctx.StatusCode(iris.StatusNotFound)
+		ctx.Text("用户信息获取失败")
+		return
+	}
+
+	ctx.JSON(dto.UserInfo{
+		UserId:     user.UserId,
+		Email:      user.Email,
+		Role:       user.Role,
+		Username:   user.Username,
+		AvatarUrl:  user.AvatarUrl,
+		LastActive: user.LastActive.Format("2006-01-02 15:04:05"),
+	})
 }
 
 func (h *AuthHandler) PostLogin(ctx iris.Context) {
 	var reqBody dto.LoginRequest
 	if err := ctx.ReadJSON(&reqBody); err != nil {
-		h.Logger.Info(fmt.Sprintf("LoginRequest 结构体字段: %+v",
-			reflect.VisibleFields(reflect.TypeOf(dto.LoginRequest{}))))
-
 		h.Logger.Info("Login请求格式错误", "error", err)
 
 		ctx.StatusCode(iris.StatusBadRequest)
@@ -52,9 +98,27 @@ func (h *AuthHandler) PostLogin(ctx iris.Context) {
 		return
 	}
 
+	strToken := strconv.FormatInt(int64(userDetail.UserId), 10) +
+		":" + userDetail.Role
+
+	uuid, err := model.Encrypt(
+		[]byte(UUID_ENCRYPT_KEY), strToken,
+	)
+	if err != nil {
+		h.Logger.Info("转uuid加密失败",
+			"error", err, "user_id", userDetail.UserId,
+		)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("token生成失败")
+		return
+
+	}
+
 	token, err := h.JwtFactory.GenToken(model.UserClaims{
 		Role:   userDetail.Role,
 		UserId: int(userDetail.UserId),
+		Uuid:   uuid,
 	})
 	if err != nil {
 		h.Logger.Info("生成token失败",
@@ -67,13 +131,18 @@ func (h *AuthHandler) PostLogin(ctx iris.Context) {
 	}
 
 	ctx.Header("Authorization", kBearerPrefix+token)
+	ctx.SetCookieKV(
+		"uuid", uuid,
+		iris.CookieHTTPOnly(true),
+		iris.CookieExpires(time.Hour*24),
+	)
 
 	resLoginConfirm := dto.LoginResponse{
 		UserId:     int(userDetail.UserId),
 		Username:   userDetail.Username,
 		Email:      userDetail.Email,
 		Role:       userDetail.Role,
-		AvatarUrl:  userDetail.AvatarURL,
+		AvatarUrl:  userDetail.AvatarUrl,
 		LastActive: userDetail.LastActive.Format("2006-01-02 15:04:05"),
 	}
 

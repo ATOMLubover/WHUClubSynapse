@@ -17,6 +17,7 @@ import (
 	"whuclubsynapse-server/internal/shared/jwtutil"
 	"whuclubsynapse-server/internal/shared/logger"
 
+	//"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"gorm.io/driver/postgres"
@@ -27,9 +28,23 @@ func main() {
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
 
+	crs := func(ctx iris.Context) {
+		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+		ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
+		if ctx.Request().Method == "OPTIONS" {
+			ctx.StatusCode(iris.StatusNoContent)
+			return
+		}
+		ctx.Next()
+	}
+
+	app.Use(crs)
+
 	rootApp := mvc.New(app.Party("/"))
 
-	config := LoadConfig("../config/basic_config.json")
+	config := LoadConfig("../../config/basic_config.json")
 
 	logger := CreateLogger(config)
 	database := ConnectDatabase(config)
@@ -88,10 +103,18 @@ func main() {
 		clubService,
 	)
 
+	rootApp.Router.Use(
+		func(ctx iris.Context) {
+			logger.Debug("==============", "method", ctx.Method(), "path", ctx.Path())
+			ctx.Next()
+			logger.Debug("==============", "method", ctx.Method(), "path", ctx.Path())
+		},
+	)
+
 	InitAuthHandler(rootApp)
 	InitApiHandler(rootApp, jwtFactory, logger)
 
-	app.Listen(":8080")
+	app.Listen(":" + config.ServerPort)
 }
 
 func LoadConfig(relPath string) *baseconfig.Config {

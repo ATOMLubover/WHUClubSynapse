@@ -15,6 +15,7 @@ type ClubRepo interface {
 	GetClubInfo(id int) (*dbstruct.Club, error)
 	GetClubsByCategory(catId int) ([]*dbstruct.Club, error)
 	GetLatestClubs() ([]*dbstruct.Club, error)
+	GetClubNum() (int64, error)
 	UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error
 }
 
@@ -44,6 +45,7 @@ func (r *sClubRepo) AppendClub(tx *gorm.DB, club *dbstruct.Club) error {
 func (r *sClubRepo) GetClubList(offset, num int) ([]*dbstruct.Club, error) {
 	var clubs []*dbstruct.Club
 	err := r.database.
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(num).
 		Find(&clubs).Error
@@ -84,6 +86,15 @@ func (r *sClubRepo) GetLatestClubs() ([]*dbstruct.Club, error) {
 		Limit(5).
 		Find(&clubs).Error
 	return clubs, err
+}
+
+func (r *sClubRepo) GetClubNum() (int64, error) {
+	var count int64
+	err := r.database.
+		Model(&dbstruct.Club{}).
+		Select("club_id").
+		Count(&count).Error
+	return count, err
 }
 
 func (r *sClubRepo) UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error {

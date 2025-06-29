@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"io"
 	"log/slog"
+	"strconv"
+	"strings"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/service"
 	"whuclubsynapse-server/internal/shared/dbstruct"
@@ -129,5 +132,40 @@ func (h *PostHandler) GetPostComments(ctx iris.Context, id int) {
 }
 
 func (h *PostHandler) PostCreatePost(ctx iris.Context) {
-	
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID获取失败")
+		return
+	}
+
+	title := ctx.PostValue("title")
+	clubIdStr := ctx.PostValue("club_id")
+	content := ctx.PostValue("content")
+
+	clubId, err := strconv.Atoi(clubIdStr)
+	if err != nil {
+		h.Logger.Error("转化社团ID失败",
+			"error", err,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("转化社团ID失败")
+		return
+	}
+
+	newPost := dbstruct.ClubPost{
+		UserId: uint(userId),
+		ClubId: uint(clubId),
+		Title:  title,
+	}
+
+	if err := h.PostService.CreatePost(
+		newPost, func(writer *io.PipeWriter) error {
+			defer writer.Close()
+
+			_, err := io.Copy(writer, strings.NewReader(content))
+			return err
+		}); err != nil {
+	}
 }

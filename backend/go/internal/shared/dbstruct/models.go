@@ -11,7 +11,7 @@ type User struct {
 	Username     string    `gorm:"size:50;unique;not null"`
 	PasswordHash string    `gorm:"type:char(60);not null"`
 	Email        string    `gorm:"size:100;unique;not null"`
-	AvatarURL    string    `gorm:"size:255"`
+	AvatarUrl    string    `gorm:"size:255"`
 	Role         string    `gorm:"size:20;default:'user';not null"`
 	CreatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	UpdatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
@@ -93,6 +93,7 @@ type JoinClubAppli struct {
 	AppliedAt      time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	Status         string    `gorm:"size:20;default:'pending';not null"`
 	RejectedReason string    `gorm:"size:255"`
+	ApplyReason    string    `gorm:"type:text;not null"`
 	ReviewedAt     time.Time
 
 	User User `gorm:"foreignKey:UserId"`
@@ -105,6 +106,8 @@ type ClubFavorite struct {
 	ClubFavoriteId uint `gorm:"primaryKey;column:club_favorite_id"`
 	UserId         uint `gorm:"not null"`
 	ClubId         uint `gorm:"not null"`
+	CreatedAt      time.Time
+	DeletedAt      time.Time
 
 	User User `gorm:"foreignKey:UserId"`
 	Club Club `gorm:"foreignKey:ClubId"`

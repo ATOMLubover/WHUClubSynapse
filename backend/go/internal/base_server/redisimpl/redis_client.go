@@ -44,7 +44,7 @@ func NewRedisClientService(
 }
 
 func (s *sRedisClientService) CheckVrfcodeExisting(email string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
 	_, err := s.client.Inst().Get(ctx, kVrfCodePrefix+email).Result()
@@ -60,7 +60,7 @@ func (s *sRedisClientService) CheckVrfcodeExisting(email string) bool {
 }
 
 func (s *sRedisClientService) ValidateRegVrfcode(email, vrfcode string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
 	redisVrfcode, err := s.client.Inst().Get(ctx, kVrfCodePrefix+email).Result()

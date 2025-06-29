@@ -17,6 +17,7 @@ type ClubService interface {
 	GetClubInfo(clubId int) (*dbstruct.Club, error)
 	GetClubsByCategory(catId int) ([]*dbstruct.Club, error)
 	GetLatestClubs() ([]*dbstruct.Club, error)
+	GetClubNum() (int64, error)
 
 	GetUserCreateApplis(userId int) ([]*dbstruct.CreateClubAppli, error)
 	GetUserJoinApplis(userId int) ([]*dbstruct.JoinClubAppli, error)
@@ -25,7 +26,7 @@ type ClubService interface {
 	GetClubListByUserId(userId int) ([]*dbstruct.Club, error)
 
 	ApplyForCreateClub(newClub dbstruct.Club) error
-	ApplyForJoinClub(userId, expectedClubId uint) error
+	ApplyForJoinClub(userId, expectedClubId uint, reason string) error
 	ApplyForUpdateClub(newInfo dbstruct.Club) error
 
 	ApproveAppliForCreateClub(appliId int) error
@@ -106,6 +107,10 @@ func (s *sClubService) GetLatestClubs() ([]*dbstruct.Club, error) {
 	return s.clubRepo.GetLatestClubs()
 }
 
+func (s *sClubService) GetClubNum() (int64, error) {
+	return s.clubRepo.GetClubNum()
+}
+
 func (s *sClubService) GetUserCreateApplis(userId int) ([]*dbstruct.CreateClubAppli, error) {
 	return s.createClubAppliRepo.GetApplisByUserId(userId)
 }
@@ -136,10 +141,11 @@ func (s *sClubService) ApplyForCreateClub(newClub dbstruct.Club) error {
 	return s.createClubAppliRepo.AddCreateClubAppli(&appli)
 }
 
-func (s *sClubService) ApplyForJoinClub(userId, expectedClubId uint) error {
+func (s *sClubService) ApplyForJoinClub(userId, expectedClubId uint, reason string) error {
 	return s.joinClubAppliRepo.AddJoinClubAppli(&dbstruct.JoinClubAppli{
-		UserId: userId,
-		ClubId: expectedClubId,
+		UserId:      userId,
+		ClubId:      expectedClubId,
+		ApplyReason: reason,
 	})
 }
 
