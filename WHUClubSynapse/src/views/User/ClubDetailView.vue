@@ -8,6 +8,7 @@
             <el-image :src="club.logo_url" fit="cover" class="cover-image" />
             <div class="club-status-badge">
               <el-tag v-if="club.isHot" type="danger" size="large"> 🔥 热门社团 </el-tag>
+              <el-tag v-if="isFull" type="warning" size="large"> ⚠️ 已满员 </el-tag>
             </div>
           </div>
 
@@ -358,6 +359,12 @@ const isUserManaged = computed(() => {
   return club.value.adminId === 'user1' // 假设当前用户ID为user1
 })
 
+// 满员状态
+const isFull = computed(() => {
+  if (!club.value) return false
+  return club.value.member_count >= (club.value.maxMembers ?? 50)
+})
+
 // 将 isDisabled 改为计算属性
 const isDisabled = computed(() => {
   if (!authStore.isLoggedIn) return false
@@ -589,6 +596,9 @@ onMounted(async () => {
   position: absolute;
   top: 12px;
   left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .club-info {

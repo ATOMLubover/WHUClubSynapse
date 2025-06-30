@@ -57,7 +57,7 @@ export const mockClubs: Club[] = [
     category: 1,
     adminId: 'admin2',
     adminName: '李四',
-    member_count: 60,
+    member_count: 45,
     maxMembers: 60,
     tags: ['摄影', '艺术', '创作'],
     isHot: false,
@@ -94,7 +94,7 @@ export const mockClubs: Club[] = [
     category: 2,
     adminId: 'admin3',
     adminName: '王五',
-    member_count: 150,
+    member_count: 120,
     maxMembers: 150,
     tags: ['志愿', '公益', '服务'],
     isHot: true,
@@ -343,7 +343,7 @@ export const mockClubs: Club[] = [
     category: 0,
     adminId: 'admin9',
     adminName: '张三',
-    member_count: 100,
+    member_count: 65,
     maxMembers: 100,
     tags: ['生物', '科技', '学术',"生物信息学"],
     isHot: false,
@@ -369,7 +369,7 @@ export const mockClubs: Club[] = [
     category: 0,
     adminId: 'admin9',
     adminName: '张三',
-    member_count: 100,
+    member_count: 70,
     maxMembers: 100,
     tags: ['数学', '科技', '学术',"数学建模"],
     isHot: false,
@@ -523,3 +523,70 @@ export const mockClubPostReplies: ClubPostReply[] = [
     id: 'r6', postId: 'p3', authorId: 3, authorName: '小刚', authorAvatar: '', content: '可以自带，也可以现场借用。', createdAt: '2024-06-03T11:00:00Z'
   }
 ]
+
+// 重置函数 - 用于开发过程中重置数据到初始状态
+export const resetMockData = () => {
+  // 重置社团成员人数到固定的合理范围
+  const clubMemberCounts = {
+    '1': 85,  // 计算机科学协会：85/100
+    '2': 45,  // 摄影艺术社：45/60
+    '3': 120, // 青年志愿者协会：120/150
+    '4': 35,  // 创业实践社：35/50
+    '5': 67,  // 篮球社：67/80
+    '6': 28,  // 机器人研究社：28/40
+    '7': 55,  // 音乐社：55/70
+    '8': 73,  // 环保行动社：73/90
+    '9': 100, // 计算机科学协会（OS）：100/100 - 满员状态用于测试
+    '10': 65, // 生物科学协会：65/100
+    '11': 70  // 数学科学协会：70/100
+  }
+  
+  mockClubs.forEach(club => {
+    const fixedCount = clubMemberCounts[club.club_id as keyof typeof clubMemberCounts]
+    if (fixedCount !== undefined) {
+      club.member_count = Math.min(fixedCount, club.maxMembers || 100)
+    }
+  })
+  
+  // 重置用户状态
+  userJoinedClubIds.length = 0
+  userJoinedClubIds.push('2', '3', '4') // 恢复初始状态
+  
+  userManagedClubIds.length = 0
+  userManagedClubIds.push('5') // 恢复初始状态
+  
+  userFavoriteClubIds.length = 0
+  userFavoriteClubIds.push('1', '3', '5') // 恢复初始状态
+  
+  // 重置用户统计信息
+  mockUser.stats = {
+    appliedClubs: 1,
+    favoriteClubs: 3,
+    joinedClubs: 3,
+    managedClubs: 1
+  }
+  
+  // 清空申请记录
+  mockApplications.length = 0
+  mockApplications.push({
+    id: '1',
+    userId: 'user1',
+    clubId: '1',
+    clubName: '计算机科学协会',
+    clubCoverImage: mockClubs[0].logo_url,
+    status: 'pending',
+    reason: '希望能够加入学习相关技术',
+    applyReason: '对技术很感兴趣',
+    createdAt: '2024-01-01T00:00:00Z',
+    reviewedAt: '2024-01-01T00:00:00Z',
+    clubCategory: '学术科技',
+    feedback: '欢迎加入我们，请等待审核',
+  })
+  
+  console.log('Mock数据已重置到初始状态')
+}
+
+// 在开发环境中自动重置数据
+// if (import.meta.env.DEV) {
+//   resetMockData()
+// }

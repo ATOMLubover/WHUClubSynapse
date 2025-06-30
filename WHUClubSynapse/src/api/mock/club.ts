@@ -190,16 +190,24 @@ export const mockApplyToClub = async (data: {
     throw new Error('您已经加入该社团')
   }
 
-  // 检查社团是否已满员
-  if (club.member_count >= (club.maxMembers ?? 50)) {
-    throw new Error('社团已满员')
+  // 检查社团是否已满员 - 更严格的检查
+  const currentMemberCount = club.member_count || 0
+  const maxMemberCount = club.maxMembers || 50
+  
+  if (currentMemberCount >= maxMemberCount) {
+    throw new Error(`社团已满员（${currentMemberCount}/${maxMemberCount}）`)
   }
 
   // 将用户添加到已加入社团列表
   userJoinedClubIds.push(data.clubId)
 
-  // 更新社团成员数量
-  club.member_count++
+  // 更新社团成员数量 - 确保不超过上限
+  const newMemberCount = currentMemberCount + 1
+  if (newMemberCount <= maxMemberCount) {
+    club.member_count = newMemberCount
+  } else {
+    throw new Error('社团成员数量超出上限')
+  }
 
   // 更新社团状态为已加入
   club.status = 'joined'
@@ -240,6 +248,21 @@ export const mockCancelApplication = async (applicationId: string)
   if (!club) {
     throw new Error('社团不存在')
   }
+  
+  // 如果申请状态是已批准，需要减少成员人数
+  if (application?.status === 'approved') {
+    if (club.member_count > 0) {
+      club.member_count--
+    }
+    // 从用户加入的社团列表中移除
+    const joinedIndex = userJoinedClubIds.indexOf(application.clubId)
+    if (joinedIndex > -1) {
+      userJoinedClubIds.splice(joinedIndex, 1)
+      // 更新用户统计信息
+      mockUser.stats!.joinedClubs--
+    }
+  }
+  
   club.status = 'not_applied'
   if (!application) {
     throw new Error('申请不存在')
@@ -257,6 +280,7 @@ export const mockCancelApplication = async (applicationId: string)
     },
   }
 }
+
 // 模拟收藏社团
 export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)

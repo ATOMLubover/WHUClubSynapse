@@ -13,6 +13,9 @@
       <!-- 热门标签 -->
       <el-tag v-if="club.isHot" type="danger" class="hot-tag" size="small"> 热门 </el-tag>
 
+      <!-- 满员标签 -->
+      <el-tag v-if="isFull" type="warning" class="full-tag" size="small"> 已满员 </el-tag>
+
       <!-- 收藏按钮 - 仅登录用户显示 -->
       <el-button
         v-if="authStore.isLoggedIn"
@@ -96,6 +99,11 @@ const clubStore = useClubStore()
 // 收藏状态 - 仅对登录用户有意义
 const isFavorited = computed(() => {
   return authStore.isLoggedIn ? props.club.isFavorite : false
+})
+
+// 满员状态
+const isFull = computed(() => {
+  return props.club.member_count >= (props.club.maxMembers ?? 50)
 })
 
 const isDisabled = computed(() => {
@@ -227,6 +235,18 @@ const getApplyButtonText = () => {
   position: absolute;
   top: 8px;
   left: 8px;
+}
+
+.full-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+}
+
+/* 如果同时有热门和满员标签，调整位置 */
+.hot-tag + .full-tag {
+  top: 32px;
 }
 
 .favorite-btn {

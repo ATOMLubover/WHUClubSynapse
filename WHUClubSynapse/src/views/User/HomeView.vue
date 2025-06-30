@@ -59,6 +59,16 @@
               <el-option label="按时间" value="time" />
               <el-option label="按成员数" value="members" />
             </el-select>
+            <!-- 开发模式重置按钮 -->
+            <el-button
+              v-if="isDev"
+              type="warning"
+              size="small"
+              @click="resetData"
+              style="margin-left: 10px"
+            >
+              🔄 重置数据
+            </el-button>
           </div>
           <div class="filter-right">
             <span class="result-count"> 共找到 {{ clubStore.globalPageData.total }} 个社团 </span>
@@ -208,10 +218,27 @@ import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import ClubCard from '@/components/Club/ClubCard.vue'
 import type { ClubCategory } from '@/types'
+import { resetMockData } from '@/utils/mockData'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const clubStore = useClubStore()
 const authStore = useAuthStore()
+
+// 开发模式标识
+const isDev = import.meta.env.DEV
+
+// 重置数据函数
+const resetData = async () => {
+  try {
+    resetMockData()
+    await clubStore.fetchClubs()
+    ElMessage.success('数据已重置')
+  } catch (error) {
+    console.error('重置数据失败:', error)
+    ElMessage.error('重置数据失败')
+  }
+}
 
 // 轮播横幅数据
 //TODO: 从后端获取轮播横幅数据？
