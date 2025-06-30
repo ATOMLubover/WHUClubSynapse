@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // 初始化（检查登录状态）
+  // TODO:初始化（检查登录状态）
   const initialize = async () => {
     // if (token.value) {
     //   try {

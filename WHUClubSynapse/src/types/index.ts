@@ -80,7 +80,11 @@ export interface Club {
 }
 
 // 社团分类
-export type ClubCategory = '学术科技' | '文艺体育' | '志愿服务' | '创新创业' | '其他'
+export interface ClubCategory {
+  category_id: number
+  name: string
+  count?: number
+}
 
 // 申请记录
 export interface Application {
@@ -125,7 +129,7 @@ export interface PaginatedData<T> {
 // 搜索参数
 export interface SearchParams {
   keyword?: string
-  category?: ClubCategory | ''
+  category?: number | ''
   sortBy?: 'hot' | 'time' | 'members'
   page?: number
   pageSize?: number

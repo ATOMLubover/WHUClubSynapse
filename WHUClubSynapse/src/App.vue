@@ -2,12 +2,15 @@
 import { RouterView } from 'vue-router'
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useClubStore } from '@/stores/club'
 import PreferenceSetupDialog from '@/components/User/PreferenceSetupDialog.vue'
 import type { UserPreferences } from '@/types'
 import { ElNotification } from 'element-plus'
 
 // 认证store
 const authStore = useAuthStore()
+// 社团store
+const clubStore = useClubStore()
 
 // 偏好设置弹窗
 const showPreferenceDialog = ref(false)
@@ -52,15 +55,39 @@ watch(
 
 // 初始化
 onMounted(async () => {
-  await authStore.initialize()
-  checkPreferenceSetup()
+  console.log('App开始初始化')
+  try {
+    // 并行初始化认证和获取社团分类
+    const [authResult, categoriesResult] = await Promise.allSettled([
+      authStore.initialize(),
+      clubStore.fetchCategoriesList(),
+    ])
 
-  ElNotification({
-    title: '欢迎访问',
-    message: 'WHU Club Synapse - 武汉大学社团管理系统',
-    type: 'success',
-    duration: 3000,
-  })
+    if (authResult.status === 'rejected') {
+      console.error('认证初始化失败:', authResult.reason)
+    }
+    if (categoriesResult.status === 'rejected') {
+      console.error('分类数据初始化失败:', categoriesResult.reason)
+    }
+
+    checkPreferenceSetup()
+    console.log('App初始化完成')
+
+    ElNotification({
+      title: '欢迎访问',
+      message: 'WHU Club Synapse - 武汉大学社团管理系统',
+      type: 'success',
+      duration: 3000,
+    })
+  } catch (error) {
+    console.error('应用初始化失败:', error)
+    ElNotification({
+      title: '初始化失败',
+      message: '部分功能可能无法正常使用',
+      type: 'warning',
+      duration: 5000,
+    })
+  }
 })
 </script>
 

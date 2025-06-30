@@ -325,7 +325,6 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import type { Club, Activity } from '@/types'
-import { categoryMap } from '@/utils/mockData'
 
 const route = useRoute()
 const router = useRouter()
@@ -394,35 +393,35 @@ const loadClubInfo = async () => {
     const club = await clubStore.fetchClubDetail(clubId)
 
     // 填充基本信息
-    basicForm.name = club.club_name
-    basicForm.description = club.desc
-    basicForm.category = categoryMap[club.category]
-    basicForm.maxMembers = club.maxMembers ?? 50
-    basicForm.tags = club.tags || []
-    basicForm.coverImage = club.logo_url
+    basicForm.name = club?.club_name || ''
+    basicForm.description = club?.desc || ''
+    basicForm.category = club?.category.toString() || ''
+    basicForm.maxMembers = club?.maxMembers || 50
+    basicForm.tags = club?.tags || []
+    basicForm.coverImage = club?.logo_url || ''
 
     // 填充详细介绍
-    detailForm.introduction = club.introduction || ''
-    detailForm.requirements = club.requirements || ''
+    detailForm.introduction = club?.introduction || ''
+    detailForm.requirements = club?.requirements || ''
 
     // 填充联系方式
-    if (club.contactInfo) {
-      contactForm.qq = club.contactInfo.qq || ''
-      contactForm.wechat = club.contactInfo.wechat || ''
-      contactForm.email = club.contactInfo.email || ''
+    if (club?.contactInfo) {
+      contactForm.qq = club?.contactInfo.qq || ''
+      contactForm.wechat = club?.contactInfo.wechat || ''
+      contactForm.email = club?.contactInfo.email || ''
       contactForm.phone = club.contactInfo.phone || ''
       contactForm.address = club.contactInfo.address || ''
     }
 
     // 填充例会信息
-    meetingForm.meetingTime = club.meetingTime || ''
-    meetingForm.meetingLocation = club.meetingLocation || ''
+    meetingForm.meetingTime = club?.meetingTime || ''
+    meetingForm.meetingLocation = club?.meetingLocation || ''
 
     // 填充公告
-    announcements.value = club.announcements || []
+    announcements.value = club?.announcements || []
 
     // 填充动态
-    activities.value = club.activities || []
+    activities.value = club?.activities || []
   } catch (error) {
     console.error('加载社团信息失败:', error)
     ElMessage.error('加载社团信息失败')

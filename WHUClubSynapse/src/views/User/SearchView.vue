@@ -24,13 +24,13 @@
         <span class="filter-label">快速筛选：</span>
         <el-tag
           v-for="category in categories"
-          :key="category"
-          :type="activeCategory === category ? 'primary' : ''"
-          :effect="activeCategory === category ? 'dark' : 'plain'"
-          @click="handleCategoryFilter(category)"
+          :key="category.category_id"
+          :type="activeCategory === category.category_id ? 'primary' : ''"
+          :effect="activeCategory === category.category_id ? 'dark' : 'plain'"
+          @click="handleCategoryFilter(category.category_id)"
           class="category-filter"
         >
-          {{ category }}
+          {{ category.name }}
         </el-tag>
         <el-tag
           :type="activeCategory === '' ? 'primary' : ''"
@@ -114,18 +114,20 @@ import { Search } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import ClubCard from '@/components/Club/ClubCard.vue'
 import type { ClubCategory, Club } from '@/types'
+import { useCategories } from '@/composables/useCategories'
 
 const route = useRoute()
 const router = useRouter()
 const clubStore = useClubStore()
 
 const searchKeyword = ref('')
-const activeCategory = ref<ClubCategory | ''>('')
+const activeCategory = ref<number | ''>('')
 const sortBy = ref<'relevance' | 'hot' | 'time' | 'members'>('relevance')
 const recommendedClubs = ref<Club[]>([])
 
 // 分类数据
-const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
+// 使用全局分类数据
+const { categories, getCategoryName } = useCategories()
 
 // 执行搜索
 const handleSearch = async () => {
@@ -142,8 +144,8 @@ const handleSearch = async () => {
 }
 
 // 分类筛选
-const handleCategoryFilter = async (category: string) => {
-  activeCategory.value = category as ClubCategory
+const handleCategoryFilter = async (category: number | string) => {
+  activeCategory.value = category as number
 
   const query: any = {}
   if (searchKeyword.value) {
@@ -215,7 +217,7 @@ watch(
   () => route.query,
   async (newQuery) => {
     searchKeyword.value = (newQuery.keyword as string) || ''
-    activeCategory.value = (newQuery.category as ClubCategory) || ''
+    activeCategory.value = Number(newQuery.category) || ''
 
     if (newQuery.keyword || newQuery.category) {
       await performSearch()
@@ -230,7 +232,7 @@ watch(
 onMounted(async () => {
   // 从URL参数初始化搜索状态
   searchKeyword.value = (route.query.keyword as string) || ''
-  activeCategory.value = (route.query.category as ClubCategory) || ''
+  activeCategory.value = Number(route.query.category) || ''
 
   // 获取推荐社团
   await fetchRecommendations()

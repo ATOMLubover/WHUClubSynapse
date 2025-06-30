@@ -32,9 +32,9 @@
             >
               <el-option label="全部类型" value="" />
               <el-option
-                v-for="(category, index) in categories"
-                :label="categories[index]"
-                :value="categories[index]"
+                v-for="category in clubStore.categoriesList"
+                :label="category.name"
+                :value="category.category_id"
               ></el-option>
             </el-select>
           </el-col>
@@ -295,8 +295,8 @@ const filteredApplications = computed(() => {
   return applications.value
 })
 
-// 分类数据
-const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
+// TODO:分类数据
+// const categories = ref<ClubCategory[]>([])
 
 // 方法
 const getCategoryText = (category: string) => {
@@ -472,8 +472,6 @@ const quitClub = async (clubId: string) => {
 }
 
 onMounted(() => {
-  console.log(clubStore.categories)
-
   loadApplications()
 })
 </script>

@@ -51,7 +51,7 @@
       <!-- 社团标签 -->
       <div class="club-tags">
         <el-tag :type="getCategoryType(club.category)" size="small">
-          {{ categoryMap[club.category] }}
+          {{ clubStore.categoriesList.find((c) => c.category_id === club.category)?.name }}
         </el-tag>
         <el-tag v-for="tag in club.tags?.slice(0, 2)" :key="tag" size="small" plain>
           {{ tag }}
@@ -84,7 +84,6 @@ import { Picture, Star, StarFilled, User, UserFilled } from '@element-plus/icons
 import type { Club, ClubCategory } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import { useClubStore } from '@/stores/club'
-import { categoryMap } from '@/utils/mockData'
 
 interface Props {
   club: Club

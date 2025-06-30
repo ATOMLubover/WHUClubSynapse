@@ -1,5 +1,5 @@
-import type { Club, PaginatedData, SearchParams, ApiResponse } from '@/types'
-import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds, categoryMap } from '@/utils/mockData'
+import type { Club, PaginatedData, SearchParams, ApiResponse, ClubCategory } from '@/types'
+import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds, categories } from '@/utils/mockData'
 import { config } from '@/config'
 import type { ClubPost, ClubPostReply } from '@/types'
 
@@ -16,7 +16,7 @@ export const mockGetClubList = async (
 
   // 分类筛选
   if (params.category) {
-    filteredClubs = filteredClubs.filter((club) => categoryMap[club.category] === params.category)
+    filteredClubs = filteredClubs.filter((club) => categories.find((c) => c.category_id === club.category)?.name === params.category)
   }
 
   // 关键词搜索
@@ -68,7 +68,7 @@ export const mockGetClubList = async (
 }
 
 // 模拟获取社团详情
-export const mockGetClubDetail = async (id: string): Promise<{ data: ApiResponse<Club> }> => {
+export const mockGetClubDetail = async (id: string): Promise<Club > => {
   await delay(500)
 
   const club = mockClubs.find((c) => c.club_id === id)
@@ -76,13 +76,7 @@ export const mockGetClubDetail = async (id: string): Promise<{ data: ApiResponse
     throw new Error('社团不存在')
   }
 
-  return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: club,
-    },
-  }
+  return club
 }
 
 // 模拟获取热门社团
@@ -145,6 +139,12 @@ export const mockSearchClubs = async (
   params: Partial<SearchParams> = {},
 ): Promise<PaginatedData<Club>> => {
   return mockGetClubList({ ...params, keyword })
+}
+
+// 模拟获取社团分类列表
+export const mockGetClubCategoriesList = async (): Promise<ClubCategory[]> => {
+  await delay(200)
+  return categories
 }
 
 // 模拟获取社团分类统计
@@ -223,7 +223,7 @@ export const mockApplyToClub = async (data: {
     reason: data.reason,
     applyReason: data.reason,
     createdAt: new Date().toISOString(),
-    clubCategory: categoryMap[club.category],
+    clubCategory: categories.find((c) => c.category_id === club.category)?.name||' ',
     feedback: '申请已通过，欢迎加入我们！',
   });
 
@@ -333,29 +333,16 @@ export const mockGetFavoriteClubs = async (
     page?: number
     pageSize?: number
   } = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise<PaginatedData<Club>> => {
   await delay(500)
 
   const favoriteClubs = userFavoriteClubIds.map((id) => mockClubs.find((club) => club.club_id === id))
-  const page = params.page || 1
-  const pageSize = params.pageSize || 12
-  const start = (page - 1) * pageSize
-  const end = start + pageSize
-  const list = favoriteClubs.slice(start, end)
-
-  console.log(list)
-
+  const list = favoriteClubs.filter((club): club is Club => club !== undefined) as Club[]
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
-        list: list.filter((club): club is Club => club !== undefined),
-        total: favoriteClubs.length,
-        page,
-        pageSize,
-      },
-    },
+    list,
+    total: list.length,
+    page: params.page || 1,
+    pageSize: params.pageSize || 12,
   }
 }
 
@@ -409,13 +396,13 @@ export const mockGetUserApplications = async (
 // 模拟创建社团
 export const mockCreateClub = async (data:  {
   name: string
-  description: string
+  desc: string
   requirements: string
   category?: string
   maxMembers?: number
   tags?: string[]
   coverImage?: string
-}): Promise<{ data: ApiResponse<Club> }> => {
+}): Promise<{ data: ApiResponse<null> }> => {
   await delay(600)
 
   // 生成新的社团ID
@@ -425,7 +412,7 @@ export const mockCreateClub = async (data:  {
   const newClub: Club = {
     club_id: newId,
     club_name: data.name,
-    desc: data.description,
+    desc: data.desc,
     category: data.category as any,
     adminId: 'user1', // 假设当前用户ID为user1
     adminName: '测试用户',
@@ -437,7 +424,7 @@ export const mockCreateClub = async (data:  {
     created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     qq: '1234567890',
-    details: data.description,
+    details: data.desc,
     activities: [],
     location: `武汉大学${data.name}`,
     isFavorite: false,
@@ -461,7 +448,7 @@ export const mockCreateClub = async (data:  {
     data: {
       code: 200,
       message: '社团创建成功',
-      data: newClub,
+      data: null,
     },
   }
 }
