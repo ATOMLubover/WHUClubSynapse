@@ -294,3 +294,43 @@ export interface ApplicationReviewRequest {
   action: 'approve' | 'reject'
   reason?: string // 拒绝时需要提供原因
 }
+
+// AI智能搜索相关类型
+export interface SmartSearchRequest {
+  query: string
+}
+
+export interface SmartSearchSource {
+  id: string
+  content: string
+  metadata: {
+    source: string
+    page: number
+  }
+}
+
+export interface SmartSearchResponse {
+  answer: string
+  source: SmartSearchSource[]
+}
+
+export interface SmartSearchError {
+  detail: string
+}
+
+// 侧边栏对话相关类型
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp?: string
+}
+
+export interface SideChatRequest {
+  query: string
+  history: ChatMessage[]
+}
+
+export interface SideChatResponse {
+  answer: string
+  source: SmartSearchSource[]
+}

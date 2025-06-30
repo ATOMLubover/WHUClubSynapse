@@ -19,6 +19,84 @@
     <div class="main-content">
       <!-- 左侧内容区 -->
       <div class="content-left">
+        <!-- 搜索区域 -->
+        <div class="search-section">
+          <el-card class="search-card">
+            <div class="search-input-group">
+              <el-input
+                v-model="searchKeyword"
+                placeholder="搜索社团名称、分类、关键词..."
+                size="large"
+                @keyup.enter="handleSearch"
+                clearable
+              >
+                <template #prepend>
+                  <el-icon><Search /></el-icon>
+                </template>
+                <template #append>
+                  <el-button type="primary" @click="handleSearch" :loading="searchLoading">
+                    搜索
+                  </el-button>
+                </template>
+              </el-input>
+              
+              <!-- AI智能搜索选项 -->
+              <div class="ai-search-option">
+                <el-checkbox 
+                  v-model="useAiSearch" 
+                  :disabled="!isAiSearchEnabled"
+                  @change="handleAiSearchChange"
+                >
+                  <el-icon><ChatDotRound /></el-icon>
+                  询问AI智能体
+                  <el-tooltip 
+                    content="启用AI智能搜索，获得更精准的搜索结果和建议" 
+                    placement="top"
+                  >
+                    <el-icon class="help-icon"><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </el-checkbox>
+              </div>
+            </div>
+          </el-card>
+        </div>
+
+        <!-- AI搜索结果 -->
+        <div v-if="showAiResult && aiSearchResult" class="ai-search-result">
+          <el-card class="ai-result-card">
+            <template #header>
+              <div class="ai-result-header">
+                <el-icon class="ai-icon"><ChatDotRound /></el-icon>
+                <span>AI智能回答</span>
+                <el-button 
+                  type="text" 
+                  size="small" 
+                  @click="hideAiResult"
+                  class="close-btn"
+                >
+                  <el-icon><Close /></el-icon>
+                </el-button>
+              </div>
+            </template>
+            <div class="ai-result-content">
+              <div class="ai-answer" v-html="formatAiAnswer(aiSearchResult.answer)"></div>
+              <div v-if="aiSearchResult.source && aiSearchResult.source.length > 0" class="ai-sources">
+                <div class="sources-title">参考来源：</div>
+                <div class="sources-list">
+                  <div 
+                    v-for="source in aiSearchResult.source" 
+                    :key="source.id" 
+                    class="source-item"
+                  >
+                    <el-icon><Document /></el-icon>
+                    <span>{{ source.metadata.source }} (第{{ source.metadata.page }}页)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </div>
+
         <!-- 分类导航 -->
         <div class="category-nav">
           <el-tabs
@@ -209,13 +287,19 @@ import {
   Document,
   UserFilled,
   Collection,
+  Search,
+  ChatDotRound,
+  QuestionFilled,
+  Close,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import ClubCard from '@/components/Club/ClubCard.vue'
-import type { ClubCategory } from '@/types'
+import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { resetMockData } from '@/utils/mockData'
 import { ElMessage } from 'element-plus'
+import { smartSearch } from '@/api/ai-search'
+import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
 
 const router = useRouter()
 const clubStore = useClubStore()
@@ -252,6 +336,14 @@ const quickLinks = ref([
   { label: '我的社团', path: '/user/clubs', icon: UserFilled },
   { label: '我的收藏', path: '/user/favorites', icon: Collection },
 ])
+
+// 搜索相关
+const searchKeyword = ref('')
+const searchLoading = ref(false)
+const showAiResult = ref(false)
+const aiSearchResult = ref<SmartSearchResponse | null>(null)
+const useAiSearch = ref(false)
+const isAiSearchEnabled = computed(() => checkAiSearchEnabled())
 
 // 计算总数
 const getTotalCount = () => {
@@ -316,6 +408,56 @@ const goToClub = (clubId: string) => {
   } catch (error) {
     console.error('路由跳转失败:', error)
   }
+}
+
+// 处理搜索
+const handleSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    ElMessage.error('请输入搜索关键词')
+    return
+  }
+
+  searchLoading.value = true
+  try {
+    if (useAiSearch.value) {
+      // 调用AI搜索
+      const result = await smartSearch({ query: searchKeyword.value })
+      aiSearchResult.value = result
+      showAiResult.value = true
+    } else {
+      // 普通搜索，跳转到搜索页面
+      router.push({
+        path: '/search',
+        query: { keyword: searchKeyword.value.trim() }
+      })
+    }
+  } catch (error) {
+    console.error('搜索失败:', error)
+    ElMessage.error('搜索失败，请稍后再试')
+  } finally {
+    searchLoading.value = false
+  }
+}
+
+// 处理AI搜索选项变化
+const handleAiSearchChange = () => {
+  // AI搜索选项变化的处理逻辑
+  console.log('AI搜索选项变化:', useAiSearch.value)
+}
+
+// 隐藏AI搜索结果
+const hideAiResult = () => {
+  showAiResult.value = false
+  aiSearchResult.value = null
+}
+
+// 格式化AI回答
+const formatAiAnswer = (answer: string) => {
+  // 简单的Markdown格式化
+  return answer
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>')
 }
 
 // 初始化数据
@@ -404,6 +546,153 @@ onMounted(async () => {
 .content-right {
   width: 280px;
   flex-shrink: 0;
+}
+
+/* 搜索区域 */
+.search-section {
+  margin-bottom: 16px;
+}
+
+.search-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.search-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-input-group .el-input {
+  flex: 1;
+}
+
+.ai-search-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.ai-search-option .el-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-search-option .el-icon {
+  color: #409eff;
+}
+
+.help-icon {
+  color: #909399;
+  margin-left: 4px;
+  cursor: help;
+  font-size: 14px;
+}
+
+/* AI搜索结果 */
+.ai-search-result {
+  margin-bottom: 16px;
+}
+
+.ai-result-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ai-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.ai-result-header .ai-icon {
+  color: #409eff;
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.ai-result-header span {
+  font-weight: 600;
+  color: #303133;
+  font-size: 16px;
+}
+
+.close-btn {
+  color: #909399;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.close-btn:hover {
+  color: #f56c6c;
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.ai-result-content {
+  padding: 20px;
+  background: white;
+}
+
+.ai-answer {
+  margin-bottom: 16px;
+  line-height: 1.6;
+  color: #303133;
+  font-size: 14px;
+}
+
+.ai-answer strong {
+  color: #409eff;
+  font-weight: 600;
+}
+
+.ai-answer em {
+  color: #67c23a;
+  font-style: italic;
+}
+
+.ai-sources {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.sources-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.source-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #606266;
+  border: 1px solid #e4e7ed;
+}
+
+.source-item .el-icon {
+  margin-right: 6px;
+  color: #909399;
 }
 
 /* 分类导航 */
@@ -641,6 +930,27 @@ onMounted(async () => {
     flex-direction: column;
     gap: 8px;
     align-items: stretch;
+  }
+
+  .search-input-group {
+    gap: 8px;
+  }
+  
+  .ai-result-header {
+    padding: 12px 16px;
+  }
+  
+  .ai-result-content {
+    padding: 16px;
+  }
+  
+  .sources-list {
+    gap: 6px;
+  }
+  
+  .source-item {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 }
 </style>

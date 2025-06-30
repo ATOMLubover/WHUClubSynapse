@@ -15,6 +15,9 @@
       <AppFooter />
     </el-footer>
 
+    <!-- AI侧边栏对话 -->
+    <AISideChat />
+
     <!-- API模式切换组件 (仅开发环境显示) -->
     <ApiModeSwitch />
   </el-container>
@@ -26,6 +29,7 @@ import { useAuthStore } from '@/stores/auth'
 import AppHeader from '@/components/Layout/AppHeader.vue'
 import AppFooter from '@/components/Layout/AppFooter.vue'
 import ApiModeSwitch from '@/components/Layout/ApiModeSwitch.vue'
+import AISideChat from '@/components/Chat/AISideChat.vue'
 
 const authStore = useAuthStore()
 
