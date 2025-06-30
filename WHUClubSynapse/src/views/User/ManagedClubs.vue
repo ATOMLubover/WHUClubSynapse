@@ -282,21 +282,6 @@ const createRules = {
   maxMembers: [{ required: true, message: '请输入最大成员数', trigger: 'blur' }],
 }
 
-// 统计数据
-const stats = computed(() => {
-  const active = managedClubs.value.filter((club) => club.status === 'managed').length
-  const pending = managedClubs.value.filter((club) => club.status === 'pending').length
-  const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.member_count, 0)
-  const pendingApplications = managedClubs.value.length * 3 // 模拟数据
-
-  return {
-    active,
-    pending,
-    totalMembers,
-    pendingApplications,
-  }
-})
-
 // 获取分类标签类型
 const getCategoryType = (category: ClubCategory) => {
   const typeMap: Record<ClubCategory, string> = {
