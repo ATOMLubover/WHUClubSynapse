@@ -44,7 +44,6 @@ export const useClubStore = defineStore('club', () => {
   const hasMore = computed(() => globalPageData.currentPage < totalPages.value)
 
   // 获取社团列表
-  //TODO: 提醒后端传回社团总数和每个社团的成员数
   const fetchClubs = async (params?: Partial<SearchParams>) => {
     try {
       loading.value = true
@@ -58,9 +57,6 @@ export const useClubStore = defineStore('club', () => {
       const response = await clubApi.getClubList(queryParams)
       const data = response
       clubs.value = data.list
-      clubs.value.forEach((club) => {
-        club.maxMembers = 50
-      })
       globalPageData.total = data.total
       globalPageData.currentPage = data.page
 
