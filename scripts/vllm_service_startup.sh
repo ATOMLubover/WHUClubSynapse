@@ -6,4 +6,5 @@ python -m vllm.entrypoints.openai.api_server \
 --model "/root/autodl-tmp/Qwen/Qwen3-8B" \
 --served-model-name "Qwen3-8B" \
 --max-model-len 8192 \
---trust-remote-code
+--trust-remote-code \
+--port 8010

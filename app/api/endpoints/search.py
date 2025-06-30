@@ -1,7 +1,7 @@
 import httpx
 import re
 from fastapi import APIRouter, Depends, HTTPException
-from app.auth import get_api_key
+from app.utils.auth import get_api_key
 from app.configs.config import settings
 from app.rag.rag_service import retrieve, format_context
 from app.schemas import SearchQuery, SearchResponse

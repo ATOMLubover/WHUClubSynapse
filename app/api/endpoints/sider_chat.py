@@ -2,7 +2,7 @@ import httpx
 import re
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any
-from app.auth import get_api_key
+from app.utils.auth import get_api_key
 from app.schemas import ChatMessage, ChatQuery, ChatResponse
 from app.configs.config import settings
 from app.rag.rag_service import retrieve, format_context

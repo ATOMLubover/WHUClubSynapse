@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # vLLM OpenAI格式兼容 API 端口
-    VLLM_API_URL: str = "http://localhost:8000/v1/chat/completions"
+    VLLM_API_URL: str = "http://localhost:8010/v1/chat/completions"
     VLLM_API_KEY: str = "sk-xxx"  # 离线部署随便写一个，只是需要它来通过 api key 的验证
     MODEL_NAME: str = "Qwen3-8B"
     MODEL_DIR: str = "/root/autodl-tmp/Qwen/Qwen3-8B"

@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Security, HTTPException, status
+from fastapi import FastAPI, Security, HTTPException, status, Depends
 from app.api.endpoints import search, sider_chat
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 
-app = FastAPI(dependencies=[Depends])
+app = FastAPI()
 
 origins = [
     "http://localhost",
