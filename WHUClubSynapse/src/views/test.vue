@@ -1,229 +1,169 @@
 <template>
   <div class="test-page">
-    <h1>功能测试页面</h1>
-
-    <el-card class="test-section">
-      <template #header>
-        <h3>AI审核助手测试</h3>
-      </template>
-
-      <div class="ai-test-layout">
-        <div class="test-info-section">
-          <h4>测试数据</h4>
-          <div class="test-data">
-            <p><strong>申请者姓名:</strong> 赵六</p>
-            <p><strong>专业:</strong> 计算机科学与技术</p>
-            <p><strong>学号:</strong> 2021001004</p>
-            <p><strong>偏好社团:</strong> 学术科技, 创新创业</p>
-            <p><strong>特质标签:</strong> 编程开发, 逻辑清晰, 团队协作, 创新冒险</p>
-            <p><strong>申请理由:</strong> 我对编程很感兴趣，希望能加入社团学习更多技术知识。</p>
-            <p><strong>社团名称:</strong> 计算机科学协会</p>
-            <p><strong>社团要求:</strong> 有编程基础, 对算法有兴趣, 积极参与团队项目</p>
-          </div>
-        </div>
-
-        <div class="ai-test-section">
-          <AIApplicationScreening
-            :application-data="testApplicationData"
-            :club-name="testClubName"
-            :required-conditions="testRequiredConditions"
-          />
-        </div>
-      </div>
-
-      <!-- 调试信息 -->
-      <el-card class="test-section">
-        <template #header>
-          <h3>调试信息</h3>
-        </template>
-        <div class="debug-info">
-          <p><strong>测试社团名称:</strong> {{ testClubName }}</p>
-          <p><strong>测试要求条件:</strong> {{ testRequiredConditions.join(', ') }}</p>
-          <p><strong>申请者姓名:</strong> {{ testApplicationData.realName }}</p>
-          <p><strong>申请者专业:</strong> {{ testApplicationData.major }}</p>
-          <p>
-            <strong>偏好社团:</strong> {{ testApplicationData.interestedCategories?.join(', ') }}
-          </p>
-          <p><strong>特质标签:</strong> {{ testApplicationData.tags?.join(', ') }}</p>
-        </div>
-      </el-card>
-    </el-card>
-
-    <el-card class="test-section">
-      <template #header>
-        <h3>AI氛围透视镜测试</h3>
-      </template>
-
-      <div class="atmosphere-test-layout">
-        <div class="test-info-section">
-          <h4>测试数据</h4>
-          <div class="test-data">
-            <p><strong>社团名称:</strong> 计算机科学协会</p>
-            <p><strong>社团介绍:</strong> 致力于计算机科学技术的推广和学习</p>
-            <p>
-              <strong>详细介绍:</strong>
-              我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。
-            </p>
-            <p><strong>社团公告:</strong> 下周五有编程比赛；欢迎新成员加入</p>
-            <p>
-              <strong>社团动态:</strong>
-              新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会
-            </p>
-            <p><strong>社团标签:</strong> 编程、算法、技术、学术</p>
-          </div>
-        </div>
-
-        <div class="atmosphere-test-section">
-          <AIClubAtmosphere :communication-content="testCommunicationContent" />
-        </div>
-      </div>
-    </el-card>
+    <h1>经费管理功能测试</h1>
+    
+    <div class="test-buttons">
+      <el-button @click="testRoute('5')" type="primary">
+        测试篮球社经费管理 (ID: 5)
+      </el-button>
+      
+      <el-button @click="testRoute('1')" type="success">
+        测试计算机科学协会经费管理 (ID: 1)
+      </el-button>
+      
+      <el-button @click="testClubDetail('5')" type="warning">
+        测试获取篮球社详情 (ID: 5)
+      </el-button>
+      
+      <el-button @click="testManagedClubs" type="info">
+        测试获取管理的社团列表
+      </el-button>
+      
+      <el-button @click="testAIConnection" type="danger">
+        测试AI服务器连接
+      </el-button>
+      
+      <el-button @click="testAIFinancial" type="secondary">
+        测试AI财务接口
+      </el-button>
+      
+      <el-button @click="testFinancialReport" type="warning">
+        测试AI财务报表
+      </el-button>
+    </div>
+    
+    <div v-if="testResult" class="test-result">
+      <h3>测试结果：</h3>
+      <pre>{{ JSON.stringify(testResult, null, 2) }}</pre>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue'
-import type { ClubApplication } from '@/types'
-import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useClubStore } from '@/stores/club'
+import { ElMessage } from 'element-plus'
+import { checkAIStatus, financialBookkeeping, generateFinancialReport } from '@/api/ai'
 
-// 测试数据
-const testApplicationData: ClubApplication = {
-  id: 'test1',
-  userId: 'user4',
-  clubId: '1',
-  username: 'applicant1',
-  realName: '赵六',
-  avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-  applyReason: '我对编程很感兴趣，希望能加入社团学习更多技术知识。',
-  status: 'pending',
-  applyTime: '2024-06-25T10:00:00Z',
-  studentId: '2021001004',
-  major: '计算机科学与技术',
-  phone: '13800138003',
-  email: 'applicant1@example.com',
-  interestedCategories: ['学术科技', '创新创业'],
-  tags: ['编程开发', '逻辑清晰', '团队协作', '创新冒险'],
+const router = useRouter()
+const clubStore = useClubStore()
+const testResult = ref<any>(null)
+
+const testRoute = (clubId: string) => {
+  console.log('测试路由跳转到:', `/user/club/${clubId}/finance`)
+  router.push(`/user/club/${clubId}/finance`)
 }
 
-const testClubName = '计算机科学协会'
-const testRequiredConditions = ['有编程基础', '对算法有兴趣', '积极参与团队项目']
+const testClubDetail = async (clubId: string) => {
+  try {
+    console.log('测试获取社团详情，clubId:', clubId)
+    const result = await clubStore.fetchClubDetail(clubId)
+    testResult.value = result
+    ElMessage.success('获取社团详情成功')
+  } catch (error: any) {
+    console.error('获取社团详情失败:', error)
+    testResult.value = { error: error.message }
+    ElMessage.error('获取社团详情失败')
+  }
+}
 
-const testCommunicationContent = `社团介绍：致力于计算机科学技术的推广和学习
+const testManagedClubs = async () => {
+  try {
+    console.log('测试获取管理的社团列表')
+    const result = await clubStore.fetchManagedClubs()
+    testResult.value = result
+    ElMessage.success('获取管理的社团列表成功')
+  } catch (error: any) {
+    console.error('获取管理的社团列表失败:', error)
+    testResult.value = { error: error.message }
+    ElMessage.error('获取管理的社团列表失败')
+  }
+}
 
-详细介绍：我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。
+const testAIConnection = async () => {
+  try {
+    console.log('测试AI连接...')
+    
+    const isAvailable = await checkAIStatus()
+    
+    if (isAvailable) {
+      testResult.value = { success: true, message: 'AI服务器连接正常' }
+      ElMessage.success('AI服务器连接正常')
+    } else {
+      throw new Error('AI服务不可用')
+    }
+  } catch (error: any) {
+    console.error('AI连接测试失败:', error)
+    testResult.value = { error: error.message }
+    ElMessage.error('AI服务器连接失败')
+  }
+}
 
-社团公告：下周五有编程比赛；欢迎新成员加入
+const testAIFinancial = async () => {
+  try {
+    console.log('测试AI财务接口...')
+    
+    const requestData = {
+      natural_language_input: '今天活动买了10瓶水和一包零食，一共花了55.8元，从小明那里报销。',
+      club_name: '篮球社',
+    }
+    
+    const data = await financialBookkeeping(requestData)
+    testResult.value = { success: true, data }
+    ElMessage.success('AI财务接口测试成功')
+  } catch (error: any) {
+    console.error('AI财务接口测试失败:', error)
+    testResult.value = { error: error.message }
+    ElMessage.error('AI财务接口测试失败')
+  }
+}
 
-社团动态：新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会
-
-社团标签：编程、算法、技术、学术`
+const testFinancialReport = async () => {
+  try {
+    console.log('测试AI财务报表...')
+    
+    const requestData = {
+      club_name: '篮球社',
+    }
+    
+    const data = await generateFinancialReport(requestData)
+    testResult.value = { success: true, data }
+    ElMessage.success('AI财务报表测试成功')
+  } catch (error: any) {
+    console.error('AI财务报表测试失败:', error)
+    testResult.value = { error: error.message }
+    ElMessage.error('AI财务报表测试失败')
+  }
+}
 </script>
 
 <style scoped>
 .test-page {
   padding: 20px;
-  max-width: 1400px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.test-section {
-  margin-bottom: 20px;
-}
-
-.ai-test-layout {
+.test-buttons {
   display: flex;
-  gap: 24px;
-  min-height: 500px;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
 }
 
-.test-info-section {
-  flex: 0 0 300px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.test-result {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
 
-.test-info-section h4 {
-  margin: 0 0 20px 0;
-  color: #303133;
-  font-size: 18px;
-  font-weight: 600;
-  text-align: center;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #409eff;
-}
-
-.test-data p {
-  margin: 12px 0;
-  line-height: 1.6;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 6px;
-  border-left: 3px solid #409eff;
-}
-
-.test-data strong {
-  color: #303133;
-  font-weight: 600;
-}
-
-.ai-test-section {
-  flex: 1;
-  min-height: 500px;
-}
-
-.debug-info p {
-  margin: 8px 0;
-  line-height: 1.5;
-}
-
-.debug-info strong {
-  color: #606266;
-}
-
-.atmosphere-test-layout {
-  display: flex;
-  gap: 24px;
-  min-height: 500px;
-}
-
-.test-info-section {
-  flex: 0 0 300px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.test-info-section h4 {
-  margin: 0 0 20px 0;
-  color: #303133;
-  font-size: 18px;
-  font-weight: 600;
-  text-align: center;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #409eff;
-}
-
-.test-data p {
-  margin: 12px 0;
-  line-height: 1.6;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 6px;
-  border-left: 3px solid #409eff;
-}
-
-.test-data strong {
-  color: #303133;
-  font-weight: 600;
-}
-
-.atmosphere-test-section {
-  flex: 1;
-  min-height: 500px;
+.test-result pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 12px;
+  line-height: 1.4;
 }
 </style>

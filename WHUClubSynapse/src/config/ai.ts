@@ -1,7 +1,7 @@
 // AI服务配置
 export const AI_CONFIG = {
   // AI代理服务器地址 - 修改这里即可更新所有AI接口地址
-  BASE_URL: ' https://b381-125-220-159-5.ngrok-free.app',
+  BASE_URL: 'https://fa82-125-220-159-5.ngrok-free.app',
   
   // 默认模型配置
   DEFAULT_MODEL: 'Qwen/Qwen3-8B-AWQ',
