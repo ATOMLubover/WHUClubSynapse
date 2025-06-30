@@ -3,23 +3,28 @@
     <div class="post-layout">
       <!-- 左侧帖子内容 -->
       <div class="post-content-area">
-        <el-card class="post-main">
-          <div class="post-title">{{ post?.title }}</div>
-          <div class="post-meta">
-            <el-avatar :size="40" :src="post?.authorAvatar || defaultAvatar" class="post-avatar" />
-            <div class="meta-info">
-              <span class="author">{{ post?.authorName }}</span>
-              <span class="time">{{ formatDate(post?.created_at) }}</span>
+        <el-card class="post-main" v-loading="postLoading">
+          <div v-if="!postLoading && post">
+            <div class="post-title">{{ post.title }}</div>
+            <div class="post-meta">
+              <el-avatar :size="40" :src="post.authorAvatar || defaultAvatar" class="post-avatar" />
+              <div class="meta-info">
+                <span class="author">{{ post.authorName }}</span>
+                <span class="time">{{ formatDate(post.created_at) }}</span>
+              </div>
+            </div>
+            <div class="post-content">
+              <MarkdownRenderer :content="post.content || ''" />
             </div>
           </div>
-          <div class="post-content">
-            <MarkdownRenderer :content="post?.content || ''" />
+          <div v-else-if="!postLoading && !post" class="error-content">
+            <el-empty description="帖子不存在或已被删除" />
           </div>
         </el-card>
-        <el-card class="reply-area">
+        <el-card class="reply-area" v-loading="repliesLoading">
           <div class="reply-header">全部回复（{{ total }}）</div>
-          <el-empty v-if="!replies.length && !loading" description="暂无回复" />
-          <div v-else class="reply-list">
+          <el-empty v-if="!replies.length && !repliesLoading" description="暂无回复" />
+          <div v-else-if="!repliesLoading" class="reply-list">
             <div v-for="(reply, idx) in replies" :key="reply.id" class="reply-item">
               <el-avatar
                 :size="32"
@@ -80,36 +85,95 @@ import AIChatWindow from '@/components/Chat/AIChatWindow.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import type { ClubPost, ClubPostReply } from '@/types'
-
+import { useClubStore } from '@/stores/club'
 const defaultAvatar = 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png'
 const route = useRoute()
 const authStore = useAuthStore()
 const clubId = String(route.params.clubId)
 const postId = String(route.params.postId)
-
+const contentUrl = decodeURIComponent(String(route.params.content_url))
+const clubStore = useClubStore()
 const post = ref<ClubPost | null>(null)
 const replies = ref<ClubPostReply[]>([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = 10
-const loading = ref(false)
+const postLoading = ref(false)
+const repliesLoading = ref(false)
 const replyContent = ref('')
 const replyLoading = ref(false)
 
 const fetchPost = async () => {
-  const res = await getClubPostDetail(postId)
-  post.value = res.data.data
+  try {
+    postLoading.value = true
+
+    // 先从store中获取帖子基础信息
+    if (clubStore.currentClubPosts.length == 0) {
+      await clubStore.fetchClubPosts(clubId, 1, 10)
+      console.log('currentClubPosts:', clubStore.currentClubPosts)
+    }
+    const storePost = clubStore.currentClubPosts.find((p) => p.post_id == postId)
+
+    if (storePost) {
+      // 如果store中有基础信息，先使用它
+      post.value = { ...storePost }
+    }
+    console.log('Post:', post.value)
+
+    // 获取markdown内容
+    console.log('正在获取帖子详细内容，postId:', postId, 'contentUrl:', contentUrl)
+    const res = await getClubPostDetail(postId, contentUrl)
+    console.log('获取到的markdown内容:', res)
+
+    // 如果没有基础信息，创建一个基本的post对象
+    if (!post.value) {
+      post.value = {
+        post_id: postId,
+        title: '加载中...',
+        content: '',
+        authorName: '未知作者',
+        authorAvatar: defaultAvatar,
+        created_at: new Date().toISOString(),
+        comment_count: 0,
+        club_id: '',
+        author_id: 0,
+        content_url: contentUrl,
+      }
+    }
+
+    // 更新content字段为返回的markdown内容
+    if (res && typeof res === 'string') {
+      // 如果返回的直接是字符串内容
+      post.value.content = res
+      console.log('post.value.content:', post.value.content)
+    } else if (res && res.data) {
+      // 如果返回的是包装的对象
+      post.value.content = typeof res.data === 'string' ? res.data : res.data.content || ''
+    } else {
+      console.warn('无法解析markdown内容:', res)
+      post.value.content = '内容加载失败'
+    }
+
+    console.log('帖子内容已更新:', post.value)
+  } catch (error) {
+    console.error('获取帖子详情失败:', error)
+    ElMessage.error('获取帖子详情失败')
+  } finally {
+    postLoading.value = false
+  }
 }
+
 const fetchReplies = async () => {
-  loading.value = true
+  repliesLoading.value = true
   try {
     const res = await getClubPostReplies(postId, page.value, pageSize)
     replies.value = res.data.data.list
     total.value = res.data.data.total
   } finally {
-    loading.value = false
+    repliesLoading.value = false
   }
 }
+
 const handleReply = async () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
@@ -135,10 +199,12 @@ const handleReply = async () => {
     replyLoading.value = false
   }
 }
+
 const formatDate = (date?: string) => {
   if (!date) return ''
   return new Date(date).toLocaleString('zh-CN')
 }
+
 onMounted(() => {
   fetchPost()
   fetchReplies()
@@ -177,6 +243,11 @@ onMounted(() => {
   box-shadow: 0 4px 24px rgba(64, 158, 255, 0.08);
   background: linear-gradient(135deg, #f8fafc 60%, #e6f0ff 100%);
   padding: 32px 28px 24px 28px;
+}
+
+.error-content {
+  text-align: center;
+  padding: 40px 20px;
 }
 
 .post-title {

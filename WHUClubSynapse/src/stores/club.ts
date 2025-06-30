@@ -2,7 +2,7 @@ import { ref, computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
-import type { Club, ClubCategory, SearchParams, PaginatedData } from '@/types'
+import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost } from '@/types'
 
 export const useClubStore = defineStore('club', () => {
   // 状态
@@ -14,6 +14,10 @@ export const useClubStore = defineStore('club', () => {
   const recommendedClubs = ref<Club[]>([])
   const categoriesList = ref<ClubCategory[]>([]) // 新增：分类列表
   const currentClub = ref<Club | null>(null)
+  
+  // 新增：全局帖子数组
+  const clubposts = ref<ClubPost[]>([])
+  const currentClubPosts = ref<ClubPost[]>([]) // 当前社团的帖子
 
   // 分页和搜索状态
 
@@ -33,6 +37,7 @@ export const useClubStore = defineStore('club', () => {
   const loading = ref(false) // 主要用于clubs列表
   const categoriesLoading = ref(false) // 用于分类加载
   const detailLoading = ref(false) // 用于详情加载
+  const postsLoading = ref(false) // 用于帖子加载
   
   const searchParams = ref<SearchParams>({
     keyword: '',
@@ -386,79 +391,28 @@ export const useClubStore = defineStore('club', () => {
     globalPageData.currentPage = 1
   }
 
-  // 申请创建社团（需要管理员审核）
-  const applyToCreateClub = async (data: {
-    name: string
-    desc: string
-    requirements: string
-    category?: number
-    maxMembers?: number
-    tags?: string[]
-    coverImage?: string
-    introduction?: string
-    contactInfo?: {
-      qq?: string
-      wechat?: string
-      email?: string
-      phone?: string
-      address?: string
-    }
-    meetingTime?: string
-    meetingLocation?: string
-  }) => {
+  // 帖子相关操作方法
+
+  // 获取特定社团的帖子
+  const fetchClubPosts = async (clubId: string, page: number = 1, pageSize: number = 10) => {
     try {
-      const response = await clubApi.applyToCreateClub(data)
-      ElMessage.success('社团创建申请提交成功，等待管理员审核')
-      return response.data.data
+      postsLoading.value = true
+      const response = await clubApi.getClubPosts(clubId, page, pageSize)
+      currentClubPosts.value = response.list
+      return response
     } catch (error) {
-      console.error('申请创建社团失败:', error)
-      ElMessage.error('申请创建社团失败')
+      console.error('获取社团帖子失败:', error)
+      ElMessage.error('获取社团帖子失败')
       throw error
+    } finally {
+      postsLoading.value = false
     }
   }
 
-  // 获取待审核的社团创建申请列表（管理员功能）
-  const fetchPendingClubApplications = async (params?: {
-    page?: number
-    pageSize?: number
-    status?: 'pending' | 'approved' | 'rejected'
-  }) => {
-    try {
-      const response = await clubApi.getPendingClubApplications(params)
-      return response.data.data
-    } catch (error) {
-      console.error('获取待审核申请失败:', error)
-      ElMessage.error('获取待审核申请失败')
-      throw error
-    }
-  }
 
-  // 审核社团创建申请（管理员功能）
-  const reviewClubApplication = async (applicationId: string, data: {
-    status: 'approved' | 'rejected'
-    rejectReason?: string
-  }) => {
-    try {
-      const response = await clubApi.reviewClubApplication(applicationId, data)
-      ElMessage.success(data.status === 'approved' ? '审核通过，社团创建成功' : '审核拒绝')
-      return response.data.data
-    } catch (error) {
-      console.error('审核申请失败:', error)
-      ElMessage.error('审核申请失败')
-      throw error
-    }
-  }
-
-  // 删除社团
-  const deleteClub = async (clubId: string) => {
-    try {
-      const response = await clubApi.deleteClub(clubId)
-      return response.data.data
-    } catch (error) {
-      console.error('删除社团失败:', error)
-      ElMessage.error('删除社团失败')
-      throw error
-    }
+  // 根据ID查找帖子
+  const getPostById = (postId: string): ClubPost | undefined => {
+    return clubposts.value.find(post => post.post_id === postId)
   }
 
   return {
@@ -477,8 +431,12 @@ export const useClubStore = defineStore('club', () => {
     loading,
     categoriesLoading, // 新增：分类加载状态
     detailLoading, // 新增：详情加载状态
+    postsLoading, // 新增：帖子加载状态
     searchParams,
     activeCategory,
+    // 新增：帖子相关状态
+    clubposts,
+    currentClubPosts,
     // 计算属性
     totalPages,
     hasMore,
@@ -494,7 +452,7 @@ export const useClubStore = defineStore('club', () => {
     setSearchParams,
     setActiveCategory,
     resetSearch,
-    setGlobalPage,
+    setGlobalPage,  
     setSearchPage,
     setSearchPageSize,
     setPageSize,
@@ -505,10 +463,8 @@ export const useClubStore = defineStore('club', () => {
     fetchJoinedClubs,
     fetchManagedClubs,
     quitClub,
+    fetchClubPosts,
+    getPostById,
     updateClub,
-    applyToCreateClub,
-    fetchPendingClubApplications,
-    reviewClubApplication,
-    deleteClub,
   }
 })

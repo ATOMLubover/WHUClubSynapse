@@ -673,20 +673,15 @@ export const mockGetClubPosts = async (
 }
 
 export const mockGetClubPostDetail = async (
-  postId: string
-): Promise<{ data: ApiResponse<ClubPost> }> => {
+  postId: string,
+  contentUrl: string
+): Promise<string > => {
   await delay(200)
   
   const post = mockClubPosts.find(p => p.post_id === postId)
   if (!post) throw new Error('帖子不存在')
   
-  return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: post
-    }
-  }
+  return post.content || ''
 }
 
 export const mockGetClubPostReplies = async (

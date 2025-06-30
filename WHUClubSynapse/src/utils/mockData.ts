@@ -407,7 +407,7 @@ export const mockClubs: Club[] = [
 
 // 模拟用户数据
 export const mockUser: User = {
-  id: 1,
+  user_id: 1,
   username: 'testuser',
   email: 'test@example.com',
   avatar_url: 'https://avatars.githubusercontent.com/u/1?v=3',
@@ -484,12 +484,13 @@ export const mockClubPosts: ClubPost[] = [
     post_id: 'p1',
     club_id: '1',
     title: '新学期社团纳新活动讨论',
-    content: '大家对今年的纳新活动有什么建议？欢迎留言讨论！',
+    content: '## 大家对今年的纳新活动有什么建议？欢迎留言讨论！\n### 建议1：增加线上宣传\n### 建议2：邀请学长学姐分享经验\n### 建议3：增加活动多样性\n### 建议4：增加活动参与度\n### 建议5：增加活动参与度\n### 建议6：增加活动参与度\n### 建议7：增加活动参与度\n### 建议8：增加活动参与度\n### 建议9：增加活动参与度\n### 建议10：增加活动参与度',
     author_id: 1,
     authorName: '小明',
     authorAvatar: '',
     created_at: '2024-06-01T10:00:00Z',
-    comment_count: 2
+    comment_count: 2,
+    content_url: 'https://picsum.photos/400/240?random=1',//帖子文件地址
   },
   {
     post_id: 'p2',
@@ -500,7 +501,8 @@ export const mockClubPosts: ClubPost[] = [
     authorName: '小红',
     authorAvatar: '',
     created_at: '2024-06-02T12:00:00Z',
-    comment_count: 1
+    comment_count: 1,
+    content_url: 'https://picsum.photos/400/240?random=2'//帖子文件地址
   },
   {
     post_id: 'p3',
@@ -511,7 +513,8 @@ export const mockClubPosts: ClubPost[] = [
     authorName: '小刚',
     authorAvatar: '',
     created_at: '2024-06-03T09:00:00Z',
-    comment_count: 3
+    comment_count: 3,
+    content_url: 'https://picsum.photos/400/240?random=3'//帖子文件地址
   }
 ]
 
