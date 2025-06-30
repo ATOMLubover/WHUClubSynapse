@@ -335,10 +335,9 @@ const goToClub = (clubId: string) => {
 // 初始化数据
 onMounted(async () => {
   try {
-    clubStore.fetchClubs()
-
+    await clubStore.fetchClubs()
     if (authStore.isLoggedIn) {
-      clubStore.fetchFavoriteClubs()
+      await clubStore.fetchFavoriteClubs()
     }
     // 并行获取数据
     await Promise.all([

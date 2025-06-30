@@ -105,9 +105,9 @@ const fetchPosts = async () => {
   try {
     console.log('正在获取社团帖子，clubId:', props.clubId)
     const res = await getClubPosts(props.clubId, page.value, pageSize)
-    console.log('获取到的帖子数据:', res.data.data)
-    posts.value = res.data.data.list
-    total.value = res.data.data.total
+    console.log('获取到的帖子数据:', res)
+    posts.value = res.list
+    total.value = res.total
   } catch (error) {
     console.error('获取帖子失败:', error)
     ElMessage.error('获取帖子失败')

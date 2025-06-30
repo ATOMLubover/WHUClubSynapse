@@ -662,7 +662,7 @@ export const mockGetClubPosts = async (
   clubId: string,
   page = 1,
   pageSize = 5
-): Promise<{ data: ApiResponse<PaginatedData<ClubPost>> }> => {
+): Promise<PaginatedData<ClubPost>> => {
   await delay(300)
   
   console.log('mockGetClubPosts 被调用，clubId:', clubId)
@@ -678,16 +678,10 @@ export const mockGetClubPosts = async (
   console.log('返回的帖子列表:', list)
   
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
-        list,
-        total: all.length,
-        page,
-        pageSize
-      }
-    }
+    list,
+    total: all.length,
+    page,
+    pageSize
   }
 }
 

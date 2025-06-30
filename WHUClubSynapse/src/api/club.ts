@@ -1,6 +1,6 @@
 //TODO: 需要改为与后端交互的api
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
@@ -303,7 +303,29 @@ export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null
     : await request.delete(`/user/joined-clubs/${clubId}`)
 }
 
-export const getClubPosts = mockGetClubPosts
+export const getClubPosts = async (clubId: string, page: number, pageSize: number): Promise<PaginatedData<ClubPost>> => {
+
+    if(getIsUsingMockAPI()){
+      return await mockClub.mockGetClubPosts(clubId, page, pageSize)
+    }
+
+    const queryParams = new URLSearchParams()
+    if (page) queryParams.append('offset', ((page - 1) * pageSize).toString())
+    if (pageSize) queryParams.append('post_num', pageSize.toString()) 
+
+    const queryString = queryParams.toString()
+    const url = queryString ? `/api/club/post/posts/${clubId}?${queryString}` : `/api/club/post/posts/${clubId}`
+
+    const res = (await request.get(url)).data as ClubPost[]
+    //const total=?
+    return {
+      list: res,
+      total: res.length,
+      page: page,
+      pageSize: pageSize,
+    }
+}
+
 export const getClubPostDetail = mockGetClubPostDetail
 export const getClubPostReplies = mockGetClubPostReplies
 export const createClubPost = mockCreateClubPost
