@@ -8,9 +8,15 @@ from redis import Redis, exceptions
 from app.configs.config import settings
 from app.rag.rag_service import get_embeddings
 from app.utils.singleton import chroma_collection, redis_pool, logger  # 从工具文件中引入向量数据库集合 和 redis连接池
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 SHUTDOWN_REQUESTED = False
 
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=settings.CHUNK_SIZE,
+    chunk_overlap=settings.CHUNK_OVERLAP,
+    separators=["\n\n", "\n", "。", "，", "、", " "]
+)
 
 def handle_shutdown(signum, frame):
     """停机信号处理器"""
@@ -38,48 +44,54 @@ def sanitize_metadata_value(value):
 
 # 批量消息处理
 def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
-    """一次性处理一批消息，以提高效率"""
+    """
+    一次性处理一批消息，对大文档进行切分，然后统一处理。
+    """
     first_msg_id = messages[0][0]
     last_msg_id = messages[-1][0]
     logger.debug(f"Parsing batch of {len(messages)} messages from {first_msg_id} to {last_msg_id}.")
+
     batch_ids, batch_embeddings, batch_metadatas, batch_documents = [], [], [], []
     processed_msg_ids = []
 
     for msg_id, msg_data in messages:
         try:
+            # 直接以字符串形式获取 source_id 和 content，使用 .get() 保证安全
             source_id_base = msg_data.get('source_id')
             content = msg_data.get('content')
 
+            # 2. 检查必要字段是否存在且不为空
             if not source_id_base or not content:
                 raise ValueError("Message is missing 'source_id' or 'content', or they are empty.")
 
             source_id = "dynamic::" + source_id_base
 
-            # 获取 metadata 字段
+            chunks = text_splitter.split_text(content)
+            logger.debug(f"Document {source_id_base} was split into {len(chunks)} chunks.")
+
+            # 安全地处理 metadata
             metadata_str = msg_data.get('metadata', '')
+            raw_metadata = json.loads(metadata_str) if metadata_str.strip() else {}
+            sanitized_metadata = {key: sanitize_metadata_value(value) for key, value in raw_metadata.items()}
 
-            if not metadata_str.strip():
-                raw_metadata = {}
-            else:
-                raw_metadata = json.loads(metadata_str)
+            # 为每个切分出的文本块准备数据
+            for i, chunk_content in enumerate(chunks):
+                chunk_id = f"{source_id}::chunk::{i}"
+                batch_ids.append(chunk_id)
+                batch_documents.append(chunk_content)
+                batch_metadatas.append(sanitized_metadata)
 
-            sanitized_metadata = {
-                key: sanitize_metadata_value(value) for key, value in raw_metadata.items()
-            }
-
-            batch_documents.append(content)
-            batch_metadatas.append(sanitized_metadata)
             processed_msg_ids.append(msg_id)
 
-
         except Exception as e:
-            logger.error(f"Failed to parse message. Error: {e}", extra={"msg_id": msg_id})
+            logger.error(f"Failed to parse or process message. Error: {e}", extra={"msg_id": msg_id})
 
     if not batch_documents:
-        return []  # 如果所有消息都解析失败，直接返回
+        # 如果所有消息都解析失败，也要返回ID以便ACK，防止毒丸消息
+        return [msg_id for msg_id, _ in messages] if messages else []
 
     try:
-        # 批量向量化
+        # 批量向量化所有切分出的文本块
         batch_embeddings = get_embeddings(batch_documents)
 
         # 批量写入向量数据库
@@ -89,13 +101,13 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
             metadatas=batch_metadatas,
             documents=batch_documents
         )
-        logger.info(f"Successfully processed and upserted a batch of {len(batch_ids)} messages.")
+        logger.info(
+            f"Successfully processed and upserted {len(batch_ids)} chunks from {len(processed_msg_ids)} original messages.")
         return processed_msg_ids
 
     except Exception as e:
-        logger.error(f"Failed to process batch. Error: {e}", extra={"msg_id": "batch_operation"})
-        return []  # 批量处理失败，这批消息都算失败
-
+        logger.error(f"Failed to process batch embeddings/upsert. Error: {e}", extra={"msg_id": "batch_operation"})
+        return []  # 批量处理失败，不ACK，以便重试
 
 # 主运行循环
 def run_sync_worker():
