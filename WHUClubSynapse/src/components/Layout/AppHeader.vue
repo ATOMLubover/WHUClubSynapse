@@ -26,7 +26,7 @@
     </div>
 
     <div>
-      <el-button type="primary" @click="handleAdmin">后台管理入口</el-button>
+      <el-button type="primary" @click="adminLoginDialogVisible = true">后台管理入口</el-button>
     </div>
 
     <!-- 右侧用户操作区 -->
@@ -93,6 +93,22 @@
       <span>{{ item.time }}</span>
     </div>
   </el-drawer>
+
+  <!-- 管理员登录弹窗 -->
+  <el-dialog v-model="adminLoginDialogVisible" title="管理员登录" width="400px">
+    <el-form :model="adminLoginForm" :rules="adminLoginRules" ref="adminLoginFormRef" label-width="80px">
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="adminLoginForm.username" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="密码" prop="password">
+        <el-input v-model="adminLoginForm.password" type="password" autocomplete="off" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="adminLoginDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="handleAdminLogin" :loading="adminLoginLoading">登录</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -111,6 +127,7 @@ import {
   Plus,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 
 interface Notification {
   id: number | string
@@ -199,6 +216,35 @@ const handleUserMenuCommand = (command: string) => {
       authStore.logout()
       router.push('/')
       break
+  }
+}
+
+// 管理员登录弹窗相关
+const adminLoginDialogVisible = ref(false)
+const adminLoginLoading = ref(false)
+const adminLoginForm = ref({ username: '', password: '' })
+const adminLoginFormRef = ref()
+const adminLoginRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+}
+
+const handleAdminLogin = async () => {
+  await adminLoginFormRef.value?.validate()
+  adminLoginLoading.value = true
+  try {
+    if (
+      adminLoginForm.value.username === 'admin' &&
+      adminLoginForm.value.password === '123456'
+    ) {
+      ElMessage.success('登录成功')
+      adminLoginDialogVisible.value = false
+      router.push('/admin')
+    } else {
+      ElMessage.error('账号或密码错误')
+    }
+  } finally {
+    adminLoginLoading.value = false
   }
 }
 

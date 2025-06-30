@@ -249,6 +249,42 @@ export interface ClubApplication {
   tags?: string[] // 用户特质标签
 }
 
+// 社团创建申请类型
+export interface ClubCreationApplication {
+  id: string
+  userId: string
+  username: string
+  realName?: string
+  avatar_url: string
+  clubName: string
+  description: string
+  category: number
+  maxMembers: number
+  tags: string[]
+  coverImage?: string
+  requirements: string
+  introduction?: string
+  contactInfo?: {
+    qq?: string
+    wechat?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  meetingTime?: string
+  meetingLocation?: string
+  status: 'pending' | 'approved' | 'rejected'
+  applyTime: string
+  reviewTime?: string
+  reviewerId?: string
+  reviewerName?: string
+  rejectReason?: string
+  studentId?: string
+  major?: string
+  phone?: string
+  email?: string
+}
+
 // 申请审核请求类型
 export interface ApplicationReviewRequest {
   applicationId: string

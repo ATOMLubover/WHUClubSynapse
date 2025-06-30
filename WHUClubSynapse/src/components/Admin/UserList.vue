@@ -148,37 +148,37 @@
     </el-card>
 
     <!-- 添加/编辑用户对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px" @close="resetForm">
-      <el-form ref="formRef" :model="userForm" :rules="formRules" label-width="100px">
+    <el-dialog v-model="editDialogVisible" :title="editDialogTitle" width="600px" @close="resetForm">
+      <el-form ref="editFormRef" :model="editUserForm" :rules="editFormRules" label-width="100px">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="userForm.username" placeholder="请输入用户名" />
+          <el-input v-model="editUserForm.username" placeholder="请输入用户名" />
         </el-form-item>
 
         <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="userForm.realName" placeholder="请输入真实姓名" />
+          <el-input v-model="editUserForm.realName" placeholder="请输入真实姓名" />
         </el-form-item>
 
         <el-form-item label="学号" prop="studentId">
-          <el-input v-model="userForm.studentId" placeholder="请输入学号" />
+          <el-input v-model="editUserForm.studentId" placeholder="请输入学号" />
         </el-form-item>
 
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="userForm.email" placeholder="请输入邮箱" type="email" />
+          <el-input v-model="editUserForm.email" placeholder="请输入邮箱" type="email" />
         </el-form-item>
 
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="userForm.phone" placeholder="请输入手机号" />
+          <el-input v-model="editUserForm.phone" placeholder="请输入手机号" />
         </el-form-item>
 
         <el-form-item label="角色" prop="role">
-          <el-select v-model="userForm.role" placeholder="请选择角色">
+          <el-select v-model="editUserForm.role" placeholder="请选择角色">
             <el-option label="普通用户" value="user" />
             <el-option label="管理员" value="admin" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="状态" prop="status">
-          <el-select v-model="userForm.status" placeholder="请选择状态">
+          <el-select v-model="editUserForm.status" placeholder="请选择状态">
             <el-option label="正常" value="active" />
             <el-option label="禁用" value="disabled" />
           </el-select>
@@ -187,8 +187,8 @@
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitForm" :loading="submitLoading"> 确定 </el-button>
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="saveUser" :loading="submitLoading"> 确定 </el-button>
         </span>
       </template>
     </el-dialog>
@@ -199,6 +199,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, RefreshLeft, Plus, Download } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 // 搜索表单
 const searchForm = reactive({
@@ -215,58 +218,21 @@ const pageData = reactive({
 })
 
 // 表格数据
-const users = ref([
-  {
-    id: '1',
-    username: 'admin',
-    realName: '系统管理员',
-    studentId: '2020001001',
-    email: 'admin@whu.edu.cn',
-    phone: '13800138000',
-    role: 'admin',
-    status: 'active',
-    avatar_url: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-    lastLogin: '2024-12-20T10:30:00Z',
-    createdAt: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    username: 'user001',
-    realName: '张三',
-    studentId: '2021001001',
-    email: 'zhangsan@whu.edu.cn',
-    phone: '13800138001',
-    role: 'user',
-    status: 'active',
-    avatar_url: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-    lastLogin: '2024-12-19T15:20:00Z',
-    createdAt: '2024-09-01T00:00:00Z',
-  },
-])
-
+const users = ref([])
 const loading = ref(false)
 const selectedUsers = ref<any[]>([])
 
 // 对话框相关
-const dialogVisible = ref(false)
-const dialogTitle = ref('添加用户')
+const editDialogVisible = ref(false)
+const editDialogTitle = ref('编辑用户')
 const submitLoading = ref(false)
-const formRef = ref()
+const editFormRef = ref()
 
 // 用户表单
-const userForm = reactive({
-  id: '',
-  username: '',
-  realName: '',
-  studentId: '',
-  email: '',
-  phone: '',
-  role: 'user',
-  status: 'active',
-})
+const editUserForm = ref({})
 
 // 表单验证规则
-const formRules = {
+const editFormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
@@ -282,7 +248,7 @@ const formRules = {
 // 搜索
 const handleSearch = () => {
   console.log('搜索用户:', searchForm)
-  fetchUsers()
+  loadUsers()
 }
 
 // 重置搜索
@@ -292,17 +258,15 @@ const resetSearch = () => {
     role: '',
     status: '',
   })
-  fetchUsers()
+  loadUsers()
 }
 
 // 获取用户列表
-const fetchUsers = async () => {
+const loadUsers = async () => {
   loading.value = true
   try {
-    // 这里应该调用API
-    console.log('获取用户列表')
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    pageData.total = 100 // 模拟总数
+    users.value = await authStore.fetchAllUsers()
+    pageData.total = users.value.length // 实际总数
   } catch (error) {
     ElMessage.error('获取用户列表失败')
   } finally {
@@ -312,15 +276,15 @@ const fetchUsers = async () => {
 
 // 显示添加对话框
 const showAddDialog = () => {
-  dialogTitle.value = '添加用户'
-  dialogVisible.value = true
+  editDialogTitle.value = '添加用户'
+  editDialogVisible.value = true
 }
 
 // 编辑用户
 const editUser = (user: any) => {
-  dialogTitle.value = '编辑用户'
-  Object.assign(userForm, user)
-  dialogVisible.value = true
+  editDialogTitle.value = '编辑用户'
+  Object.assign(editUserForm, user)
+  editDialogVisible.value = true
 }
 
 // 查看用户详情
@@ -340,26 +304,24 @@ const toggleUserStatus = async (user: any) => {
 
     user.status = user.status === 'active' ? 'disabled' : 'active'
     ElMessage.success(`${action}成功`)
+    loadUsers()
   } catch {
     // 用户取消操作
   }
 }
 
 // 提交表单
-const submitForm = async () => {
-  if (!formRef.value) return
+const saveUser = async () => {
+  if (!editFormRef.value) return
 
   try {
-    await formRef.value.validate()
+    await editFormRef.value.validate()
     submitLoading.value = true
 
-    // 这里应该调用API
-    console.log('提交用户数据:', userForm)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    ElMessage.success(dialogTitle.value === '添加用户' ? '添加成功' : '更新成功')
-    dialogVisible.value = false
-    fetchUsers()
+    await authStore.updateUser(editUserForm.value.id, editUserForm.value)
+    ElMessage.success(editDialogTitle.value === '添加用户' ? '添加成功' : '更新成功')
+    editDialogVisible.value = false
+    loadUsers()
   } catch (error) {
     console.error('表单验证失败:', error)
   } finally {
@@ -369,7 +331,7 @@ const submitForm = async () => {
 
 // 重置表单
 const resetForm = () => {
-  Object.assign(userForm, {
+  Object.assign(editUserForm, {
     id: '',
     username: '',
     realName: '',
@@ -379,8 +341,8 @@ const resetForm = () => {
     role: 'user',
     status: 'active',
   })
-  if (formRef.value) {
-    formRef.value.clearValidate()
+  if (editFormRef.value) {
+    editFormRef.value.clearValidate()
   }
 }
 
@@ -392,12 +354,12 @@ const handleSelectionChange = (selection: any[]) => {
 // 分页处理
 const handleSizeChange = (size: number) => {
   pageData.pageSize = size
-  fetchUsers()
+  loadUsers()
 }
 
 const handleCurrentChange = (page: number) => {
   pageData.currentPage = page
-  fetchUsers()
+  loadUsers()
 }
 
 // 导出用户数据
@@ -411,7 +373,7 @@ const formatDate = (dateStr: string) => {
 }
 
 onMounted(() => {
-  fetchUsers()
+  loadUsers()
 })
 </script>
 
