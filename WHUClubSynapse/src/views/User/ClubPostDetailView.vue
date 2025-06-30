@@ -112,7 +112,7 @@ const fetchPost = async () => {
       await clubStore.fetchClubPosts(clubId, 1, 10)
       console.log('currentClubPosts:', clubStore.currentClubPosts)
     }
-    const storePost = clubStore.currentClubPosts.find((p) => p.post_id === postId)
+    const storePost = clubStore.currentClubPosts.find((p) => p.post_id == postId)
 
     if (storePost) {
       // 如果store中有基础信息，先使用它
