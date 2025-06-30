@@ -1,14 +1,16 @@
 import httpx
 import re
-from fastapi import APIRouter, HTTPException
-
+from fastapi import APIRouter, Depends, HTTPException
+from app.auth import get_api_key
 from app.configs.config import settings
 from app.rag.rag_service import retrieve, format_context
 from app.schemas import SearchQuery, SearchResponse
 from app.utils.singleton import logger
 
-# 创建 FastAPI 路由
-router = APIRouter()
+# 创建 FastAPI 路由，通过 dependencies 参数应用认证
+router = APIRouter(
+    dependencies=[Depends(get_api_key)]
+)
 
 
 @router.post("/smart-search", response_model=SearchResponse, summary="AI智能搜素总结接口")

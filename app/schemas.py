@@ -2,7 +2,6 @@ from typing import List, Dict, Any, Optional
 
 from pydantic import BaseModel, Field
 
-
 # RAG 数据同步模板
 class Document(BaseModel):
     document_id: int

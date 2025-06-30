@@ -1,18 +1,18 @@
 import httpx
 import re
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any
-
+from app.auth import get_api_key
 from app.schemas import ChatMessage, ChatQuery, ChatResponse
 from app.configs.config import settings
 from app.rag.rag_service import retrieve, format_context
 from app.utils.singleton import logger
 
-router = APIRouter()
-
+router = APIRouter(
+    dependencies=[Depends(get_api_key)]
+)
 
 # --- Helper Functions (Pure or Near-Pure Logic) ---
-
 def _format_history(history: List[ChatMessage]) -> str:
     """
     Formats the chat history list into a readable string. Pure function
