@@ -391,13 +391,24 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
     const queryString = queryParams.toString()
     const url = queryString ? `/api/club/post/posts/${clubId}?${queryString}` : `/api/club/post/posts/${clubId}`
 
-    const res = (await request.get(url)).data as ClubPost[]
+    const res = (await request.get(url))
+
+    if(res.data==null){
+      return{
+        list:[],
+        total:0,
+        page:page,
+        pageSize: pageSize,
+
+      }
+    }
     //const total=?
     return {
-      list: res,
-      total: res.length,
+      list: res.data,
+      total: res.data.length,
       page: page,
       pageSize: pageSize,
+
     }
 }
 

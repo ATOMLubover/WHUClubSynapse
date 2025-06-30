@@ -123,6 +123,11 @@ const router = createRouter({
       name: 'test',
       component: () => import('@/views/test2.vue'),
     },
+    {
+      path:'/admin',
+      name:'admin',
+      component:()=>import("@/views/Admin/index.vue")
+    }
   ],
 })
 
