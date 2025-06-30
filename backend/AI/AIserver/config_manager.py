@@ -118,5 +118,9 @@ class ConfigManager:
     def rate_limit_window(self) -> int:
         return self.get('rate_limit.window_seconds', 60)
 
+    @property
+    def financial_data_file(self) -> str:
+        return self.get('financial_assistant.data_file', 'financial_data.json')
+
 # 创建全局配置实例
 config = ConfigManager() 

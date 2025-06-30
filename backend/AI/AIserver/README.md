@@ -12,6 +12,7 @@
 - 🔧 JSON配置文件，易于管理
 - 🌐 CORS支持
 - 📋 详细的日志记录
+- 💾 **智能财务助理**: 提供对话式记账、一键生成财务报表、预算超支预警和预算修改功能。支持多社团独立管理账目和预算，并自动将数据持久化到本地JSON文件。
 
 ## 安装依赖
 
@@ -55,6 +56,9 @@ pip install -r requirements.txt
     "enabled": false,
     "requests_per_minute": 100,
     "window_seconds": 60
+  },
+  "financial_assistant": {
+    "data_file": "financial_data.json"
   }
 }
 ```
@@ -87,6 +91,9 @@ pip install -r requirements.txt
   - `enabled`: 是否启用请求限流
   - `requests_per_minute`: 每分钟最大请求数
   - `window_seconds`: 限流时间窗口（秒）
+
+- **financial_assistant**: 智能财务助理配置
+  - `data_file`: 存储财务记账数据的JSON文件路径（相对于服务器脚本路径）。如果文件不存在，服务器启动时会自动创建。
 
 ## 启动服务器
 
@@ -376,6 +383,95 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         }
         ```
 
+### 14. 智能财务助理 - 对话式记账
+
+*   **POST** `/financial_bookkeeping`
+    *   **描述**: 智能财务助理，根据自然语言输入，AI自动解析并记录财务条目。支持多社团记账。
+    *   **请求体 (JSON)**: `FinancialBookkeepingRequest`
+        *   `natural_language_input` (str): 用户输入的自然语言记账文本。
+        *   `club_name` (str): **必填**，社团的名称，用于区分不同社团的账目。
+    *   **响应体 (JSON)**: `FinancialBookkeepingResponse`
+        *   `parsed_entries` (List[FinancialEntry]): AI解析出的财务条目列表。
+        *   `confirmation_message` (str): AI生成的确认信息或提示。
+        *   `original_input` (str): 原始输入，方便调试。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/financial_bookkeeping \
+          -H "Content-Type: application/json" \
+          -d '{
+            "natural_language_input": "今天活动买了10瓶水和一包零食，一共花了55.8元，从小明那里报销。",
+            "club_name": "篮球社"
+          }'
+        ```
+
+### 15. 智能财务助理 - 一键生成财务报表
+
+*   **POST** `/generate_financial_report`
+    *   **描述**: 智能财务助理，根据提供的社团名称，AI自动汇总收支并生成清晰的财务报表摘要。
+    *   **请求体 (JSON)**: `FinancialReportRequest`
+        *   `club_name` (str): **必填**，要生成报表的社团名称。
+    *   **响应体 (JSON)**: `FinancialReportResponse`
+        *   `report_summary` (str): 财务报表总结。
+        *   `expense_breakdown` (Dict[str, float]): 支出分类汇总。
+        *   `income_breakdown` (Dict[str, float]): 收入分类汇总 (如果包含收入概念)。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate_financial_report \
+          -H "Content-Type: application/json" \
+          -d '{
+            "club_name": "篮球社"
+          }'
+        ```
+
+### 16. 智能财务助理 - 修改预算
+
+*   **POST** `/update_budget`
+    *   **描述**: 智能财务助理，允许根据社团名称修改其预算总额和描述。
+    *   **请求体 (JSON)**: `UpdateBudgetRequest`
+        *   `club_name` (str): **必填**，要修改预算的社团名称。
+        *   `new_budget_limit` (float): **必填**，新的预算总额。
+        *   `budget_description` (Optional[str]): 预算的描述信息。
+    *   **响应体 (JSON)**: `UpdateBudgetResponse`
+        *   `message` (str): 更新结果的消息。
+        *   `club_name` (str): 被更新预算的社团名称。
+        *   `new_budget_limit` (float): 新的预算总额。
+        *   `budget_description` (Optional[str]): 更新后的预算描述。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/update_budget \
+          -H "Content-Type: application/json" \
+          -d '{
+            "club_name": "篮球社",
+            "new_budget_limit": 2500.00,
+            "budget_description": "篮球社2024年度活动总预算"
+          }'
+        ```
+
+### 17. 智能财务助理 - 预算超支预警
+
+*   **POST** `/budget_warning`
+    *   **描述**: 智能财务助理，根据当前支出和社团存储的预算总额（或本次请求传入的临时预算），AI判断是否超支并生成预警信息。
+    *   **请求体 (JSON)**: `BudgetWarningRequest`
+        *   `current_spending` (float): **必填**，当前已支出金额 (本次请求的即时支出，不持久化)。
+        *   `budget_limit` (Optional[float]): 本次请求传入的临时预算限制，如果提供则会覆盖社团存储的预算限制进行本次判断。
+        *   `description` (Optional[str]): 可选的描述信息，例如活动名称。
+        *   `club_name` (str): **必填**，社团名称，用于获取其存储的预算。
+    *   **响应体 (JSON)**: `BudgetWarningResponse`
+        *   `warning_message` (str): 预警信息。
+        *   `is_over_budget` (bool): 是否超预算。
+        *   `percentage_used` (float): 预算使用百分比。
+        *   `club_budget_limit` (Optional[float]): 社团存储的预算上限。
+        *   `club_budget_description` (Optional[str]): 社团存储的预算描述。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/budget_warning \
+          -H "Content-Type: application/json" \
+          -d '{
+            "current_spending": 1200.00,
+            "club_name": "篮球社"
+          }'
+        ```
+
 ## 测试
 
 ### 测试配置导入
@@ -397,6 +493,18 @@ python test_client.py
 - 模型列表查询
 - 配置信息查询
 - 多轮对话
+- AI内容生成
+- 通义总结 (流式)
+- 社团介绍生成
+- 社团口号生成
+- 配置重载
+- 智能申请筛选
+- 社团氛围透视
+- 智能活动策划
+- 智能财务助理 - 对话式记账
+- 智能财务助理 - 修改预算
+- 智能财务助理 - 一键生成财务报表
+- 智能财务助理 - 预算超支预警
 
 ## 使用示例
 
@@ -404,16 +512,65 @@ python test_client.py
 
 ```python
 import requests
+import json
 
-# 简化聊天
-response = requests.post(
+# 智能财务助理 - 对话式记账
+payload_bookkeeping = {
+    "natural_language_input": "今天团建买了200块钱零食，小红报销。",
+    "club_name": "羽毛球社"
+}
+response_bookkeeping = requests.post(
+    "http://localhost:8080/financial_bookkeeping",
+    headers={"Content-Type": "application/json"},
+    json=payload_bookkeeping
+)
+print("记账响应:", json.dumps(response_bookkeeping.json(), indent=2, ensure_ascii=False))
+
+# 智能财务助理 - 修改预算
+payload_update_budget = {
+    "club_name": "羽毛球社",
+    "new_budget_limit": 1500.00,
+    "budget_description": "羽毛球社2024年春季活动预算"
+}
+response_update_budget = requests.post(
+    "http://localhost:8080/update_budget",
+    headers={"Content-Type": "application/json"},
+    json=payload_update_budget
+)
+print("修改预算响应:", json.dumps(response_update_budget.json(), indent=2, ensure_ascii=False))
+
+# 智能财务助理 - 一键生成财务报表
+payload_report = {
+    "club_name": "羽毛球社"
+}
+response_report = requests.post(
+    "http://localhost:8080/generate_financial_report",
+    headers={"Content-Type": "application/json"},
+    json=payload_report
+)
+print("财务报表响应:", json.dumps(response_report.json(), indent=2, ensure_ascii=False))
+
+# 智能财务助理 - 预算超支预警
+payload_warning = {
+    "current_spending": 1200.00,
+    "club_name": "羽毛球社" # 使用存储的社团预算
+}
+response_warning = requests.post(
+    "http://localhost:8080/budget_warning",
+    headers={"Content-Type": "application/json"},
+    json=payload_warning
+)
+print("预算预警响应:", json.dumps(response_warning.json(), indent=2, ensure_ascii=False))
+
+# 简化聊天 (原有功能)
+response_chat = requests.post(
     "http://localhost:8080/simple_chat",
     params={"prompt": "你好，请介绍一下人工智能"}
 )
-print(response.json())
+print("简化聊天响应:", json.dumps(response_chat.json(), indent=2, ensure_ascii=False))
 
-# 完整聊天
-payload = {
+# 完整聊天 (原有功能)
+payload_full_chat = {
     "messages": [
         {"role": "user", "content": "请用中文解释什么是机器学习"}
     ],
@@ -421,41 +578,89 @@ payload = {
     "temperature": 0.7
 }
 
-response = requests.post(
+response_full_chat = requests.post(
     "http://localhost:8080/chat",
     headers={"Content-Type": "application/json"},
-    json=payload
+    json=payload_full_chat
 )
-print(response.json())
+print("完整聊天响应:", json.dumps(response_full_chat.json(), indent=2, ensure_ascii=False))
 ```
 
 ### JavaScript客户端示例
 
 ```javascript
-// 简化聊天
-const response = await fetch('http://localhost:8080/simple_chat?prompt=你好', {
-    method: 'POST'
-});
-const result = await response.json();
-console.log(result);
+// 智能财务助理 - 对话式记账
+fetch('http://localhost:8080/financial_bookkeeping', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        natural_language_input: "今天团建买了200块钱零食，小红报销。",
+        club_name: "羽毛球社"
+    })
+})
+.then(response => response.json())
+.then(data => console.log('记账响应:', data));
 
-// 完整聊天
-const payload = {
+// 智能财务助理 - 修改预算
+fetch('http://localhost:8080/update_budget', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        club_name: "羽毛球社",
+        new_budget_limit: 1500.00,
+        budget_description: "羽毛球社2024年春季活动预算"
+    })
+})
+.then(response => response.json())
+.then(data => console.log('修改预算响应:', data));
+
+// 智能财务助理 - 一键生成财务报表
+fetch('http://localhost:8080/generate_financial_report', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        club_name: "羽毛球社"
+    })
+})
+.then(response => response.json())
+.then(data => console.log('财务报表响应:', data));
+
+// 智能财务助理 - 预算超支预警
+fetch('http://localhost:8080/budget_warning', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        current_spending: 1200.00,
+        club_name: "羽毛球社"
+    })
+})
+.then(response => response.json())
+.then(data => console.log('预算预警响应:', data));
+
+// 简化聊天 (原有功能)
+fetch('http://localhost:8080/simple_chat?prompt=你好', {
+    method: 'POST'
+})
+.then(response => response.json())
+.then(data => console.log('简化聊天响应:', data));
+
+// 完整聊天 (原有功能)
+const payload_full_chat = {
     messages: [
         {role: "user", content: "请介绍一下深度学习"}
     ],
     max_tokens: 1000
 };
 
-const response = await fetch('http://localhost:8080/chat', {
+fetch('http://localhost:8080/chat', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload)
-});
-const result = await response.json();
-console.log(result);
+    body: JSON.stringify(payload_full_chat)
+})
+.then(response => response.json())
+.then(data => console.log('完整聊天响应:', data));
 ```
 
 ## 配置文件管理

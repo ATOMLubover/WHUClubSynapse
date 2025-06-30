@@ -11,6 +11,7 @@ import sys
 import summary
 from openai import OpenAI
 from fastapi.responses import StreamingResponse
+import time
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -113,6 +114,59 @@ class EventPlanningResponse(BaseModel):
     risk_assessment: str      # 风险评估与预案
     creative_ideas: List[str] # 创意点子推荐
 
+# 新增智能财务助理请求和响应模型
+class FinancialEntry(BaseModel):
+    item: str # 购买的物品或服务
+    amount: float # 金额
+    category: Optional[str] = "未分类" # 支出类别，如餐饮、交通、物资等
+    payer: Optional[str] = None # 经手人/报销人
+    date: Optional[str] = None # 发生日期，默认为空，AI可以尝试解析
+    remark: Optional[str] = None # 备注信息
+
+class FinancialBookkeepingRequest(BaseModel):
+    natural_language_input: str # 用户输入的自然语言记账文本
+    club_name: str # 社团名称
+
+class FinancialBookkeepingResponse(BaseModel):
+    parsed_entries: List[FinancialEntry] # AI解析出的财务条目列表
+    confirmation_message: str # AI生成的确认信息或提示
+    original_input: str # 原始输入，方便调试
+
+# 新增财务报表生成请求和响应模型
+class FinancialReportRequest(BaseModel):
+    club_name: str # 社团名称
+
+class FinancialReportResponse(BaseModel):
+    report_summary: str # 财务报表总结
+    expense_breakdown: Dict[str, float] # 支出分类汇总
+    income_breakdown: Dict[str, float] # 收入分类汇总 (如果包含收入概念)
+
+# 新增预算超支预警请求和响应模型
+class BudgetWarningRequest(BaseModel):
+    current_spending: float # 当前已支出金额 (本次请求的即时支出，不持久化)
+    budget_limit: Optional[float] = None # 本次请求传入的预算限制，如果提供则覆盖社团存储的预算限制
+    description: Optional[str] = None # 可选的描述信息，例如活动名称
+    club_name: str # 社团名称
+
+class BudgetWarningResponse(BaseModel):
+    warning_message: str # 预警信息
+    is_over_budget: bool # 是否超预算
+    percentage_used: float # 预算使用百分比
+    club_budget_limit: Optional[float] = None # 社团存储的预算上限
+    club_budget_description: Optional[str] = None # 社团存储的预算描述
+
+# 新增修改预算请求模型
+class UpdateBudgetRequest(BaseModel):
+    club_name: str # 社团名称
+    new_budget_limit: float # 新的预算总额
+    budget_description: Optional[str] = None # 预算描述
+    
+class UpdateBudgetResponse(BaseModel):
+    message: str
+    club_name: str
+    new_budget_limit: float
+    budget_description: Optional[str] = None
+
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
 base_url_tongyi="https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -143,6 +197,40 @@ def tongyi_chat_embedded(messages=None,temperature=0.7,max_tokens=1024,presence_
         # 可以在这里根据需要抛出更具体的异常或返回错误信息
         # 为了在HTTP响应中捕获，这里不直接 sys.exit(1)
         yield{"type": "error", "content": f"通义千问API调用错误: {e}"}
+
+# 全局财务数据存储路径
+FINANCIAL_DATA_FILE = os.path.join(current_dir, config.financial_data_file)
+
+def load_financial_data() -> Dict[str, Any]:
+    """从JSON文件加载所有社团的财务数据"""
+    if not os.path.exists(FINANCIAL_DATA_FILE):
+        return {} # 如果文件不存在，返回一个空字典
+    try:
+        with open(FINANCIAL_DATA_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if not isinstance(data, dict): # 确保加载的是字典
+                logger.error(f"财务数据文件格式错误，应为字典，但加载到: {type(data)}")
+                os.rename(FINANCIAL_DATA_FILE, f"{FINANCIAL_DATA_FILE}.bak_{int(time.time())}")
+                logger.warning(f"已备份损坏的财务数据文件到 {FINANCIAL_DATA_FILE}.bak_{int(time.time())}")
+                return {}
+            return data
+    except json.JSONDecodeError as e:
+        logger.error(f"加载财务数据文件时JSON解析错误: {e}")
+        # 备份损坏的文件并返回空字典，避免影响服务
+        os.rename(FINANCIAL_DATA_FILE, f"{FINANCIAL_DATA_FILE}.bak_{int(time.time())}")
+        logger.warning(f"已备份损坏的财务数据文件到 {FINANCIAL_DATA_FILE}.bak_{int(time.time())}")
+        return {}
+    except Exception as e:
+        logger.error(f"加载财务数据文件失败: {e}")
+        return {}
+
+def save_financial_data(data: Dict[str, Any]):
+    """将所有社团的财务数据保存到JSON文件"""
+    try:
+        with open(FINANCIAL_DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"保存财务数据文件失败: {e}")
 
 @app.get("/")
 async def root():
@@ -370,30 +458,25 @@ async def summarize_with_tongyi(req: TongyiSummaryRequest):
     Returns:
         包含总结结果的响应对象
     """
-    try:
-        def generate_summary_stream():
-            for chunk in tongyi_chat_embedded(
-                messages=req.text,
-                temperature=req.temperature,
-                max_tokens=req.max_tokens,
-                presence_penalty=req.presence_penalty,
-                top_p=req.top_p
-            ):
-                if chunk.get("type") == "content":
-                    # 将内容封装为SSE格式的JSON
-                    yield f'data: {json.dumps({"summary": chunk.get("content", "")})}\n\n'.encode('utf-8')
-                elif chunk.get("type") == "error":
-                    logger.error(f"通义千问流式总结错误: {chunk.get('content')}")
-                    # 将错误信息封装为SSE格式的JSON
-                    yield f'data: {json.dumps({"error": chunk.get("content", "未知错误")})}\n\n'.encode('utf-8')
-            # 发送结束标记
-            yield b"data: [DONE]\n\n"
-        
-        return StreamingResponse(generate_summary_stream(), media_type="text/event-stream")
-
-    except Exception as e:
-        logger.error(f"调用通义千问总结失败: {e}")
-        raise HTTPException(status_code=500, detail=f"通义千问总结失败: {e}")
+    def generate_summary_stream():
+        for chunk in tongyi_chat_embedded(
+            messages=req.text,
+            temperature=req.temperature,
+            max_tokens=req.max_tokens,
+            presence_penalty=req.presence_penalty,
+            top_p=req.top_p
+        ):
+            if chunk.get("type") == "content":
+                # 将内容封装为SSE格式的JSON
+                yield ("data: " + json.dumps({"summary": chunk.get("content", "")}) + "\n\n").encode('utf-8')
+            elif chunk.get("type") == "error":
+                logger.error("通义千问流式总结错误: {}".format(chunk.get('content')))
+                # 将错误信息封装为SSE格式的JSON
+                yield ("data: " + json.dumps({"error": chunk.get("content", "未知错误")}) + "\n\n").encode('utf-8')
+        # 发送结束标记
+        yield b"data: [DONE]\n\n"
+    
+    return StreamingResponse(generate_summary_stream(), media_type="text/event-stream")
 
 @app.post("/generate/content", response_model=ContentGenerationResponse)
 async def generate_content(request: ContentGenerationRequest):
@@ -819,6 +902,365 @@ async def plan_event(request: EventPlanningRequest):
         logger.error(f"AI活动策划失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI活动策划失败: {e}")
 
+@app.post("/financial_bookkeeping", response_model=FinancialBookkeepingResponse)
+async def financial_bookkeeping(request: FinancialBookkeepingRequest):
+    """
+    智能财务助理 - 对话式记账接口。
+    根据自然语言输入，AI自动解析并记录财务条目。
+    
+    Args:
+        request: 包含自然语言记账文本和社团名称的请求体。
+        
+    Returns:
+        FinancialBookkeepingResponse: 包含AI解析出的财务条目和确认信息。
+    """
+    try:
+        # 构造发送给vLLM的payload
+        prompt_template = """
+你是一个智能财务助理，你的任务是根据用户输入的自然语言描述，解析出财务支出或收入的详细信息，并生成结构化的记账条目和友好的确认信息。
+
+请优先解析以下信息：
+- **物品/服务 (item)**: 具体购买或涉及的物品或服务。
+- **金额 (amount)**: 具体的金额，应为数字。
+- **类别 (category)**: 支出或收入的类别（如餐饮、交通、物资、办公、活动、报销等）。如果无法明确分类，请使用"未分类"。
+- **经手人/报销人 (payer)**: 涉及的经手人或需要报销的人名。
+- **日期 (date)**: 如果描述中包含日期信息，请解析出来。
+- **备注 (remark)**: 任何其他相关信息。
+
+请按照以下JSON格式返回结果：
+{{
+  "parsed_entries": [
+    {{
+      "item": "[物品/服务描述]",
+      "amount": [金额，浮点数],
+      "category": "[类别，默认为"未分类"]",
+      "payer": "[经手人/报销人，如果没有则为null]",
+      "date": "[日期，例如"今天"、"昨天"、"2023-10-26"，如果没有则为null]",
+      "remark": "[备注信息，如果没有则为null]"
+    }},
+    // 如果有多个条目，可以继续添加
+  ],
+  "confirmation_message": "[AI生成的确认信息或总结，例如"好的，已为您记录…"、"本次消费明细如下:…"。用友好的语气，总结记账内容，以便用户确认。]"
+}}
+
+--- 用户输入 ---
+{natural_language_input}
+
+请开始解析并生成财务条目和确认信息。
+"""
+        
+        full_prompt = prompt_template.format(
+            natural_language_input=request.natural_language_input
+        )
+        
+        logger.info(f"AI财务记账Prompt: {full_prompt[:200]}...")
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+        
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        # 尝试解析LLM的JSON响应，先移除可能的markdown代码块
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+        
+        try:
+            parsed_response = json.loads(json_string)
+            parsed_entries_data = parsed_response.get("parsed_entries", [])
+            confirmation_message = parsed_response.get("confirmation_message", "")
+
+            # 验证 parsed_entries_data 中的每个条目是否符合 FinancialEntry 模型
+            parsed_entries = []
+            for entry_data in parsed_entries_data:
+                try:
+                    entry = FinancialEntry(**entry_data)
+                    parsed_entries.append(entry)
+                except Exception as e:
+                    logger.warning(f"解析单个财务条目时出错: {entry_data}, 错误: {e}")
+                    # 如果单个条目解析失败，可以跳过或记录错误，这里选择跳过不完整的条目
+            
+            if not confirmation_message:
+                raise ValueError("AI返回的JSON格式不完整，缺少confirmation_message字段。")
+
+            # 将新解析的条目保存到文件，按社团名称存储
+            all_clubs_data = load_financial_data()
+            if request.club_name not in all_clubs_data:
+                all_clubs_data[request.club_name] = {"entries": [], "budget": {}} # Initialize with empty budget
+
+            for entry in parsed_entries:
+                all_clubs_data[request.club_name]["entries"].append(entry.dict())
+            save_financial_data(all_clubs_data)
+
+            return FinancialBookkeepingResponse(
+                parsed_entries=parsed_entries,
+                confirmation_message=confirmation_message.strip(),
+                original_input=request.natural_language_input
+            )
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+            
+    except Exception as e:
+        logger.error(f"AI财务记账失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI财务记账失败: {e}")
+
+@app.post("/generate_financial_report", response_model=FinancialReportResponse)
+async def generate_financial_report(request: FinancialReportRequest):
+    """
+    智能财务助理 - 一键生成财务报表。
+    根据提供的社团名称，AI自动汇总收支并生成清晰的财务报表摘要。
+    
+    Args:
+        request: 包含社团名称的请求体。
+        
+    Returns:
+        FinancialReportResponse: 包含AI生成的报表总结、支出分类和收入分类。
+    """
+    try:
+        all_clubs_data = load_financial_data()
+        club_data = all_clubs_data.get(request.club_name)
+
+        if not club_data or not club_data.get("entries"): # Check if club_data exists and has entries
+            raise HTTPException(
+                status_code=404,
+                detail=f"未找到社团 '{request.club_name}' 的财务数据或账目为空。"
+            )
+
+        entries_to_report = [FinancialEntry(**entry_data) for entry_data in club_data["entries"]]
+
+        entries_str = "\n".join([
+            f"- {entry.date if entry.date else '日期未知'}: {entry.item} - {entry.amount:.2f}元 ({entry.category}) - 经手人: {entry.payer if entry.payer else '未知'}"
+            for entry in entries_to_report
+        ])
+
+        prompt_template = """
+你是一个智能财务报表生成助手，你的任务是根据用户提供的财务流水，生成一份清晰、专业的财务报表总结，并详细列出各项支出和收入的分类汇总。请注意，这里主要是支出，如果出现收入字样可以进行分类。
+
+请**直接**按照以下JSON格式返回结果，**不要包含任何Markdown代码块或其他文本**：
+{{
+  "report_summary": "[AI生成的财务报表总结，包括总支出、可能存在的总收入、主要支出类别等，用友好的语言描述。]",
+  "expense_breakdown": {{
+    "[类别1]": [金额],
+    "[类别2]": [金额],
+    "...",
+    "总支出": [总支出金额]
+  }},
+  "income_breakdown": {{
+    "[收入类别1]": [金额],
+    "...",
+    "总收入": [总收入金额]
+  }}
+}}
+
+--- 财务流水 ---
+{financial_entries_str}
+
+请开始分析并生成财务报表。
+"""
+
+        full_prompt = prompt_template.format(
+            financial_entries_str=entries_str
+        )
+
+        logger.info(f"AI财务报表Prompt: {full_prompt[:200]}...")
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        # 尝试解析LLM的JSON响应，先移除可能的markdown代码块
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+
+        try:
+            parsed_response = json.loads(json_string)
+            report_summary = parsed_response.get("report_summary", "")
+            expense_breakdown = parsed_response.get("expense_breakdown", {})
+            income_breakdown = parsed_response.get("income_breakdown", {})
+
+            if not report_summary or not isinstance(expense_breakdown, dict) or not isinstance(income_breakdown, dict):
+                raise ValueError("AI返回的JSON格式不完整或字段类型不正确。")
+
+            return FinancialReportResponse(
+                report_summary=report_summary.strip(),
+                expense_breakdown=expense_breakdown,
+                income_breakdown=income_breakdown
+            )
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+            
+    except HTTPException as http_exc: # Re-raise HTTPException directly
+        raise http_exc
+    except Exception as e:
+        logger.error(f"AI财务报表生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI财务报表生成失败: {e}")
+
+@app.post("/budget_warning", response_model=BudgetWarningResponse)
+async def budget_warning(request: BudgetWarningRequest):
+    """
+    智能财务助理 - 预算超支预警。
+    根据当前支出和社团存储的预算总额（或本次请求传入的临时预算），AI判断是否超支并生成预警信息。
+    
+    Args:
+        request: 包含当前支出、可选的临时预算总额、描述和社团名称的请求体。
+        
+    Returns:
+        BudgetWarningResponse: 包含预警信息、是否超预算标志和预算使用百分比。
+    """
+    try:
+        all_clubs_data = load_financial_data()
+        club_data = all_clubs_data.get(request.club_name)
+
+        club_budget_limit = None
+        club_budget_description = None
+
+        if club_data and club_data.get("budget"):
+            club_budget_limit = club_data["budget"].get("limit")
+            club_budget_description = club_data["budget"].get("description")
+
+        # Determine the budget limit to use for warning
+        effective_budget_limit = request.budget_limit if request.budget_limit is not None else club_budget_limit
+
+        if effective_budget_limit is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"社团 '{request.club_name}' 未设置预算，或请求中未提供预算限制。请先设置预算。"
+            )
+        if effective_budget_limit <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="预算限制必须大于0。"
+            )
+
+        percentage_used = (request.current_spending / effective_budget_limit) * 100
+        is_over_budget = request.current_spending > effective_budget_limit
+
+        prompt_template = """
+你是一个预算管理助手，你的任务是根据当前的支出和预算限额，判断是否超支，并生成一个友好的预警信息。如果用户提供了描述信息，请在预警信息中提及。
+
+请按照以下JSON格式返回结果：
+{{
+  "warning_message": "[AI生成的预警信息，例如"您好，[活动名称]的支出已接近预算上限，请注意控制。"或"恭喜，[活动名称]的支出仍在预算范围内！"]]",
+  "is_over_budget": [true/false],
+  "percentage_used": [预算使用百分比，浮点数，例如95.5]
+}}
+
+--- 预算信息 ---
+当前已支出金额: {current_spending:.2f}元
+预算总额: {budget_limit:.2f}元
+预算使用百分比: {percentage_used:.2f}%
+是否超预算: {is_over_budget}
+社团名称: {club_name}
+{description_str}
+
+请开始生成预警信息。
+"""
+
+        description_str = f"描述: {request.description}" if request.description else ""
+
+        full_prompt = prompt_template.format(
+            current_spending=request.current_spending,
+            budget_limit=effective_budget_limit,
+            percentage_used=percentage_used,
+            is_over_budget=is_over_budget,
+            club_name=request.club_name,
+            description_str=description_str
+        )
+
+        logger.info(f"AI预算预警Prompt: {full_prompt[:200]}...")
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+
+        try:
+            parsed_response = json.loads(json_string)
+            warning_message = parsed_response.get("warning_message", "")
+            is_over_budget_from_ai = parsed_response.get("is_over_budget", False)
+            percentage_used_from_ai = parsed_response.get("percentage_used", 0.0)
+
+            if not warning_message or not isinstance(is_over_budget_from_ai, bool) or not isinstance(percentage_used_from_ai, (float, int)):
+                raise ValueError("AI返回的JSON格式不完整或字段类型不正确。")
+
+            return BudgetWarningResponse(
+                warning_message=warning_message.strip(),
+                is_over_budget=is_over_budget_from_ai,
+                percentage_used=percentage_used_from_ai,
+                club_budget_limit=club_budget_limit,
+                club_budget_description=club_budget_description
+            )
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+
+    except HTTPException as http_exc: # Re-raise HTTPException directly
+        raise http_exc
+    except Exception as e:
+        logger.error(f"AI预算预警失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI预算预警失败: {e}")
+
+@app.post("/update_budget", response_model=UpdateBudgetResponse)
+async def update_budget(request: UpdateBudgetRequest):
+    """
+    智能财务助理 - 修改预算。
+    根据新的预算总额和描述，更新社团的预算限制。
+    
+    Args:
+        request: 包含社团名称、新的预算总额和预算描述的请求体。
+        
+    Returns:
+        UpdateBudgetResponse: 包含更新结果的消息。
+    """
+    try:
+        all_clubs_data = load_financial_data()
+
+        if request.club_name not in all_clubs_data:
+            # If club does not exist, initialize it with empty entries and budget
+            all_clubs_data[request.club_name] = {"entries": [], "budget": {}} # Initialize with empty budget
+
+        # Update the budget for the specific club
+        all_clubs_data[request.club_name]["budget"] = {
+            "limit": request.new_budget_limit,
+            "description": request.budget_description
+        }
+
+        save_financial_data(all_clubs_data)
+
+        return UpdateBudgetResponse(
+            message=f"{request.club_name} 的预算已成功更新",
+            club_name=request.club_name,
+            new_budget_limit=request.new_budget_limit,
+            budget_description=request.budget_description
+        )
+
+    except Exception as e:
+        logger.error(f"AI修改预算失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI修改预算失败: {e}")
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")
@@ -835,8 +1277,10 @@ if __name__ == "__main__":
     print(f"智能申请筛选接口: http://{config.server_host}:{config.server_port}/screen_application")
     print(f"社团氛围透视接口: http://{config.server_host}:{config.server_port}/club_atmosphere")
     print(f"智能活动策划接口: http://{config.server_host}:{config.server_port}/plan_event")
-    print(f"模型列表: http://{config.server_host}:{config.server_port}/models")
-    print(f"配置信息: http://{config.server_host}:{config.server_port}/config")
+    print(f"智能财务助理接口: http://{config.server_host}:{config.server_port}/financial_bookkeeping")
+    print(f"财务报表生成接口: http://{config.server_host}:{config.server_port}/generate_financial_report")
+    print(f"预算超支预警接口: http://{config.server_host}:{config.server_port}/budget_warning")
+    print(f"修改预算接口: http://{config.server_host}:{config.server_port}/update_budget")
     
     uvicorn.run(
         app,

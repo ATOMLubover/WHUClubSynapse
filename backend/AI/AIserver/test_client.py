@@ -607,7 +607,9 @@ def test_club_atmosphere():
         return False
 
 def test_plan_event():
-    """测试智能活动策划参谋接口"""
+    """
+    测试智能活动策划参谋接口
+    """
     print("\n=== 测试智能活动策划参谋接口 ===")
     try:
         payload = {
@@ -651,8 +653,248 @@ def test_plan_event():
         print(f"智能活动策划测试错误: {e}")
         return False
 
+def test_financial_bookkeeping():
+    """
+    测试智能财务助理 - 对话式记账接口
+    """
+    print("\n=== 测试智能财务助理 - 对话式记账接口 ===")
+    try:
+        payload = {
+            "natural_language_input": "今天活动买了10瓶水和一包零食，一共花了55.8元，从小明那里报销。",
+            "club_name": "篮球社" # 新增社团名称
+        }
+
+        print(f"发送记账请求 (社团: {payload['club_name']}): {payload['natural_language_input']}")
+        start_time = time.time()
+
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/financial_bookkeeping",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+
+        if response.status_code == 200:
+            result = response.json()
+            parsed_entries = result.get('parsed_entries')
+            confirmation_message = result.get('confirmation_message')
+            original_input = result.get('original_input')
+
+            print(f"解析出的条目:\n{json.dumps(parsed_entries, indent=2, ensure_ascii=False)}")
+            print(f"确认信息:\n{confirmation_message}")
+            print(f"原始输入:\n{original_input}")
+
+            # 验证响应内容
+            return (parsed_entries is not None and isinstance(parsed_entries, list) and len(parsed_entries) > 0 and
+                    confirmation_message is not None and len(confirmation_message.strip()) > 0 and
+                    original_input == payload["natural_language_input"])
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+
+    except Exception as e:
+        print(f"智能财务助理 - 对话式记账测试错误: {e}")
+        return False
+
+def test_generate_financial_report():
+    """
+    测试智能财务助理 - 一键生成财务报表接口
+    """
+    print("\n=== 测试智能财务助理 - 一键生成财务报表接口 ===")
+    try:
+        club_name = "篮球社" # 指定要生成报表的社团名称
+        payload = {
+            "club_name": club_name
+        }
+
+        print(f"发送财务报表生成请求 (社团: {club_name})")
+        start_time = time.time()
+
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/generate_financial_report",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+
+        if response.status_code == 200:
+            result = response.json()
+            report_summary = result.get('report_summary')
+            expense_breakdown = result.get('expense_breakdown')
+            income_breakdown = result.get('income_breakdown')
+
+            print(f"报表总结:\n{report_summary}")
+            print(f"支出分类:\n{json.dumps(expense_breakdown, indent=2, ensure_ascii=False)}")
+            print(f"收入分类:\n{json.dumps(income_breakdown, indent=2, ensure_ascii=False)}")
+
+            # 验证响应内容
+            return (response.status_code == 200 and 
+                    report_summary is not None and len(report_summary.strip()) > 0 and
+                    expense_breakdown is not None and isinstance(expense_breakdown, dict) and
+                    income_breakdown is not None and isinstance(income_breakdown, dict))
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+
+    except Exception as e:
+        print(f"智能财务助理 - 财务报表生成测试错误: {e}")
+        return False
+
+def test_update_budget():
+    """
+    测试智能财务助理 - 修改预算接口
+    """
+    print("\n=== 测试智能财务助理 - 修改预算接口 ===")
+    try:
+        club_name = "篮球社"
+        new_budget = 2000.00
+        budget_desc = "篮球社2024年全年预算"
+        payload = {
+            "club_name": club_name,
+            "new_budget_limit": new_budget,
+            "budget_description": budget_desc
+        }
+
+        print(f"发送修改预算请求 (社团: {club_name}, 新预算: {new_budget})")
+        start_time = time.time()
+
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/update_budget",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+
+        end_time = time.time()
+        print(f"状态码: {response.status_code}")
+        print(f"响应时间: {end_time - start_time:.2f}秒")
+
+        if response.status_code == 200:
+            result = response.json()
+            print(f"响应: {json.dumps(result, indent=2, ensure_ascii=False)}")
+            return (result.get("message") == f"{club_name} 的预算已成功更新" and
+                    result.get("club_name") == club_name and
+                    result.get("new_budget_limit") == new_budget and
+                    result.get("budget_description") == budget_desc)
+        else:
+            print(f"错误响应: {response.text}")
+            return False
+
+    except Exception as e:
+        print(f"智能财务助理 - 修改预算测试错误: {e}")
+        return False
+
+def test_budget_warning():
+    """
+    测试智能财务助理 - 预算超支预警接口
+    """
+    print("\n=== 测试智能财务助理 - 预算超支预警接口 ===")
+    try:
+        club_name = "篮球社" # 指定社团名称
+        # 场景1: 支出在预算内
+        payload1 = {
+            "current_spending": 800.00,
+            "budget_limit": 1000.00, # 临时预算，可覆盖存储的社团预算
+            "description": "春季游园会",
+            "club_name": club_name
+        }
+
+        print(f"发送预算预警请求 (场景1: {club_name}, 800/1000): {payload1['description']}")
+        start_time1 = time.time()
+        response1 = requests.post(
+            f"{PROXY_SERVER_URL}/budget_warning",
+            headers={"Content-Type": "application/json"},
+            json=payload1
+        )
+        end_time1 = time.time()
+        print(f"状态码: {response1.status_code}")
+        print(f"响应时间: {end_time1 - start_time1:.2f}秒")
+        if response1.status_code == 200:
+            result1 = response1.json()
+            print(f"预警信息:\n{result1.get('warning_message')}")
+            print(f"是否超预算: {result1.get('is_over_budget')}")
+            print(f"预算使用百分比: {result1.get('percentage_used'):.2f}%")
+            test1_success = (result1.get('warning_message') is not None and 
+                             isinstance(result1.get('is_over_budget'), bool) and 
+                             not result1.get('is_over_budget') and 
+                             isinstance(result1.get('percentage_used'), (float, int)) and 
+                             result1.get('percentage_used') > 0)
+        else:
+            print(f"错误响应: {response1.text}")
+            test1_success = False
+        
+        time.sleep(1) # 暂停避免请求过快
+
+        # 场景2: 支出超预算 (使用存储的社团预算，先通过update_budget设置)
+        # 假设在运行此测试前，篮球社的预算已经通过test_update_budget设置为2000
+        payload2 = {
+            "current_spending": 2100.00,
+            "description": "夏季迎新活动",
+            "club_name": club_name # 使用已存储的社团预算
+        }
+
+        print(f"\n发送预算预警请求 (场景2: {club_name}, 2100/2000): {payload2['description']}")
+        start_time2 = time.time()
+        response2 = requests.post(
+            f"{PROXY_SERVER_URL}/budget_warning",
+            headers={"Content-Type": "application/json"},
+            json=payload2
+        )
+        end_time2 = time.time()
+        print(f"状态码: {response2.status_code}")
+        print(f"响应时间: {end_time2 - start_time2:.2f}秒")
+        if response2.status_code == 200:
+            result2 = response2.json()
+            print(f"预警信息:\n{result2.get('warning_message')}")
+            print(f"是否超预算: {result2.get('is_over_budget')}")
+            print(f"预算使用百分比: {result2.get('percentage_used'):.2f}%")
+            test2_success = (result2.get('warning_message') is not None and 
+                             isinstance(result2.get('is_over_budget'), bool) and 
+                             result2.get('is_over_budget') and 
+                             isinstance(result2.get('percentage_used'), (float, int)) and 
+                             result2.get('percentage_used') > 100)
+        else:
+            print(f"错误响应: {response2.text}")
+            test2_success = False
+
+        # 场景3: 社团未设置预算，且请求中未提供预算
+        payload3 = {
+            "current_spending": 100.00,
+            "description": "测试无预算社团",
+            "club_name": "不存在的社团" # 使用一个不存在的社团名
+        }
+        print(f"\n发送预算预警请求 (场景3: 不存在社团，无预算): {payload3['description']}")
+        start_time3 = time.time()
+        response3 = requests.post(
+            f"{PROXY_SERVER_URL}/budget_warning",
+            headers={"Content-Type": "application/json"},
+            json=payload3
+        )
+        end_time3 = time.time()
+        print(f"状态码: {response3.status_code}")
+        print(f"响应时间: {end_time3 - start_time3:.2f}秒")
+        if response3.status_code == 400:
+            print(f"预期错误响应: {response3.text}")
+            test3_success = True # 预期返回400，表示成功测试了错误情况
+        else:
+            print(f"错误响应: {response3.text}")
+            test3_success = False
+
+        return test1_success and test2_success and test3_success
+
+    except Exception as e:
+        print(f"智能财务助理 - 预算超支预警测试错误: {e}")
+        return False
+
 def main():
-    """运行所有测试"""
+    """
+    运行所有测试
+    """
     print("开始测试vLLM代理服务器...")
     print(f"服务器地址: {PROXY_SERVER_URL}")
     print(f"默认模型: {config.default_model}")
@@ -671,8 +913,12 @@ def main():
         # ("社团口号生成", test_generate_slogan),
         # ("配置重载", test_reload_config),
         # ("智能申请筛选", test_screen_application),
-        ("社团氛围透视", test_club_atmosphere),
-        ("智能活动策划", test_plan_event)
+        # ("社团氛围透视", test_club_atmosphere),
+        # ("智能活动策划", test_plan_event),
+        ("智能财务助理 - 对话式记账", test_financial_bookkeeping),
+        ("智能财务助理 - 修改预算", test_update_budget),
+        ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
+        ("智能财务助理 - 预算超支预警", test_budget_warning)
     ]
     
     results = []

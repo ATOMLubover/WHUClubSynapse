@@ -1,0 +1,34 @@
+{
+  "篮球社": {
+    "entries": [
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": "用于活动"
+      },
+      {
+        "item": "10瓶水",
+        "amount": 40.0,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      },
+      {
+        "item": "一包零食",
+        "amount": 15.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      }
+    ],
+    "budget": {
+      "limit": 2000.0,
+      "description": "篮球社2024年全年预算"
+    }
+  }
+}

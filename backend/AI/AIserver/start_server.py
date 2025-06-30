@@ -8,6 +8,7 @@ import os
 import subprocess
 import time
 import requests
+import json
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -67,6 +68,20 @@ def check_vllm_server():
         print(f"⚠️  检查vLLM服务器时发生错误: {e}")
         return False
 
+def ensure_financial_data_file():
+    """确保财务数据文件存在，如果不存在则创建空文件"""
+    data_file_path = os.path.join(current_dir, config.financial_data_file)
+    if not os.path.exists(data_file_path):
+        try:
+            with open(data_file_path, 'w', encoding='utf-8') as f:
+                json.dump({}, f) # 写入一个空的JSON对象，适应多社团结构
+            print(f"✅ 财务数据文件已创建: {data_file_path}")
+        except Exception as e:
+            print(f"❌ 创建财务数据文件失败: {e}")
+            sys.exit(1)
+    else:
+        print(f"✅ 财务数据文件已存在: {data_file_path}")
+
 def print_server_info():
     """打印服务器信息"""
     print("\n" + "="*60)
@@ -77,6 +92,7 @@ def print_server_info():
     print(f"默认模型: {config.default_model}")
     print(f"请求超时: {config.request_timeout}秒")
     print(f"日志级别: {config.log_level}")
+    print(f"财务数据文件: {os.path.join(current_dir, config.financial_data_file)}")
     print("="*60)
 
 def print_api_endpoints():
@@ -132,6 +148,9 @@ def main():
     # 检查依赖
     if not check_dependencies():
         sys.exit(1)
+
+    # 确保财务数据文件存在
+    ensure_financial_data_file()
     
     # 检查vLLM服务器
     print("\n🔍 检查vLLM服务器连接...")

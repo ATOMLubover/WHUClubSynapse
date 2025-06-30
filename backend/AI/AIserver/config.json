@@ -29,5 +29,8 @@
     "enabled": false,
     "requests_per_minute": 100,
     "window_seconds": 60
+  },
+  "financial_assistant": {
+    "data_file": "financial_data.json"
   }
 } 
