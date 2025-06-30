@@ -33,14 +33,20 @@
               </template>
             </el-tab-pane>
             <el-tab-pane
-              v-for="category in categories"
-              :key="category"
-              :label="category"
-              :name="category"
+              v-for="category in clubStore.categoriesList"
+              :key="category.category_id"
+              :label="category.name"
+              :name="category.category_id"
             >
               <template #label>
-                {{ category }}
-                <el-badge :value="clubStore.categories[category] || 0" class="category-badge" />
+                {{ category.name }}
+                <el-badge
+                  :value="
+                    clubStore.categoriesList.find((c) => c.category_id === category.category_id)
+                      ?.count || 0
+                  "
+                  class="category-badge"
+                />
               </template>
             </el-tab-pane>
           </el-tabs>
@@ -59,16 +65,6 @@
               <el-option label="按时间" value="time" />
               <el-option label="按成员数" value="members" />
             </el-select>
-            <!-- 开发模式重置按钮 -->
-            <el-button
-              v-if="isDev"
-              type="warning"
-              size="small"
-              @click="resetData"
-              style="margin-left: 10px"
-            >
-              🔄 重置数据
-            </el-button>
           </div>
           <div class="filter-right">
             <span class="result-count"> 共找到 {{ clubStore.globalPageData.total }} 个社团 </span>
@@ -228,20 +224,7 @@ const authStore = useAuthStore()
 // 开发模式标识
 const isDev = import.meta.env.DEV
 
-// 重置数据函数
-const resetData = async () => {
-  try {
-    resetMockData()
-    await clubStore.fetchClubs()
-    ElMessage.success('数据已重置')
-  } catch (error) {
-    console.error('重置数据失败:', error)
-    ElMessage.error('重置数据失败')
-  }
-}
-
 // 轮播横幅数据
-//TODO: 从后端获取轮播横幅数据？
 const banners = ref([
   {
     title: '欢迎来到WHU社团联盟',
@@ -257,8 +240,8 @@ const banners = ref([
   },
 ])
 
-// 分类数据
-const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
+// TODO:分类数据
+const categories = ref<ClubCategory[]>([])
 
 // 排序方式
 const sortBy = ref<string>('hot')
@@ -272,7 +255,10 @@ const quickLinks = ref([
 
 // 计算总数
 const getTotalCount = () => {
-  return Object.values(clubStore.categories).reduce((sum, count) => sum + count, 0)
+  if (!clubStore.categoriesList || clubStore.categoriesList.length === 0) {
+    return 0
+  }
+  return clubStore.categoriesList.reduce((sum, category) => sum + (category.count || 0), 0)
 }
 
 // 获取分类标签类型
@@ -303,7 +289,7 @@ const formatDate = (dateStr: string) => {
 // 处理分类切换
 const handleCategoryChange = (category: string) => {
   clubStore.setActiveCategory(category)
-  clubStore.setSearchParams({ category: category as ClubCategory | '' }) // 类型断言
+  clubStore.setSearchParams({ category: category as number | '' }) // 类型断言
   clubStore.fetchClubs()
 }
 
@@ -335,19 +321,35 @@ const goToClub = (clubId: string) => {
 // 初始化数据
 onMounted(async () => {
   try {
-    await clubStore.fetchClubs()
-    if (authStore.isLoggedIn) {
-      await clubStore.fetchFavoriteClubs()
+    console.log('HomeView开始初始化')
+
+    // 等待分类数据加载完成（App.vue中已开始加载）
+    if (clubStore.categoriesLoading) {
+      console.log('等待分类数据加载完成...')
+      // 等待分类加载完成
+      let retries = 0
+      while (clubStore.categoriesLoading && retries < 50) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        retries++
+      }
     }
-    // 并行获取数据
-    await Promise.all([
-      clubStore.fetchCategories(),
+
+    // 先获取社团列表
+    await clubStore.fetchClubs()
+    console.log('社团列表加载完成')
+
+    // 并行获取侧边栏数据（不阻塞主列表显示）
+    Promise.all([
       clubStore.fetchHotClubs(5),
       clubStore.fetchLatestClubs(5),
-      authStore.isLoggedIn ? clubStore.fetchRecommendedClubs(3) : Promise.resolve(),
-    ])
+      // authStore.isLoggedIn ? clubStore.fetchRecommendedClubs(3) : Promise.resolve(),
+    ]).catch((error) => {
+      console.error('侧边栏数据加载失败:', error)
+      // 不影响主界面显示
+    })
   } catch (error) {
-    console.error('初始化数据失败:', error)
+    console.error('HomeView初始化失败:', error)
+    ElMessage.error('页面初始化失败，请刷新重试')
   }
 })
 </script>

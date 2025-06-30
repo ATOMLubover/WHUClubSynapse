@@ -1,6 +1,6 @@
-//TODO: 需要改为与后端交互的api
+
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
@@ -27,7 +27,7 @@ export const getClubList = async (
     queryParams.append('keyword', params.keyword)
   }
   if (params.category) {
-    queryParams.append('category', params.category)
+    queryParams.append('category', params.category.toString())
   }
   if (params.sortBy) {
     queryParams.append('sortBy', params.sortBy)
@@ -38,9 +38,17 @@ export const getClubList = async (
     queryParams.append('num', params.pageSize.toString())
   }
 
-  const queryString = queryParams.toString()
-  const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
+    const queryString = queryParams.toString()
+    const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
   const response = await request.get(url)
+  if(response.data==null){
+    return {
+      list: [],
+      total: 0,
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
+    }
+  }
   const total=(await request.get('/api/club/club_num')).data.club_num
   return {
     list: response.data,
@@ -51,10 +59,21 @@ export const getClubList = async (
 }
 
 // 获取社团详情
-export const getClubDetail = async (id: string, post_num: number = 5): Promise<{ data: ApiResponse<Club> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockGetClubDetail(id)
-    : await request.get(`/api/club/${id}/info?post_num=${post_num}`)
+export const getClubDetail = async (id: string, post_num: number = 5): Promise<Club|null> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetClubDetail(id)
+  }
+  const response = await request.get(`/api/club/${id}/info?post_num=${post_num}`)
+  if(response.data==null){
+    return null
+  }
+  if(response.data.posts==null){
+    response.data.posts=[]
+  }
+  if(response.data.members==null){
+    response.data.members=[]
+  }
+  return response.data as Club
 }
 
 // 获取热门社团
@@ -86,13 +105,33 @@ export const searchClubs = async (
   return getClubList({ ...params, keyword })
 }
 
-// 获取社团分类统计
+// 获取社团分类列表
+export const getClubCategoriesList = async (): Promise<ClubCategory[]> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetClubCategoriesList()
+  }
+  const response = await request.get('/api/club/categories')
+  if(response.data==null){
+    return []
+  }
+  return response.data as ClubCategory[]
+}
+
+// TODO:获取社团分类统计
 export const getClubCategories = async (): Promise<{
   data: ApiResponse<Record<string, number>>
 }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockGetClubCategories()
-    : await request.get('/api/club/categories')
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetClubCategories()
+  }
+  const response = await request.get('/api/club/categories_num')
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: response.data,
+    },
+  }
 }
 
 // 申请加入社团
@@ -100,9 +139,18 @@ export const applyToClub = async (data: {
   clubId: string
   reason: string
 }): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockApplyToClub(data)
-    : await request.post(`/api/club/${data.clubId}/join`, { reason: data.reason })
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockApplyToClub(data)
+  }
+  const response = await request.post(`/api/club/${data.clubId}/join`, { reason: data.reason })
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
+  
 }
 
 // 撤销申请
@@ -114,46 +162,65 @@ export const cancelApplication = async (applicationId: string): Promise<{ data: 
 
 // 收藏社团
 export const favoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockFavoriteClub(clubId)
-    : await request.post('/api/club/favorite',{club_id:clubId})
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockFavoriteClub(clubId)
+  }
+  const response = await request.post('/api/club/favorite',{club_id:clubId})
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
 }
 
 // 取消收藏社团
 export const unfavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockUnfavoriteClub(clubId)
-    : await request.post('/api/club/unfavorite',{club_id:clubId})
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockUnfavoriteClub(clubId)
+  }
+  const response = await request.post('/api/club/unfavorite',{club_id:clubId})
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
 }
 
 // 获取用户收藏的社团
-export const getFavoriteClubs: (
-  params?: {
+export const getFavoriteClubs = async (
+  params: {
     page?: number
     pageSize?: number
-  }
-) => Promise<{ data: ApiResponse<PaginatedData<Club>> }> = async (
-  params = {},
-) => {
+  } = {},
+): Promise<PaginatedData<Club>> => {
     if (getIsUsingMockAPI()) {
       return await mockClub.mockGetFavoriteClubs(params)
     }
 
-    const queryParams = new URLSearchParams()
 
-    if (params.page) {
-      queryParams.append('page', params.page.toString())
+    const url = `/api/club/my_favorites`
+
+    const response = await request.get(url)
+    if(response.data==null){
+      return {
+        list: [],
+        total: 0,
+        page: params.page || 1,
+        pageSize: params.pageSize || 12,
+      }
     }
-    if (params.pageSize) {
-      queryParams.append('pageSize', params.pageSize.toString())
+    return {
+      list: response.data,
+      total: response.data.length,
+      page: params.page || 1,
+      pageSize: params.pageSize || 12,
     }
-
-    const queryString = queryParams.toString()
-    const url = queryString ? `/api/club/my_favorites?${queryString}` : '/api/club/my_favorites'
-
-    return await request.get(url)
   }
-
+    
 
 // 获取用户申请记录
 export const getUserApplications = async (
@@ -187,19 +254,27 @@ export const getUserApplications = async (
   return await request.get(url)
 }
 
-// 创建社团（管理员功能）
+// 申请创建社团（管理员功能）
 export const createClub = async (data: {
   name: string
-  description: string
+  desc: string
   requirements: string
   category?: string
   maxMembers?: number
   tags?: string[]
   coverImage?: string
-}): Promise<{ data: ApiResponse<Club> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockCreateClub(data)
-    : await request.post('/api/club/create', data)
+}): Promise<{ data: ApiResponse<null> }> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockCreateClub(data)
+  }
+  const response = await request.post('/api/club/create', data)
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
 }
 
 // 更新社团信息（社团管理员功能）

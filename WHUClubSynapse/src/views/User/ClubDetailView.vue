@@ -31,7 +31,7 @@
 
             <div class="club-tags">
               <el-tag :type="getCategoryType(club.category)" size="large">
-                {{ club.category }}
+                {{ clubStore.categoriesList.find((c) => c.category_id === club?.category)?.name }}
               </el-tag>
               <el-tag v-for="tag in club.tags" :key="tag" size="large" plain>
                 {{ tag }}
@@ -293,6 +293,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
 import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
+import { applyToClub } from '@/api/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -400,7 +401,6 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
-// TODO：申请加入社团
 const handleApply = () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
@@ -486,7 +486,7 @@ const confirmApply = async () => {
 
   try {
     createLoading.value = true
-    await clubStore.applyToClub(club.value!.club_id, reason.value)
+    await applyToClub({ clubId: club.value!.club_id, reason: reason.value })
 
     // 申请成功后，更新社团状态
     if (club.value) {

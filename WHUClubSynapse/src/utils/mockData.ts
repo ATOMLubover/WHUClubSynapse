@@ -1,12 +1,27 @@
-import type { Application, Club, User, ClubPost, ClubPostReply } from '@/types'
+import type { Application, Club, User, ClubPost, ClubPostReply, ClubCategory } from '@/types'
 
-export const categoryMap: Record<number, string> = {
-  0: '学术科技',
-  1: '文艺体育',
-  2: '志愿服务',
-  3: '创新创业',
-  4: '其他',
-}
+export const categories: ClubCategory[] = [
+  {
+    category_id: 0,
+    name: '学术科技',
+  },
+  {
+    category_id: 1,
+    name: '文艺体育',
+  },
+  {
+    category_id: 2,
+    name: '志愿服务',
+  },
+  {
+    category_id: 3,
+    name: '创新创业',
+  },
+  {
+    category_id: 4,
+    name: '其他',
+  },
+]
 
 // 模拟社团数据
 export const mockClubs: Club[] = [
@@ -414,7 +429,7 @@ export const mockUser: User = {
   },
   // 用户偏好设置
   preferences: {
-    interestedCategories: ['学术科技', '文艺体育'],
+    interestedCategories: categories,
     emailNotifications: true,
     applicationNotifications: true,
     activityNotifications: false,

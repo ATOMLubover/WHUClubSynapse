@@ -19,12 +19,16 @@
         <el-form-item label="感兴趣类型" required>
           <div class="category-selection">
             <el-checkbox-group v-model="preferences.interestedCategories" class="category-group">
-              <div class="category-item" v-for="category in categories" :key="category">
-                <el-checkbox :label="category" class="category-checkbox">
-                  <div class="category-content">
-                    <div class="category-name">{{ category }}</div>
-                    <div class="category-description">{{ getCategoryDescription(category) }}</div>
-                  </div>
+              <div class="category-item" v-for="category in categories" :key="category.category_id">
+                <el-checkbox :label="category" :value="category" class="category-checkbox">
+                  <template #default>
+                    <div class="category-content">
+                      <div class="category-name">{{ category.name }}</div>
+                      <div class="category-description">
+                        {{ getCategoryDescription(category.name) }}
+                      </div>
+                    </div>
+                  </template>
                 </el-checkbox>
               </div>
             </el-checkbox-group>
@@ -129,6 +133,7 @@ import { ElMessage } from 'element-plus'
 import { Setting, InfoFilled } from '@element-plus/icons-vue'
 import type { ClubCategory, UserPreferences } from '@/types'
 import { allUserTags } from '@/utils/mockData'
+import { useCategories } from '@/composables/useCategories'
 
 // Props
 interface Props {
@@ -145,7 +150,8 @@ const emit = defineEmits<{
 
 // 响应式数据
 const loading = ref(false)
-const categories: ClubCategory[] = ['学术科技', '文艺体育', '志愿服务', '创新创业', '其他']
+// 使用全局分类数据
+const { categories } = useCategories()
 
 // 偏好设置
 const preferences = reactive<UserPreferences>({
@@ -196,15 +202,15 @@ const filterTag = (query: string) => {
 }
 
 // 方法
-const getCategoryDescription = (category: ClubCategory): string => {
-  const descriptions: Record<ClubCategory, string> = {
+const getCategoryDescription = (categoryName: string): string => {
+  const descriptions: Record<string, string> = {
     学术科技: '编程、算法、科研等学术类社团',
     文艺体育: '音乐、舞蹈、运动等文体类社团',
     志愿服务: '公益、志愿、服务等社会类社团',
     创新创业: '创业、创新、商业等实践类社团',
     其他: '其他类型的社团',
   }
-  return descriptions[category]
+  return descriptions[categoryName] || '社团相关活动'
 }
 
 const handleSave = async () => {

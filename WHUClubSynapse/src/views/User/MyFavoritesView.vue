@@ -19,9 +19,9 @@
             >
               <el-option label="全部类型" value="" />
               <el-option
-                v-for="(category, index) in categories"
-                :label="categories[index]"
-                :value="categories[index]"
+                v-for="category in clubStore.categoriesList"
+                :label="category.name"
+                :value="category.category_id"
               />
             </el-select>
           </el-col>
@@ -223,13 +223,13 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, ArrowDown, UserFilled } from '@element-plus/icons-vue'
-import { getFavoriteClubs, unfavoriteClub } from '@/api/club'
+import { getClubCategoriesList, getFavoriteClubs, unfavoriteClub } from '@/api/club'
 import type { Club, ClubCategory } from '@/types'
-import { categoryMap } from '@/utils/mockData'
+import { useClubStore } from '@/stores/club'
 
 // 路由
 const router = useRouter()
-
+const clubStore = useClubStore()
 // 响应式数据
 const loading = ref(false)
 const viewMode = ref<'card' | 'list'>('card')
@@ -253,16 +253,17 @@ const favoriteStats = reactive({
   categories: 0,
 })
 
-// 分类数据
-const categories = ref<ClubCategory[]>(['学术科技', '文艺体育', '志愿服务', '创新创业', '其他'])
-
 // 计算属性
 const filteredClubs = computed(() => {
   let clubs = [...favoriteClubs.value]
 
   // 分类筛选
   if (filterCategory.value) {
-    clubs = clubs.filter((club) => categoryMap[club.category] === filterCategory.value)
+    clubs = clubs.filter(
+      (club) =>
+        clubStore.categoriesList.find((c) => c.category_id === club.category)?.name ===
+        filterCategory.value,
+    )
   }
 
   // 关键词搜索
@@ -343,7 +344,7 @@ const loadFavorites = async () => {
       pageSize: 1000, // 获取全部收藏，前端分页
     })
 
-    const list = response.data.data.list
+    const list = response.list
     //TODO: 这里需要修改，favoriteAt应该是从后端获取的,也许不需要这个字段
     favoriteClubs.value = list.map((item: any) => ({
       ...item,
