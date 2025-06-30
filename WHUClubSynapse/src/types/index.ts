@@ -162,7 +162,7 @@ export interface UserListParams {
 
 // 注册成功响应
 export interface RegisterResponse {
-  id: number
+  user_id: number
   username: string
 }
 

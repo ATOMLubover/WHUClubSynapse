@@ -15,7 +15,12 @@
       </div>
 
       <!-- 导航菜单 -->
-      <el-menu :default-active="activeMenu" class="user-menu" @select="handleMenuSelect" :default-openeds="['user-clubs']">
+      <el-menu
+        :default-active="activeMenu"
+        class="user-menu"
+        @select="handleMenuSelect"
+        :default-openeds="['user-clubs']"
+      >
         <el-menu-item index="user-center">
           <el-icon><User /></el-icon>
           <span>个人中心</span>
@@ -91,7 +96,7 @@ const handleMenuSelect = (index: string) => {
   const routeMap: Record<string, string> = {
     'user-center': '/user/center',
     'user-applications': '/user/applications',
-    'user-favorites': '/api/club/my_favorites',
+    'user-favorites': '/user/favorites',
     'joined-clubs': '/user/clubs/joined',
     'managed-clubs': '/user/clubs/managed',
     'user-activities': '/user/activities',

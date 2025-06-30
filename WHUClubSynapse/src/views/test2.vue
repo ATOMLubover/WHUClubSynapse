@@ -7,7 +7,7 @@ import request from '@/utils/request'
 import { ref } from 'vue'
 
 const test = () => {
-  request.get('/api/club/list').then((res) => {
+  request.get('/auth/my_info').then((res) => {
     console.log(res.data.data)
   })
 }

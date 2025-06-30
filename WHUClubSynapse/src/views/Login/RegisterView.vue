@@ -321,7 +321,7 @@ const handleRegister = async () => {
     console.log(registerData)
     const result = await authStore.register(registerData)
 
-    ElMessage.success(`注册成功！用户ID: ${result.id}`)
+    ElMessage.success(`注册成功！用户ID: ${result.user_id}`)
 
     // 注册成功后跳转到登录页面
     router.push('/login')

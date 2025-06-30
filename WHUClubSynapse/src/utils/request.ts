@@ -10,7 +10,7 @@ import type { ApiResponse } from '@/types'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://localhost:22116",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

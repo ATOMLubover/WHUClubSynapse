@@ -190,7 +190,7 @@ const handleUserMenuCommand = (command: string) => {
       router.push('/user/applications')
       break
     case 'favorites':
-      router.push('/api/club/my_favorites')
+      router.push('/user/favorites')
       break
     case 'create-clubs':
       router.push('/user/clubs/managed?isOpen=true')

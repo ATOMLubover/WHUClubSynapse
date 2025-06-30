@@ -78,7 +78,7 @@ export const mockRegister = async (
   }
 
   return {
-    id: Date.now(),
+    user_id: Date.now(),
     username: data.username,
   }
 }
