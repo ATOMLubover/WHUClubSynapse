@@ -47,27 +47,26 @@ def process_messages_batch(messages: List[Tuple[str, Dict[str, str]]]):
 
     for msg_id, msg_data in messages:
         try:
-            data = json.loads(msg_data['data'])
-            source_id = "dynamic::" + data.get('source_id')
-            content = data.get('content')
+            source_id_base = msg_data.get('source_id')
+            content = msg_data.get('content')
 
-            # 这里是正常实现
-            if not all([source_id, content]):
-                raise ValueError("Message is missing 'source_id' or 'content'")
-            batch_ids.append(source_id)
+            if not source_id_base or not content:
+                raise ValueError("Message is missing 'source_id' or 'content', or they are empty.")
 
-            # FIX: 以下是测试内容，测试完毕请删除
-            # if not content: # 在这个临时版本中，我们只关心content
-            #     raise ValueError("Message is missing 'content'")
-            # random_id = str(uuid.uuid4())
-            # batch_ids.append(random_id)
+            source_id = "dynamic::" + source_id_base
 
-            raw_metadata = data.get('metadata', {})
+            # 获取 metadata 字段
+            metadata_str = msg_data.get('metadata', '')
+
+            if not metadata_str.strip():
+                raw_metadata = {}
+            else:
+                raw_metadata = json.loads(metadata_str)
+
             sanitized_metadata = {
                 key: sanitize_metadata_value(value) for key, value in raw_metadata.items()
             }
 
-            # 以下不动
             batch_documents.append(content)
             batch_metadatas.append(sanitized_metadata)
             processed_msg_ids.append(msg_id)
