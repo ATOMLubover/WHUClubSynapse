@@ -302,38 +302,6 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-  // 创建社团
-  const createClub = async (data:  {
-  name: string
-  desc: string
-  requirements: string
-  category?: string
-  maxMembers?: number
-  tags?: string[]
-  coverImage?: string
-}) => {
-    try {
-      const response = await clubApi.createClub(data)
-      return response.data.data
-    } catch (error) {
-      console.error('创建社团失败:', error)
-      ElMessage.error('创建社团失败')
-      throw error
-    }
-  }
-
-  // 删除社团
-  const deleteClub = async (clubId: string) => {
-    try {
-      const response = await clubApi.deleteClub(clubId)
-      return response.data.data
-    } catch (error) {
-      console.error('删除社团失败:', error)
-      ElMessage.error('删除社团失败')
-      throw error
-    }
-  }
-
   // 更新社团信息
   const updateClub = async (
     clubId: string,
@@ -484,7 +452,7 @@ export const useClubStore = defineStore('club', () => {
     setSearchParams,
     setActiveCategory,
     resetSearch,
-    setGlobalPage,
+    setGlobalPage,  
     setSearchPage,
     setSearchPageSize,
     setPageSize,
@@ -495,11 +463,8 @@ export const useClubStore = defineStore('club', () => {
     fetchJoinedClubs,
     fetchManagedClubs,
     quitClub,
-    createClub,
-    deleteClub,
-    updateClub,
-    // 新增：帖子相关方法
     fetchClubPosts,
     getPostById,
+    updateClub,
   }
 })

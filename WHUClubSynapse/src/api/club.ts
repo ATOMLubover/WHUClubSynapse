@@ -1,6 +1,5 @@
-
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory, ClubCreationApplication } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
@@ -254,20 +253,67 @@ export const getUserApplications = async (
   return await request.get(url)
 }
 
-// 申请创建社团（管理员功能）
-export const createClub = async (data: {
+// 申请创建社团（需要管理员审核）
+export const applyToCreateClub = async (data: {
   name: string
   desc: string
   requirements: string
-  category?: string
+  category?: number
   maxMembers?: number
   tags?: string[]
   coverImage?: string
+  introduction?: string
+  contactInfo?: {
+    qq?: string
+    wechat?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  meetingTime?: string
+  meetingLocation?: string
 }): Promise<{ data: ApiResponse<null> }> => {
   if(getIsUsingMockAPI()){
-    return await mockClub.mockCreateClub(data)
+    return await mockClub.mockApplyToCreateClub(data)
   }
-  const response = await request.post('/api/club/create', data)
+  const response = await request.post('/api/club/apply-create', data)
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
+}
+
+// 获取待审核的社团创建申请列表（管理员功能）
+export const getPendingClubApplications = async (params?: {
+  page?: number
+  pageSize?: number
+  status?: 'pending' | 'approved' | 'rejected'
+}): Promise<{ data: ApiResponse<{ list: ClubCreationApplication[], total: number }> }> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetPendingClubApplications(params)
+  }
+  const response = await request.get('/api/admin/club-applications', { params })
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: response.data,
+    },
+  }
+}
+
+// 审核社团创建申请（管理员功能）
+export const reviewClubApplication = async (applicationId: string, data: {
+  status: 'approved' | 'rejected'
+  rejectReason?: string
+}): Promise<{ data: ApiResponse<null> }> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockReviewClubApplication(applicationId, data)
+  }
+  const response = await request.post(`/api/admin/club-applications/${applicationId}/review`, data)
   return{
     data: {
       code: response.status,

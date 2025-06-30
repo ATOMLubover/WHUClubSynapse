@@ -1,4 +1,4 @@
-import type { Club, PaginatedData, SearchParams, ApiResponse, ClubCategory } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, ClubCategory, ClubApplication, ClubCreationApplication } from '@/types'
 import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds, categories } from '@/utils/mockData'
 import { config } from '@/config'
 import type { ClubPost, ClubPostReply } from '@/types'
@@ -755,3 +755,233 @@ export const mockReplyClubPost = async (
     }
   }
 }
+
+// 模拟申请创建社团
+export const mockApplyToCreateClub = async (data: {
+  name: string
+  desc: string
+  requirements: string
+  category?: number
+  maxMembers?: number
+  tags?: string[]
+  coverImage?: string
+  introduction?: string
+  contactInfo?: {
+    qq?: string
+    wechat?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  meetingTime?: string
+  meetingLocation?: string
+}): Promise<{ data: ApiResponse<null> }> => {
+  await delay(800)
+
+  // 生成新的申请ID
+  const newId = (mockClubApplications.length + 1).toString()
+
+  // 创建申请对象
+  const newApplication: ClubCreationApplication = {
+    id: newId,
+    userId: 'user1', // 假设当前用户ID
+    username: '测试用户',
+    realName: '张三',
+    avatar_url: 'https://picsum.photos/100/100?random=1',
+    clubName: data.name,
+    description: data.desc,
+    category: data.category || 0,
+    maxMembers: data.maxMembers || 50,
+    tags: data.tags || [],
+    coverImage: data.coverImage,
+    requirements: data.requirements,
+    introduction: data.introduction,
+    contactInfo: data.contactInfo,
+    meetingTime: data.meetingTime,
+    meetingLocation: data.meetingLocation,
+    status: 'pending',
+    applyTime: new Date().toISOString(),
+    studentId: '2021001001',
+    major: '计算机科学与技术',
+    phone: '13800138000',
+    email: 'test@whu.edu.cn'
+  }
+
+  // 添加到申请列表
+  mockClubApplications.push(newApplication)
+
+  return {
+    data: {
+      code: 200,
+      message: '社团创建申请提交成功，等待管理员审核',
+      data: null,
+    },
+  }
+}
+
+// 模拟获取待审核的社团创建申请列表
+export const mockGetPendingClubApplications = async (params?: {
+  page?: number
+  pageSize?: number
+  status?: 'pending' | 'approved' | 'rejected'
+}): Promise<{ data: ApiResponse<{ list: ClubCreationApplication[], total: number }> }> => {
+  await delay(600)
+
+  const page = params?.page || 1
+  const pageSize = params?.pageSize || 10
+  const status = params?.status || 'pending'
+
+  // 过滤申请
+  let filteredApplications = mockClubApplications
+  if (status) {
+    filteredApplications = mockClubApplications.filter(app => app.status === status)
+  }
+
+  // 分页
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = filteredApplications.slice(start, end)
+
+  return {
+    data: {
+      code: 200,
+      message: '获取成功',
+      data: {
+        list,
+        total: filteredApplications.length
+      },
+    },
+  }
+}
+
+// 模拟审核社团创建申请
+export const mockReviewClubApplication = async (applicationId: string, data: {
+  status: 'approved' | 'rejected'
+  rejectReason?: string
+}): Promise<{ data: ApiResponse<null> }> => {
+  await delay(500)
+
+  const application = mockClubApplications.find(app => app.id === applicationId)
+  if (!application) {
+    return {
+      data: {
+        code: 404,
+        message: '申请不存在',
+        data: null,
+      },
+    }
+  }
+
+  // 更新申请状态
+  application.status = data.status
+  application.reviewTime = new Date().toISOString()
+  application.reviewerId = 'admin1'
+  application.reviewerName = '管理员'
+  if (data.status === 'rejected' && data.rejectReason) {
+    application.rejectReason = data.rejectReason
+  }
+
+  // 如果审核通过，创建社团
+  if (data.status === 'approved') {
+    const newClub: Club = {
+      club_id: (mockClubs.length + 1).toString(),
+      club_name: application.clubName,
+      desc: application.description,
+      logo_url: application.coverImage || `https://picsum.photos/400/240?random=${mockClubs.length + 1}`,
+      category: application.category,
+      adminId: application.userId,
+      adminName: application.username,
+      member_count: 1,
+      maxMembers: application.maxMembers,
+      tags: application.tags,
+      isHot: false,
+      status: 'managed',
+      created_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      qq: application.contactInfo?.qq || '',
+      details: application.description,
+      activities: [],
+      location: `武汉大学${application.clubName}`,
+      isFavorite: false,
+      introduction: application.introduction,
+      contactInfo: application.contactInfo,
+      requirements: application.requirements,
+      meetingTime: application.meetingTime,
+      meetingLocation: application.meetingLocation,
+    }
+
+    mockClubs.push(newClub)
+  }
+
+  return {
+    data: {
+      code: 200,
+      message: data.status === 'approved' ? '审核通过，社团创建成功' : '审核拒绝',
+      data: null,
+    },
+  }
+}
+
+// 模拟社团创建申请数据
+export const mockClubApplications: ClubCreationApplication[] = [
+  {
+    id: '1',
+    userId: 'user1',
+    username: '张三',
+    realName: '张三',
+    avatar_url: 'https://picsum.photos/100/100?random=1',
+    clubName: '人工智能研究社',
+    description: '致力于人工智能技术的研究和应用，组织技术分享和项目实践。',
+    category: 0,
+    maxMembers: 60,
+    tags: ['AI', '机器学习', '深度学习'],
+    coverImage: 'https://picsum.photos/400/240?random=20',
+    requirements: '对人工智能技术有浓厚兴趣，具备一定的编程基础。',
+    introduction: '我们是一个专注于人工智能技术研究的学术社团，定期组织技术讲座、项目实践和竞赛活动。',
+    contactInfo: {
+      qq: '123456789',
+      wechat: 'ai_research',
+      email: 'ai@whu.edu.cn',
+      phone: '13800138001',
+      address: '武汉大学计算机学院'
+    },
+    meetingTime: '每周三晚上7点',
+    meetingLocation: '计算机学院A101',
+    status: 'pending',
+    applyTime: '2024-01-25T10:00:00Z',
+    studentId: '2021001001',
+    major: '计算机科学与技术',
+    phone: '13800138001',
+    email: 'zhangsan@whu.edu.cn'
+  },
+  {
+    id: '2',
+    userId: 'user2',
+    username: '李四',
+    realName: '李四',
+    avatar_url: 'https://picsum.photos/100/100?random=2',
+    clubName: '摄影艺术社',
+    description: '用镜头记录美好瞬间，分享摄影技巧，提升艺术修养。',
+    category: 1,
+    maxMembers: 40,
+    tags: ['摄影', '艺术', '创作'],
+    coverImage: 'https://picsum.photos/400/240?random=21',
+    requirements: '热爱摄影艺术，愿意分享和学习。',
+    introduction: '摄影艺术社致力于培养同学们的摄影兴趣和艺术修养，定期组织外拍活动和作品分享。',
+    contactInfo: {
+      qq: '987654321',
+      wechat: 'photo_art',
+      email: 'photo@whu.edu.cn',
+      phone: '13800138002',
+      address: '武汉大学艺术学院'
+    },
+    meetingTime: '每周五下午3点',
+    meetingLocation: '艺术学院B201',
+    status: 'pending',
+    applyTime: '2024-01-24T14:30:00Z',
+    studentId: '2021002001',
+    major: '艺术设计',
+    phone: '13800138002',
+    email: 'lisi@whu.edu.cn'
+  }
+]

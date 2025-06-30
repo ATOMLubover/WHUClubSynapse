@@ -1,11 +1,13 @@
 // 用户类型
 export interface User {
-  id: number
+  user_id: number
   username: string
   email: string
   avatar_url: string
   role: 'user' | 'admin'
   last_active: string
+  // 扩展字段（前端使用）
+  id?: number // 兼容现有代码
   studentId?: string
   realName?: string
   major?: string
@@ -14,6 +16,7 @@ export interface User {
   emailVerified?: string
   phoneVerified?: string
   bio?: string
+  status?: 'active' | 'disabled'
   // 用户统计信息
   stats?: UserStats
   // 用户偏好设置
@@ -248,6 +251,42 @@ export interface ClubApplication {
   // 新增字段：用户偏好社团和特质标签
   interestedCategories?: string[] // 偏好社团类型
   tags?: string[] // 用户特质标签
+}
+
+// 社团创建申请类型
+export interface ClubCreationApplication {
+  id: string
+  userId: string
+  username: string
+  realName?: string
+  avatar_url: string
+  clubName: string
+  description: string
+  category: number
+  maxMembers: number
+  tags: string[]
+  coverImage?: string
+  requirements: string
+  introduction?: string
+  contactInfo?: {
+    qq?: string
+    wechat?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  meetingTime?: string
+  meetingLocation?: string
+  status: 'pending' | 'approved' | 'rejected'
+  applyTime: string
+  reviewTime?: string
+  reviewerId?: string
+  reviewerName?: string
+  rejectReason?: string
+  studentId?: string
+  major?: string
+  phone?: string
+  email?: string
 }
 
 // 申请审核请求类型

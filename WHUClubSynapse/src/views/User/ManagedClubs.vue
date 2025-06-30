@@ -439,8 +439,15 @@ const beforeCoverUpload = (file: File) => {
 const confirmCreate = async () => {
   try {
     createLoading.value = true
-    await clubStore.createClub(createForm.value)
-    ElMessage.success('社团创建成功，等待审核')
+    await clubStore.applyToCreateClub({
+      name: createForm.value.name,
+      desc: createForm.value.description,
+      requirements: createForm.value.requirements,
+      category: parseInt(createForm.value.category) || 0,
+      maxMembers: createForm.value.maxMembers,
+      tags: createForm.value.tags,
+      coverImage: createForm.value.coverImage,
+    })
     showCreateDialog.value = false
     // 重置表单
     createForm.value = {
@@ -455,7 +462,7 @@ const confirmCreate = async () => {
     // 重新加载列表
     await loadManagedClubs()
   } catch (error) {
-    console.error('创建社团失败:', error)
+    console.error('申请创建社团失败:', error)
   } finally {
     createLoading.value = false
   }

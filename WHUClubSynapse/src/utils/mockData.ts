@@ -407,7 +407,7 @@ export const mockClubs: Club[] = [
 
 // 模拟用户数据
 export const mockUser: User = {
-  id: 1,
+  user_id: 1,
   username: 'testuser',
   email: 'test@example.com',
   avatar_url: 'https://avatars.githubusercontent.com/u/1?v=3',
