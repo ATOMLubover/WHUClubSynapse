@@ -691,8 +691,18 @@ const confirmAvatarUpload = () => {
 }
 
 const savePreferences = async () => {
-  // 注意：根据接口文档，后端暂时没有提供更新偏好设置接口
-  ElMessage.warning('偏好设置功能暂未开放，请联系管理员')
+  try {
+    preferencesLoading.value = true
+    // 调用后端API保存偏好设置
+    await authStore.updatePreferences(preferences)
+    ElMessage.success('偏好设置保存成功')
+    // 重新拉取用户信息，刷新页面显示
+    await loadUserData()
+  } catch (error) {
+    ElMessage.error('保存偏好设置失败')
+  } finally {
+    preferencesLoading.value = false
+  }
 }
 
 //更换邮箱手机号
