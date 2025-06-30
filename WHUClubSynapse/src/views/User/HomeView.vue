@@ -240,7 +240,7 @@ const sortBy = ref<string>('hot')
 const quickLinks = ref([
   { label: '我的申请', path: '/user/applications', icon: Document },
   { label: '我的社团', path: '/user/clubs', icon: UserFilled },
-  { label: '我的收藏', path: '/api/club/my_favorites', icon: Collection },
+  { label: '我的收藏', path: '/user/favorites', icon: Collection },
 ])
 
 // 计算总数

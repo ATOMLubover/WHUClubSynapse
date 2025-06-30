@@ -1,12 +1,12 @@
 <template>
   <div class="test-page">
     <h1>功能测试页面</h1>
-    
+
     <el-card class="test-section">
       <template #header>
         <h3>AI审核助手测试</h3>
       </template>
-      
+
       <div class="ai-test-layout">
         <div class="test-info-section">
           <h4>测试数据</h4>
@@ -21,16 +21,16 @@
             <p><strong>社团要求:</strong> 有编程基础, 对算法有兴趣, 积极参与团队项目</p>
           </div>
         </div>
-        
+
         <div class="ai-test-section">
-          <AIApplicationScreening 
+          <AIApplicationScreening
             :application-data="testApplicationData"
             :club-name="testClubName"
             :required-conditions="testRequiredConditions"
           />
         </div>
       </div>
-      
+
       <!-- 调试信息 -->
       <el-card class="test-section">
         <template #header>
@@ -41,7 +41,9 @@
           <p><strong>测试要求条件:</strong> {{ testRequiredConditions.join(', ') }}</p>
           <p><strong>申请者姓名:</strong> {{ testApplicationData.realName }}</p>
           <p><strong>申请者专业:</strong> {{ testApplicationData.major }}</p>
-          <p><strong>偏好社团:</strong> {{ testApplicationData.interestedCategories?.join(', ') }}</p>
+          <p>
+            <strong>偏好社团:</strong> {{ testApplicationData.interestedCategories?.join(', ') }}
+          </p>
           <p><strong>特质标签:</strong> {{ testApplicationData.tags?.join(', ') }}</p>
         </div>
       </el-card>
@@ -51,24 +53,28 @@
       <template #header>
         <h3>AI氛围透视镜测试</h3>
       </template>
-      
+
       <div class="atmosphere-test-layout">
         <div class="test-info-section">
           <h4>测试数据</h4>
           <div class="test-data">
             <p><strong>社团名称:</strong> 计算机科学协会</p>
             <p><strong>社团介绍:</strong> 致力于计算机科学技术的推广和学习</p>
-            <p><strong>详细介绍:</strong> 我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。</p>
+            <p>
+              <strong>详细介绍:</strong>
+              我们是一个专注于计算机科学技术的学术社团，定期举办编程比赛、技术讲座等活动。
+            </p>
             <p><strong>社团公告:</strong> 下周五有编程比赛；欢迎新成员加入</p>
-            <p><strong>社团动态:</strong> 新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会</p>
+            <p>
+              <strong>社团动态:</strong>
+              新成员见面会：欢迎新成员加入我们的大家庭；编程挑战赛：提升编程技能的好机会
+            </p>
             <p><strong>社团标签:</strong> 编程、算法、技术、学术</p>
           </div>
         </div>
-        
+
         <div class="atmosphere-test-section">
-          <AIClubAtmosphere 
-            :communication-content="testCommunicationContent"
-          />
+          <AIClubAtmosphere :communication-content="testCommunicationContent" />
         </div>
       </div>
     </el-card>

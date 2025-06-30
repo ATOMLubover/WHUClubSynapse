@@ -853,7 +853,7 @@ const handleStatClick = (index: number) => {
   if (index === 0) {
     router.push('/user/applications')
   } else if (index === 1) {
-    router.push('/api/club/my_favorites')
+    router.push('/user/favorites')
   } else if (index === 2) {
     router.push('/user/clubs/joined')
   }
@@ -1063,22 +1063,26 @@ onMounted(() => {
   border-radius: 16px;
   margin: 0 16px;
   background: linear-gradient(135deg, #f8fafc 60%, #e3e6f3 100%);
-  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(64,158,255,0.04);
+  transition:
+    box-shadow 0.2s,
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.04);
   cursor: pointer;
 }
 
 .user-tabs :deep(.el-tabs__item.is-active) {
   background: linear-gradient(135deg, #667eea 60%, #764ba2 100%);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
   transform: scale(1.08);
 }
 
 .user-tabs :deep(.el-tabs__item):hover {
   background: linear-gradient(135deg, #e0e7ff 60%, #c7d2fe 100%);
   color: #5a67d8;
-  box-shadow: 0 4px 16px rgba(64,158,255,0.12);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.12);
   transform: scale(1.04);
 }
 
@@ -1618,10 +1622,12 @@ onMounted(() => {
 
 .stat-card.clickable {
   cursor: pointer;
-  transition: box-shadow 0.2s, background 0.2s;
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
 }
 .stat-card.clickable:hover {
-  background: rgba(255,255,255,0.3);
-  box-shadow: 0 4px 16px rgba(64,158,255,0.18);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
 }
 </style>

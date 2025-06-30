@@ -86,14 +86,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 初始化（检查登录状态）
   const initialize = async () => {
-    if (token.value) {
-      try {
-        await fetchUserInfo()
-      } catch (error) {
-        // 自动清除无效token
-        logout()
-      }
-    }
+    // if (token.value) {
+    //   try {
+    //     await fetchUserInfo()
+    //   } catch (error) {
+    //     // 自动清除无效token
+    //     logout()
+    //   }
+    // }
   }
 
   // TODO:更新用户偏好设置

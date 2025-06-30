@@ -41,9 +41,10 @@ export const getClubList = async (
   const queryString = queryParams.toString()
   const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
   const response = await request.get(url)
+  const total=(await request.get('/api/club/club_num')).data.club_num
   return {
     list: response.data,
-    total: response.data.length,
+    total: total,
     page: params.page || 1,
     pageSize: params.pageSize || 10,
   }
@@ -115,14 +116,14 @@ export const cancelApplication = async (applicationId: string): Promise<{ data: 
 export const favoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockFavoriteClub(clubId)
-    : await request.post(`/clubs/${clubId}/favorite`)
+    : await request.post('/api/club/favorite',{club_id:clubId})
 }
 
 // 取消收藏社团
 export const unfavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockUnfavoriteClub(clubId)
-    : await request.delete(`/clubs/${clubId}/favorite`)
+    : await request.post('/api/club/unfavorite',{club_id:clubId})
 }
 
 // 获取用户收藏的社团
