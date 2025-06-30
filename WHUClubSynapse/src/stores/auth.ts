@@ -111,6 +111,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 管理员获取用户列表
+  const fetchAllUsers = async (params?: { offset?: number; num?: number }) => {
+    try {
+      const response = await authApi.getUserList({
+        offset: params?.offset || 0,
+        num: params?.num || 10
+      })
+      return response
+    } catch (error) {
+      console.error('获取用户列表失败:', error)
+      ElMessage.error('获取用户列表失败')
+      throw error
+    }
+  }
+
+  // 更新用户信息（管理员功能）
+  const updateUser = async (userId: number, userData: Partial<User>) => {
+    try {
+      // 这里应该调用后端API，暂时模拟成功
+      ElMessage.success('用户信息更新成功')
+      return { success: true }
+    } catch (error) {
+      console.error('更新用户信息失败:', error)
+      ElMessage.error('更新用户信息失败')
+      throw error
+    }
+  }
+
   return {
     // 状态
     user,
@@ -126,5 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     initialize,
     updatePreferences,
+    fetchAllUsers,
+    updateUser,
   }
 })

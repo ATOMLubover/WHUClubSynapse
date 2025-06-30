@@ -200,6 +200,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, RefreshLeft, Plus, Download } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import type { User } from '@/types'
 
 const authStore = useAuthStore()
 
@@ -218,9 +219,9 @@ const pageData = reactive({
 })
 
 // 表格数据
-const users = ref([])
+const users = ref<User[]>([])
 const loading = ref(false)
-const selectedUsers = ref<any[]>([])
+const selectedUsers = ref<User[]>([])
 
 // 对话框相关
 const editDialogVisible = ref(false)
@@ -229,7 +230,7 @@ const submitLoading = ref(false)
 const editFormRef = ref()
 
 // 用户表单
-const editUserForm = ref({})
+const editUserForm = ref<Partial<User>>({})
 
 // 表单验证规则
 const editFormRules = {
@@ -265,10 +266,16 @@ const resetSearch = () => {
 const loadUsers = async () => {
   loading.value = true
   try {
-    users.value = await authStore.fetchAllUsers()
-    pageData.total = users.value.length // 实际总数
+    const offset = (pageData.currentPage - 1) * pageData.pageSize
+    const usersData = await authStore.fetchAllUsers({
+      offset: offset,
+      num: pageData.pageSize
+    })
+    users.value = usersData
+    // 模拟总数，实际应该从API返回
+    pageData.total = 100
   } catch (error) {
-    ElMessage.error('获取用户列表失败')
+    console.error('加载用户列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -318,7 +325,13 @@ const saveUser = async () => {
     await editFormRef.value.validate()
     submitLoading.value = true
 
-    await authStore.updateUser(editUserForm.value.id, editUserForm.value)
+    const userId = editUserForm.value.user_id || editUserForm.value.id
+    if (!userId) {
+      ElMessage.error('用户ID不能为空')
+      return
+    }
+
+    await authStore.updateUser(userId, editUserForm.value)
     ElMessage.success(editDialogTitle.value === '添加用户' ? '添加成功' : '更新成功')
     editDialogVisible.value = false
     loadUsers()

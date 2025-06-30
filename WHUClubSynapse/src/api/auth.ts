@@ -83,7 +83,7 @@ export const getUserList = async (
     return await mockAuth.mockGetUserList(params)
   }
   
-  const response = await request.get('/api/v1/auth/users', { params })
+  const response = await request.get('/api/user/list', { params })
   // 返回用户数组
   return response.data
 }

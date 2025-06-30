@@ -1,11 +1,13 @@
 // 用户类型
 export interface User {
-  id: number
+  user_id: number
   username: string
   email: string
   avatar_url: string
   role: 'user' | 'admin'
   last_active: string
+  // 扩展字段（前端使用）
+  id?: number // 兼容现有代码
   studentId?: string
   realName?: string
   major?: string
@@ -14,6 +16,7 @@ export interface User {
   emailVerified?: string
   phoneVerified?: string
   bio?: string
+  status?: 'active' | 'disabled'
   // 用户统计信息
   stats?: UserStats
   // 用户偏好设置

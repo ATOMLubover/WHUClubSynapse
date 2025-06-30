@@ -9,20 +9,62 @@ import type {
   UserPreferences
 } from '@/types'
 import { config } from '@/config'
-import { mockUser } from '@/utils/mockData'
 
 // 模拟延迟
 const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTimeout(resolve, ms))
 
-
 // 模拟管理员用户
-const mockAdmin: User = {
-  id: 1,
+export const mockAdmin: User = {
+  user_id: 1,
   username: 'admin',
-  email: 'admin@example.com',
-  avatar_url: 'https://example.com/admin-avatar.jpg',
+  email: 'admin@whu.edu.cn',
+  avatar_url: 'https://picsum.photos/100/100?random=1',
   role: 'admin',
-  last_active: '2025-06-25 16:00:00'
+  last_active: '2024-01-25T10:30:00Z',
+  id: 1, // 兼容字段
+  realName: '系统管理员',
+  studentId: '2021001001',
+  major: '计算机科学与技术',
+  phone: '13800138001',
+  createdAt: '2024-01-01T00:00:00Z',
+  status: 'active'
+}
+
+// 模拟普通用户
+export const mockUser: User = {
+  user_id: 2,
+  username: 'testuser',
+  email: 'test@whu.edu.cn',
+  avatar_url: 'https://picsum.photos/100/100?random=2',
+  role: 'user',
+  last_active: '2024-01-25T09:15:00Z',
+  id: 2, // 兼容字段
+  realName: '测试用户',
+  studentId: '2021002001',
+  major: '软件工程',
+  phone: '13800138002',
+  createdAt: '2024-01-15T10:00:00Z',
+  status: 'active',
+  stats: {
+    appliedClubs: 2,
+    joinedClubs: 3,
+    managedClubs: 1,
+    favoriteClubs: 5,
+  },
+  preferences: {
+    interestedCategories: [
+      { category_id: 0, name: '学术科技' },
+      { category_id: 1, name: '文艺体育' }
+    ],
+    emailNotifications: true,
+    applicationNotifications: true,
+    activityNotifications: false,
+    profilePublic: true,
+    showJoinedClubs: true,
+    tags: ['编程', '音乐', '运动'],
+  },
+  hasCompletedPreferences: true,
+  tags: ['编程', '音乐', '运动'],
 }
 
 // 1. 模拟用户登录
@@ -103,12 +145,135 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
   // 模拟权限检查
   // 在实际使用中，这个检查应该在请求拦截器中处理
   
+  // 生成模拟用户数据
+  const mockUsers: User[] = [
+    {
+      user_id: 1,
+      username: 'admin',
+      email: 'admin@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=1',
+      role: 'admin',
+      last_active: '2024-01-25T10:30:00Z',
+      id: 1, // 兼容字段
+      realName: '系统管理员',
+      studentId: '2021001001',
+      major: '计算机科学与技术',
+      phone: '13800138001',
+      createdAt: '2024-01-01T00:00:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 2,
+      username: 'zhangsan',
+      email: 'zhangsan@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=2',
+      role: 'user',
+      last_active: '2024-01-25T09:15:00Z',
+      id: 2, // 兼容字段
+      realName: '张三',
+      studentId: '2021002001',
+      major: '软件工程',
+      phone: '13800138002',
+      createdAt: '2024-01-15T10:00:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 3,
+      username: 'lisi',
+      email: 'lisi@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=3',
+      role: 'user',
+      last_active: '2024-01-24T16:45:00Z',
+      id: 3, // 兼容字段
+      realName: '李四',
+      studentId: '2021003001',
+      major: '信息安全',
+      phone: '13800138003',
+      createdAt: '2024-01-10T14:30:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 4,
+      username: 'wangwu',
+      email: 'wangwu@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=4',
+      role: 'user',
+      last_active: '2024-01-23T11:20:00Z',
+      id: 4, // 兼容字段
+      realName: '王五',
+      studentId: '2021004001',
+      major: '人工智能',
+      phone: '13800138004',
+      createdAt: '2024-01-05T09:15:00Z',
+      status: 'disabled'
+    },
+    {
+      user_id: 5,
+      username: 'zhaoliu',
+      email: 'zhaoliu@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=5',
+      role: 'user',
+      last_active: '2024-01-25T08:30:00Z',
+      id: 5, // 兼容字段
+      realName: '赵六',
+      studentId: '2021005001',
+      major: '数据科学',
+      phone: '13800138005',
+      createdAt: '2024-01-20T16:00:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 6,
+      username: 'qianqi',
+      email: 'qianqi@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=6',
+      role: 'user',
+      last_active: '2024-01-22T13:45:00Z',
+      id: 6, // 兼容字段
+      realName: '钱七',
+      studentId: '2021006001',
+      major: '网络工程',
+      phone: '13800138006',
+      createdAt: '2024-01-12T11:30:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 7,
+      username: 'sunba',
+      email: 'sunba@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=7',
+      role: 'user',
+      last_active: '2024-01-21T15:20:00Z',
+      id: 7, // 兼容字段
+      realName: '孙八',
+      studentId: '2021007001',
+      major: '计算机科学与技术',
+      phone: '13800138007',
+      createdAt: '2024-01-08T10:45:00Z',
+      status: 'active'
+    },
+    {
+      user_id: 8,
+      username: 'zhoujiu',
+      email: 'zhoujiu@whu.edu.cn',
+      avatar_url: 'https://picsum.photos/100/100?random=8',
+      role: 'user',
+      last_active: '2024-01-20T12:10:00Z',
+      id: 8, // 兼容字段
+      realName: '周九',
+      studentId: '2021008001',
+      major: '软件工程',
+      phone: '13800138008',
+      createdAt: '2024-01-03T14:20:00Z',
+      status: 'active'
+    }
+  ]
+  
   // 模拟分页返回
-  const allUsers = [mockAdmin, mockUser]
   const start = params.offset
   const end = start + params.num
   
-  return allUsers.slice(start, end)
+  return mockUsers.slice(start, end)
 }
 
 // 6. 模拟ping
