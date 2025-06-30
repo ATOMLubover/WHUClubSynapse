@@ -25,6 +25,7 @@ type ClubHandler struct {
 func (h *ClubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/list", "GetClubList")
 	b.Handle("GET", "/{id:int}/info", "GetClubInfo")
+	b.Handle("GET", "/categories", "GetClubCategories")
 	b.Handle("GET", "/category/{catId:int}", "GetClubsByCategory")
 	b.Handle("GET", "/latest", "GetLatestClubs")
 	b.Handle("GET", "/club_num", "GetClubNum")
@@ -71,6 +72,27 @@ func (h *ClubHandler) GetClubList(ctx iris.Context) {
 	}
 
 	ctx.JSON(resClubList)
+}
+
+func (h *ClubHandler) GetClubCategories(ctx iris.Context) {
+	categories, err := h.ClubService.GetClubCategories()
+	if err != nil {
+		h.Logger.Error("获取社团分类失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法获取社团分类")
+		return
+	}
+
+	var resCategories []*dto.CategoryResponse
+	for _, category := range categories {
+		resCategories = append(resCategories, &dto.CategoryResponse{
+			CatId: int(category.CategoryId),
+			Name:  category.Name,
+		})
+	}
+
+	ctx.JSON(resCategories)
 }
 
 func (h *ClubHandler) GetClubInfo(ctx iris.Context, id int) {

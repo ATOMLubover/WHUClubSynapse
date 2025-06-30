@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -24,23 +25,31 @@ import (
 	"gorm.io/gorm"
 )
 
+type MiddlewareFunc func(iris.Context)
+
+var crs MiddlewareFunc = func(ctx iris.Context) {
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
+	if ctx.Request().Method == "OPTIONS" {
+		ctx.StatusCode(iris.StatusNoContent)
+		return
+	}
+	ctx.Next()
+}
+
+var routeLogger MiddlewareFunc = func(ctx iris.Context) {
+	fmt.Printf("==============  %s  %s  ==============\n", ctx.Method(), ctx.Path())
+	ctx.Next()
+	fmt.Printf("--------------  %s  %s  --------------\n", ctx.Method(), ctx.Path())
+}
+
 func main() {
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
 
-	crs := func(ctx iris.Context) {
-		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
-		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
-		ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
-		if ctx.Request().Method == "OPTIONS" {
-			ctx.StatusCode(iris.StatusNoContent)
-			return
-		}
-		ctx.Next()
-	}
-
-	app.Use(crs)
+	app.Use(crs, routeLogger)
 
 	rootApp := mvc.New(app.Party("/"))
 
@@ -101,14 +110,6 @@ func main() {
 		userService,
 		mailvrfService,
 		clubService,
-	)
-
-	rootApp.Router.Use(
-		func(ctx iris.Context) {
-			logger.Debug("==============", "method", ctx.Method(), "path", ctx.Path())
-			ctx.Next()
-			logger.Debug("==============", "method", ctx.Method(), "path", ctx.Path())
-		},
 	)
 
 	InitAuthHandler(rootApp)
