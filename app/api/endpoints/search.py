@@ -1,4 +1,5 @@
 import httpx
+import re
 from fastapi import APIRouter, HTTPException
 
 from app.configs.config import settings
@@ -47,6 +48,7 @@ async def smart_search(search_query: SearchQuery):
             *   **核心摘要**：首先，用一两句话直接给出最核心的答案或定义。
             *   **关键信息/步骤**：然后，分点列出关键的细节、操作步骤或相关概念。
             *   **实用技巧/补充**：最后，提供一些相关的实用技巧、注意事项或补充信息。
+        4. **回答中不要给出具体参考哪个文档**：在回答中不要给出具体参考哪个文档来源的提示，这部分已经由RAG系统给出。
 
         请使用 Markdown 格式化你的回答，确保内容友好、易于理解。
         """
@@ -62,10 +64,9 @@ async def smart_search(search_query: SearchQuery):
                     "content": final_prompt
                 }
             ],
-            "temperature": 0.8,
+            "enable_thinking": True,
             "max_tokens": 1024,
-            "top_p": 0.95,
-            "top_k": 20,
+            "stream": False  # 流式响应无法返回溯源结果，而且需要分块处理
         }
 
         headers = {
@@ -85,8 +86,11 @@ async def smart_search(search_query: SearchQuery):
             answer = data['choices'][0]['message']['content']
         logger.info("成功从 vLLM 服务获取到回答")
         # c. 构造并返回响应
+        # 清除思考输出
+        clear_answer = re.sub(r'<think>.*?</think>\s*', '', answer, flags=re.DOTALL).strip()
+
         return SearchResponse(
-            answer=answer,
+            answer=clear_answer,
             source=retrieved_docs
         )
     except httpx.RequestError as e:

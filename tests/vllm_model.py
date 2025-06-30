@@ -1,3 +1,4 @@
+# 集成式方法，仅用于测试，不建议作为服务使用，不可用于生成环境
 import os
 
 from transformers import AutoTokenizer
