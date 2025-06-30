@@ -7,11 +7,7 @@ type ClubPostBasic struct {
 	Title        string `json:"title"`
 	CommentCount int    `json:"comment_count"`
 	CreatedAt    string `json:"created_at"`
-}
-
-type ClubPostDetail struct {
-	ClubPostBasic
-	ContentUrl string `json:"content_url"`
+	ContentUrl   string `json:"content_url"`
 }
 
 type CreatePostRequest struct {

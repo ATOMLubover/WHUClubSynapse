@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"whuclubsynapse-server/internal/base_server/dto"
+	"whuclubsynapse-server/internal/base_server/redisimpl"
 	"whuclubsynapse-server/internal/base_server/service"
 	"whuclubsynapse-server/internal/shared/dbstruct"
 
@@ -14,8 +15,10 @@ import (
 )
 
 type PostHandler struct {
-	PostService service.PostService
-	Logger      *slog.Logger
+	PostService  service.PostService
+	RedisService redisimpl.RedisClientService
+
+	Logger *slog.Logger
 }
 
 func (h *PostHandler) BeforeActivation(b mvc.BeforeActivation) {
@@ -161,11 +164,27 @@ func (h *PostHandler) PostCreatePost(ctx iris.Context) {
 	}
 
 	if err := h.PostService.CreatePost(
-		newPost, func(writer *io.PipeWriter) error {
+		&newPost, func(writer *io.PipeWriter) error {
 			defer writer.Close()
 
 			_, err := io.Copy(writer, strings.NewReader(content))
 			return err
 		}); err != nil {
+		h.Logger.Error("创建帖子失败",
+			"error", err,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("创建帖子失败")
+		return
 	}
+
+	if err := h.RedisService.UploadPostInfo(&newPost); err != nil {
+		h.Logger.Error("上传帖子信息失败",
+			"error", err, "post_id", newPost.PostId, 
+			"path", newPost.ContentUrl,
+		)
+	}
+
+	ctx.Text("创建帖子成功")
 }

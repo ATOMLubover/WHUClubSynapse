@@ -2,10 +2,15 @@ package redisimpl
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
 	"log/slog"
+	"os"
 	"strconv"
 	"time"
 	"whuclubsynapse-server/internal/base_server/baseconfig"
+	"whuclubsynapse-server/internal/shared/dbstruct"
 	"whuclubsynapse-server/internal/shared/rediscli"
 
 	"github.com/redis/go-redis/v9"
@@ -18,6 +23,8 @@ const (
 type RedisClientService interface {
 	CheckVrfcodeExisting(email string) bool
 	ValidateRegVrfcode(email, vrfcode string) bool
+	UploadClubInfo(clubInfo *dbstruct.Club) error
+	UploadPostInfo(postInfo *dbstruct.ClubPost) error
 }
 
 type sRedisClientService struct {
@@ -77,4 +84,87 @@ func (s *sRedisClientService) ValidateRegVrfcode(email, vrfcode string) bool {
 	}
 
 	return true
+}
+
+func (s *sRedisClientService) UploadClubInfo(clubInfo *dbstruct.Club) error {
+	s.logger.Debug("上传社团信息", "club", clubInfo)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	strClubId := strconv.Itoa(int(clubInfo.ClubId))
+	if strClubId == "" {
+		return errors.New("无法转化club_id为字符串")
+	}
+
+	metadataJson, err := json.Marshal(map[string]any{})
+	if err != nil {
+		return err
+	}
+
+	cmd := s.client.Inst().XAdd(ctx, &redis.XAddArgs{
+		Stream: "rag_sync_stream",
+		Values: map[string]any{
+			"source_id": "club_id::" + strClubId,
+			"content":   clubInfo.Description,
+			"metadata":  string(metadataJson),
+		},
+	})
+
+	msgId, err := cmd.Result()
+	if err != nil {
+		s.logger.Error("Redis操作异常", "error", err)
+		return err
+	}
+
+	s.logger.Info("上传社团信息成功", "msg_id", msgId)
+
+	return nil
+}
+
+func (s *sRedisClientService) UploadPostInfo(postInfo *dbstruct.ClubPost) error {
+	s.logger.Debug("上传帖子信息", "post", postInfo)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	strPostId := strconv.Itoa(int(postInfo.PostId))
+	if strPostId == "" {
+		return errors.New("无法转化post_id为字符串")
+	}
+
+	postFile, err := os.Open(postInfo.ContentUrl)
+	if err != nil {
+		return err
+	}
+	defer postFile.Close()
+
+	content, err := io.ReadAll(postFile)
+	if err != nil {
+		return err
+	}
+
+	metadataJson, err := json.Marshal(map[string]any{})
+	if err != nil {
+		return err
+	}
+
+	cmd := s.client.Inst().XAdd(ctx, &redis.XAddArgs{
+		Stream: "rag_sync_stream",
+		Values: map[string]any{
+			"source_id": "post_id::" + strPostId,
+			"content":   string(content),
+			"metadata":  string(metadataJson),
+		},
+	})
+
+	msgId, err := cmd.Result()
+	if err != nil {
+		s.logger.Error("Redis操作异常", "error", err)
+		return err
+	}
+
+	s.logger.Info("上传帖子信息成功", "msg_id", msgId)
+
+	return nil
 }

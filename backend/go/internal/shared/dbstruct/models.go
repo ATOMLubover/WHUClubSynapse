@@ -45,7 +45,7 @@ type Club struct {
 	Requirements string    `gorm:"type:text" json:"requirements"`
 	CreatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null" json:"updated_at"`
-	ApprovedAt   time.Time `json:"approved_at"`
+	Tags         time.Time `json:"type:jsonb"`
 
 	Leader   User     `gorm:"foreignKey:LeaderId" json:"-"`
 	Category Category `gorm:"foreignKey:CategoryId" json:"-"`

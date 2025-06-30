@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/model"
+	"whuclubsynapse-server/internal/base_server/redisimpl"
 	"whuclubsynapse-server/internal/base_server/service"
 	"whuclubsynapse-server/internal/shared/jwtutil"
 
@@ -14,7 +15,8 @@ import (
 type ClubAdminHandler struct {
 	JwtFactory *jwtutil.CliamsFactory[model.UserClaims]
 
-	ClubService service.ClubService
+	ClubService  service.ClubService
+	RedisService redisimpl.RedisClientService
 
 	Logger *slog.Logger
 }
@@ -36,13 +38,36 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 
 	switch reqBody.Result {
 	case "approve":
-		if err := h.ClubService.ApproveAppliForCreateClub(reqBody.CreateClubAppliId); err != nil {
+		newClubId, err := h.ClubService.ApproveAppliForCreateClub(
+			reqBody.CreateClubAppliId)
+		if err != nil {
 			h.Logger.Info("通过社团创建申请失败",
 				"error", err, "appli_id", reqBody.CreateClubAppliId,
 			)
 
 			ctx.StatusCode(iris.StatusInternalServerError)
 			ctx.Text("通过社团创建申请失败")
+			return
+		}
+
+		newClub, err := h.ClubService.GetClubInfo(int(newClubId))
+		if err != nil {
+			h.Logger.Info("获取新创建的社团信息失败",
+				"error", err, "appli_id", reqBody.CreateClubAppliId,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("获取新创建的社团信息失败")
+			return
+		}
+
+		if err := h.RedisService.UploadClubInfo(newClub); err != nil {
+			h.Logger.Info("转发新创建的社团信息失败",
+				"error", err, "appli_id", reqBody.CreateClubAppliId,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("转发新创建的社团信息失败")
 			return
 		}
 
@@ -78,7 +103,7 @@ func (h *ClubAdminHandler) PutProcAppliForUpdateClub(ctx iris.Context) {
 
 	switch reqBody.Result {
 	case "approve":
-		if err := h.ClubService.ApproveAppliForCreateClub(reqBody.UpdateAppliId); err != nil {
+		if err := h.ClubService.ApproveAppliForUpdateClub(reqBody.UpdateAppliId); err != nil {
 			h.Logger.Info("通过社团更新申请失败",
 				"error", err, "appli_id", reqBody.UpdateAppliId,
 			)
@@ -89,7 +114,7 @@ func (h *ClubAdminHandler) PutProcAppliForUpdateClub(ctx iris.Context) {
 		}
 
 	case "reject":
-		if err := h.ClubService.RejectAppliForCreateClub(reqBody.UpdateAppliId, reqBody.Reason); err != nil {
+		if err := h.ClubService.RejectAppliForUpdateClub(reqBody.UpdateAppliId, reqBody.Reason); err != nil {
 			h.Logger.Info("拒绝社团更新申请失败",
 				"error", err, "appli_id", reqBody.UpdateAppliId,
 			)

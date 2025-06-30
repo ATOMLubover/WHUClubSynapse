@@ -22,14 +22,8 @@ type PostService interface {
 	GetPinnedPost(clubId int) (*dbstruct.ClubPost, error)
 	GetPostsByUserId(userId int) ([]*dbstruct.ClubPost, error)
 
-	CreatePost(newPost dbstruct.ClubPost,
+	CreatePost(newPost *dbstruct.ClubPost,
 		sender func(writer *io.PipeWriter) error) error
-
-	// ApplyForCreatePost(tmpUrl string, newPost dbstruct.ClubPost) error
-	// ApproveAppliForCreatePost(appliId int) (*dbstruct.CreatePostAppli, *dbstruct.ClubPost, error)
-	// RejectAppliForCreatePost(appliId int, reason string) error
-
-	//TransferPost(oriAppli *dbstruct.CreatePostAppli, post *dbstruct.ClubPost) error
 
 	CreatePostComment(newComment dbstruct.ClubPostComment) error
 	GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error)
@@ -86,92 +80,11 @@ func (s *sPostService) GetPostsByUserId(userId int) ([]*dbstruct.ClubPost, error
 	return s.clubPostRepo.GetPostsByUserId(userId)
 }
 
-// func (s *sPostService) ApplyForCreatePost(tmpUrl string, newPost dbstruct.ClubPost) error {
-// 	jsonb, err := jsonbutil.ToJsonb(newPost)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	appli := dbstruct.CreatePostAppli{
-// 		ApplicantId:     uint(newPost.UserId),
-// 		Proposal:        jsonb,
-// 		DraftContentUrl: tmpUrl,
-// 	}
-
-// 	return s.createPostAppliRepo.AddCreatePostAppli(&appli)
-// }
-
-// func (s *sPostService) ApproveAppliForCreatePost(appliId int) (*dbstruct.CreatePostAppli, *dbstruct.ClubPost, error) {
-// 	if appliId <= 0 {
-// 		return nil, nil, errors.New("无效appliId")
-// 	}
-
-// 	ctxTmt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-// 	defer cancel()
-
-// 	var oriAppli *dbstruct.CreatePostAppli
-// 	var curPost *dbstruct.ClubPost
-// 	err := s.txCoordinator.RunInTransaction(ctxTmt, func(tx *gorm.DB) error {
-// 		appli, err := s.createPostAppliRepo.GetAppliForUpdate(tx, appliId)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		if appli.Status != "pending" {
-// 			return errors.New("申请无法处理")
-// 		}
-
-// 		if err := s.createPostAppliRepo.ApproveAppli(tx, appliId); err != nil {
-// 			return err
-// 		}
-
-// 		var newPost dbstruct.ClubPost
-// 		if err := jsonbutil.FromJsonb(appli.Proposal, &newPost); err != nil {
-// 			return err
-// 		}
-
-// 		if err := s.clubPostRepo.AddPost(&newPost); err != nil {
-// 			return err
-// 		}
-
-// 		oriAppli = appli
-// 		curPost = &newPost
-
-// 		return nil
-// 	})
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	return oriAppli, curPost, nil
-// }
-
-// func (s *sPostService) RejectAppliForCreatePost(appliId int, reason string) error {
-// 	if appliId <= 0 {
-// 		return errors.New("Invalid appliId")
-// 	}
-
-// 	return s.createPostAppliRepo.RejectAppli(appliId, reason)
-// }
-
-// func (s *sPostService) TransferPost(oriAppli *dbstruct.CreatePostAppli, post *dbstruct.ClubPost) error {
-// 	oldFilePath := POST_TMP_FILE_DIR + oriAppli.DraftContentUrl
-// 	newFilePath := POST_FILE_DIR +
-// 		time.Now().Format("2006-01-02") + "_" +
-// 		strconv.FormatInt(int64(post.PostId), 10) + ".md"
-
-// 	if err := os.Symlink(oldFilePath, newFilePath); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 func (s *sPostService) CreatePost(
-	newPost dbstruct.ClubPost,
+	newPost *dbstruct.ClubPost,
 	sender func(writer *io.PipeWriter) error,
 ) error {
-	if err := s.clubPostRepo.AddPost(&newPost); err != nil {
+	if err := s.clubPostRepo.AddPost(newPost); err != nil {
 		return err
 	}
 
@@ -181,7 +94,8 @@ func (s *sPostService) CreatePost(
 
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
-		return errors.New("创建对应post文件失败，需重试：" + err.Error())
+		return errors.New("创建对应post文件失败，需重试：" + err.Error() +
+			"（path: " + newFilePath + "）")
 	}
 
 	defer newFile.Close()
@@ -203,6 +117,8 @@ func (s *sPostService) CreatePost(
 	if err := s.clubPostRepo.UpdatePostUrl(int(newPost.PostId), newFilePath); err != nil {
 		return errors.New("更新post URI失败，需重试：" + err.Error())
 	}
+
+	newPost.ContentUrl = newFilePath
 
 	return nil
 }

@@ -67,7 +67,7 @@ func (h *ClubPubHandler) PutProcAppliForJoinClub(ctx iris.Context) {
 
 	switch reqBody.Result {
 	case "approve":
-		if err := h.ClubService.ApproveAppliForCreateClub(reqBody.JoinAppliId); err != nil {
+		if err := h.ClubService.ApproveAppliForJoinClub(reqBody.JoinAppliId); err != nil {
 			h.Logger.Info("通过社团加入申请失败",
 				"error", err, "appli_id", reqBody.JoinAppliId,
 			)
@@ -78,7 +78,7 @@ func (h *ClubPubHandler) PutProcAppliForJoinClub(ctx iris.Context) {
 		}
 
 	case "reject":
-		if err := h.ClubService.RejectAppliForCreateClub(reqBody.JoinAppliId, reqBody.Reason); err != nil {
+		if err := h.ClubService.RejectAppliForJoinClub(reqBody.JoinAppliId, reqBody.Reason); err != nil {
 			h.Logger.Info("拒绝社团加入申请失败",
 				"error", err, "appli_id", reqBody.JoinAppliId,
 			)

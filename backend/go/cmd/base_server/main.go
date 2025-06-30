@@ -18,7 +18,6 @@ import (
 	"whuclubsynapse-server/internal/shared/jwtutil"
 	"whuclubsynapse-server/internal/shared/logger"
 
-	//"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"gorm.io/driver/postgres"
@@ -51,6 +50,8 @@ func main() {
 
 	app.Use(crs, routeLogger)
 
+	app.HandleDir("/pub/post_files", service.POST_FILE_DIR)
+
 	rootApp := mvc.New(app.Party("/"))
 
 	config := LoadConfig("../../config/basic_config.json")
@@ -70,6 +71,7 @@ func main() {
 	clubPostRepo := repo.CreateClubPostRepo(database, logger)
 	updateClubInfoAppliRepo := repo.CreateUpdateClubInfoAppliRepo(database, logger)
 	clubFavoriteRepo := repo.CreateClubFavoriteRepo(database, logger)
+	postCommentRepo := repo.CreatePostCommentRepo(database, logger)
 
 	txCoordinator := repo.NewTransactionCoordinator(database)
 
@@ -90,6 +92,12 @@ func main() {
 
 		logger,
 	)
+	postService := service.CreatePostService(
+		clubPostRepo,
+		postCommentRepo,
+		txCoordinator,
+		logger,
+	)
 
 	rootApp.Register(
 		config,
@@ -98,18 +106,11 @@ func main() {
 		logger,
 		database,
 
-		// userRepo,
-		// categoryRepo,
-		// clubRepo,
-		// createClubAppliRepo,
-		// joinClubAppliRepo,
-		// clubMemberRepo,
-		// clubPostRepo,
-
 		redisService,
 		userService,
 		mailvrfService,
 		clubService,
+		postService,
 	)
 
 	InitAuthHandler(rootApp)

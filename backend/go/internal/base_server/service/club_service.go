@@ -30,7 +30,7 @@ type ClubService interface {
 	ApplyForJoinClub(userId, expectedClubId uint, reason string) error
 	ApplyForUpdateClub(newInfo dbstruct.Club) error
 
-	ApproveAppliForCreateClub(appliId int) error
+	ApproveAppliForCreateClub(appliId int) (uint, error)
 	RejectAppliForCreateClub(appliId int, reason string) error
 
 	ApproveAppliForJoinClub(appliId int) error
@@ -169,11 +169,13 @@ func (s *sClubService) ApplyForUpdateClub(newInfo dbstruct.Club) error {
 	return s.updateClubInfoAppliRepo.AddUpdateClubInfoAppli(&appli)
 }
 
-func (s *sClubService) ApproveAppliForCreateClub(appliId int) error {
+func (s *sClubService) ApproveAppliForCreateClub(appliId int) (uint, error) {
 	ctxTmt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return s.txCoordinator.RunInTransaction(ctxTmt, func(tx *gorm.DB) error {
+	var newClubId uint
+
+	err := s.txCoordinator.RunInTransaction(ctxTmt, func(tx *gorm.DB) error {
 		appli, err := s.createClubAppliRepo.GetAppliForUpdate(tx, appliId)
 		if err != nil {
 			return err
@@ -201,12 +203,23 @@ func (s *sClubService) ApproveAppliForCreateClub(appliId int) error {
 			return err
 		}
 
-		return s.clubMemberRepo.AppendClubMember(tx, &dbstruct.ClubMember{
+		if err := s.clubMemberRepo.AppendClubMember(tx, &dbstruct.ClubMember{
 			ClubId:     newClub.ClubId,
 			UserId:     appli.UserId,
 			RoleInClub: dbstruct.ROLE_CLUB_LEADER,
-		})
+		}); err != nil {
+			return err
+		}
+
+		newClubId = newClub.ClubId
+
+		return nil
 	})
+	if err != nil {
+		return 0, err
+	}
+
+	return newClubId, nil
 }
 
 func (s *sClubService) RejectAppliForCreateClub(appliId int, reason string) error {

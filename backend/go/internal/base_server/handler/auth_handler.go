@@ -40,7 +40,7 @@ func (h *AuthHandler) BeforeActivation(b mvc.BeforeActivation) {
 func (h *AuthHandler) GetMyInfo(ctx iris.Context) {
 	encryptedToken := ctx.GetCookie("uuid")
 	if encryptedToken == "" {
-		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.StatusCode(iris.StatusOK)
 		ctx.Text("Cookie UUID获取失败")
 		return
 	}

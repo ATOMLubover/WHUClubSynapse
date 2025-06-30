@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"log/slog"
 	"whuclubsynapse-server/internal/shared/dbstruct"
 
@@ -8,8 +9,8 @@ import (
 )
 
 type PostCommentRepo interface {
-    CreatePostComment(newComment dbstruct.ClubPostComment) error
-    GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error)
+	CreatePostComment(newComment dbstruct.ClubPostComment) error
+	GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error)
 }
 
 type sPostCommentRepo struct {
@@ -17,7 +18,7 @@ type sPostCommentRepo struct {
 	logger   *slog.Logger
 }
 
-func NewPostCommentRepo(
+func CreatePostCommentRepo(
 	database *gorm.DB,
 	logger *slog.Logger,
 ) PostCommentRepo {
@@ -36,5 +37,10 @@ func (r *sPostCommentRepo) GetPostComments(postId, visibility int) ([]*dbstruct.
 	err := r.database.
 		Where("post_id = ? AND visibility <= ?", postId, visibility).
 		Find(&comments).Error
-	return comments, err
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	return comments, nil
 }

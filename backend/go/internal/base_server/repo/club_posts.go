@@ -43,12 +43,18 @@ func (r *sClubPostRepo) AddPost(post *dbstruct.ClubPost) error {
 func (r *sClubPostRepo) GetClubPostList(clubId, offset, num, visibility int) ([]*dbstruct.ClubPost, error) {
 	var posts []*dbstruct.ClubPost
 	err := r.database.
-		Where("club_id = ? AND visibility <= 0", clubId, visibility).
+		Model(&dbstruct.ClubPost{}).
+		Where("club_id = ? AND visibility <= ?", clubId, visibility).
 		Order("created_at DESC").
 		Offset(offset).
 		Limit(num).
 		Find(&posts).Error
-	return posts, err
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	return posts, nil
 }
 
 func (r *sClubPostRepo) ChangePostVisibility(postId, visibility int) error {
@@ -63,7 +69,12 @@ func (r *sClubPostRepo) GetPinnedPost(clubId int) (*dbstruct.ClubPost, error) {
 	err := r.database.
 		Where("club_id = ? AND is_pinned = ?", clubId, true).
 		First(&post).Error
-	return &post, err
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	return &post, nil
 }
 
 func (r *sClubPostRepo) PinPost(postId int) error {
@@ -103,9 +114,9 @@ func (r *sClubPostRepo) UpdatePostUrl(postId int, url string) error {
 		return err
 	}
 
-	if r.database.RowsAffected == 0 {
-		return errors.New("无法修改不存在的post")
-	}
+	// if r.database.RowsAffected == 0 {
+	// 	return errors.New("无法修改不存在的post")
+	// }
 
 	return nil
 }
