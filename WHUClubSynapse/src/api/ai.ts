@@ -247,4 +247,103 @@ export const analyzeClubAtmosphere = async (requestData: ClubAtmosphereRequest):
     console.error('AI氛围透视镜请求失败:', error)
     throw error
   }
+}
+
+// 财务记账接口类型
+export interface FinancialBookkeepingRequest {
+  natural_language_input: string
+  club_name: string
+}
+
+export interface FinancialEntry {
+  description: string
+  amount: number
+  category: string
+  payer: string
+  type: 'income' | 'expense'
+}
+
+export interface FinancialBookkeepingResponse {
+  parsed_entries: FinancialEntry[]
+  confirmation_message: string
+  original_input: string
+}
+
+// 财务记账API
+export const financialBookkeeping = async (requestData: FinancialBookkeepingRequest): Promise<FinancialBookkeepingResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/financial_bookkeeping`
+    console.log('财务记账请求URL:', url)
+    console.log('财务记账请求数据:', requestData)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('财务记账响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('财务记账HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('财务记账响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('财务记账请求失败:', error)
+    throw error
+  }
+}
+
+// 财务报表接口类型
+export interface FinancialReportRequest {
+  club_name: string
+}
+
+export interface FinancialReportResponse {
+  report_summary: string
+  expense_breakdown: Record<string, number>
+  income_breakdown: Record<string, number>
+}
+
+// 生成财务报表API
+export const generateFinancialReport = async (requestData: FinancialReportRequest): Promise<FinancialReportResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/generate_financial_report`
+    console.log('生成财务报表请求URL:', url)
+    console.log('生成财务报表请求数据:', requestData)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('生成财务报表响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('生成财务报表HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('生成财务报表响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('生成财务报表请求失败:', error)
+    throw error
+  }
 } 

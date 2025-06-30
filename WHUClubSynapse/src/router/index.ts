@@ -93,12 +93,17 @@ const router = createRouter({
               meta: { requiresAuth: true },
             },
             {
+              path: '/user/club/:clubId/finance',
+              name: 'ClubFinanceManagement',
+              component: () => import('@/views/User/FinanceManagementView.vue'),
+              meta: { requiresAuth: true },
+            },
+            {
               path: '/user/clubs',
               name: 'user-clubs',
               redirect: '/user/clubs/joined',
               meta: { requiresAuth: true },
             },
-
           ],
         },
       ],

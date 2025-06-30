@@ -1019,7 +1019,20 @@ onMounted(async () => {
 }
 
 .tab-content {
-  padding: 20px 0;
+  width: 100%;
+  max-width: 900px;
+  min-width: 320px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 24px 0;
+}
+
+@media (max-width: 1000px) {
+  .tab-content {
+    max-width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+  }
 }
 
 .toolbar {

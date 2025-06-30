@@ -111,8 +111,9 @@
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="goToClubDetail(club.club_id)"> 查看 </el-button>
-                    <el-button size="small" type="danger" @click="showQuitDialog = true">
+                    <el-button size="small" @click="goToClubDetail(club.club_id)">查看详情</el-button>
+                    <el-button size="small" @click="viewActivities(club)">查看活动</el-button>
+                    <el-button size="small" type="danger" @click="showQuitDialog = true; quitClub = club">
                       退出社团
                     </el-button>
                   </div>
@@ -280,8 +281,8 @@ const goToClubDetail = (clubId: string) => {
 
 // 查看活动
 const viewActivities = (club: Club) => {
-  // TODO: 跳转到活动页面
-  ElMessage.info('活动功能开发中...')
+  // 跳转到社团详情页面
+  router.push(`/club/${club.club_id}`)
 }
 
 // 处理更多操作
@@ -449,7 +450,21 @@ onMounted(() => {
 .club-actions {
   padding: 0 16px 16px;
   display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.club-actions .el-button {
+  width: 100%;
+  min-height: 38px;
+  font-size: 15px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  margin: 0;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 .pagination-section {
@@ -465,6 +480,43 @@ onMounted(() => {
 @media (max-width: 768px) {
   .card-view .el-col {
     width: 100%;
+  }
+
+  .club-actions {
+    padding: 0 12px 12px;
+  }
+
+  .club-info {
+    padding: 12px;
+  }
+
+  .club-name {
+    font-size: 14px;
+  }
+
+  .club-category,
+  .club-members,
+  .favorite-time {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-favorites {
+    padding: 10px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .page-header p {
+    font-size: 14px;
+  }
+
+  .club-actions .el-button {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 </style>

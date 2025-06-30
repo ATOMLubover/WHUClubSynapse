@@ -112,6 +112,7 @@
                   <div class="club-actions">
                     <el-button size="small" @click="editClub(club)">编辑信息</el-button>
                     <el-button size="small" @click="manageMembers(club)">成员管理</el-button>
+                    <el-button size="small" @click="manageFinance(club)">经费管理</el-button>
                     <el-button size="small" type="danger" @click="handledelete(club)">
                       删除社团
                     </el-button>
@@ -271,6 +272,7 @@ const createForm = ref({
   maxMembers: 50,
   tags: [] as string[],
   coverImage: '',
+  requirements: '',
 })
 
 const createRules = {
@@ -282,7 +284,7 @@ const createRules = {
 
 // 统计数据
 const stats = computed(() => {
-  const active = managedClubs.value.filter((club) => club.status === 'approved').length
+  const active = managedClubs.value.filter((club) => club.status === 'managed').length
   const pending = managedClubs.value.filter((club) => club.status === 'pending').length
   const totalMembers = managedClubs.value.reduce((sum, club) => sum + club.member_count, 0)
   const pendingApplications = managedClubs.value.length * 3 // 模拟数据
@@ -394,6 +396,11 @@ const manageMembers = (club: Club) => {
   router.push(`/user/club/${club.club_id}/members`)
 }
 
+// 经费管理
+const manageFinance = (club: Club) => {
+  router.push(`/user/club/${club.club_id}/finance`)
+}
+
 // 处理删除社团
 const handledelete = (club: Club) => {
   showDeleteDialog.value = true
@@ -456,8 +463,9 @@ const confirmCreate = async () => {
       description: '',
       category: '',
       maxMembers: 50,
-      tags: [],
+      tags: [] as string[],
       coverImage: '',
+      requirements: '',
     }
     // 重新加载列表
     await loadManagedClubs()
