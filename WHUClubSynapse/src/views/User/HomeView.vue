@@ -338,6 +338,10 @@ onMounted(async () => {
     await clubStore.fetchClubs()
     console.log('社团列表加载完成')
 
+    if (authStore.isLoggedIn) {
+      await clubStore.fetchFavoriteClubs()
+    }
+
     // 并行获取侧边栏数据（不阻塞主列表显示）
     Promise.all([
       clubStore.fetchHotClubs(5),

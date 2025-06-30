@@ -32,10 +32,6 @@
               ><el-icon><ChatLineRound /></el-icon> {{ post.comment_count }}</span
             >
           </div>
-          <div class="post-abstract">
-            {{ stripMarkdown(post.content || '').slice(0, 80)
-            }}<span v-if="stripMarkdown(post.content || '').length > 80">...</span>
-          </div>
         </div>
         <el-icon class="arrow"><ArrowRightBold /></el-icon>
       </div>
@@ -74,11 +70,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getClubPosts, createClubPost } from '@/api/club'
+import { createClubPost } from '@/api/club'
 import { useAuthStore } from '@/stores/auth'
+import { useClubStore } from '@/stores/club'
 import type { ClubPost, Club } from '@/types'
 import { Plus, ChatLineRound, ArrowRightBold } from '@element-plus/icons-vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
@@ -89,37 +86,37 @@ const props = defineProps<{
 }>()
 const router = useRouter()
 const authStore = useAuthStore()
+const clubStore = useClubStore()
 
-const posts = ref<ClubPost[]>([])
+// 使用store中的状态和方法
+const posts = computed(() => clubStore.currentClubPosts || [])
+const loading = computed(() => clubStore.postsLoading)
 const total = ref(0)
 const page = ref(1)
 const pageSize = 5
-const loading = ref(false)
 
 const showCreate = ref(false)
 const createForm = ref({ title: '', content: '' })
 const createLoading = ref(false)
 
+// 使用store中的方法
 const fetchPosts = async () => {
-  loading.value = true
   try {
     console.log('正在获取社团帖子，clubId:', props.clubId)
-    const res = await getClubPosts(props.clubId, page.value, pageSize)
+    const res = await clubStore.fetchClubPosts(props.clubId, page.value, pageSize)
+    console.log('currentClubPosts:', clubStore.currentClubPosts)
     console.log('获取到的帖子数据:', res)
-    posts.value = res.list
     total.value = res.total
   } catch (error) {
     console.error('获取帖子失败:', error)
-    ElMessage.error('获取帖子失败')
-    posts.value = []
     total.value = 0
-  } finally {
-    loading.value = false
   }
 }
 
 const goToPost = (row: ClubPost) => {
-  router.push(`/club/${props.clubId}/post/${row.post_id}`)
+  // 对content_url进行URL编码，避免路径中的特殊字符导致路由解析错误
+  const encodedContentUrl = encodeURIComponent(row.content_url)
+  router.push(`/club/post/${props.clubId}/${row.post_id}/${encodedContentUrl}`)
 }
 
 const handleCreate = async () => {
@@ -139,12 +136,14 @@ const handleCreate = async () => {
       post_id: '',
       created_at: '',
       comment_count: 0,
+      content_url: '',
     })
     ElMessage.success('发帖成功')
     showCreate.value = false
     createForm.value.title = ''
     createForm.value.content = ''
-    fetchPosts()
+    // 使用store方法刷新帖子列表
+    await fetchPosts()
   } catch (error) {
     console.error('发帖失败:', error)
     ElMessage.error('发帖失败，请重试')

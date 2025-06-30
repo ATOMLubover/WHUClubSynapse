@@ -412,7 +412,19 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
     }
 }
 
-export const getClubPostDetail = mockGetClubPostDetail
+export const getClubPostDetail = async (postId: string, contentUrl: string) => {
+  if(getIsUsingMockAPI()){
+    const res = await mockClub.mockGetClubPostDetail(postId, contentUrl)
+    return res
+  }
+  const res = await request.get('/'+contentUrl,{
+    headers: {
+      'Content-Type': '',
+    },
+  })
+  return res.data
+}
+
 export const getClubPostReplies = mockGetClubPostReplies
 export const createClubPost = mockCreateClubPost
 export const replyClubPost = mockReplyClubPost

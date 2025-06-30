@@ -189,6 +189,7 @@ export interface ClubPost {
   created_at: string
   comment_count: number
   author_id: number
+  content_url: string
 
   content?: string
   authorName?: string

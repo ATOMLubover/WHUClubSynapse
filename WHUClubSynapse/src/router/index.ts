@@ -35,7 +35,7 @@ const router = createRouter({
           component: () => import('@/views/User/ClubDetailView.vue'),
         },
         {
-          path: '/club/:clubId/post/:postId',
+          path: '/club/post/:clubId/:postId/:content_url',
           name: 'club-post-detail',
           component: () => import('@/views/User/ClubPostDetailView.vue'),
         },

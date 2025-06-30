@@ -2,7 +2,7 @@ import { ref, computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
-import type { Club, ClubCategory, SearchParams, PaginatedData } from '@/types'
+import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost } from '@/types'
 
 export const useClubStore = defineStore('club', () => {
   // 状态
@@ -14,6 +14,10 @@ export const useClubStore = defineStore('club', () => {
   const recommendedClubs = ref<Club[]>([])
   const categoriesList = ref<ClubCategory[]>([]) // 新增：分类列表
   const currentClub = ref<Club | null>(null)
+  
+  // 新增：全局帖子数组
+  const clubposts = ref<ClubPost[]>([])
+  const currentClubPosts = ref<ClubPost[]>([]) // 当前社团的帖子
 
   // 分页和搜索状态
 
@@ -33,6 +37,7 @@ export const useClubStore = defineStore('club', () => {
   const loading = ref(false) // 主要用于clubs列表
   const categoriesLoading = ref(false) // 用于分类加载
   const detailLoading = ref(false) // 用于详情加载
+  const postsLoading = ref(false) // 用于帖子加载
   
   const searchParams = ref<SearchParams>({
     keyword: '',
@@ -418,6 +423,29 @@ export const useClubStore = defineStore('club', () => {
     globalPageData.currentPage = 1
   }
 
+  // 帖子相关操作方法
+
+  // 获取特定社团的帖子
+  const fetchClubPosts = async (clubId: string, page: number = 1, pageSize: number = 10) => {
+    try {
+      postsLoading.value = true
+      const response = await clubApi.getClubPosts(clubId, page, pageSize)
+      currentClubPosts.value = response.list
+      return response
+    } catch (error) {
+      console.error('获取社团帖子失败:', error)
+      ElMessage.error('获取社团帖子失败')
+      throw error
+    } finally {
+      postsLoading.value = false
+    }
+  }
+
+
+  // 根据ID查找帖子
+  const getPostById = (postId: string): ClubPost | undefined => {
+    return clubposts.value.find(post => post.post_id === postId)
+  }
 
   return {
     // 状态
@@ -435,8 +463,12 @@ export const useClubStore = defineStore('club', () => {
     loading,
     categoriesLoading, // 新增：分类加载状态
     detailLoading, // 新增：详情加载状态
+    postsLoading, // 新增：帖子加载状态
     searchParams,
     activeCategory,
+    // 新增：帖子相关状态
+    clubposts,
+    currentClubPosts,
     // 计算属性
     totalPages,
     hasMore,
@@ -466,5 +498,8 @@ export const useClubStore = defineStore('club', () => {
     createClub,
     deleteClub,
     updateClub,
+    // 新增：帖子相关方法
+    fetchClubPosts,
+    getPostById,
   }
 })
