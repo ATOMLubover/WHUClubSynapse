@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL_NAME: str = "moka-ai/m3e-base"
     EMBEDDING_MODEL_DIR: str = "/root/autodl-tmp/AI-ModelScope/all-MiniLM-L6-v2"
 
+    # 文本切分器配置
+    CHUNK_SIZE: int = 300
+    CHUNK_OVERLAP: int = 50
+
     # 向量数据库配置
     CHROMA_SERVER_HOST: str = "127.0.0.1"
     CHROMA_SERVER_PORT: int = 8040

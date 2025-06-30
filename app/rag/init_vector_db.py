@@ -10,11 +10,11 @@ from app.utils.singleton import chroma_collection
 from app.utils.singleton import logger
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200,
+    chunk_size=settings.CHUNK_SIZE,
+    chunk_overlap=settings.CHUNK_OVERLAP,
+    separators=["\n\n", "\n", "。", "，", "、", " "],
     length_function=len
 )
-
 
 def init_vector_db(pdf_dir: str):
     """

@@ -12,13 +12,19 @@ class Document(BaseModel):
 
 # 聊天模板
 class ChatMessage(BaseModel):
-    role: str
-    content: str
+    """单条聊天消息的模型"""
+    role: str = Field(..., description="消息发送者的角色，必须是 'user' 或 'assistant'")
+    content: str = Field(..., description="消息的具体内容")
 
+class ChatQuery(BaseModel):
+    """聊天请求的模型"""
+    query: str = Field(..., description="用户的最新一条消息")
+    history: List[ChatMessage] = Field([], description="历史对话记录，由前端负责维护和传递")  # TODO: 真的由前端吗
 
-class ChatRequest(BaseModel):
-    messages: List[ChatMessage]
-    user_id: Optional[int] = None
+class ChatResponse(BaseModel):
+    """聊天响应的模型，结构与SearchResponse相同"""
+    answer: str = Field(..., description="模型生成的答案")
+    source: List[Dict[str, Any]] = Field(..., description="答案的溯源文档列表")
     stream: Optional[bool] = False
 
 
