@@ -494,15 +494,14 @@ export const mockGetJoinedClubs = async (
     page?: number
     pageSize?: number
   } = {},
-): Promise<{ data: ApiResponse<PaginatedData<Club>> }> => {
+): Promise<PaginatedData<Club>> => {
   await delay(500)
 
   // 根据用户加入的社团ID列表获取社团
   const joinedClubs = mockClubs
     .filter(club => userJoinedClubIds.includes(club.club_id))
     .map(club => ({
-      ...club,
-      isFavorite: false
+      ...club
     }))
 
   const page = params.page || 1
@@ -512,16 +511,12 @@ export const mockGetJoinedClubs = async (
   const list = joinedClubs.slice(start, end)
 
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
-        list,
-        total: joinedClubs.length,
-        page,
-        pageSize,
-      },
-    },
+
+      list,
+      total: joinedClubs.length,
+      page,
+      pageSize,
+    
   }
 }
 
@@ -761,25 +756,16 @@ export const mockApplyToCreateClub = async (data: {
   name: string
   desc: string
   requirements: string
-  category?: number
-  maxMembers?: number
-  tags?: string[]
-  coverImage?: string
-  introduction?: string
-  contactInfo?: {
-    qq?: string
-    wechat?: string
-    email?: string
-    phone?: string
-    address?: string
-  }
-  meetingTime?: string
-  meetingLocation?: string
+  category_id: number
+  tags: string
 }): Promise<{ data: ApiResponse<null> }> => {
   await delay(800)
 
   // 生成新的申请ID
   const newId = (mockClubApplications.length + 1).toString()
+
+  //将tags转换为数组
+  const tags = data.tags.split(',')
 
   // 创建申请对象
   const newApplication: ClubCreationApplication = {
@@ -790,15 +776,15 @@ export const mockApplyToCreateClub = async (data: {
     avatar_url: 'https://picsum.photos/100/100?random=1',
     clubName: data.name,
     description: data.desc,
-    category: data.category || 0,
-    maxMembers: data.maxMembers || 50,
-    tags: data.tags || [],
-    coverImage: data.coverImage,
+    category: data.category_id || 0,
+    maxMembers: 50,
+    tags: tags,
+    coverImage: '',
     requirements: data.requirements,
-    introduction: data.introduction,
-    contactInfo: data.contactInfo,
-    meetingTime: data.meetingTime,
-    meetingLocation: data.meetingLocation,
+    introduction: '',
+    contactInfo: {},
+    meetingTime: '',
+    meetingLocation: '',
     status: 'pending',
     applyTime: new Date().toISOString(),
     studentId: '2021001001',

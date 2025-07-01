@@ -4,42 +4,32 @@
       <div class="screening-title">
         <el-icon class="ai-icon"><ChatDotRound /></el-icon>
         AI 审核助手
-        <el-tag 
-          :type="aiServiceAvailable ? 'success' : 'danger'" 
-          size="small" 
-          style="margin-left: 8px;"
+        <el-tag
+          :type="aiServiceAvailable ? 'success' : 'danger'"
+          size="small"
+          style="margin-left: 8px"
         >
           {{ aiServiceAvailable ? '在线' : '离线' }}
         </el-tag>
       </div>
       <div class="header-actions">
-        <el-button 
-          type="text" 
-          size="small" 
-          @click="checkAIService"
-          :loading="checkingStatus"
-        >
+        <el-button type="text" size="small" @click="checkAIService" :loading="checkingStatus">
           <el-icon><Refresh /></el-icon>
           检查状态
         </el-button>
-        <el-button 
-          type="text" 
-          size="small" 
-          @click="clearScreening"
-          :disabled="!screeningResult"
-        >
+        <el-button type="text" size="small" @click="clearScreening" :disabled="!screeningResult">
           清空结果
         </el-button>
       </div>
     </div>
-    
+
     <div class="screening-content">
       <div v-if="!screeningResult && !isLoading" class="empty-state">
         <el-icon class="empty-icon"><ChatDotRound /></el-icon>
         <p>点击下方按钮开始AI审核分析</p>
         <p class="empty-tip">AI将分析申请者信息并给出建议</p>
       </div>
-      
+
       <div v-if="isLoading" class="loading-state">
         <el-icon class="loading-icon"><Loading /></el-icon>
         <p>AI正在分析申请信息...</p>
@@ -49,7 +39,7 @@
           <span></span>
         </div>
       </div>
-      
+
       <div v-if="screeningResult" class="screening-result">
         <div class="result-section">
           <h4>申请摘要</h4>
@@ -57,9 +47,9 @@
             <p>{{ screeningResult.summary }}</p>
           </div>
         </div>
-        
+
         <el-divider />
-        
+
         <div class="result-section">
           <h4>审核建议</h4>
           <div class="result-content">
@@ -67,17 +57,17 @@
           </div>
         </div>
       </div>
-      
+
       <div v-if="errorMessage" class="error-state">
         <el-icon class="error-icon" color="#F56C6C"><Warning /></el-icon>
         <p>{{ errorMessage }}</p>
       </div>
     </div>
-    
+
     <div class="screening-actions">
-      <el-button 
-        type="primary" 
-        @click="startScreening" 
+      <el-button
+        type="primary"
+        @click="startScreening"
         :loading="isLoading"
         :disabled="!aiServiceAvailable || !applicationData"
         class="screening-btn"
@@ -104,7 +94,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  requiredConditions: () => []
+  requiredConditions: () => [],
 })
 
 const aiServiceAvailable = ref(false)
@@ -114,21 +104,25 @@ const screeningResult = ref<ApplicationScreeningResponse | null>(null)
 const errorMessage = ref('')
 
 // 监听申请数据变化，清空之前的结果
-watch(() => props.applicationData, () => {
-  screeningResult.value = null
-  errorMessage.value = ''
-}, { deep: true })
+watch(
+  () => props.applicationData,
+  () => {
+    screeningResult.value = null
+    errorMessage.value = ''
+  },
+  { deep: true },
+)
 
 const checkAIService = async () => {
   if (checkingStatus.value) return
-  
+
   checkingStatus.value = true
-  
+
   try {
     console.log('开始检查AI服务状态...')
     aiServiceAvailable.value = await checkAIStatus()
     console.log('AI服务状态检查结果:', aiServiceAvailable.value)
-    
+
     if (!aiServiceAvailable.value) {
       ElMessage.warning('AI服务暂时不可用，请检查网络连接或联系管理员')
     } else {
@@ -151,47 +145,46 @@ const clearScreening = () => {
 
 const startScreening = async () => {
   if (!props.applicationData || !props.clubName || isLoading.value) return
-  
+
   if (!aiServiceAvailable.value) {
     ElMessage.warning('AI服务暂时不可用，请稍后重试')
     return
   }
-  
+
   isLoading.value = true
   errorMessage.value = ''
   screeningResult.value = null
-  
+
   try {
     // 调试信息
     console.log('props.applicationData:', props.applicationData)
     console.log('props.clubName:', props.clubName)
     console.log('props.requiredConditions:', props.requiredConditions)
-    
+
     // 构建申请者数据
     const applicantData = {
       name: props.applicationData.realName || props.applicationData.username,
       major: props.applicationData.major || '未填写',
       skills: [
         ...(props.applicationData.interestedCategories || []),
-        ...(props.applicationData.tags || [])
+        ...(props.applicationData.tags || []),
       ],
-      experience: props.applicationData.applyReason
+      experience: props.applicationData.reason,
     }
-    
+
     const requestData = {
       applicant_data: applicantData,
-      application_reason: props.applicationData.applyReason,
+      application_reason: props.applicationData.reason,
       required_conditions: props.requiredConditions || [],
-      club_name: props.clubName || '未知社团'
+      club_name: props.clubName || '未知社团',
     }
-    
+
     console.log('开始AI审核分析，请求数据:', requestData)
-    
+
     const result = await screenApplication(requestData)
     screeningResult.value = result
-    
+
     ElMessage.success('AI审核分析完成')
-    
   } catch (error) {
     console.error('AI审核分析失败:', error)
     errorMessage.value = 'AI审核分析失败: ' + (error instanceof Error ? error.message : '未知错误')
@@ -288,8 +281,12 @@ checkAIService()
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .typing-indicator {
@@ -306,11 +303,17 @@ checkAIService()
   animation: typing 1.4s infinite ease-in-out;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8);
     opacity: 0.5;
   }
@@ -379,4 +382,4 @@ checkAIService()
 .screening-btn {
   width: 100%;
 }
-</style> 
+</style>

@@ -52,6 +52,7 @@ export interface Club {
   category: number
   created_at: string
   member_count: number
+  leader_id?: string
   //以上是必须包含的，以下是可选的
   adminId?: string
   adminName?: string
@@ -231,19 +232,18 @@ export interface ClubMember {
 
 // 社团申请类型
 export interface ClubApplication {
-  id: string
-  userId: string
-  clubId: string
-  username: string
+  appli_id: string
+  reject_reason: string
+  club_id: string
+  reason: string
+  applied_at: string
+  reviewed_at: string
+
+  userId?: string
+  username?: string
   realName?: string
-  avatar_url: string
-  applyReason: string
-  status: 'pending' | 'approved' | 'rejected'
-  applyTime: string
-  reviewTime?: string
-  reviewerId?: string
-  reviewerName?: string
-  rejectReason?: string
+  avatar_url?: string
+  status?: 'pending' | 'approved' | 'rejected'
   studentId?: string
   major?: string
   phone?: string
@@ -251,6 +251,14 @@ export interface ClubApplication {
   // 新增字段：用户偏好社团和特质标签
   interestedCategories?: string[] // 偏好社团类型
   tags?: string[] // 用户特质标签
+}
+
+// 用户创建的社团申请记录
+export interface UserCreatedApplication {
+  appli_id: number
+  applied_at: string  // RFC3339格式
+  reject_reason?: string
+  reviewed_at?: string  // RFC3339格式
 }
 
 // 社团创建申请类型

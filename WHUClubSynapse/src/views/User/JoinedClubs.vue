@@ -104,18 +104,24 @@
                     <h3 class="club-name" @click="goToClubDetail(club.club_id)">
                       {{ club.club_name }}
                     </h3>
-                    <p class="club-category">{{ club.category }}</p>
+                    <p class="club-category">
+                      {{
+                        clubStore.categoriesList.find(
+                          (category) => category.category_id === club.category,
+                        )?.name
+                      }}
+                    </p>
                     <p class="club-members">{{ club.member_count }}/{{ club.maxMembers }} 人</p>
                     <p class="favorite-time">加入于 {{ formatDate(club.created_at) }}</p>
                   </div>
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="goToClubDetail(club.club_id)">查看详情</el-button>
+                    <el-button size="small" @click="goToClubDetail(club.club_id)"
+                      >查看详情</el-button
+                    >
                     <el-button size="small" @click="viewActivities(club)">查看活动</el-button>
-                    <el-button size="small" type="danger" @click="showQuitDialog = true; quitClub = club">
-                      退出社团
-                    </el-button>
+                    <el-button size="small" type="danger" @click=""> 退出社团 </el-button>
                   </div>
                 </div>
               </el-col>
@@ -190,18 +196,6 @@ const sortBy = ref('joinedAt_desc')
 const showQuitDialog = ref(false)
 const quitClub = ref<Club | null>(null)
 
-// 获取分类标签类型
-const getCategoryType = (category: ClubCategory) => {
-  const typeMap: Record<ClubCategory, string> = {
-    学术科技: 'primary',
-    文艺体育: 'success',
-    志愿服务: 'warning',
-    创新创业: 'danger',
-    其他: 'info',
-  }
-  return typeMap[category] || 'info'
-}
-
 // 获取状态类型
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
@@ -241,7 +235,7 @@ const loadJoinedClubs = async () => {
       page: currentPage.value,
       pageSize: pageSize.value,
     })
-    joinedClubs.value = data.list
+    joinedClubs.value = clubStore.joinedClubs
     total.value = data.total
   } catch (error) {
     console.error('加载已加入社团失败:', error)
@@ -320,6 +314,7 @@ const confirmQuit = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
+  clubStore.fetchJoinedClubs()
   loadJoinedClubs()
 })
 </script>
