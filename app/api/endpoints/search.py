@@ -12,6 +12,10 @@ router = APIRouter(
     dependencies=[Depends(get_api_key)]
 )
 
+@router.get("/smart-search", summary="AI智能搜索总结接口测试")
+def test_smart_search():
+    return "smart-search 接口的 GET 请求成功了！"
+
 
 @router.post("/smart-search", response_model=SearchResponse, summary="AI智能搜素总结接口")
 async def smart_search(search_query: SearchQuery):

@@ -12,6 +12,10 @@ router = APIRouter(
     dependencies=[Depends(get_api_key)]
 )
 
+@router.get("/sider-chat", summary="侧边栏对话接口测试")
+def test_sider_chat():
+    return "sider-chat 接口的 GET 请求成功了！"
+
 # --- Helper Functions (Pure or Near-Pure Logic) ---
 def _format_history(history: List[ChatMessage]) -> str:
     """
