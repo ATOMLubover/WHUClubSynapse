@@ -89,12 +89,6 @@ export const getLatestClubs = async (limit = 10): Promise<{ data: ApiResponse<Cl
   }
 }
 
-// TODO:后端没有，后续会删除这个接口
-export const getRecommendedClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockGetRecommendedClubs(limit)
-    : await request.get(`/clubs/recommended?limit=${limit}`)
-}
 
 // 搜索社团
 export const searchClubs = async (
@@ -152,7 +146,7 @@ export const applyToClub = async (data: {
   
 }
 
-// 撤销申请
+// TODO：后端没有，后续会删除这个接口
 export const cancelApplication = async (applicationId: string): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockCancelApplication(applicationId)
@@ -199,8 +193,6 @@ export const getFavoriteClubs = async (
     if (getIsUsingMockAPI()) {
       return await mockClub.mockGetFavoriteClubs(params)
     }
-
-
     const url = `/api/club/my_favorites`
 
     const response = await request.get(url)
@@ -276,7 +268,7 @@ export const applyToCreateClub = async (data: {
   if(getIsUsingMockAPI()){
     return await mockClub.mockApplyToCreateClub(data)
   }
-  const response = await request.post('/api/club/apply-create', data)
+  const response = await request.post('/api/club/create', data)
   return{
     data: {
       code: response.status,

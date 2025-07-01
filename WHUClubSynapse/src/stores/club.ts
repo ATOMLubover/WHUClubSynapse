@@ -136,17 +136,6 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-  // 获取推荐社团
-  const fetchRecommendedClubs = async (limit = 10) => {
-    try {
-      const response = await clubApi.getRecommendedClubs(limit)
-      recommendedClubs.value = response.data.data
-      return response.data.data
-    } catch (error) {
-      console.error('获取推荐社团失败:', error)
-      throw error
-    }
-  }
 
   // 获取社团分类统计
   // 获取社团分类统计（保留以支持统计功能）
@@ -433,7 +422,6 @@ export const useClubStore = defineStore('club', () => {
     searchClubs,
     fetchClubDetail,
     fetchLatestClubs,
-    fetchRecommendedClubs,
     fetchCategoriesStats, // 获取分类统计
     fetchCategoriesList, // 获取分类列表
     setSearchParams,

@@ -535,9 +535,14 @@ onMounted(async () => {
     console.error('获取社团详情时出错:', error)
   }
 
+  console.log('club', club.value)
+
   if (clubStore.favoriteClubs.length == 0) {
-    clubStore.fetchFavoriteClubs()
+    await clubStore.fetchFavoriteClubs()
+    console.log('获取收藏社团完成')
   }
+
+  console.log('clubStore.favoriteClubs:', clubStore.favoriteClubs)
   if (clubStore.favoriteClubs.find((club) => club.club_id === clubId)) {
     club.value!.isFavorite = true
   }
