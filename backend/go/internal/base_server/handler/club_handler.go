@@ -462,7 +462,7 @@ func (h *ClubHandler) GetMyFavorites(ctx iris.Context) {
 	var resClubList []dto.ClubBasic
 	for _, club := range clubs {
 		var tags []string
-		err = json.Unmarshal(club.Tags, &tags)
+		err = h.sTagsToArray(club.Tags, &tags)
 		if err != nil {
 			h.Logger.Error("解析社团标签失败",
 				"error", err, "club", club,
@@ -524,7 +524,7 @@ func (h *ClubHandler) PostApplyForJoinClub(ctx iris.Context, id int) {
 }
 
 func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
-	userId, err := ctx.Values().GetInt("user_id")
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
 	if err != nil {
 		h.Logger.Error("获取上下文用户ID失败",
 			"error", err,
@@ -544,12 +544,26 @@ func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
 		return
 	}
 
+	var tags []byte
+	if len(reqBody.Tags) != 0 {
+		tags, err = json.Marshal(reqBody.Tags)
+		if err != nil {
+			h.Logger.Error("序列化社团标签失败",
+				"error", err, "tags", reqBody.Tags,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法序列化社团标签")
+			return
+		}
+	}
+
 	err = h.ClubService.ApplyForCreateClub(dbstruct.Club{
 		Name:        reqBody.Name,
 		Description: reqBody.Desc,
 		LeaderId:    uint(userId),
 		CategoryId:  uint(reqBody.CategoryId),
-		Tags:        []byte(reqBody.Tags),
+		Tags:        tags,
 	})
 	if err != nil {
 		h.Logger.Error("申请创建社团失败",

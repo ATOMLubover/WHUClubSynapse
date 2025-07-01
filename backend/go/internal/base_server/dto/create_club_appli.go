@@ -4,7 +4,7 @@ type CreateClubAppliRequest struct {
 	Name         string `json:"name"`
 	Desc         string `json:"desc"`
 	CategoryId   int    `json:"category_id"`
-	Tags         string `json:"tags"`
+	Tags         []string `json:"tags"`
 	Requirements string `json:"requirements"`
 }
 
