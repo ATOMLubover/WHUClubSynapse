@@ -528,8 +528,6 @@ onMounted(async () => {
   console.log('路由参数:', route.params)
   console.log('当前路由:', route.path)
 
-  window.scrollTo(0, 0)
-
   try {
     await fetchClubDetail()
     console.log('社团详情获取完成')
@@ -537,6 +535,12 @@ onMounted(async () => {
     console.error('获取社团详情时出错:', error)
   }
 
+  if (clubStore.favoriteClubs.length == 0) {
+    clubStore.fetchFavoriteClubs()
+  }
+  if (clubStore.favoriteClubs.find((club) => club.club_id === clubId)) {
+    club.value!.isFavorite = true
+  }
   // 检查 URL 参数，如果有 isApply=true，自动打开申请弹窗
   const isApply = route.query.isApply
   if (isApply === 'true') {
