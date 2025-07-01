@@ -4,8 +4,9 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 from app.configs.config import settings
-from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline, EmbeddingsFilter
 from langchain_community.document_transformers import LongContextReorder
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 # 初始化向量数据库客户端
@@ -17,6 +18,13 @@ collection = client.get_or_create_collection(name=settings.CHROMA_RAG_COLLECTION
 
 # 加载模型
 st_model = SentenceTransformer(settings.EMBEDDING_MODEL_DIR)
+lc_embeddings = HuggingFaceEmbeddings(
+    model_name=settings.EMBEDDING_MODEL_DIR,
+    model_kwargs={
+        'device': 'cpu'
+    }
+)
+lc_reorder = LongContextReorder()
 
 
 def get_embeddings(texts: List[str]) -> List[List[float]]:
@@ -28,28 +36,45 @@ def get_embeddings(texts: List[str]) -> List[List[float]]:
     return embeddings.tolist()
 
 
-'''检索最相关的文档片段，包含长上下文重排'''
+'''检索最相关的文档片段，包含 长上下文重排 和 上下文压缩 优化'''
 def retrieve(query: str, n_results: int = 5) -> List[Dict[str, Any]]:
     query_embedding = get_embeddings(query if isinstance(query, List) else [query])
     retrieved_docs = collection.query(
         query_embeddings=query_embedding,
         n_results=n_results,
-        include=["metadatas", "documents"]
+        include=["metadatas", "documents", "distances"]
     )
 
     docs = []
+    if not retrieved_docs['ids'] or not retrieved_docs['ids'][0]:
+        return []
+    
     for i in range(len(retrieved_docs["ids"][0])):
+        similarity = 1 - retrieved_docs['distances'][0][i]
+        metadata=retrieved_docs["metadatas"][0][i]
+        metadata['similarity_score'] = similarity
+        
         docs.append(
             Document(
                 page_content=retrieved_docs["documents"][0][i],
-                metadata=retrieved_docs["metadatas"][0][i]
+                metadata=metadata
             )
         )
+    
+    embeddings_filter = EmbeddingsFilter(
+        embeddings=lc_embeddings,
+        similarity_threshold=settings.SIMILARITY_THRESHOLD
+    )
+    # 压缩管道，包含 长上下文重排 和 上下文压缩
+    pipeline_compressor = DocumentCompressorPipeline(
+        transformers=[embeddings_filter, lc_reorder]
+    )
 
-    reordered_docs = LongContextReorder().transform_documents(docs)  # 参数需要是 langchain 的 Document 对象
+    compressed_docs = pipeline_compressor.compress_documents(docs, query)
+
     return [
         {"content": doc.page_content, "metadata": doc.metadata}
-        for doc in reordered_docs
+        for doc in compressed_docs
     ]
 
 

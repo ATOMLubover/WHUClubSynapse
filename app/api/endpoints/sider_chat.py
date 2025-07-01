@@ -63,7 +63,7 @@ def build_final_prompt(user_query: str, history_str: str, context_str: str) -> s
 
 
 @router.post("/sider-chat", summary="RAG侧边栏对话接口")
-async def sider_chat(chat_query: ChatQuery):
+async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
     """
     Receives user query and history, enhances with RAG, and returns a response.
     This function orchestrates the calls to helper functions.
@@ -102,7 +102,8 @@ async def sider_chat(chat_query: ChatQuery):
             "model": settings.VLLM_MODEL_NAME,
             "messages": [{"role": "user", "content": final_prompt}],
             "max_tokens": 1024,
-            "stream": True
+            "stream": True,
+            "enable_thinking": enable_thinking
         }
         headers = {"Authorization": "Bearer sk-this-can-be-anything"}
 
@@ -118,6 +119,8 @@ async def sider_chat(chat_query: ChatQuery):
                             data_str = line[len("data: "):].strip()
                             if data_str == "[DONE]":
                                 break
+                            if not data_str:
+                                continue
                             try:
                                 chunk = json.loads(data_str)
                                 if 'choices' in chunk and chunk['choices'][0].get('delta', {}).get('content'):
