@@ -1,6 +1,9 @@
 import httpx
 import re
+import json
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from starlette.responses import StreamingResponse
 from app.utils.auth import get_api_key
 from app.configs.config import settings
 from app.rag.rag_service import retrieve, format_context
@@ -17,25 +20,26 @@ def test_smart_search():
     return "smart-search 接口的 GET 请求成功了！"
 
 
-@router.post("/smart-search", response_model=SearchResponse, summary="AI智能搜素总结接口")
+@router.post("/smart-search", summary="AI智能搜素总结接口")
 async def smart_search(search_query: SearchQuery):
     """
-    接收用户查询，通过 RAG 增强后调用大模型，返回最终总结及溯源信息。
+    接收用户查询，通过 RAG 增强后调用大模型，以流式响应返回最终总结及溯源信息。
     """
     user_query = search_query.query
     if not user_query:
         raise HTTPException(status_code=400, detail="没有收到查询内容")
     logger.info(f"收到新的智能搜索请求, 查询: '{user_query}'")
+    # 1. 先同步执行 RAG 检索，因为溯源信息需要先于回答返回
     try:
         # 1. 调用 RAG 服务，进行文档检索
-        retrieved_docs = retrieve(query=user_query, n_results=settings.RAG_N_RESULT)
+        retrieved_docs = await run_in_threadpool(retrieve, query=user_query, n_results=settings.RAG_N_RESULT)
         logger.info(f"检索到 {len(retrieved_docs)} 篇相关文档")
-
-        # 2. 格式化检索到的上下文
         context_str = format_context(retrieved_docs=retrieved_docs)
+    except Exception as e:
+        logger.error(f"RAG 检索或格式化失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"检索相关文档时出错: {str(e)}")
 
-        # 3. 构建增强提示
-        # 在 search.py 中构建 final_prompt 的部分
+        # 2. 构建增强提示
         final_prompt = f"""
         你是一个“社团管理系统”的AI助手。你的核心任务是为用户提供清晰、准确、有用的信息。
 
@@ -59,53 +63,58 @@ async def smart_search(search_query: SearchQuery):
 
         请使用 Markdown 格式化你的回答，确保内容友好、易于理解。
         """
-        logger.debug(f"构建的最终提示 (前30字符): {final_prompt[:300]}...")
+        logger.debug(f"构建的最终提示 (前300字符): {final_prompt[:300]}...")
 
-        # 4. 调用 vLLM 模型服务，获取最终总结
-        # a. 准备请求体和头
-        payload = {
-            "model": settings.VLLM_MODEL_NAME,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": final_prompt
-                }
-            ],
-            "enable_thinking": True,
-            "max_tokens": 1024,
-            "stream": False  # 流式响应无法返回溯源结果，而且需要分块处理
-        }
+        # 3. 定义一个异步生成器，用于流式处理
+        async def stream_generator():
+            # a. 通过 SSE 发送溯源文档事件
+            source_data = [doc.dict() for doc in retrieved_docs]
+            yield f"event: source\ndata: {json.dumps(source_data)}\n\n"
+            logger.info("已将溯源文档事件发送到前端")
 
-        headers = {
-            "Authorization": f"Bearer sk-this-can-be-anything"
-        }
-        logger.info(f"正在调用 vLLM 模型服务: {settings.VLLM_API_URL}")
-        # b. 异步调用模型接口获取回答
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                settings.VLLM_API_URL,
-                json=payload,
-                headers=headers,
-                timeout=60.0,
-            )
-            response.raise_for_status()
-            data = response.json()
-            answer = data['choices'][0]['message']['content']
-        logger.info("成功从 vLLM 服务获取到回答")
-        # c. 构造并返回响应
-        # 清除思考输出
-        clear_answer = re.sub(r'<think>.*?</think>\s*', '', answer, flags=re.DOTALL).strip()
+            # b. 准备并开始流式调用 vLLM
+            payload = {
+                "model": settings.VLLM_MODEL_NAME,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": final_prompt
+                    }
+                ],
+                "enable_thinking": True,
+                "max_tokens": 1024,
+                "stream": True 
+            }
 
-        return SearchResponse(
-            answer=clear_answer,
-            source=retrieved_docs
-        )
-    except httpx.RequestError as e:
-        logger.error(f"无法连接到离线推理服务: {e}", exc_info=True)
-        raise HTTPException(status_code=503, detail=f"无法连接到离线推理服务: {e}")
-    except (KeyError, IndexError) as e:
-        logger.error(f"离线推理服务返回的数据格式无效: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"离线推理服务返回的数据格式无效: {e}")
-    except Exception as e:
-        logger.error(f"处理请求时发生内部错误: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"处理请求时发生内部错误: {str(e)}")
+            headers = {
+                "Authorization": f"Bearer sk-this-can-be-anything"
+            }
+            logger.info(f"正在调用 vLLM 模型服务: {settings.VLLM_API_URL}")
+            try: 
+                async with httpx.AsyncClient() as client:
+                    # 调用模型客户端接口获取流式响应
+                    async with client.stream("POST", settings.VLLM_API_URL, json=payload, headers=headers, timeout=60.0) as response:
+                        response.raise_for_status()
+                        logger.info("成功连接到 vLLM 流式服务")
+                        # 流式处理部分
+                        # vLLM 的 OpenAI 兼容接口返回 SSE 格式的流 (Server-Sent Events)
+                        async for line in response.aiter_lines():  # aiter_lines 用于异步迭代器，运行逐行读取异步生成的数据
+                            if line.startswith("data:"):  # 处理数据
+                                data_str = line[len("data:"):].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    chunk = json.loads(data_str)
+                                    if 'choices' in chunk and chunk['choices'][0].get('delta', {}).get('content'):
+                                        token = chunk['choices'][0]['delta']['content']
+                                        # 将每个 token 作为 'token' 事件发送
+                                        yield f"event: token\ndata: {json.dumps({"token": token})}\n\n" 
+                                except json.JSONDecodeError:
+                                    continue
+                logger.info("vLLM 流式传输完成")
+            except Exception as e:
+                logger.error(f"调用LLM流式接口时出错: {e}", exc_info=True)
+                error_message = json.dumps({"error": "处理请求时发生内部错误"})
+                yield f"event: error\ndata: {error_message}\n\n"
+            yield "event: end\ndata: {}\n\n"
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")

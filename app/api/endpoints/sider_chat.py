@@ -1,6 +1,9 @@
 import httpx
 import re
+import json
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from starlette.responses import StreamingResponse
 from typing import List, Dict, Any
 from app.utils.auth import get_api_key
 from app.schemas import ChatMessage, ChatQuery, ChatResponse
@@ -59,41 +62,7 @@ def build_final_prompt(user_query: str, history_str: str, context_str: str) -> s
 """
 
 
-async def query_llm(prompt: str) -> str:
-    """
-    Sends the prompt to the vLLM service and returns the raw response content.
-    This function handles the HTTP request logic.
-    """
-    payload = {
-        "model": settings.VLLM_MODEL_NAME,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 512,
-        "enable_thinking": False,
-        "stream": False
-    }
-    headers = {"Authorization": f"Bearer sk-this-can-be-anything"}
-
-    logger.info(f"正在调用 vLLM 模型服务: {settings.VLLM_API_URL}")
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            settings.VLLM_API_URL,
-            json=payload,
-            headers=headers,
-            timeout=60.0,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data['choices'][0]['message']['content']
-
-
-def clean_llm_answer(answer: str) -> str:
-    """
-    Post-processes the raw answer from the LLM (e.g., removing <think> tags). Pure function.
-    """
-    return re.sub(r'<think>.*?</think>\s*', '', answer, flags=re.DOTALL).strip()
-
-
-@router.post("/sider-chat", response_model=ChatResponse, summary="RAG侧边栏对话接口")
+@router.post("/sider-chat", summary="RAG侧边栏对话接口")
 async def sider_chat(chat_query: ChatQuery):
     """
     Receives user query and history, enhances with RAG, and returns a response.
@@ -108,7 +77,7 @@ async def sider_chat(chat_query: ChatQuery):
 
     try:
         # 1. Retrieve relevant documents (I/O)
-        retrieved_docs = retrieve(query=user_query, n_results=settings.RAG_N_RESULT)
+        retrieved_docs = await run_in_threadpool(retrieve, query=user_query, n_results=settings.RAG_N_RESULT)
         logger.info(f"为最新问题检索到 {len(retrieved_docs)} 篇相关文档")
 
         # 2. Format inputs (Pure computation)
@@ -119,25 +88,50 @@ async def sider_chat(chat_query: ChatQuery):
         final_prompt = build_final_prompt(user_query, history_str, context_str)
         logger.debug(f"构建的最终提示 (前100字符): {final_prompt[:100]}...")
 
-        # 4. Query the Language Model (I/O)
-        raw_answer = await query_llm(final_prompt)
-        logger.info("成功从 vLLM 服务获取到回答")
-
-        # 5. Clean the response (Pure computation)
-        cleaned_answer = clean_llm_answer(raw_answer)
-
-        # 6. Return the final response
-        return ChatResponse(
-            answer=cleaned_answer,
-            source=retrieved_docs
-        )
-
-    except httpx.RequestError as e:
-        logger.error(f"无法连接到离线推理服务: {e}", exc_info=True)
-        raise HTTPException(status_code=503, detail=f"无法连接到离线推理服务: {e}")
-    except (KeyError, IndexError) as e:
-        logger.error(f"离线推理服务返回的数据格式无效: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"离线推理服务返回的数据格式无效: {e}")
     except Exception as e:
-        logger.error(f"处理聊天请求时发生内部错误: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"处理请求时发生内部错误: {str(e)}")
+        logger.error(f"RAG 检索或格式化失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"检索相关文档时出错: {str(e)}")
+
+    async def stream_generator():
+        # a. 通过 SSE 发送溯源文档事件
+        source_data = [doc.dict() for doc in retrieved_docs]
+        yield f"event: source\ndata: {json.dumps(source_data)}\n\n"
+        logger.info("已将溯源文档事件发送到前端")
+
+        # b. 准备并开始流式调用 vLLM
+        payload = {
+            "model": settings.VLLM_MODEL_NAME,
+            "messages": [{"role": "user", "content": final_prompt}],
+            "max_tokens": 1024,
+            "stream": True
+        }
+        headers = {"Authorization": "Bearer sk-this-can-be-anything"}
+
+        logger.info(f"正在调用 vLLM 模型服务: {settings.VLLM_API_URL}")
+        try:
+            async with httpx.AsyncClient() as client:
+                async with client.stream("POST", settings.VLLM_API_URL, json=payload, headers=headers, timeout=60.0) as response:
+                    response.raise_for_status()
+                    logger.info("成功连接到 vLLM 流式服务")
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data:"):
+                            data_str = line[len("data: "):].strip()
+                            if data_str == "[DONE]":
+                                break
+                            try:
+                                chunk = json.loads(data_str)
+                                if 'choices' in chunk and chunk['choices'][0].get('delta', {}).get('content'):
+                                    token = chunk['choices'][0]['delta']['content']
+                                    yield f"event: token\ndata: {json.dumps({'token': token})}\n\n"
+                            except json.JSONDecodeError:
+                                continue
+            logger.info("vLLM 流式传输完成")
+        except Exception as e:
+            logger.error(f"调用LLM流式接口时出错: {e}", exc_info=True)
+            error_message = json.dumps({"error": "处理请求时发生内部错误"})
+            yield f"event: error\ndata: {error_message}\n\n"
+        
+        yield "event: end\ndata: {}\n\n"
+
+    return StreamingResponse(stream_generator(), media_type="text/event-stream")
