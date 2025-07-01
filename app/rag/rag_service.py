@@ -4,6 +4,8 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 from app.configs.config import settings
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+from langchain_community.document_transformers import LongContextReorder
 
 # 初始化向量数据库客户端
 client = chromadb.HttpClient(
@@ -25,24 +27,21 @@ def get_embeddings(texts: List[str]) -> List[List[float]]:
     return embeddings.tolist()
 
 
-'''检索最相关的文档片段'''
-
-
-def retrieve(query: str, n_results: int = 3) -> List[Dict[str, Any]]:
+'''检索最相关的文档片段，包含长上下文重排'''
+def retrieve(query: str, n_results: int = 5) -> List[Dict[str, Any]]:
     query_embedding = get_embeddings(query if isinstance(query, List) else [query])
-    results = collection.query(
+    retrieved_docs = collection.query(
         query_embeddings=query_embedding,
         n_results=n_results
     )
+    reorder_docs = LongContextReorder.transform_documents(retrieved_docs)
     return [
         {"content": doc, "metadata": meta}
-        for doc, meta in zip(results["documents"][0], results["metadatas"][0])
+        for doc, meta in zip(reorder_docs["documents"][0], reorder_docs["metadatas"][0])
     ]
 
 
 '''格式化检索结果为 LLM 输入'''
-
-
 def format_context(retrieved_docs: List[Dict]) -> str:
     return "\n\n".join(
         f"""
