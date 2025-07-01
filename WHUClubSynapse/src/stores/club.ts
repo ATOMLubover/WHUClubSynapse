@@ -8,7 +8,6 @@ export const useClubStore = defineStore('club', () => {
   // 状态
   const clubs = ref<Club[]>([])
   const searchResult=ref<Club[]>([])
-  const hotClubs = ref<Club[]>([])
   const favoriteClubs = ref<Club[]>([])
   const latestClubs = ref<Club[]>([])
   const recommendedClubs = ref<Club[]>([])
@@ -42,7 +41,7 @@ export const useClubStore = defineStore('club', () => {
   const searchParams = ref<SearchParams>({
     keyword: '',
     category: '',
-    sortBy: 'hot',
+    sortBy: 'time',
   })
   
   // UI状态
@@ -123,17 +122,7 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-  // 获取热门社团
-  const fetchHotClubs = async (limit = 10) => {
-    try {
-      const response = await clubApi.getHotClubs(limit)
-      hotClubs.value = response.data.data
-      return response.data.data
-    } catch (error) {
-      console.error('获取热门社团失败:', error)
-      throw error
-    }
-  }
+
 
   // 获取最新社团
   const fetchLatestClubs = async (limit = 10) => {
@@ -142,7 +131,7 @@ export const useClubStore = defineStore('club', () => {
       latestClubs.value = response.data.data
       return response.data.data
     } catch (error) {
-      console.error('获取最新社团失败:', error)
+      console.error('获取最新社团失败:', error) 
       throw error
     }
   }
@@ -367,7 +356,7 @@ export const useClubStore = defineStore('club', () => {
     searchParams.value = {
       keyword: '',
       category: '',
-      sortBy: 'hot',
+      sortBy: 'time',
     }
     globalPageData.currentPage = 1
   }
@@ -419,7 +408,6 @@ export const useClubStore = defineStore('club', () => {
     // 状态
     clubs,
     searchResult,
-    hotClubs,
     favoriteClubs,
     latestClubs,
     recommendedClubs,
@@ -444,7 +432,6 @@ export const useClubStore = defineStore('club', () => {
     fetchClubs,
     searchClubs,
     fetchClubDetail,
-    fetchHotClubs,
     fetchLatestClubs,
     fetchRecommendedClubs,
     fetchCategoriesStats, // 获取分类统计

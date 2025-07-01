@@ -74,22 +74,22 @@ export const getClubDetail = async (id: string, post_num: number = 5): Promise<C
   }
   return response.data as Club
 }
-
-// 获取热门社团
-export const getHotClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockGetHotClubs(limit)
-    : await request.get(`/api/club/latest?limit=${limit}`)
-}
-
 // 获取最新社团
 export const getLatestClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockGetLatestClubs(limit)
-    : await request.get(`/api/club/latest?limit=${limit}`)
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetLatestClubs(limit)
+  }
+  const response = await request.get(`/api/club/latest?limit=${limit}`)
+  return{
+    data: {
+      code: response.status,
+      message: ' ' ,
+      data: response.data,
+    },
+  }
 }
 
-// 获取推荐社团
+// TODO:后端没有，后续会删除这个接口
 export const getRecommendedClubs = async (limit = 10): Promise<{ data: ApiResponse<Club[]> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockGetRecommendedClubs(limit)
