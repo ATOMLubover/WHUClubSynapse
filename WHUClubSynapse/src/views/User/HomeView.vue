@@ -500,7 +500,7 @@ onMounted(async () => {
 
   // 获取热门社团
   try {
-    await clubStore.fetchHotClubs(6)
+    await clubStore.fetchLatestClubs(6)
   } catch (error) {
     console.error('获取热门社团失败:', error)
   }
