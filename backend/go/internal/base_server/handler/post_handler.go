@@ -67,6 +67,7 @@ func (h *PostHandler) GetPostList(ctx iris.Context, id int) {
 			PostId:       int(post.PostId),
 			ClubId:       int(post.ClubId),
 			Title:        post.Title,
+			ContentUrl:   post.ContentUrl,
 			AuthorId:     int(post.UserId),
 			CommentCount: int(post.CommentCount),
 			CreatedAt:    post.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -181,7 +182,7 @@ func (h *PostHandler) PostCreatePost(ctx iris.Context) {
 
 	if err := h.RedisService.UploadPostInfo(&newPost); err != nil {
 		h.Logger.Error("上传帖子信息失败",
-			"error", err, "post_id", newPost.PostId, 
+			"error", err, "post_id", newPost.PostId,
 			"path", newPost.ContentUrl,
 		)
 	}

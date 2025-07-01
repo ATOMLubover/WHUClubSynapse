@@ -23,4 +23,7 @@ type Config struct {
 
 	JwtExpirationTime uint64 `mapstructure:"jwt_expiration_time"`
 	JwtSecretKey      string `mapstructure:"jwt_secret_key"`
+
+	LlmAddr string `mapstructure:"llm_addr"`
+	RagAddr string `mapstructure:"rag_addr"`
 }

@@ -43,6 +43,12 @@ func (r *sClubFavouriteRepo) AddClubFavourite(userId, clubId int) error {
 			DeletedAt: time.Time{},
 		}).Error
 
+	case fav.ClubFavoriteId != 0:
+		return r.database.
+			Model(&dbstruct.ClubFavorite{}).
+			Where("club_favorite_id = ?", fav.ClubFavoriteId).
+			Update("deleted_at", time.Time{}).Error
+
 	default:
 		return err
 	}
@@ -59,7 +65,7 @@ func (r *sClubFavouriteRepo) GetClubFavorites(userId int) ([]uint, error) {
 	var clubSerials []uint
 	err := r.database.
 		Model(&dbstruct.ClubFavorite{}).
-		Where("user_id = ?", userId).
+		Where("user_id = ? AND deleted_at != ?", userId, time.Time{}).
 		Pluck("club_id", &clubSerials).Error
 	return clubSerials, err
 }

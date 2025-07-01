@@ -50,7 +50,7 @@ func main() {
 
 	app.Use(crs, routeLogger)
 
-	app.HandleDir("/pub/post_files", service.POST_FILE_DIR)
+	app.HandleDir("/pub/post_files/", service.POST_FILE_DIR)
 
 	rootApp := mvc.New(app.Party("/"))
 
@@ -114,7 +114,7 @@ func main() {
 	)
 
 	InitAuthHandler(rootApp)
-	InitApiHandler(rootApp, jwtFactory, logger)
+	InitApiHandler(rootApp, jwtFactory, logger, config)
 
 	app.Listen(":" + config.ServerPort)
 }
@@ -160,6 +160,7 @@ func InitApiHandler(
 	parent *mvc.Application,
 	jwtFct *jwtutil.CliamsFactory[model.UserClaims],
 	lgr *slog.Logger,
+	cfg *baseconfig.Config,
 ) {
 	apiApp := parent.Party("/api")
 
@@ -193,6 +194,8 @@ func InitApiHandler(
 
 		ctx.Next()
 	})
+
+	handler.InitTransHandler(apiApp, cfg)
 
 	InitUserHandler(apiApp)
 	InitClubHandler(apiApp, jwtFct, lgr)

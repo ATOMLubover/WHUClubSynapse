@@ -1,28 +1,111 @@
 package handler
 
 import (
-	"github.com/gorilla/websocket"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"strings"
+	"whuclubsynapse-server/internal/base_server/baseconfig"
+
 	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/mvc"
 )
 
-type IrisMiddleware func(iris.Context)
+func InitTransHandler(parent *mvc.Application, cfg *baseconfig.Config) {
+	transApp := parent.Party("/trans")
 
-var httpInterceptor IrisMiddleware = func(ctx iris.Context) {
-	if websocket.IsWebSocketUpgrade(ctx.Request()) {
-		ctx.StopWithText(iris.StatusBadRequest,
-			"该接口只支持HTTP请求")
-		return
+	handler := &TransHandler{
+		LlmAddr: cfg.LlmAddr,
+		RagAddr: cfg.RagAddr,
 	}
 
-	ctx.Next()
+	transApp.Handle(handler)
 }
 
-var websockInterceptor IrisMiddleware = func(ctx iris.Context) {
-	if !websocket.IsWebSocketUpgrade(ctx.Request()) {
-		ctx.StopWithText(iris.StatusBadRequest,
-			"该接口只支持WebSocket请求")
+type TransHandler struct {
+	LlmAddr string
+	RagAddr string
+
+	Logger *slog.Logger
+}
+
+func (h *TransHandler) BeforeActivation(b mvc.BeforeActivation) {
+	b.Handle("GET", "/llm/{route:string}", "GetTransLlm")
+
+	b.Handle("POST", "/llm/{route:string}", "PostTransLlm")
+	b.Handle("POST", "/rag/{route:string}", "PostTransRag")
+}
+
+func (h *TransHandler) GetTransLlm(ctx iris.Context, route string) {
+	req := ctx.Request().Clone(ctx.Request().Context())
+
+	req.URL, _ = url.Parse(h.LlmAddr + "/" + route)
+	req.RequestURI = ""
+
+	req.Host = strings.TrimPrefix(h.LlmAddr, "https://")
+	req.Header.Set("Host", req.Host)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		h.Logger.Error("LLM服务器请求失败", "error", err)
+
+		ctx.StatusCode(iris.StatusServiceUnavailable)
+		ctx.Text("LLM服务器暂不可用")
 		return
 	}
+	defer res.Body.Close()
 
-	ctx.Next()
+	for key, values := range res.Header {
+		for _, value := range values {
+			ctx.ResponseWriter().Header().Add(key, value)
+		}
+	}
+
+	ctx.StatusCode(res.StatusCode)
+	io.Copy(ctx.ResponseWriter(), res.Body)
+}
+
+func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
+	req := ctx.Request().Clone(ctx.Request().Context())
+	req.URL, _ = url.Parse(h.LlmAddr + route)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		ctx.StatusCode(iris.StatusServiceUnavailable)
+		ctx.Text("LLM服务器暂不可用")
+		return
+	}
+	defer res.Body.Close()
+
+	for key, values := range res.Header {
+		for _, value := range values {
+			ctx.ResponseWriter().Header().Add(key, value)
+		}
+	}
+
+	ctx.StatusCode(res.StatusCode)
+	io.Copy(ctx.ResponseWriter(), res.Body)
+}
+
+func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
+	req := ctx.Request().Clone(ctx.Request().Context())
+	req.URL, _ = url.Parse(h.LlmAddr + route)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		ctx.StatusCode(iris.StatusServiceUnavailable)
+		ctx.Text("LLM服务器暂不可用")
+		return
+	}
+	defer res.Body.Close()
+
+	for key, values := range res.Header {
+		for _, value := range values {
+			ctx.ResponseWriter().Header().Add(key, value)
+		}
+	}
+
+	ctx.StatusCode(res.StatusCode)
+	io.Copy(ctx.ResponseWriter(), res.Body)
 }

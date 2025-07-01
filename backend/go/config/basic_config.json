@@ -15,5 +15,7 @@
   "grpc_min_conn": 1,
   "grpc_idle_timeout": 60,
   "jwt_expiration_time": 24,
-  "jwt_secret_key": "priestess"
+  "jwt_secret_key": "priestess",
+  "llm_addr": "https://095c-91-103-121-55.ngrok-free.app",
+  "rag_addr": "localhost:8888"
 }
