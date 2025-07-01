@@ -39,7 +39,7 @@
                   </el-button>
                 </template>
               </el-input>
-              
+
               <!-- AI智能搜索选项 -->
               <div class="ai-search-option">
                 <el-checkbox 
@@ -87,12 +87,7 @@
               <div class="ai-result-header">
                 <el-icon class="ai-icon"><ChatDotRound /></el-icon>
                 <span>AI智能回答</span>
-                <el-button 
-                  type="text" 
-                  size="small" 
-                  @click="hideAiResult"
-                  class="close-btn"
-                >
+                <el-button type="text" size="small" @click="hideAiResult" class="close-btn">
                   <el-icon><Close /></el-icon>
                 </el-button>
               </div>
@@ -185,17 +180,17 @@
 
       <!-- 右侧功能区 -->
       <div class="content-right">
-        <!-- 热门排行 -->
+        <!-- 最新发布 -->
         <el-card class="sidebar-card">
           <template #header>
             <div class="card-header">
               <el-icon><TrendCharts /></el-icon>
-              <span>热门排行</span>
+              <span>最新发布</span>
             </div>
           </template>
           <div class="hot-list">
             <div
-              v-for="(club, index) in clubStore.hotClubs"
+              v-for="(club, index) in clubStore.latestClubs"
               :key="club.club_id"
               class="hot-item"
               @click="goToClub(club.club_id)"
@@ -204,28 +199,6 @@
               <div class="hot-info">
                 <div class="hot-name">{{ club.club_name }}</div>
                 <div class="hot-members">{{ club.member_count }}人</div>
-              </div>
-            </div>
-          </div>
-        </el-card>
-
-        <!-- 最新发布 -->
-        <el-card class="sidebar-card">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Clock /></el-icon>
-              <span>最新发布</span>
-            </div>
-          </template>
-          <div class="latest-list">
-            <div
-              v-for="club in clubStore.latestClubs"
-              :key="club.club_id"
-              class="latest-item"
-              @click="goToClub(club.club_id)"
-            >
-              <div class="latest-info">
-                <div class="latest-name">{{ club.club_name }}</div>
                 <div class="latest-time">{{ formatDate(club.created_at) }}</div>
               </div>
             </div>
@@ -454,7 +427,7 @@ const handleSearch = async () => {
       // 普通搜索，跳转到搜索页面
       router.push({
         path: '/search',
-        query: { keyword: searchKeyword.value.trim() }
+        query: { keyword: searchKeyword.value.trim() },
       })
     }
   } catch (error) {
@@ -1012,19 +985,19 @@ onMounted(async () => {
   .search-input-group {
     gap: 8px;
   }
-  
+
   .ai-result-header {
     padding: 12px 16px;
   }
-  
+
   .ai-result-content {
     padding: 16px;
   }
-  
+
   .sources-list {
     gap: 6px;
   }
-  
+
   .source-item {
     padding: 6px 10px;
     font-size: 11px;
