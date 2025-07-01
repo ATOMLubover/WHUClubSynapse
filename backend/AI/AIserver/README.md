@@ -472,6 +472,70 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
           }'
         ```
 
+### 18. 社团推荐接口
+
+- **路径**: `/club_recommend`
+- **方法**: `POST`
+- **描述**: 根据用户提供的信息，智能推荐符合用户兴趣和需求的社团。
+
+#### 请求体 (`Club_Recommend_Request`)
+
+| 字段名         | 类型       | 描述                 | 必填 |
+| ------------- | ---------- | -------------------- | ---- |
+| `User_name`     | `string`   | 用户姓名             | 是   |
+| `User_description` | `string`   | 用户个人描述         | 是   |
+| `User_tags`     | `List[string]` | 用户兴趣标签列表     | 是   |
+| `User_major`    | `string`   | 用户专业             | 是   |
+
+**示例请求 (JSON)**:
+
+```json
+{
+  "User_name": "张三",
+  "User_description": "我热爱运动，喜欢户外活动和团队合作。",
+  "User_tags": ["运动", "户外", "团队", "篮球"],
+  "User_major": "计算机科学与技术"
+}
+```
+
+#### 响应体 (`Club_Recommend_Response`)
+
+| 字段名               | 类型              | 描述             |
+| ------------------- | ----------------- | ---------------- |
+| `Summary_text`      | `string`          | AI生成的推荐总结 |
+| `Recommend_club_list` | `List[ClubInfo]` | 推荐社团列表     |
+
+**`ClubInfo` 对象结构**:
+
+| 字段名             | 类型     | 描述           |
+| ----------------- | -------- | -------------- |
+| `club_name`       | `string` | 社团名称       |
+| `description`     | `string` | 社团描述       |
+| `tags`            | `List[string]` | 社团标签列表   |
+| `recommend_reason` | `string` | 推荐该社团的理由 |
+
+**示例响应 (JSON)**:
+
+```json
+{
+  "Summary_text": "根据您的兴趣和专业，以下是为您推荐的社团：",
+  "Recommend_club_list": [
+    {
+      "club_name": "篮球俱乐部",
+      "description": "专注于篮球运动，定期组织训练和比赛。",
+      "tags": ["运动", "篮球", "团队"],
+      "recommend_reason": "您热爱运动和团队合作，篮球俱乐部非常适合您。"
+    },
+    {
+      "club_name": "户外探险社",
+      "description": "组织各类户外活动，如徒步、露营和登山。",
+      "tags": ["户外", "探险", "自然"],
+      "recommend_reason": "您喜欢户外活动，该社团能满足您的探险精神。"
+    }
+  ]
+}
+```
+
 ## 测试
 
 ### 测试配置导入

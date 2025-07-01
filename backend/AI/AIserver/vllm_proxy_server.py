@@ -167,6 +167,22 @@ class UpdateBudgetResponse(BaseModel):
     new_budget_limit: float
     budget_description: Optional[str] = None
 
+class ClubInfo(BaseModel):
+    club_name: str
+    description: str
+    tags: List[str]
+    recommend_reason: str
+
+class Club_Recommend_Request(BaseModel):
+    User_name: str
+    User_description: str
+    User_tags: List[str]
+    User_major: str
+
+class Club_Recommend_Response(BaseModel):
+    Summary_text: str
+    Recommend_club_list: List[ClubInfo]
+
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
 base_url_tongyi="https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -1260,6 +1276,16 @@ async def update_budget(request: UpdateBudgetRequest):
     except Exception as e:
         logger.error(f"AI修改预算失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI修改预算失败: {e}")
+
+@app.post("/club_recommend", response_model=Club_Recommend_Response)
+async def club_recommend(request: Club_Recommend_Request):
+    """
+    社团推荐助手 - 根据用户信息推荐社团。
+    根据用户信息，AI推荐适合的社团。
+    """
+    try:1
+
+    except Exception as e: 1
 
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
