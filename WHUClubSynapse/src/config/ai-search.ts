@@ -1,12 +1,12 @@
 // AI智能搜索配置
 export const aiSearchConfig = {
   // AI智能搜索API基础URL
-  baseURL: 'http://5c3f836f.cpolar.io', // 根据实际部署情况修改
+  baseURL: 'http://7e6e72a.cpolar.io', // 根据实际部署情况修改
   
   // API端点
   endpoints: {
-    smartSearch: '/api/v1/smart-search',
-    sideChat: '/api/v1/sider-chat',
+    smartSearch: '/smart-search',
+    sideChat: '/sider-chat',
     healthCheck: '/', // 新增健康检查端点
   },
   

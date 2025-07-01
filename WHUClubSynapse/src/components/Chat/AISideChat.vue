@@ -28,43 +28,47 @@
         <div class="chat-title">
           <el-icon class="ai-icon"><ChatDotRound /></el-icon>
           <span>AI智能助手</span>
-          <!-- AI状态标签 -->
-          <el-tag 
-            v-if="!aiAvailable" 
-            type="warning" 
-            size="small" 
-            class="ai-status-tag"
-          >
-            AI不可用
-          </el-tag>
         </div>
         <div class="chat-actions">
-          <el-button 
-            type="info" 
-            size="small" 
-            @click="testAiConnectivity"
-            class="ai-test-btn"
-            style="margin-right: 8px;"
-          >
-            AI连通性测试
-          </el-button>
-          <el-button 
-            type="text" 
-            size="small" 
-            @click="clearHistory"
-            :disabled="chatHistory.length === 0"
-          >
-            <el-icon><Delete /></el-icon>
-            清空对话
-          </el-button>
           <el-button 
             type="text" 
             size="small" 
             @click="toggleChat"
+            class="close-btn"
           >
             <el-icon><Close /></el-icon>
           </el-button>
         </div>
+      </div>
+      <div class="chat-header-sub">
+        <el-tag 
+          v-if="!aiAvailable" 
+          type="warning" 
+          size="small" 
+          class="ai-status-tag"
+        >
+          AI不可用
+        </el-tag>
+        <el-button 
+          type="info" 
+          size="small" 
+          @click="testAiConnectivity"
+          class="ai-test-btn"
+          style="margin-left: 12px;"
+        >
+          AI连通性测试
+        </el-button>
+        <el-button 
+          type="text" 
+          size="small" 
+          @click="clearHistory"
+          :disabled="chatHistory.length === 0"
+          class="clear-btn"
+          style="margin-left: 12px;"
+        >
+          <el-icon><Delete /></el-icon>
+          清空对话
+        </el-button>
       </div>
 
       <!-- 对话内容区域 -->
@@ -517,10 +521,6 @@ const testAiConnectivity = async () => {
   font-size: 18px;
 }
 
-.ai-status-tag {
-  margin-left: 8px;
-}
-
 .chat-actions {
   display: flex;
   gap: 8px;
@@ -883,5 +883,28 @@ const testAiConnectivity = async () => {
 
 .chat-content::-webkit-scrollbar-thumb:hover {
   background: rgba(102, 126, 234, 0.5);
+}
+
+.chat-header-sub {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px 0 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 0 0 0;
+  min-height: 40px;
+  gap: 0;
+}
+.chat-header-sub .el-tag {
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 2px 12px;
+  box-shadow: 0 2px 8px rgba(255,183,77,0.10);
+}
+.chat-header-sub .ai-test-btn {
+  margin-left: 12px;
+}
+.chat-header-sub .clear-btn {
+  margin-left: 12px;
 }
 </style> 
