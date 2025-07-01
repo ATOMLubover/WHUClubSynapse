@@ -9,9 +9,13 @@ def test_smart_search():
     search_query = {
         "query": "如何创建一个社团？"
     }
+    
+    headers = {
+        "X-API-Key": "super_plus_api_key"
+    }
 
     # Send a POST request to the /smart-search endpoint
-    response = client.post("/api/v1/smart-search", json=search_query)
+    response = client.post("/smart-search", json=search_query, headers=headers)
 
     # Assert the response status code is 200
     assert response.status_code == 200

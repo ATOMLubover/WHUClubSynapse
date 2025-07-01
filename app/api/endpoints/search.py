@@ -59,7 +59,7 @@ async def smart_search(search_query: SearchQuery):
 
         请使用 Markdown 格式化你的回答，确保内容友好、易于理解。
         """
-        logger.debug(f"构建的最终提示 (前30字符): {final_prompt[:30]}...")
+        logger.debug(f"构建的最终提示 (前30字符): {final_prompt[:300]}...")
 
         # 4. 调用 vLLM 模型服务，获取最终总结
         # a. 准备请求体和头

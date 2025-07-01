@@ -18,7 +18,7 @@ def test_chat_initial_message():
         "history": []
     }
 
-    response = client.post("/api/v1/chat", json=chat_request_body)
+    response = client.post("/chat", json=chat_request_body)
 
     assert response.status_code == 200
 

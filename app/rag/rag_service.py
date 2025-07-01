@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 from app.configs.config import settings
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain_community.document_transformers import LongContextReorder
+from langchain_core.documents import Document
 
 # 初始化向量数据库客户端
 client = chromadb.HttpClient(
@@ -32,12 +33,23 @@ def retrieve(query: str, n_results: int = 5) -> List[Dict[str, Any]]:
     query_embedding = get_embeddings(query if isinstance(query, List) else [query])
     retrieved_docs = collection.query(
         query_embeddings=query_embedding,
-        n_results=n_results
+        n_results=n_results,
+        include=["metadatas", "documents"]
     )
-    reorder_docs = LongContextReorder.transform_documents(retrieved_docs)
+
+    docs = []
+    for i in range(len(retrieved_docs["ids"][0])):
+        docs.append(
+            Document(
+                page_content=retrieved_docs["documents"][0][i],
+                metadata=retrieved_docs["metadatas"][0][i]
+            )
+        )
+
+    reordered_docs = LongContextReorder().transform_documents(docs)  # 参数需要是 langchain 的 Document 对象
     return [
-        {"content": doc, "metadata": meta}
-        for doc, meta in zip(reorder_docs["documents"][0], reorder_docs["metadatas"][0])
+        {"content": doc.page_content, "metadata": doc.metadata}
+        for doc in reordered_docs
     ]
 
 
