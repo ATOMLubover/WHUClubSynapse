@@ -3,8 +3,10 @@ import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
 import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost } from '@/types'
+import { useAuthStore } from '@/stores/auth'
 
 export const useClubStore = defineStore('club', () => {
+  const authStore = useAuthStore()
   // 状态
   const clubs = ref<Club[]>([])
   const searchResult=ref<Club[]>([])
@@ -13,6 +15,8 @@ export const useClubStore = defineStore('club', () => {
   const recommendedClubs = ref<Club[]>([])
   const categoriesList = ref<ClubCategory[]>([]) // 新增：分类列表
   const currentClub = ref<Club | null>(null)
+  const joinedClubs = ref<Club[]>([])
+  const managedClubs = ref<Club[]>([])
   
   // 新增：全局帖子数组
   const clubposts = ref<ClubPost[]>([])
@@ -230,6 +234,37 @@ export const useClubStore = defineStore('club', () => {
 
   }
 
+  //获取加入社团申请列表
+  const fetchPendingClubApplications=async(params:{
+    page?:number,
+    pageSize?:number,
+    status?:string,
+    keyword?:string,
+  })=>{
+    try{
+      const response=await clubApi.getClubApplications(params);
+      if(clubs.value.length==0){
+        await fetchClubs()
+      }
+      const applications=response.list.map((application)=>{
+        return {
+          ...application,
+          club_name:clubs.value.find((club)=>club.club_id===application.club_id)?.club_name,
+        }
+      })
+      return {
+        list:applications,
+        total:response.total,
+        page:params.page||1,
+        pageSize:params.pageSize||10,
+      }
+    }
+    catch (error){
+      console.error('获取加入社团申请列表失败:', error)
+      throw error
+    }
+  }
+
   // 撤销申请
   const cancelApplication = async (applicationId: string) => {
     try {
@@ -243,11 +278,30 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  // 申请创建社团
+  const applyToCreateClub = async (data: {
+    name: string
+    desc: string
+    requirements: string
+    category_id: number
+    tags: string
+  }) => {
+    try {
+      const response = await clubApi.applyToCreateClub(data)
+      return response.data.data
+    } catch (error) {
+      console.error('申请创建社团失败:', error)
+      ElMessage.error('申请创建社团失败')
+      throw error
+    }
+  }
+
   // 获取用户已加入的社团
   const fetchJoinedClubs = async (params?: { page?: number; pageSize?: number }) => {
     try {
       const response = await clubApi.getJoinedClubs(params)
-      return response.data.data
+      joinedClubs.value = response.list
+      return response
     } catch (error) {
       console.error('获取已加入社团失败:', error)
       ElMessage.error('获取已加入社团失败')
@@ -258,8 +312,17 @@ export const useClubStore = defineStore('club', () => {
   // 获取用户管理的社团
   const fetchManagedClubs = async (params?: { page?: number; pageSize?: number }) => {
     try {
-      const response = await clubApi.getManagedClubs(params)
-      return response.data.data
+      if(joinedClubs.value.length==0){
+        const response = await clubApi.getJoinedClubs(params)
+        joinedClubs.value = response.list
+      }
+      managedClubs.value=joinedClubs.value.filter((club)=>club.leader_id==authStore.user?.user_id)
+      return {
+        list:managedClubs.value,
+        total:managedClubs.value.length,
+        page:params?.page||1,
+        pageSize:params?.pageSize||12,
+      }
     } catch (error) {
       console.error('获取管理的社团失败:', error)
       ElMessage.error('获取管理的社团失败')
@@ -400,6 +463,8 @@ export const useClubStore = defineStore('club', () => {
     favoriteClubs,
     latestClubs,
     recommendedClubs,
+    joinedClubs,
+    managedClubs,
     // categories,
     categoriesList, // 新增：分类列表
     currentClub,
@@ -441,5 +506,7 @@ export const useClubStore = defineStore('club', () => {
     fetchClubPosts,
     getPostById,
     updateClub,
+    applyToCreateClub,
+    fetchPendingClubApplications,
   }
 })

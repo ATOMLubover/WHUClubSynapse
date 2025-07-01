@@ -155,12 +155,13 @@
           />
         </el-form-item>
         <el-form-item label="社团类型" prop="category">
-          <el-select v-model="createForm.category" placeholder="请选择社团类型">
-            <el-option label="学术科技" value="学术科技" />
-            <el-option label="文艺体育" value="文艺体育" />
-            <el-option label="志愿服务" value="志愿服务" />
-            <el-option label="创新创业" value="创新创业" />
-            <el-option label="其他" value="其他" />
+          <el-select v-model="createForm.category_id" placeholder="请选择社团类型">
+            <el-option
+              v-for="category in categoriesList"
+              :key="category.category_id"
+              :label="category.name"
+              :value="category.category_id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="最大成员数" prop="maxMembers">
@@ -263,35 +264,29 @@ const sortBy = ref('createdAt_desc')
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const deleteClub = ref<Club | null>(null)
-
+const categoriesList = ref<ClubCategory[]>([])
 // 创建表单
 const createForm = ref({
   name: '',
   description: '',
-  category: '',
+  category_id: 0,
   maxMembers: 50,
   tags: [] as string[],
-  coverImage: '',
   requirements: '',
+  coverImage: '',
 })
 
 const createRules = {
   name: [{ required: true, message: '请输入社团名称', trigger: 'blur' }],
   description: [{ required: true, message: '请输入社团简介', trigger: 'blur' }],
-  category: [{ required: true, message: '请选择社团类型', trigger: 'change' }],
+  category_id: [{ required: true, message: '请选择社团类型', trigger: 'change' }],
   maxMembers: [{ required: true, message: '请输入最大成员数', trigger: 'blur' }],
 }
 
-// 获取分类标签类型
-const getCategoryType = (category: ClubCategory) => {
-  const typeMap: Record<ClubCategory, string> = {
-    学术科技: 'primary',
-    文艺体育: 'success',
-    志愿服务: 'warning',
-    创新创业: 'danger',
-    其他: 'info',
-  }
-  return typeMap[category] || 'info'
+// 获取分类标签列表
+const getCategoriesList = async () => {
+  await clubStore.fetchCategoriesList()
+  categoriesList.value = clubStore.categoriesList
 }
 
 // 获取状态类型
@@ -319,7 +314,7 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
-// 加载管理的社团
+// TODO:加载管理的社团
 const loadManagedClubs = async () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
@@ -333,7 +328,7 @@ const loadManagedClubs = async () => {
       page: currentPage.value,
       pageSize: pageSize.value,
     })
-    managedClubs.value = data.list
+    managedClubs.value = clubStore.managedClubs
     total.value = data.total
   } catch (error) {
     console.error('加载管理的社团失败:', error)
@@ -443,21 +438,19 @@ const confirmCreate = async () => {
       name: createForm.value.name,
       desc: createForm.value.description,
       requirements: createForm.value.requirements,
-      category: parseInt(createForm.value.category) || 0,
-      maxMembers: createForm.value.maxMembers,
-      tags: createForm.value.tags,
-      coverImage: createForm.value.coverImage,
+      category_id: createForm.value.category_id,
+      tags: createForm.value.tags.join(','),
     })
     showCreateDialog.value = false
     // 重置表单
     createForm.value = {
       name: '',
       description: '',
-      category: '',
+      category_id: 0,
       maxMembers: 50,
       tags: [] as string[],
-      coverImage: '',
       requirements: '',
+      coverImage: '',
     }
     // 重新加载列表
     await loadManagedClubs()
@@ -490,6 +483,7 @@ const confirmDelete = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
+  getCategoriesList()
   loadManagedClubs()
   const isOpen = route.query.isOpen
   if (isOpen == 'true') {

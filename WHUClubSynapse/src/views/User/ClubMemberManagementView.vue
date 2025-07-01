@@ -375,7 +375,7 @@
                 </div>
                 <div class="info-item">
                   <span class="label">申请时间:</span
-                  ><span class="value">{{ formatDate(currentApplication.applyTime) }}</span>
+                  ><span class="value">{{ formatDate(currentApplication.applied_at) }}</span>
                 </div>
               </div>
             </div>
@@ -425,7 +425,7 @@
             <div class="info-section">
               <h4>申请理由</h4>
               <div class="apply-reason">
-                <p>{{ currentApplication.applyReason }}</p>
+                <p>{{ currentApplication.reason }}</p>
               </div>
             </div>
           </div>
@@ -689,7 +689,7 @@ const approveApplication = async (application: ClubApplication) => {
     )
 
     const response = await reviewApplication(club.value!.club_id, {
-      applicationId: application.id,
+      applicationId: application.appli_id,
       action: 'approve',
     })
 
@@ -717,7 +717,7 @@ const confirmReject = async () => {
   try {
     rejectLoading.value = true
     const response = await reviewApplication(club.value!.club_id, {
-      applicationId: currentApplication.value.id,
+      applicationId: currentApplication.value.appli_id,
       action: 'reject',
       reason: rejectForm.value.reason,
     })
@@ -726,13 +726,15 @@ const confirmReject = async () => {
       ElMessage.success('申请已拒绝')
 
       // 立即更新本地数据
-      const index = applications.value.findIndex((app) => app.id === currentApplication.value!.id)
+      const index = applications.value.findIndex(
+        (app) => app.appli_id === currentApplication.value!.appli_id,
+      )
       if (index !== -1) {
         applications.value[index].status = 'rejected'
-        applications.value[index].reviewTime = new Date().toISOString()
+        applications.value[index].reviewed_at = new Date().toISOString()
         applications.value[index].reviewerId = authStore.user?.id?.toString()
         applications.value[index].reviewerName = authStore.user?.username
-        applications.value[index].rejectReason = rejectForm.value.reason
+        applications.value[index].reject_reason = rejectForm.value.reason
       }
 
       showRejectDialog.value = false
@@ -890,7 +892,7 @@ const approveApplicationFromDetail = async (application: ClubApplication) => {
     )
 
     const response = await reviewApplication(club.value!.club_id, {
-      applicationId: application.id,
+      applicationId: application.appli_id,
       action: 'approve',
     })
 
@@ -898,10 +900,10 @@ const approveApplicationFromDetail = async (application: ClubApplication) => {
       ElMessage.success('申请已通过')
 
       // 立即更新本地数据，避免重新加载
-      const index = applications.value.findIndex((app) => app.id === application.id)
+      const index = applications.value.findIndex((app) => app.appli_id === application.appli_id)
       if (index !== -1) {
         applications.value[index].status = 'approved'
-        applications.value[index].reviewTime = new Date().toISOString()
+        applications.value[index].reviewed_at = new Date().toISOString()
         applications.value[index].reviewerId = authStore.user?.id?.toString()
         applications.value[index].reviewerName = authStore.user?.username
       }

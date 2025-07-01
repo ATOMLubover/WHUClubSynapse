@@ -543,7 +543,7 @@ onMounted(async () => {
   }
 
   console.log('clubStore.favoriteClubs:', clubStore.favoriteClubs)
-  if (clubStore.favoriteClubs.find((club) => club.club_id === clubId)) {
+  if (clubStore.favoriteClubs.find((club) => club.club_id == clubId)) {
     club.value!.isFavorite = true
   }
   // 检查 URL 参数，如果有 isApply=true，自动打开申请弹窗

@@ -28,7 +28,10 @@
           <el-table-column prop="category" label="类型" width="100">
             <template #default="{ row }">
               <el-tag :type="getCategoryType(row.category)">
-                {{ getCategoryName(row.category) }}
+                {{
+                  clubStore.categoriesList.find((category) => category.category_id === row.category)
+                    ?.name
+                }}
               </el-tag>
             </template>
           </el-table-column>
@@ -83,19 +86,35 @@
     <el-dialog v-model="detailDialogVisible" title="申请详情" width="800px">
       <div v-if="selectedApplication" class="application-detail">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="社团名称">{{ selectedApplication.clubName }}</el-descriptions-item>
-          <el-descriptions-item label="申请人">{{ selectedApplication.username }}</el-descriptions-item>
-          <el-descriptions-item label="学号">{{ selectedApplication.studentId }}</el-descriptions-item>
+          <el-descriptions-item label="社团名称">{{
+            selectedApplication.clubName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="申请人">{{
+            selectedApplication.username
+          }}</el-descriptions-item>
+          <el-descriptions-item label="学号">{{
+            selectedApplication.studentId
+          }}</el-descriptions-item>
           <el-descriptions-item label="专业">{{ selectedApplication.major }}</el-descriptions-item>
-          <el-descriptions-item label="联系电话">{{ selectedApplication.phone }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{
+            selectedApplication.phone
+          }}</el-descriptions-item>
           <el-descriptions-item label="邮箱">{{ selectedApplication.email }}</el-descriptions-item>
           <el-descriptions-item label="社团类型">
             <el-tag :type="getCategoryType(selectedApplication.category)">
-              {{ getCategoryName(selectedApplication.category) }}
+              {{
+                clubStore.categoriesList.find(
+                  (category) => category.category_id === selectedApplication?.category,
+                )?.name
+              }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="最大人数">{{ selectedApplication.maxMembers }}人</el-descriptions-item>
-          <el-descriptions-item label="申请时间">{{ formatDate(selectedApplication.applyTime) }}</el-descriptions-item>
+          <el-descriptions-item label="最大人数"
+            >{{ selectedApplication.maxMembers }}人</el-descriptions-item
+          >
+          <el-descriptions-item label="申请时间">{{
+            formatDate(selectedApplication.applyTime)
+          }}</el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(selectedApplication.status)">
               {{ getStatusText(selectedApplication.status) }}
@@ -127,7 +146,12 @@
         <div class="detail-section">
           <h4>社团标签</h4>
           <div class="tags-container">
-            <el-tag v-for="tag in selectedApplication.tags" :key="tag" size="small" style="margin-right: 8px;">
+            <el-tag
+              v-for="tag in selectedApplication.tags"
+              :key="tag"
+              size="small"
+              style="margin-right: 8px"
+            >
               {{ tag }}
             </el-tag>
           </div>
@@ -136,11 +160,21 @@
         <div class="detail-section">
           <h4>联系方式</h4>
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="QQ">{{ selectedApplication.contactInfo?.qq || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="微信">{{ selectedApplication.contactInfo?.wechat || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{ selectedApplication.contactInfo?.email || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="电话">{{ selectedApplication.contactInfo?.phone || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="地址" :span="2">{{ selectedApplication.contactInfo?.address || '暂无' }}</el-descriptions-item>
+            <el-descriptions-item label="QQ">{{
+              selectedApplication.contactInfo?.qq || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="微信">{{
+              selectedApplication.contactInfo?.wechat || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{
+              selectedApplication.contactInfo?.email || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="电话">{{
+              selectedApplication.contactInfo?.phone || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="地址" :span="2">{{
+              selectedApplication.contactInfo?.address || '暂无'
+            }}</el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -155,7 +189,10 @@
           <img :src="selectedApplication.coverImage" alt="封面图片" class="cover-image" />
         </div>
 
-        <div v-if="selectedApplication.status === 'rejected' && selectedApplication.rejectReason" class="detail-section">
+        <div
+          v-if="selectedApplication.status === 'rejected' && selectedApplication.rejectReason"
+          class="detail-section"
+        >
           <h4>拒绝原因</h4>
           <p class="reject-reason">{{ selectedApplication.rejectReason }}</p>
         </div>
@@ -177,11 +214,11 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClubStore } from '@/stores/club'
 import { ElMessage } from 'element-plus'
-import type { ClubCreationApplication } from '@/types'
+import type { ClubApplication, ClubCreationApplication } from '@/types'
 
 const router = useRouter()
 const clubStore = useClubStore()
-const applications = ref<ClubCreationApplication[]>([])
+const applications = ref<ClubApplication[]>([])
 const loading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
@@ -193,25 +230,13 @@ const selectedApplication = ref<ClubCreationApplication | null>(null)
 // 获取分类类型
 const getCategoryType = (category: number) => {
   const typeMap: Record<number, string> = {
-    0: 'primary',   // 学术科技
-    1: 'success',   // 文艺体育
-    2: 'warning',   // 志愿服务
-    3: 'danger',    // 创新创业
-    4: 'info'       // 其他
+    0: 'primary', // 学术科技
+    1: 'success', // 文艺体育
+    2: 'warning', // 志愿服务
+    3: 'danger', // 创新创业
+    4: 'info', // 其他
   }
   return typeMap[category] || 'info'
-}
-
-// 获取分类名称
-const getCategoryName = (category: number) => {
-  const nameMap: Record<number, string> = {
-    0: '学术科技',
-    1: '文艺体育',
-    2: '志愿服务',
-    3: '创新创业',
-    4: '其他'
-  }
-  return nameMap[category] || '未知'
 }
 
 // 获取状态类型
@@ -219,7 +244,7 @@ const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
     pending: 'warning',
     approved: 'success',
-    rejected: 'danger'
+    rejected: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -229,7 +254,7 @@ const getStatusText = (status: string) => {
   const textMap: Record<string, string> = {
     pending: '待审核',
     approved: '已通过',
-    rejected: '已拒绝'
+    rejected: '已拒绝',
   }
   return textMap[status] || '未知'
 }
@@ -246,7 +271,7 @@ const loadApplications = async () => {
     const data = await clubStore.fetchPendingClubApplications({
       page: currentPage.value,
       pageSize: pageSize.value,
-      status: filterStatus.value as 'pending' | 'approved' | 'rejected' | undefined
+      status: filterStatus.value as 'pending' | 'approved' | 'rejected' | undefined,
     })
     applications.value = data.list
     total.value = data.total
@@ -285,6 +310,7 @@ const goToClubDetail = (application: ClubCreationApplication) => {
 }
 
 onMounted(() => {
+  clubStore.fetchCategoriesList()
   loadApplications()
 })
 </script>
