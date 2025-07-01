@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -34,18 +35,17 @@ type Category struct {
 func (Category) TableName() string { return "categories" }
 
 type Club struct {
-	ClubId       uint      `gorm:"primaryKey;column:club_id" json:"club_id"`
-	Name         string    `gorm:"size:100;not null" json:"name"`
-	LeaderId     uint      `gorm:"not null" json:"leader_id"`
-	CategoryId   uint      `gorm:"not null" json:"category_id"`
-	Description  string    `gorm:"type:text;not null" json:"description"`
-	LogoUrl      string    `gorm:"size:255" json:"logo_url"`
-	MemberCount  int       `gorm:"default:0;not null" json:"member_count"`
-	Status       string    `gorm:"size:20;default:'pending';not null" json:"status"`
-	Requirements string    `gorm:"type:text" json:"requirements"`
-	CreatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null" json:"updated_at"`
-	Tags         time.Time `json:"type:jsonb"`
+	ClubId       uint           `gorm:"primaryKey;column:club_id" json:"club_id"`
+	Name         string         `gorm:"size:100;not null" json:"name"`
+	LeaderId     uint           `gorm:"not null" json:"leader_id"`
+	CategoryId   uint           `gorm:"not null" json:"category_id"`
+	Description  string         `gorm:"type:text;not null" json:"description"`
+	LogoUrl      string         `gorm:"size:255" json:"logo_url"`
+	MemberCount  int            `gorm:"default:0;not null" json:"member_count"`
+	Requirements string         `gorm:"type:text" json:"requirements"`
+	CreatedAt    time.Time      `gorm:"default:CURRENT_TIMESTAMP;not null" json:"created_at"`
+	UpdatedAt    time.Time      `gorm:"default:CURRENT_TIMESTAMP;not null" json:"updated_at"`
+	Tags         datatypes.JSON `json:"type:jsonb"`
 
 	Leader   User     `gorm:"foreignKey:LeaderId" json:"-"`
 	Category Category `gorm:"foreignKey:CategoryId" json:"-"`
@@ -107,7 +107,7 @@ type ClubFavorite struct {
 	UserId         uint `gorm:"not null"`
 	ClubId         uint `gorm:"not null"`
 	CreatedAt      time.Time
-	DeletedAt      time.Time
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
 
 	User User `gorm:"foreignKey:UserId"`
 	Club Club `gorm:"foreignKey:ClubId"`

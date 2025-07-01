@@ -85,17 +85,26 @@ func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 	}
 
 	ctx.StatusCode(res.StatusCode)
-	io.Copy(ctx.ResponseWriter(), res.Body)
+	for true {
+		if _, err := io.Copy(ctx.ResponseWriter(), res.Body); err != nil {
+			h.Logger.Error("SSE转发中错误: %w", "error", err)
+			break
+		}
+		ctx.ResponseWriter().Flush()
+	}
 }
 
 func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
 	req := ctx.Request().Clone(ctx.Request().Context())
-	req.URL, _ = url.Parse(h.LlmAddr + route)
+	req.URL, _ = url.Parse(h.RagAddr + route)
+	req.RequestURI = ""
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		h.Logger.Error("无法访问RAG服务器", "error", err)
+
 		ctx.StatusCode(iris.StatusServiceUnavailable)
-		ctx.Text("LLM服务器暂不可用")
+		ctx.Text("RAG服务器暂不可用")
 		return
 	}
 	defer res.Body.Close()

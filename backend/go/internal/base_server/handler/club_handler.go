@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"log/slog"
 	"time"
 	"whuclubsynapse-server/internal/base_server/dto"
@@ -60,12 +61,26 @@ func (h *ClubHandler) GetClubList(ctx iris.Context) {
 	var resClubList []dto.ClubBasic
 
 	for _, club := range clubs {
+		var tags []string
+		err = h.sTagsToArray(club.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", club,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resClubList = append(resClubList, dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
 			MemberCount: int(club.MemberCount),
 		})
@@ -175,13 +190,27 @@ func (h *ClubHandler) GetClubInfo(ctx iris.Context, id int) {
 		CreatedAt:    pinnedPost.CreatedAt.Format(time.DateTime),
 	})
 
+	var tags []string
+	err = h.sTagsToArray(club.Tags, &tags)
+	if err != nil {
+		h.Logger.Error("解析社团标签失败",
+			"error", err, "club", club,
+		)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("无法解析社团标签")
+		return
+	}
+
 	resClub := dto.ClubDetail{
 		ClubBasic: dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
 			MemberCount: int(club.MemberCount),
 		},
@@ -207,12 +236,26 @@ func (h *ClubHandler) GetClubsByCategory(ctx iris.Context, catId int) {
 	var resClubsCat []dto.ClubBasic
 
 	for _, club := range clubs {
+		var tags []string
+		err = h.sTagsToArray(club.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", club,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resClubsCat = append(resClubsCat, dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
 			MemberCount: int(club.MemberCount),
 		})
@@ -236,12 +279,26 @@ func (h *ClubHandler) GetLatestClubs(ctx iris.Context) {
 	var resClubs []dto.ClubBasic
 
 	for _, club := range clubs {
+		var tags []string
+		err = h.sTagsToArray(club.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", club,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resClubs = append(resClubs, dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
 			MemberCount: int(club.MemberCount),
 		})
@@ -288,12 +345,26 @@ func (h *ClubHandler) GetMyClubs(ctx iris.Context) {
 	var resClubs []dto.ClubBasic
 
 	for _, club := range clubs {
+		var tags []string
+		err = h.sTagsToArray(club.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", club,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resClubs = append(resClubs, dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format("2006-01-02 15:04:05"),
 			MemberCount: int(club.MemberCount),
 		})
@@ -390,10 +461,24 @@ func (h *ClubHandler) GetMyFavorites(ctx iris.Context) {
 
 	var resClubList []dto.ClubBasic
 	for _, club := range clubs {
+		var tags []string
+		err = json.Unmarshal(club.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", club,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resClubList = append(resClubList, dto.ClubBasic{
 			ClubId:      int(club.ClubId),
 			ClubName:    club.Name,
+			LeaderId:    int(club.LeaderId),
 			Category:    int(club.CategoryId),
+			Tags:        tags,
 			CreatedAt:   club.CreatedAt.Format(time.DateTime),
 			Desc:        club.Description,
 			LogoUrl:     club.LogoUrl,
@@ -463,6 +548,8 @@ func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
 		Name:        reqBody.Name,
 		Description: reqBody.Desc,
 		LeaderId:    uint(userId),
+		CategoryId:  uint(reqBody.CategoryId),
+		Tags:        []byte(reqBody.Tags),
 	})
 	if err != nil {
 		h.Logger.Error("申请创建社团失败",
@@ -535,4 +622,17 @@ func (h *ClubHandler) PostUnfavoriteClub(ctx iris.Context) {
 	}
 
 	ctx.Text("取消收藏社团成功")
+}
+
+func (h *ClubHandler) sTagsToArray(raw []byte, v *[]string) error {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	if err := json.Unmarshal(raw, v); err != nil {
+		h.Logger.Error("解析标签失败", "error", err)
+		return err
+	}
+
+	return nil
 }

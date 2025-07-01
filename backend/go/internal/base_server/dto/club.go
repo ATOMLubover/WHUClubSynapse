@@ -3,6 +3,7 @@ package dto
 type ClubBasic struct {
 	ClubId      int      `json:"club_id"`
 	ClubName    string   `json:"club_name"`
+	LeaderId    int      `json:"leader_id"`
 	Category    int      `json:"category"`
 	Tags        []string `json:"tags"`
 	LogoUrl     string   `json:"logo_url"`

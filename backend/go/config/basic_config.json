@@ -2,9 +2,9 @@
   "env_level": "debug",
   "server_port": 8080,
   "database_dsn": "postgresql://server_user:testpwd123@172.21.144.1:5432/whuclubsynapse?connect_timeout=10&sslmode=disable&application_name=auth_server&search_path=public&client_encoding=UTF8&timezone=UTC",
-  "redis_host": "8.141.92.242",
+  "redis_host": "localhost",
   "redis_port": 6379,
-  "redis_password": "_pwdForRedis1",
+  "redis_password": "lbbbbbb",
   "redis_db": 0,
   "redis_max_conn": 10,
   "redis_min_idle": 3,
@@ -17,5 +17,5 @@
   "jwt_expiration_time": 24,
   "jwt_secret_key": "priestess",
   "llm_addr": "https://095c-91-103-121-55.ngrok-free.app",
-  "rag_addr": "localhost:8888"
+  "rag_addr": "http://5c3f836f.cpolar.io"
 }

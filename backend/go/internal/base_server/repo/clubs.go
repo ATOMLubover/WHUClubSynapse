@@ -59,6 +59,7 @@ func (r *sClubRepo) GetClubInfo(id int) (*dbstruct.Club, error) {
 
 	var club dbstruct.Club
 	err := r.database.
+		Model(&dbstruct.Club{}).
 		Where("club_id = ?", id).
 		First(&club).Error
 
