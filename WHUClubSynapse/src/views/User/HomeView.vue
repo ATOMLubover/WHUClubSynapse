@@ -44,18 +44,37 @@
               <div class="ai-search-option">
                 <el-checkbox 
                   v-model="useAiSearch" 
-                  :disabled="!isAiSearchEnabled"
+                  :disabled="!isAiSearchEnabled || !aiAvailable"
                   @change="handleAiSearchChange"
                 >
                   <el-icon><ChatDotRound /></el-icon>
                   询问AI智能体
                   <el-tooltip 
-                    content="启用AI智能搜索，获得更精准的搜索结果和建议" 
+                    :content="aiAvailable ? '启用AI智能搜索，获得更精准的搜索结果和建议' : 'AI服务暂时不可用，请稍后重试'" 
                     placement="top"
                   >
                     <el-icon class="help-icon"><QuestionFilled /></el-icon>
                   </el-tooltip>
                 </el-checkbox>
+                <!-- AI状态指示器 -->
+                <el-tag 
+                  v-if="!aiAvailable" 
+                  type="warning" 
+                  size="small" 
+                  class="ai-status-tag"
+                >
+                  AI不可用
+                </el-tag>
+                <!-- AI连通性测试按钮 -->
+                <el-button 
+                  type="info" 
+                  size="small" 
+                  @click="testAiConnectivity"
+                  class="ai-test-btn"
+                  style="margin-left: 12px;"
+                >
+                  AI连通性测试
+                </el-button>
               </div>
             </div>
           </el-card>
@@ -79,19 +98,8 @@
               </div>
             </template>
             <div class="ai-result-content">
-              <div class="ai-answer" v-html="formatAiAnswer(aiSearchResult.answer)"></div>
-              <div v-if="aiSearchResult.source && aiSearchResult.source.length > 0" class="ai-sources">
-                <div class="sources-title">参考来源：</div>
-                <div class="sources-list">
-                  <div 
-                    v-for="source in aiSearchResult.source" 
-                    :key="source.id" 
-                    class="source-item"
-                  >
-                    <el-icon><Document /></el-icon>
-                    <span>{{ source.metadata.source }} (第{{ source.metadata.page }}页)</span>
-                  </div>
-                </div>
+              <div class="ai-answer">
+                <MarkdownRenderer :content="aiSearchResult.answer" />
               </div>
             </div>
           </el-card>
@@ -295,10 +303,11 @@ import {
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import ClubCard from '@/components/Club/ClubCard.vue'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { resetMockData } from '@/utils/mockData'
 import { ElMessage } from 'element-plus'
-import { smartSearch } from '@/api/ai-search'
+import { smartSearch, checkAiServiceHealth } from '@/api/ai-search'
 import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
 
 const router = useRouter()
@@ -343,7 +352,18 @@ const searchLoading = ref(false)
 const showAiResult = ref(false)
 const aiSearchResult = ref<SmartSearchResponse | null>(null)
 const useAiSearch = ref(false)
+const aiAvailable = ref(true) // AI服务可用性状态
 const isAiSearchEnabled = computed(() => checkAiSearchEnabled())
+
+// 检查AI服务可用性
+const checkAiAvailability = async () => {
+  try {
+    aiAvailable.value = await checkAiServiceHealth()
+  } catch (error) {
+    console.error('检查AI服务可用性失败:', error)
+    aiAvailable.value = false
+  }
+}
 
 // 计算总数
 const getTotalCount = () => {
@@ -420,6 +440,12 @@ const handleSearch = async () => {
   searchLoading.value = true
   try {
     if (useAiSearch.value) {
+      // 检查AI可用性
+      if (!aiAvailable.value) {
+        ElMessage.error('AI服务暂时不可用，请稍后重试')
+        return
+      }
+      
       // 调用AI搜索
       const result = await smartSearch({ query: searchKeyword.value })
       aiSearchResult.value = result
@@ -433,7 +459,15 @@ const handleSearch = async () => {
     }
   } catch (error) {
     console.error('搜索失败:', error)
-    ElMessage.error('搜索失败，请稍后再试')
+    if (error instanceof Error && error.message.includes('AI连接失败')) {
+      aiAvailable.value = false
+      ElMessage.error('AI连接失败，请稍后重试')
+      // AI连接失败时不显示任何搜索结果
+      showAiResult.value = false
+      aiSearchResult.value = null
+    } else {
+      ElMessage.error('搜索失败，请稍后再试')
+    }
   } finally {
     searchLoading.value = false
   }
@@ -451,51 +485,63 @@ const hideAiResult = () => {
   aiSearchResult.value = null
 }
 
-// 格式化AI回答
-const formatAiAnswer = (answer: string) => {
-  // 简单的Markdown格式化
-  return answer
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br>')
+// AI连通性测试按钮逻辑
+const testAiConnectivity = async () => {
+  const loading = ElMessage({ message: '正在检测AI连通性...', type: 'info', duration: 0 })
+  try {
+    const healthy = await checkAiServiceHealth()
+    ElMessage.closeAll()
+    if (healthy) {
+      ElMessage.success('AI服务可用')
+      aiAvailable.value = true
+    } else {
+      ElMessage.error('AI服务不可用')
+      aiAvailable.value = false
+    }
+  } catch (error) {
+    ElMessage.closeAll()
+    ElMessage.error('AI服务检测失败')
+    aiAvailable.value = false
+  }
 }
 
 // 初始化数据
 onMounted(async () => {
+  // 检查AI服务可用性
+  await checkAiAvailability()
+  
+  // 获取分类数据
   try {
-    console.log('HomeView开始初始化')
-
-    // 等待分类数据加载完成（App.vue中已开始加载）
-    if (clubStore.categoriesLoading) {
-      console.log('等待分类数据加载完成...')
-      // 等待分类加载完成
-      let retries = 0
-      while (clubStore.categoriesLoading && retries < 50) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        retries++
-      }
-    }
-
-    // 先获取社团列表
-    await clubStore.fetchClubs()
-    console.log('社团列表加载完成')
-
-    if (authStore.isLoggedIn) {
-      await clubStore.fetchFavoriteClubs()
-    }
-
-    // 并行获取侧边栏数据（不阻塞主列表显示）
-    Promise.all([
-      clubStore.fetchHotClubs(5),
-      clubStore.fetchLatestClubs(5),
-      // authStore.isLoggedIn ? clubStore.fetchRecommendedClubs(3) : Promise.resolve(),
-    ]).catch((error) => {
-      console.error('侧边栏数据加载失败:', error)
-      // 不影响主界面显示
-    })
+    await clubStore.fetchCategoriesList()
+    categories.value = clubStore.categoriesList
   } catch (error) {
-    console.error('HomeView初始化失败:', error)
-    ElMessage.error('页面初始化失败，请刷新重试')
+    console.error('获取分类数据失败:', error)
+  }
+
+  // 获取社团数据
+  try {
+    await clubStore.fetchClubs()
+  } catch (error) {
+    console.error('获取社团数据失败:', error)
+  }
+
+  // 获取热门社团
+  try {
+    await clubStore.fetchHotClubs(6)
+  } catch (error) {
+    console.error('获取热门社团失败:', error)
+  }
+
+  // 获取最新社团
+  try {
+    await clubStore.fetchLatestClubs(6)
+  } catch (error) {
+    console.error('获取最新社团失败:', error)
+  }
+
+  // 开发模式下的数据重置
+  if (isDev) {
+    resetMockData()
   }
 })
 </script>
@@ -597,6 +643,11 @@ onMounted(async () => {
   font-size: 14px;
 }
 
+.ai-status-tag {
+  margin-left: 8px;
+  font-size: 11px;
+}
+
 /* AI搜索结果 */
 .ai-search-result {
   margin-bottom: 16px;
@@ -654,6 +705,63 @@ onMounted(async () => {
   font-size: 14px;
 }
 
+.ai-answer :deep(.markdown-renderer) {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ai-answer :deep(.markdown-renderer h1) {
+  font-size: 1.3em;
+  margin: 0.6em 0 0.3em 0;
+}
+
+.ai-answer :deep(.markdown-renderer h2) {
+  font-size: 1.2em;
+  margin: 0.5em 0 0.2em 0;
+}
+
+.ai-answer :deep(.markdown-renderer h3) {
+  font-size: 1.1em;
+  margin: 0.4em 0 0.2em 0;
+}
+
+.ai-answer :deep(.markdown-renderer p) {
+  margin: 0.4em 0;
+}
+
+.ai-answer :deep(.markdown-renderer code) {
+  background-color: #f6f8fa;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.ai-answer :deep(.markdown-renderer pre) {
+  background-color: #f6f8fa;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.4em 0;
+  font-size: 0.85em;
+}
+
+.ai-answer :deep(.markdown-renderer blockquote) {
+  margin: 0.4em 0;
+  padding: 0 0.6em;
+  color: #6a737d;
+  border-left: 0.2em solid #dfe2e5;
+  font-size: 0.9em;
+}
+
+.ai-answer :deep(.katex) {
+  font-size: 1em;
+}
+
+.ai-answer :deep(.katex-display) {
+  margin: 0.4em 0;
+  text-align: center;
+}
+
 .ai-answer strong {
   color: #409eff;
   font-weight: 600;
@@ -662,41 +770,6 @@ onMounted(async () => {
 .ai-answer em {
   color: #67c23a;
   font-style: italic;
-}
-
-.ai-sources {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.sources-title {
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #606266;
-  font-size: 14px;
-}
-
-.sources-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.source-item {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #606266;
-  border: 1px solid #e4e7ed;
-}
-
-.source-item .el-icon {
-  margin-right: 6px;
-  color: #909399;
 }
 
 /* 分类导航 */

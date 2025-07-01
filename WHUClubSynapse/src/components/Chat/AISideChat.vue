@@ -5,7 +5,10 @@
       v-if="isSideChatEnabled"
       class="chat-float-button"
       @click="toggleChat"
-      :class="{ 'chat-open': isChatOpen }"
+      :class="{ 
+        'chat-open': isChatOpen,
+        'ai-unavailable': !aiAvailable 
+      }"
     >
       <el-icon v-if="!isChatOpen" class="chat-icon">
         <ChatDotRound />
@@ -13,6 +16,10 @@
       <el-icon v-else class="close-icon">
         <Close />
       </el-icon>
+      <!-- AI状态指示器 -->
+      <div v-if="!aiAvailable" class="ai-status-indicator">
+        <el-icon><Warning /></el-icon>
+      </div>
     </div>
 
     <!-- 对话窗口 -->
@@ -21,8 +28,26 @@
         <div class="chat-title">
           <el-icon class="ai-icon"><ChatDotRound /></el-icon>
           <span>AI智能助手</span>
+          <!-- AI状态标签 -->
+          <el-tag 
+            v-if="!aiAvailable" 
+            type="warning" 
+            size="small" 
+            class="ai-status-tag"
+          >
+            AI不可用
+          </el-tag>
         </div>
         <div class="chat-actions">
+          <el-button 
+            type="info" 
+            size="small" 
+            @click="testAiConnectivity"
+            class="ai-test-btn"
+            style="margin-right: 8px;"
+          >
+            AI连通性测试
+          </el-button>
           <el-button 
             type="text" 
             size="small" 
@@ -49,8 +74,31 @@
             <el-icon><ChatDotRound /></el-icon>
           </div>
           <h3>欢迎使用AI智能助手</h3>
-          <p>我可以帮助您了解社团相关信息，支持多轮对话。</p>
-          <div class="suggestions">
+          <p v-if="aiAvailable">我可以帮助您了解社团相关信息，支持多轮对话。</p>
+          <p v-else class="ai-unavailable-text">AI服务暂时不可用，请稍后重试。</p>
+          
+          <!-- AI不可用时的提示 -->
+          <div v-if="!aiAvailable" class="ai-unavailable-notice">
+            <el-alert
+              title="AI服务连接失败"
+              type="warning"
+              :closable="false"
+              show-icon
+            >
+              <template #default>
+                <p>当前无法连接到AI服务，可能的原因：</p>
+                <ul>
+                  <li>AI服务暂时不可用</li>
+                  <li>网络连接问题</li>
+                  <li>服务配置错误</li>
+                </ul>
+                <p>请稍后重试或联系管理员。</p>
+              </template>
+            </el-alert>
+          </div>
+          
+          <!-- AI可用时的建议问题 -->
+          <div v-else class="suggestions">
             <div class="suggestion-title">您可以问我：</div>
             <div class="suggestion-list">
               <el-tag 
@@ -83,23 +131,9 @@
               </el-avatar>
             </div>
             <div class="message-content">
-              <div class="message-text" v-html="formatMessage(message.content)"></div>
-              
-              <!-- 来源信息 -->
-              <div v-if="message.sources && message.sources.length > 0" class="message-sources">
-                <div class="sources-title">参考来源：</div>
-                <div class="sources-list">
-                  <div 
-                    v-for="source in message.sources" 
-                    :key="source.id"
-                    class="source-item"
-                  >
-                    <el-icon><Document /></el-icon>
-                    <span>{{ source.metadata.source }} (第{{ source.metadata.page }}页)</span>
-                  </div>
-                </div>
+              <div class="message-text">
+                <MarkdownRenderer :content="message.content" />
               </div>
-              
               <div class="message-time">{{ formatTime(message.timestamp) }}</div>
             </div>
           </div>
@@ -134,19 +168,21 @@
             @keydown.ctrl.enter="sendMessage"
             resize="none"
             class="message-input"
+            :disabled="!aiAvailable"
           />
           <el-button 
             type="primary" 
             @click="sendMessage"
             :loading="isLoading"
-            :disabled="!inputMessage.trim()"
+            :disabled="!inputMessage.trim() || !aiAvailable"
             class="send-button"
           >
             <el-icon><Position /></el-icon>
           </el-button>
         </div>
         <div class="input-tips">
-          <span>按 Enter 发送，Ctrl + Enter 换行</span>
+          <span v-if="aiAvailable">按 Enter 发送，Ctrl + Enter 换行</span>
+          <span v-else class="ai-unavailable-tip">AI服务不可用，无法发送消息</span>
         </div>
       </div>
     </div>
@@ -164,16 +200,19 @@ import {
   Document,
   Loading,
   Position,
+  Warning,
 } from '@element-plus/icons-vue'
-import { sideChat } from '@/api/ai-search'
+import { sideChat, checkAiServiceHealth } from '@/api/ai-search'
 import { isSideChatEnabled as checkSideChatEnabled } from '@/config/ai-search'
 import type { ChatMessage, SmartSearchSource } from '@/types'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 // 响应式数据
 const isChatOpen = ref(false)
 const inputMessage = ref('')
 const isLoading = ref(false)
 const chatContentRef = ref<HTMLElement>()
+const aiAvailable = ref(true) // AI服务可用性状态
 
 // 对话历史
 const chatHistory = ref<(ChatMessage & { sources?: SmartSearchSource[] })[]>([])
@@ -198,6 +237,8 @@ const isSideChatEnabled = computed(() => checkSideChatEnabled())
 const toggleChat = () => {
   isChatOpen.value = !isChatOpen.value
   if (isChatOpen.value) {
+    // 打开对话窗口时检查AI可用性
+    checkAiAvailability()
     nextTick(() => {
       scrollToBottom()
     })
@@ -209,9 +250,19 @@ const clearHistory = () => {
   ElMessage.success('对话历史已清空')
 }
 
+// 检查AI服务可用性
+const checkAiAvailability = async () => {
+  try {
+    aiAvailable.value = await checkAiServiceHealth()
+  } catch (error) {
+    console.error('检查AI服务可用性失败:', error)
+    aiAvailable.value = false
+  }
+}
+
 const sendMessage = async (message?: string) => {
   const content = message || inputMessage.value.trim()
-  if (!content) return
+  if (!content || !aiAvailable.value) return
 
   // 添加用户消息
   const userMessage: ChatMessage = {
@@ -250,15 +301,16 @@ const sendMessage = async (message?: string) => {
     scrollToBottom()
   } catch (error) {
     console.error('发送消息失败:', error)
-    ElMessage.error('发送失败，请稍后重试')
     
-    // 添加错误消息
-    const errorMessage: ChatMessage = {
-      role: 'assistant',
-      content: '抱歉，我暂时无法回答您的问题，请稍后重试。',
-      timestamp: new Date().toISOString()
+    // 检查是否是AI连接失败
+    if (error instanceof Error && error.message.includes('AI连接失败')) {
+      aiAvailable.value = false
+      ElMessage.error('AI连接失败，请稍后重试')
+    } else {
+      ElMessage.error('发送失败，请稍后重试')
     }
-    chatHistory.value.push(errorMessage)
+    
+    // AI连接失败时不添加任何错误消息
   } finally {
     isLoading.value = false
   }
@@ -277,14 +329,6 @@ const scrollToBottom = () => {
   if (chatContentRef.value) {
     chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight
   }
-}
-
-const formatMessage = (content: string) => {
-  // 简单的Markdown格式化
-  return content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br>')
 }
 
 const formatTime = (timestamp?: string) => {
@@ -316,14 +360,40 @@ watch(chatHistory, () => {
 }, { deep: true })
 
 onMounted(() => {
-  // 初始化
+  // 初始化时检查AI可用性
+  checkAiAvailability()
 })
+
+// AI连通性测试按钮逻辑
+const testAiConnectivity = async () => {
+  const loading = ElMessage({ message: '正在检测AI连通性...', type: 'info', duration: 0 })
+  try {
+    const healthy = await checkAiServiceHealth()
+    ElMessage.closeAll()
+    if (healthy) {
+      ElMessage.success('AI服务可用')
+      aiAvailable.value = true
+    } else {
+      ElMessage.error('AI服务不可用')
+      aiAvailable.value = false
+    }
+  } catch (error) {
+    ElMessage.closeAll()
+    ElMessage.error('AI服务检测失败')
+    aiAvailable.value = false
+  }
+}
 </script>
 
 <style scoped>
 .ai-side-chat {
-  position: relative;
-  z-index: 1000;
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.ai-side-chat > * {
+  pointer-events: auto;
 }
 
 /* 悬浮球 */
@@ -342,7 +412,8 @@ onMounted(() => {
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
   transition: all 0.3s ease;
-  z-index: 1001;
+  z-index: 9999;
+  position: fixed;
 }
 
 .chat-float-button:hover {
@@ -354,8 +425,45 @@ onMounted(() => {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+.chat-float-button.ai-unavailable {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  opacity: 0.8;
+}
+
 .chat-icon, .close-icon {
   font-size: 24px;
+}
+
+/* AI状态指示器 */
+.ai-status-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: #f56c6c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* 对话窗口 */
@@ -409,6 +517,10 @@ onMounted(() => {
   font-size: 18px;
 }
 
+.ai-status-tag {
+  margin-left: 8px;
+}
+
 .chat-actions {
   display: flex;
   gap: 8px;
@@ -454,6 +566,27 @@ onMounted(() => {
 .welcome-message p {
   margin: 0 0 24px 0;
   font-size: 14px;
+}
+
+.ai-unavailable-text {
+  color: #f56c6c;
+  font-weight: 500;
+}
+
+/* AI不可用提示 */
+.ai-unavailable-notice {
+  margin: 20px 0;
+  text-align: left;
+}
+
+.ai-unavailable-notice ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.ai-unavailable-notice li {
+  margin: 4px 0;
+  font-size: 13px;
 }
 
 .suggestions {
@@ -532,6 +665,63 @@ onMounted(() => {
   word-wrap: break-word;
 }
 
+.message-text :deep(.markdown-renderer) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message-text :deep(.markdown-renderer h1) {
+  font-size: 1.3em;
+  margin: 0.6em 0 0.3em 0;
+}
+
+.message-text :deep(.markdown-renderer h2) {
+  font-size: 1.2em;
+  margin: 0.5em 0 0.2em 0;
+}
+
+.message-text :deep(.markdown-renderer h3) {
+  font-size: 1.1em;
+  margin: 0.4em 0 0.2em 0;
+}
+
+.message-text :deep(.markdown-renderer p) {
+  margin: 0.4em 0;
+}
+
+.message-text :deep(.markdown-renderer code) {
+  background-color: #f6f8fa;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.message-text :deep(.markdown-renderer pre) {
+  background-color: #f6f8fa;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.4em 0;
+  font-size: 0.85em;
+}
+
+.message-text :deep(.markdown-renderer blockquote) {
+  margin: 0.4em 0;
+  padding: 0 0.6em;
+  color: #6a737d;
+  border-left: 0.2em solid #dfe2e5;
+  font-size: 0.9em;
+}
+
+.message-text :deep(.katex) {
+  font-size: 1em;
+}
+
+.message-text :deep(.katex-display) {
+  margin: 0.4em 0;
+  text-align: center;
+}
+
 .message-item.user .message-text {
   background: #667eea;
   color: white;
@@ -551,38 +741,6 @@ onMounted(() => {
 
 .message-text em {
   font-style: italic;
-}
-
-/* 来源信息 */
-.message-sources {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.sources-title {
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: #667eea;
-}
-
-.sources-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.source-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #606266;
-}
-
-.source-item .el-icon {
-  font-size: 12px;
 }
 
 /* 消息时间 */
@@ -644,6 +802,12 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
+.message-input :deep(.el-textarea__inner:disabled) {
+  background-color: #f5f7fa;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+
 .send-button {
   width: 40px;
   height: 40px;
@@ -671,6 +835,10 @@ onMounted(() => {
   font-size: 11px;
   color: #909399;
   text-align: center;
+}
+
+.ai-unavailable-tip {
+  color: #f56c6c;
 }
 
 /* 响应式设计 */
