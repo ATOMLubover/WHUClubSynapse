@@ -20,6 +20,9 @@ type ClubService interface {
 	GetClubNum() (int64, error)
 	GetClubCategories() ([]*dbstruct.Category, error)
 
+	GetJoinApplisForClub(clubId int) ([]*dbstruct.JoinClubAppli, error)
+	GetCreateApplisForUser(userId int) ([]*dbstruct.CreateClubAppli, error)
+
 	GetUserCreateApplis(userId int) ([]*dbstruct.CreateClubAppli, error)
 	GetUserJoinApplis(userId int) ([]*dbstruct.JoinClubAppli, error)
 
@@ -292,4 +295,12 @@ func (s *sClubService) GetFavoriteClubs(userId int) ([]*dbstruct.Club, error) {
 	}
 
 	return clubs, nil
+}
+
+func (s *sClubService) GetJoinApplisForClub(clubId int) ([]*dbstruct.JoinClubAppli, error) {
+	return s.joinClubAppliRepo.GetJoinClubAppliList(clubId)
+}
+
+func (s *sClubService) GetCreateApplisForUser(userId int) ([]*dbstruct.CreateClubAppli, error) {
+	return s.createClubAppliRepo.GetCreateClubAppliList(userId)
 }

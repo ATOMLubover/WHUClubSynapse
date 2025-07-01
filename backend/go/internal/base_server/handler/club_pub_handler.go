@@ -21,6 +21,8 @@ type ClubPubHandler struct {
 }
 
 func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
+	b.Handle("GET", "/join_applis/{id:int}", "GetJoinApplisForClub")
+
 	b.Handle("POST", "/update", "PostApplyForUpdateClubInfo")
 
 	b.Handle("PUT", "/proc_join", "PutProcAppliForJoinClub")
@@ -95,4 +97,32 @@ func (h *ClubPubHandler) PutProcAppliForJoinClub(ctx iris.Context) {
 	}
 
 	ctx.Text("通过社团更新申请成功")
+}
+
+func (h *ClubHandler) GetJoinApplisForClub(ctx iris.Context, id int) {
+	joinApplis, err := h.ClubService.
+		GetJoinApplisForClub(id)
+	if err != nil {
+		h.Logger.Error("获取社团加入申请列表失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法获取社团加入申请列表")
+		return
+	}
+
+	var resApplisList []*dto.JoinClubAppliResponse
+	for _, appli := range joinApplis {
+		resApplisList = append(resApplisList, &dto.JoinClubAppliResponse{
+			AppliId:      int(appli.JoinAppliId),
+			AppliedAt:    appli.AppliedAt.Format("2006-01-02 15:04:05"),
+			ClubId:       int(appli.ClubId),
+			ApplicantId:  int(appli.UserId),
+			Reason:       appli.ApplyReason,
+			Status:       appli.Status,
+			RejectReason: appli.RejectedReason,
+			ReviewedAt:   appli.RejectedReason,
+		})
+	}
+
+	ctx.JSON(resApplisList)
 }

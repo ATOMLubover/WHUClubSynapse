@@ -12,7 +12,7 @@ import (
 
 type CreateClubAppliRepo interface {
 	AddCreateClubAppli(appli *dbstruct.CreateClubAppli) error
-	GetCreateClubAppliList(offset, num int) ([]*dbstruct.CreateClubAppli, error)
+	GetCreateClubAppliList(userId int) ([]*dbstruct.CreateClubAppli, error)
 	GetApplisByUserId(userId int) ([]*dbstruct.CreateClubAppli, error)
 	GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstruct.CreateClubAppli, error)
 	ApproveAppli(tx *gorm.DB, appliId int) error
@@ -54,15 +54,11 @@ func (r *sCreateClubAppliRepo) AddCreateClubAppli(appli *dbstruct.CreateClubAppl
 	})
 }
 
-func (r *sCreateClubAppliRepo) GetCreateClubAppliList(offset, num int) ([]*dbstruct.CreateClubAppli, error) {
-	if num <= 0 || offset < 0 {
-		return nil, errors.New("无效参数")
-	}
-
+func (r *sCreateClubAppliRepo) GetCreateClubAppliList(clubId int) ([]*dbstruct.CreateClubAppli, error) {
 	var list []*dbstruct.CreateClubAppli
 	err := r.database.
-		Limit(num).
-		Offset(offset).
+		Model(&dbstruct.CreateClubAppli{}).
+		Where("user_id = ?", clubId).
 		Find(&list).Error
 	return list, err
 }

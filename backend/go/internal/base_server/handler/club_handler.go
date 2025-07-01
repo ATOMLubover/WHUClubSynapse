@@ -431,6 +431,8 @@ func (h *ClubHandler) GetMyJoinApplis(ctx iris.Context) {
 		resApplis = append(resApplis, &dto.JoinClubAppliResponse{
 			AppliId:      int(appli.JoinAppliId),
 			AppliedAt:    appli.AppliedAt.Format(time.RFC3339),
+			ClubId:       int(appli.ClubId),
+			ApplicantId:  int(appli.UserId),
 			Reason:       appli.ApplyReason,
 			RejectReason: appli.RejectedReason,
 			ReviewedAt:   appli.ReviewedAt.Format(time.RFC3339),
