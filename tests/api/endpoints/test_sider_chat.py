@@ -1,83 +1,83 @@
 import pytest
+import json
 from fastapi.testclient import TestClient
 from app.main import app
 
-# 使用 TestClient 初始化，它允许我们向 FastAPI 应用发送模拟请求
 client = TestClient(app)
 
 
-def test_chat_initial_message():
+def test_sider_chat_streaming():
     """
-    测试场景 1: 首次发起对话，历史记录为空。
+    Tests the sider-chat endpoint with a follow-up question,
+    ensuring it correctly handles streaming responses.
     """
-    print("\n--- Running Test: Initial Chat Message ---")
-
-    # 模拟用户第一次提问，此时 history 列表为空
-    chat_request_body = {
-        "query": "如何创建一个社团？",
-        "history": []
-    }
-
-    response = client.post("/chat", json=chat_request_body)
-
-    assert response.status_code == 200
-
-    response_data = response.json()
-
-    # a. 检查核心键是否存在
-    assert "answer" in response_data
-    assert "source" in response_data
-
-    # b. 检查值的类型是否正确
-    assert isinstance(response_data["answer"], str)
-    assert isinstance(response_data["source"], list)
-
-    # c. 检查内容是否非空
-    assert response_data["answer"] != ""
-    # RAG 检索可能会返回空列表，但这本身是有效的结果，所以我们只检查类型
-
-    # 打印响应内容，便于手动验证 (运行时需加 -s 参数)
-    print("Response for initial message:")
-    print(response_data)
-
-
-def test_chat_follow_up_message():
-    """
-    测试场景 2: 进行跟进提问，提供历史对话记录。
-    """
-    print("\n--- Running Test: Follow-up Chat Message ---")
-
-    # 模拟用户在得到第一次回答后，提出一个相关的跟进问题
-    chat_request_body = {
-        "query": "那需要多少人才能发起呢？",
+    # Define a sample chat query with history
+    chat_query = {
+        "query": "审核一般需要多久？",
         "history": [
             {
                 "role": "user",
-                "content": "如何创建一个社团？"
+                "content": "如何创建一个新的社团？"
             },
             {
                 "role": "assistant",
-                "content": "创建社团需要明确目标、组建团队、提交申请并完成审批流程..."
+                "content": "要创建一个新的社团，您需要先提交一份包含社团基本信息的申请表..."
             }
         ]
     }
 
-    response = client.post("/api/v1/chat", json=chat_request_body)
+    headers = {
+        "X-API-Key": "super_plus_api_key"
+    }
 
+    # Send a POST request to the /sider-chat endpoint
+    response = client.post("/sider-chat", json=chat_query, headers=headers)
+
+    # Assert the response status code is 200
     assert response.status_code == 200
+    assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
 
-    response_data = response.json()
+    # Process the event stream
+    source_received = False
+    answer_tokens = []
+    end_received = False
+    event_type = None
 
-    # a. 检查核心键是否存在
-    assert "answer" in response_data
-    assert "source" in response_data
+    for line in response.iter_lines():
+        if line.startswith("event: "):
+            event_type = line[len("event: "):]
+            continue
 
-    # b. 检查值的类型是否正确
-    assert isinstance(response_data["answer"], str)
-    assert isinstance(response_data["source"], list)
+        if line.startswith("data: "):
+            data_str = line[len("data: "):]
+            if not data_str:
+                continue
 
-    # c. 检查回答是否非空
-    assert response_data["answer"] != ""
+            if event_type == "source":
+                source_data = json.loads(data_str)
+                assert isinstance(source_data, list)
+                source_received = True
 
-    print("Response for follow-up message:")
-    print(response_data)
+            elif event_type == "token":
+                token_data = json.loads(data_str)
+                assert "token" in token_data
+                answer_tokens.append(token_data["token"])
+
+            elif event_type == "end":
+                end_received = True
+                break
+
+    # Final assertions after processing the stream
+    assert source_received, "Source event was not received"
+    assert end_received, "End event was not received"
+    assert len(answer_tokens) > 0, "No tokens were received"
+
+    full_answer = "".join(answer_tokens)
+    assert isinstance(full_answer, str)
+    assert len(full_answer) > 0
+
+    # Print the reconstructed answer for manual verification
+    print("\n--- Reconstructed Answer ---")
+    print(full_answer)
+    print("\n--- Source Documents ---")
+    print(source_data)

@@ -94,8 +94,7 @@ async def sider_chat(chat_query: ChatQuery):
 
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
-        source_data = [doc.dict() for doc in retrieved_docs]
-        yield f"event: source\ndata: {json.dumps(source_data)}\n\n"
+        yield f"event: source\ndata: {json.dumps(retrieved_docs)}\n\n"
         logger.info("已将溯源文档事件发送到前端")
 
         # b. 准备并开始流式调用 vLLM
