@@ -21,7 +21,7 @@
               </div>
               <div class="meta-item">
                 <el-icon><UserFilled /></el-icon>
-                <span>成员数：{{ club.member_count }}/{{ club.maxMembers }}</span>
+                <span>成员数：{{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }}</span>
               </div>
               <div class="meta-item">
                 <el-icon><Calendar /></el-icon>
@@ -42,13 +42,9 @@
               <el-button type="primary" size="large" :disabled="isDisabled" @click="handleApply">
                 {{ getApplyButtonText() }}
               </el-button>
-              <el-button
-                v-if="authStore.isLoggedIn"
-                :icon="isFavorited ? StarFilled : Star"
-                size="large"
-                @click="toggleFavorite"
-              >
-                {{ isFavorited ? '已收藏' : '收藏' }}
+              <el-button v-if="authStore.isLoggedIn" size="large" @click="toggleFavorite">
+                <div :class="['custom-heart-icon', { favorited: isFavorited }]"></div>
+                <span style="margin-left: 8px">{{ isFavorited ? '已收藏' : '收藏' }}</span>
               </el-button>
               <el-button :icon="Share" size="large" @click="handleShare"> 分享 </el-button>
             </div>
@@ -274,8 +270,6 @@ import {
   User,
   UserFilled,
   Calendar,
-  Star,
-  StarFilled,
   Share,
   Document,
   Bell,
@@ -363,7 +357,7 @@ const isUserManaged = computed(() => {
 // 满员状态
 const isFull = computed(() => {
   if (!club.value) return false
-  return club.value.member_count >= (club.value.maxMembers ?? 50)
+  return club.value.member_count >= clubStore.MAX_MEMBER_NUM
 })
 
 // 将 isDisabled 改为计算属性
@@ -372,14 +366,13 @@ const isDisabled = computed(() => {
   if (!club.value) return true
 
   if (club.value.status === 'joined') return true
-  if (club.value.status === 'managed') return true
   if (club.value.status === 'pending') return true
 
   // 如果已经申请过了，就禁用
   if (hasApplied.value) return true
 
   // 如果社团已满员
-  if (club.value.member_count >= (club.value.maxMembers ?? 50)) return true
+  if (club.value.member_count >= clubStore.MAX_MEMBER_NUM) return true
 
   return false
 })
@@ -512,11 +505,10 @@ const getApplyButtonText = () => {
   // 根据社团状态返回对应文本
   if (club.value.status === 'joined') return '已加入'
   if (club.value.status === 'pending') return '等待审核中'
-  if (club.value.status === 'managed') return '管理中'
   if (hasApplied.value) return '等待审核中'
 
   // 如果社团已满员
-  if (club.value.member_count >= (club.value.maxMembers ?? 50)) return '已满员'
+  if (club.value.member_count >= clubStore.MAX_MEMBER_NUM) return '已满员'
 
   return '申请加入'
 }
@@ -541,8 +533,17 @@ onMounted(async () => {
     await clubStore.fetchFavoriteClubs()
     console.log('获取收藏社团完成')
   }
+  if (clubStore.applications.length == 0) {
+    await clubStore.fetchPendingClubApplications({})
+    console.log('获取加入社团申请完成')
+  }
 
+  console.log('clubStore.applications:', clubStore.applications)
   console.log('clubStore.favoriteClubs:', clubStore.favoriteClubs)
+
+  if (clubStore.applications.find((application) => application.club_id == clubId)) {
+    club.value!.status = 'pending'
+  }
   if (clubStore.favoriteClubs.find((club) => club.club_id == clubId)) {
     club.value!.isFavorite = true
   }
@@ -833,5 +834,61 @@ onMounted(async () => {
 }
 .ai-atmosphere-container {
   min-height: 550px;
+}
+
+/* 自定义心形收藏图标 */
+.custom-heart-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  transform: rotate(-45deg);
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.custom-heart-icon::before,
+.custom-heart-icon::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  width: 8px;
+  height: 13px;
+  background: #c0c4cc;
+  border-radius: 8px 8px 0 0;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+  transition: all 0.3s ease;
+}
+
+.custom-heart-icon::after {
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+}
+
+.custom-heart-icon.favorited::before,
+.custom-heart-icon.favorited::after {
+  background: #f56c6c;
+  animation: heartBeat 0.6s ease-in-out;
+}
+
+/* 心跳动画效果 */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 悬停效果 */
+.el-button:hover .custom-heart-icon::before,
+.el-button:hover .custom-heart-icon::after {
+  background: #f56c6c;
 }
 </style>

@@ -42,36 +42,35 @@
 
               <!-- AI智能搜索选项 -->
               <div class="ai-search-option">
-                <el-checkbox 
-                  v-model="useAiSearch" 
+                <el-checkbox
+                  v-model="useAiSearch"
                   :disabled="!isAiSearchEnabled || !aiAvailable"
                   @change="handleAiSearchChange"
                 >
                   <el-icon><ChatDotRound /></el-icon>
                   询问AI智能体
-                  <el-tooltip 
-                    :content="aiAvailable ? '启用AI智能搜索，获得更精准的搜索结果和建议' : 'AI服务暂时不可用，请稍后重试'" 
+                  <el-tooltip
+                    :content="
+                      aiAvailable
+                        ? '启用AI智能搜索，获得更精准的搜索结果和建议'
+                        : 'AI服务暂时不可用，请稍后重试'
+                    "
                     placement="top"
                   >
                     <el-icon class="help-icon"><QuestionFilled /></el-icon>
                   </el-tooltip>
                 </el-checkbox>
                 <!-- AI状态指示器 -->
-                <el-tag 
-                  v-if="!aiAvailable" 
-                  type="warning" 
-                  size="small" 
-                  class="ai-status-tag"
-                >
+                <el-tag v-if="!aiAvailable" type="warning" size="small" class="ai-status-tag">
                   AI不可用
                 </el-tag>
                 <!-- AI连通性测试按钮 -->
-                <el-button 
-                  type="info" 
-                  size="small" 
+                <el-button
+                  type="info"
+                  size="small"
                   @click="testAiConnectivity"
                   class="ai-test-btn"
-                  style="margin-left: 12px;"
+                  style="margin-left: 12px"
                 >
                   AI连通性测试
                 </el-button>
@@ -278,7 +277,6 @@ import { useAuthStore } from '@/stores/auth'
 import ClubCard from '@/components/Club/ClubCard.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import type { ClubCategory, SmartSearchResponse } from '@/types'
-import { resetMockData } from '@/utils/mockData'
 import { ElMessage } from 'element-plus'
 import { smartSearch, checkAiServiceHealth } from '@/api/ai-search'
 import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
@@ -386,9 +384,11 @@ const handleSortChange = (sort: string) => {
 }
 
 // 处理分页切换
-const handlePageChange = (page: number) => {
+const handlePageChange = async (page: number) => {
   clubStore.setGlobalPage(page)
-  clubStore.fetchClubs()
+  await clubStore.fetchClubs()
+  await clubStore.fetchFavoriteClubs()
+  await clubStore.fetchPendingClubApplications({})
 }
 
 // 跳转到社团详情
@@ -418,7 +418,7 @@ const handleSearch = async () => {
         ElMessage.error('AI服务暂时不可用，请稍后重试')
         return
       }
-      
+
       // 调用AI搜索
       const result = await smartSearch({ query: searchKeyword.value })
       aiSearchResult.value = result
@@ -482,7 +482,7 @@ const testAiConnectivity = async () => {
 onMounted(async () => {
   // 检查AI服务可用性
   await checkAiAvailability()
-  
+
   // 获取分类数据
   try {
     await clubStore.fetchCategoriesList()
@@ -494,13 +494,15 @@ onMounted(async () => {
   // 获取社团数据
   try {
     await clubStore.fetchClubs()
+    await clubStore.fetchFavoriteClubs()
+    await clubStore.fetchPendingClubApplications({})
   } catch (error) {
     console.error('获取社团数据失败:', error)
   }
 
   // 获取热门社团
   try {
-    await clubStore.fetchHotClubs(6)
+    await clubStore.fetchLatestClubs(6)
   } catch (error) {
     console.error('获取热门社团失败:', error)
   }
@@ -510,11 +512,6 @@ onMounted(async () => {
     await clubStore.fetchLatestClubs(6)
   } catch (error) {
     console.error('获取最新社团失败:', error)
-  }
-
-  // 开发模式下的数据重置
-  if (isDev) {
-    resetMockData()
   }
 })
 </script>

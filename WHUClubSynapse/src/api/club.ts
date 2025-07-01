@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse, Application, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory, ClubCreationApplication, UserCreatedApplication } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory, ClubCreationApplication, ClubCreatedApplication } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
@@ -36,9 +36,9 @@ export const getClubList = async (
     queryParams.append('offset', offset.toString())
     queryParams.append('num', params.pageSize.toString())
   }
-
-    const queryString = queryParams.toString()
-    const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
+  const queryString = queryParams.toString()
+  const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
+  console.log(url)
   const response = await request.get(url)
   if(response.data==null){
     return {
@@ -50,7 +50,12 @@ export const getClubList = async (
   }
   const total=(await request.get('/api/club/club_num')).data.club_num
   return {
-    list: response.data,
+    list: response.data.map((club:Club)=>{
+      if(club.tags==null){
+        club.tags=[]
+      }
+      return club
+    }),
     total: total,
     page: params.page || 1,
     pageSize: params.pageSize || 10,
@@ -146,12 +151,7 @@ export const applyToClub = async (data: {
   
 }
 
-// TODO：后端没有，后续会删除这个接口
-export const cancelApplication = async (applicationId: string): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockCancelApplication(applicationId)
-    : await request.delete(`/clubs/applications/${applicationId}`)
-}
+
 
 // 收藏社团
 export const favoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
@@ -211,39 +211,7 @@ export const getFavoriteClubs = async (
       pageSize: params.pageSize || 12,
     }
   }
-    
-
-// 获取用户申请记录
-export const getUserApplications = async (
-  params: {
-    page?: number
-    pageSize?: number
-    status?: string
-    category?: string
-    keyword?: string
-  } = {},
-): Promise<{ data: ApiResponse<PaginatedData<Application>> }> => {
-  if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetUserApplications(params)
-  }
-
-  const queryParams = new URLSearchParams()
-
-  if (params.page) {
-    queryParams.append('page', params.page.toString())
-  }
-  if (params.pageSize) {
-    queryParams.append('pageSize', params.pageSize.toString())
-  }
-  if (params.status) {
-    queryParams.append('status', params.status)
-  }
-
-  const queryString = queryParams.toString()
-  const url = queryString ? `/api/club/my_joinapplis?${queryString}` : '/api/club/my_joinapplis'
-
-  return await request.get(url)
-}
+   
 
 // 申请创建社团（需要管理员审核）
 export const applyToCreateClub = async (data: {
@@ -251,7 +219,7 @@ export const applyToCreateClub = async (data: {
   desc: string
   requirements: string
   category_id: number
-  tags: string
+  tags: string[]
 }): Promise<{ data: ApiResponse<null> }> => {
   if(getIsUsingMockAPI()){
     return await mockClub.mockApplyToCreateClub(data)
@@ -356,6 +324,7 @@ export const getJoinedClubs = async (
     return await mockClub.mockGetJoinedClubs(params)
   }
   const response = (await request.get('/api/club/my_clubs')).data as Club[]
+  console.log('response',response)
   if(response==null){
     return {
       list: [],
@@ -364,15 +333,9 @@ export const getJoinedClubs = async (
       pageSize: params.pageSize || 12,
     }
   }
-  let list: Club[]
-  if(params.page!=null&&params.pageSize!=null){
-    list=response.slice((params.page-1)*params.pageSize,params.page*params.pageSize)
-  }
-  else{
-    list=response
-  }
+
   return {
-    list: list,
+    list: response,
     total: response.length,
     page: params.page || 1,
     pageSize: params.pageSize || 12,
@@ -460,7 +423,24 @@ export const getClubPostDetail = async (postId: string, contentUrl: string) => {
 }
 //TODO
 export const getClubPostReplies = mockGetClubPostReplies
-export const createClubPost = mockCreateClubPost
+export const createClubPost = async (data: {
+  title: string
+  club_id: number
+  content: string
+}): Promise<{ data: ApiResponse<null> }> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockCreateClubPost(data)
+  }
+  const response = await request.post('/api/club/post/create', data)
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
+}
+
 export const replyClubPost = mockReplyClubPost
 
 // 获取社团成员列表
@@ -559,7 +539,7 @@ export const getClubMembers = async (
   return await request.get(url)
 }
 
-// 获取社团申请列表
+// 获取用户加入社团申请列表
 export const getClubApplications = async (
   params: {
     page?: number
@@ -569,133 +549,7 @@ export const getClubApplications = async (
   } = {},
 ): Promise<PaginatedData<ClubApplication>> => {
   if (getIsUsingMockAPI()) {
-    // 模拟数据 - 使用静态数据避免重复创建
-    const mockApplications: ClubApplication[] = [
-      {
-        appli_id: '1',
-        userId: 'user4',
-        club_id: '1',
-        username: 'applicant1',
-        realName: '赵六',
-        avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        reason: '我对编程很感兴趣，希望能加入社团学习更多技术知识。',
-        status: 'pending',
-        applied_at: '2024-06-25T10:00:00Z',
-        studentId: '2021001004',
-        major: '计算机科学与技术',
-        phone: '13800138003',
-        email: 'applicant1@example.com',
-        interestedCategories: ['学术科技', '创新创业'],
-        tags: ['编程开发', '逻辑清晰', '团队协作', '创新冒险'],
-        reject_reason: '',
-        reviewed_at: '',
-      },
-      {
-        appli_id: '2',
-        userId: 'user5',
-        club_id: '2',
-        username: 'applicant2',
-        realName: '钱七',
-        avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        reason: '想参加社团活动，提升自己的实践能力。',
-        status: 'pending',
-        applied_at: '2024-06-26T14:30:00Z',
-        studentId: '2021001005',
-        major: '软件工程',
-        phone: '13800138004',
-        email: 'applicant2@example.com',
-        interestedCategories: ['学术科技', '文艺体育'],
-        tags: ['开朗外向', '善于沟通', '执行力强', '球类运动（篮球 / 足球 / 羽毛球等）'],
-        reject_reason: '',
-        reviewed_at: '',
-      },
-      {
-        appli_id: '3',
-        userId: 'user6',
-        club_id: '3',
-        username: 'applicant3',
-        realName: '孙八',
-        avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        reason: '希望能在社团中认识更多志同道合的朋友。',
-        status: 'approved',
-        applied_at: '2024-06-20T09:15:00Z',
-        studentId: '2021001006',
-        major: '信息安全',
-        phone: '13800138005',
-        email: 'applicant3@example.com',
-        interestedCategories: ['学术科技', '志愿服务'],
-        tags: ['沉稳内敛', '细心周到', '同理心强', '志愿服务'],
-        reject_reason: '',
-        reviewed_at: '',
-      },
-      {
-        appli_id: '4',
-        userId: 'user7',
-        club_id: '4',
-        username: 'applicant4',
-        realName: '周九',
-        avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        reason: '对算法竞赛很感兴趣，希望能和志同道合的同学一起学习。',
-        status: 'pending',
-        applied_at: '2024-06-27T08:00:00Z',
-        studentId: '2021001007',
-        major: '计算机科学与技术',
-        phone: '13800138006',
-        email: 'applicant4@example.com',
-        interestedCategories: ['学术科技'],
-        tags: ['理性冷静', '追求完美', '数学建模', '学术竞赛'],
-        reject_reason: '',
-        reviewed_at: '',
-      },
-      {
-        appli_id: '5',
-        userId: 'user8',club_id: '5',
-        username: 'applicant5',
-        realName: '吴十',
-        avatar_url: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png',
-        reason: '想学习前端开发技术，希望能参与社团的项目开发。',
-        status: 'pending',
-        applied_at: '2024-06-27T15:20:00Z',
-        studentId: '2021001008',
-        major: '软件工程',
-        phone: '13800138007',
-        email: 'applicant5@example.com',
-        interestedCategories: ['学术科技', '创新创业'],
-        tags: ['编程开发', '平面设计', '创新冒险', '目标明确'],
-        reject_reason: '',
-        reviewed_at: '',
-      },
-    ]
-
-    const { page = 1, pageSize = 10, status, keyword } = params
-
-    // 优化过滤逻辑
-    let filteredApplications = mockApplications
-
-    if (status) {
-      filteredApplications = mockApplications.filter(app => app.status === status)
-    }
-
-    if (keyword) {
-      const lowerKeyword = keyword.toLowerCase()
-      filteredApplications = filteredApplications.filter(app =>
-        (app.realName && app.realName.toLowerCase().includes(lowerKeyword)) ||
-        (app.username && app.username.toLowerCase().includes(lowerKeyword)) ||
-        (app.studentId && app.studentId.includes(keyword))
-      )
-    }
-
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    const list = filteredApplications.slice(start, end)
-
-    // 立即返回，不添加延迟
-    return {
-          list,
-          total: filteredApplications.length,
-          page,
-          pageSize,
-        }
+    return await mockClub.mockGetUserApplications(params)
   }
 
   // const queryParams = new URLSearchParams()
@@ -704,6 +558,7 @@ export const getClubApplications = async (
   // if (params.status) queryParams.append('status', params.status)
   // if (params.keyword) queryParams.append('keyword', params.keyword)
   const response = await request.get('/api/club/my_joinapplis')
+  console.log('response', response)
   if(response.data==null){
     return {
       list: [],
@@ -713,11 +568,13 @@ export const getClubApplications = async (
     }
   }
   let list: ClubApplication[]=response.data
-  if(params.page!=null&&params.pageSize!=null){
-    list=list.slice((params.page-1)*params.pageSize,params.page*params.pageSize)
-  }
   return {
-    list: list,
+    list: list.map((item)=>{
+      if(item.reviewed_at=="0001-01-01T00:00:00Z"){
+        item.reviewed_at=""
+      }
+      return item
+    }),
     total: response.data.length,
     page: params.page || 1,
     pageSize: params.pageSize || 10,
@@ -786,21 +643,29 @@ export const changeMemberRole = async (
 }
 
 //TODO 获取用户创建的社团申请列表
-export const getUserCreatedApplications = async (): Promise<UserCreatedApplication[]> => {
+export const getUserCreatedApplications = async (): Promise<ClubCreatedApplication[]> => {
   if (getIsUsingMockAPI()) {
     // 模拟数据 - 按照API文档格式
-    const mockApplications: UserCreatedApplication[] = [
+    const mockApplications: ClubCreatedApplication[] = [
       {
         appli_id: 1,
         applied_at: '2024-06-25T10:00:00Z',
+        club_id: 1,
+        reject_reason: '',
+        reviewed_at: '2024-06-25T10:00:00Z',
       },
       {
         appli_id: 2,
         applied_at: '2024-06-26T14:30:00Z',
+        club_id: 2,
+        reject_reason: '',
+        reviewed_at: '2024-06-26T14:30:00Z',
       },
       {
         appli_id: 3,
         applied_at: '2024-06-20T09:15:00Z',
+        club_id: 3,
+        reject_reason: '',
         reviewed_at: '2024-06-21T16:00:00Z',
       },
       {
@@ -808,10 +673,14 @@ export const getUserCreatedApplications = async (): Promise<UserCreatedApplicati
         applied_at: '2024-06-27T08:00:00Z',
         reject_reason: '申请材料不完整',
         reviewed_at: '2024-06-28T10:00:00Z',
+        club_id: 4,
       },
       {
         appli_id: 5,
         applied_at: '2024-06-27T15:20:00Z',
+        club_id: 5,
+        reject_reason: '',
+        reviewed_at: '2024-06-27T15:20:00Z',
       },
     ]
 
@@ -825,5 +694,5 @@ export const getUserCreatedApplications = async (): Promise<UserCreatedApplicati
     return []
   }
   
-  return response.data as UserCreatedApplication[]
+  return response.data as ClubCreatedApplication[]
 }

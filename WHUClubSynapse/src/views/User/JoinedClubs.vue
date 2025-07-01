@@ -314,7 +314,6 @@ const confirmQuit = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
-  clubStore.fetchJoinedClubs()
   loadJoinedClubs()
 })
 </script>

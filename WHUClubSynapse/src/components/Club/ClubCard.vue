@@ -19,13 +19,14 @@
       <!-- 收藏按钮 - 仅登录用户显示 -->
       <el-button
         v-if="authStore.isLoggedIn"
-        :icon="isFavorited ? StarFilled : Star"
         class="favorite-btn"
         circle
         size="small"
-        :type="isFavorited ? 'warning' : 'default'"
+        :type="isFavorited ? 'danger' : 'default'"
         @click.stop="toggleFavorite"
-      />
+      >
+        <div :class="['custom-heart-icon', { favorited: isFavorited }]"></div>
+      </el-button>
     </div>
 
     <!-- 社团信息 -->
@@ -44,7 +45,7 @@
         </div>
         <div class="detail-item">
           <el-icon><UserFilled /></el-icon>
-          <span>成员：{{ club.member_count }}/{{ club.maxMembers }}</span>
+          <span>成员：{{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }}</span>
         </div>
       </div>
 
@@ -80,7 +81,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Picture, Star, StarFilled, User, UserFilled } from '@element-plus/icons-vue'
+import { Picture, User, UserFilled } from '@element-plus/icons-vue'
 import type { Club, ClubCategory } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import { useClubStore } from '@/stores/club'
@@ -102,7 +103,7 @@ const isFavorited = computed(() => {
 
 // 满员状态
 const isFull = computed(() => {
-  return props.club.member_count >= (props.club.maxMembers ?? 50)
+  return props.club.member_count >= clubStore.MAX_MEMBER_NUM
 })
 
 const isDisabled = computed(() => {
@@ -112,10 +113,9 @@ const isDisabled = computed(() => {
   // 根据社团状态判断
   if (props.club.status === 'pending') return true
   if (props.club.status === 'joined') return true
-  if (props.club.status === 'managed') return true
 
   // 如果社团已满员
-  if (props.club.member_count >= (props.club.maxMembers ?? 50)) return true
+  if (props.club.member_count >= clubStore.MAX_MEMBER_NUM) return true
 
   return false
 })
@@ -172,7 +172,7 @@ const handleApply = () => {
     return
   }
 
-  if (props.club.member_count >= (props.club.maxMembers ?? 50)) {
+  if (props.club.member_count >= clubStore.MAX_MEMBER_NUM) {
     ElMessage.warning('该社团已满员')
     return
   }
@@ -188,8 +188,7 @@ const getApplyButtonText = () => {
   // 根据社团状态返回对应文本
   if (props.club.status === 'joined') return '已加入'
   if (props.club.status === 'pending') return '等待审核中'
-  if (props.club.status === 'managed') return '管理中'
-  if (props.club.member_count >= (props.club.maxMembers ?? 50)) return '已满员'
+  if (props.club.member_count >= clubStore.MAX_MEMBER_NUM) return '已满员'
 
   return '立即申请'
 }
@@ -314,5 +313,61 @@ const getApplyButtonText = () => {
 
 .club-actions .el-button {
   flex: 1;
+}
+
+/* 自定义心形收藏图标 */
+.custom-heart-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  transform: rotate(-45deg);
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.custom-heart-icon::before,
+.custom-heart-icon::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  width: 7px;
+  height: 11px;
+  background: #c0c4cc;
+  border-radius: 7px 7px 0 0;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+  transition: all 0.3s ease;
+}
+
+.custom-heart-icon::after {
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+}
+
+.custom-heart-icon.favorited::before,
+.custom-heart-icon.favorited::after {
+  background: #f56c6c;
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+/* 心跳动画效果 */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 悬停效果 */
+.favorite-btn:hover .custom-heart-icon::before,
+.favorite-btn:hover .custom-heart-icon::after {
+  background: #f56c6c;
 }
 </style>
