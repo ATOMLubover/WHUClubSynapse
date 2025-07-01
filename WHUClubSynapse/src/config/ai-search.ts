@@ -1,21 +1,23 @@
 // AI智能搜索配置
 export const aiSearchConfig = {
   // AI智能搜索API基础URL
-  baseURL: 'http://localhost:8000', // 根据实际部署情况修改
+  baseURL: 'http://5c3f836f.cpolar.io', // 根据实际部署情况修改
   
   // API端点
   endpoints: {
-    smartSearch: '/smart-search',
-    sideChat: '/sider-chat',
+    smartSearch: '/api/v1/smart-search',
+    sideChat: '/api/v1/sider-chat',
+    healthCheck: '/', // 新增健康检查端点
   },
   
   // API Key配置
-  apiKey: 'YOUR_API_KEY', // 需要替换为实际的API Key
+  apiKey: 'super_plus_api_key', // 需要替换为实际的API Key
   
   // 请求配置
   requestConfig: {
     timeout: 30000, // 30秒超时
     retryTimes: 3, // 重试次数
+    healthCheckTimeout: 5000, // 健康检查超时时间
   },
   
   // 响应配置
@@ -29,6 +31,7 @@ export const aiSearchConfig = {
     enabled: true, // 是否启用AI搜索功能
     showInSearch: true, // 是否在搜索页面显示AI回答
     sideChat: true, // 是否启用侧边栏对话功能
+    healthCheck: true, // 是否启用健康检查
   },
 
   // 侧边栏对话配置
@@ -49,6 +52,11 @@ export const getSideChatURL = () => {
   return `${aiSearchConfig.baseURL}${aiSearchConfig.endpoints.sideChat}`
 }
 
+// 获取健康检查API URL
+export const getHealthCheckURL = () => {
+  return `${aiSearchConfig.baseURL}${aiSearchConfig.endpoints.healthCheck}`
+}
+
 // 获取API Key
 export const getApiKey = () => {
   return aiSearchConfig.apiKey
@@ -62,4 +70,9 @@ export const isAiSearchEnabled = () => {
 // 检查侧边栏对话是否启用
 export const isSideChatEnabled = () => {
   return aiSearchConfig.features.sideChat
+}
+
+// 检查健康检查是否启用
+export const isHealthCheckEnabled = () => {
+  return aiSearchConfig.features.healthCheck
 } 
