@@ -553,25 +553,57 @@
     </el-dialog>
 
     <!-- 头像上传对话框 -->
-    <el-dialog v-model="showAvatarUpload" title="更换头像" width="400px">
-      <el-upload
-        class="avatar-uploader"
-        :show-file-list="false"
-        :before-upload="beforeAvatarUpload"
-        :http-request="uploadAvatar"
-      >
-        <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
-        <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-      </el-upload>
-      <div class="upload-tips">
-        <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+    <el-dialog
+      v-model="showAvatarUpload"
+      title="更换头像"
+      width="400px"
+      :close-on-click-modal="false"
+    >
+      <div class="avatar-upload-container">
+        <el-upload
+          class="avatar-uploader"
+          :show-file-list="false"
+          :before-upload="beforeAvatarUpload"
+          :http-request="uploadAvatar"
+          :disabled="avatarUploading"
+        >
+          <div class="upload-area">
+            <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
+            <div v-else class="upload-placeholder">
+              <el-icon class="avatar-uploader-icon" :class="{ 'is-loading': avatarUploading }">
+                <Loading v-if="avatarUploading" />
+                <Plus v-else />
+              </el-icon>
+              <p class="upload-text">
+                {{ avatarUploading ? '正在上传...' : '点击选择头像' }}
+              </p>
+            </div>
+            <div v-if="avatarUploading" class="upload-progress">
+              <el-progress
+                :percentage="100"
+                :show-text="false"
+                status="success"
+                :indeterminate="true"
+              />
+            </div>
+          </div>
+        </el-upload>
+        <div class="upload-tips">
+          <el-icon><InfoFilled /></el-icon>
+          <span>支持 JPG、PNG 格式，文件大小不超过 2MB</span>
+        </div>
       </div>
 
       <template #footer>
-        <el-button @click="showAvatarUpload = false">取消</el-button>
-        <el-button type="primary" @click="confirmAvatarUpload" :disabled="!uploadedAvatar"
-          >确定</el-button
+        <el-button @click="cancelAvatarUpload" :disabled="avatarUploading">取消</el-button>
+        <el-button
+          type="primary"
+          @click="confirmAvatarUpload"
+          :disabled="!uploadedAvatar || avatarUploading"
+          :loading="avatarUploading"
         >
+          {{ avatarUploading ? '上传中...' : '确认上传' }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -607,7 +639,6 @@ import {
 } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
-import { getCurrentUser, changePassword } from '@/api/auth'
 import { getClubRecommendations, checkAIStatus } from '@/api/ai'
 import type {
   User as UserType,
@@ -635,6 +666,8 @@ const verificationLoading = ref(false)
 const passwordLoading = ref(false)
 const preferencesLoading = ref(false)
 const uploadedAvatar = ref('')
+const uploadedFile = ref<File | null>(null)
+const avatarUploading = ref(false)
 const tagLoading = ref(false)
 const tagOptions = ref<string[]>([])
 const tagInput = ref('')
@@ -813,23 +846,55 @@ const beforeAvatarUpload = (rawFile: UploadRawFile) => {
 }
 
 const uploadAvatar = (params: any) => {
-  // 创建预览URL
   const file = params.file
+
+  // 只创建预览URL，不立即上传
   const reader = new FileReader()
   reader.onload = (e) => {
     uploadedAvatar.value = e.target?.result as string
   }
   reader.readAsDataURL(file)
+
+  // 保存文件对象供后续上传使用
+  uploadedFile.value = file
 }
 
-const confirmAvatarUpload = () => {
-  // TODO: 上传头像到服务器
-  if (userInfo.value) {
-    userInfo.value.avatar_url = uploadedAvatar.value
-  }
-  showAvatarUpload.value = false
+// 取消上传，清除预览状态
+const cancelAvatarUpload = () => {
   uploadedAvatar.value = ''
-  ElMessage.success('头像更新成功')
+  uploadedFile.value = null
+  showAvatarUpload.value = false
+}
+
+const confirmAvatarUpload = async () => {
+  if (!uploadedFile.value) {
+    ElMessage.warning('请先选择头像文件')
+    return
+  }
+
+  try {
+    avatarUploading.value = true
+
+    // 实际上传到服务器
+    const result = await authStore.uploadAvatar(uploadedFile.value)
+
+    // 更新用户信息
+    if (userInfo.value) {
+      // 关闭对话框并清除状态
+      showAvatarUpload.value = false
+      uploadedAvatar.value = ''
+      uploadedFile.value = null
+
+      ElMessage.success('请刷新后查看更新后的头像')
+    } else {
+      throw new Error('上传失败')
+    }
+  } catch (error: any) {
+    console.error('头像上传失败:', error)
+    ElMessage.error(error.message || '头像上传失败，请重试')
+  } finally {
+    avatarUploading.value = false
+  }
 }
 
 const savePreferences = async () => {
@@ -2100,5 +2165,108 @@ onMounted(() => {
 .stat-card.clickable:hover {
   background: rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
+}
+
+/* 头像上传样式 */
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.avatar-uploader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.upload-area {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.upload-area:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-uploader-icon {
+  font-size: 32px;
+  color: #8c939d;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.avatar-uploader-icon.is-loading {
+  animation: rotate 2s linear infinite;
+  color: #667eea;
+}
+
+.upload-text {
+  margin: 0;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.4;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.upload-progress {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.upload-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #909399;
+  text-align: center;
+  padding: 8px 16px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.upload-tips .el-icon {
+  color: #409eff;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

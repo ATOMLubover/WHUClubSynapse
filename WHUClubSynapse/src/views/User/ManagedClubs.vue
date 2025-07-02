@@ -172,7 +172,7 @@
 
                     <div v-if="application.reviewed_at" class="time-item">
                       <el-icon class="time-icon"><CircleCheck /></el-icon>
-                      <div class="time-content">
+                      <div v-if="application.reviewed_at != ''" class="time-content">
                         <span class="time-label">审核时间</span>
                         <span class="time-value">{{ formatDate(application.reviewed_at) }}</span>
                       </div>
@@ -191,14 +191,14 @@
                   <!-- 操作按钮 -->
                   <div class="card-actions">
                     <el-button
-                      v-if="application.status === 'approved' && application.club_id"
+                      v-if="application.status === 'approved'"
                       type="success"
                       size="default"
-                      @click="goToClubDetail(application.club_id!)"
+                      disabled="true"
                       class="action-button success-button"
                     >
                       <el-icon><View /></el-icon>
-                      查看社团
+                      已经创建
                     </el-button>
                     <el-button
                       v-else-if="application.status === 'pending'"
@@ -289,13 +289,13 @@
                     <div class="club-meta">
                       <div class="meta-item">
                         <el-icon class="meta-icon"><Collection /></el-icon>
-                        <span class="club-category">{{ club.category }}</span>
+                        <span class="club-category">{{ getCategoryName(club.category) }}</span>
                       </div>
 
                       <div class="meta-item">
                         <el-icon class="meta-icon"><User /></el-icon>
                         <span class="club-members"
-                          >{{ club.member_count }}/{{ club.maxMembers }} 人</span
+                          >{{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }} 人</span
                         >
                       </div>
 
@@ -778,6 +778,10 @@ onMounted(() => {
   if (isOpen == 'true') {
     showCreateDialog.value = true
   }
+  router.replace({
+    path: route.path,
+    query: { ...route.query, isOpen: undefined },
+  })
 })
 </script>
 
@@ -1254,6 +1258,10 @@ onMounted(() => {
   padding: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  /* 固定高度和flex布局 */
+  height: 480px;
+  display: flex;
+  flex-direction: column;
 }
 
 .application-card::before {

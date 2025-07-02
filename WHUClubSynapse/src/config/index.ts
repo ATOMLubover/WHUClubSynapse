@@ -1,7 +1,7 @@
 // 应用配置
 export const config = {
   // API基础URL
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
 
   // API模式: 'mock' | 'real'
   apiMode: (import.meta.env.VITE_API_MODE || 'mock') as 'mock' | 'real',

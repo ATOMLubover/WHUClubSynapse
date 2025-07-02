@@ -25,7 +25,7 @@
           <div class="reply-header">全部回复（{{ total }}）</div>
           <el-empty v-if="!replies.length && !repliesLoading" description="暂无回复" />
           <div v-else-if="!repliesLoading" class="reply-list">
-            <div v-for="(reply, idx) in replies" :key="reply.id" class="reply-item">
+            <div v-for="(reply, idx) in replies" :key="reply.comment_id" class="reply-item">
               <el-avatar
                 :size="32"
                 :src="reply.authorAvatar || defaultAvatar"
@@ -34,7 +34,7 @@
               <div class="reply-info">
                 <div class="reply-meta">
                   <span class="reply-author">{{ reply.authorName }}</span>
-                  <span class="reply-time">{{ formatDate(reply.createdAt) }}</span>
+                  <span class="reply-time">{{ formatDate(reply.created_at) }}</span>
                 </div>
                 <div class="reply-content">
                   <MarkdownRenderer :content="reply.content || ''" />
@@ -79,12 +79,12 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getClubPostDetail, getClubPostReplies, replyClubPost } from '@/api/club'
+import { getClubPostDetail, replyClubPost } from '@/api/club'
 import { useAuthStore } from '@/stores/auth'
 import AIChatWindow from '@/components/Chat/AIChatWindow.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
-import type { ClubPost, ClubPostReply } from '@/types'
+import type { ClubPost, ClubPostComment } from '@/types'
 import { useClubStore } from '@/stores/club'
 const defaultAvatar = 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png'
 const route = useRoute()
@@ -94,7 +94,7 @@ const postId = String(route.params.postId)
 const contentUrl = decodeURIComponent(String(route.params.content_url))
 const clubStore = useClubStore()
 const post = ref<ClubPost | null>(null)
-const replies = ref<ClubPostReply[]>([])
+const replies = ref<ClubPostComment[]>([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = 10
@@ -156,9 +156,9 @@ const fetchPost = async () => {
 const fetchReplies = async () => {
   repliesLoading.value = true
   try {
-    const res = await getClubPostReplies(postId, page.value, pageSize)
-    replies.value = res.data.data.list
-    total.value = res.data.data.total
+    const res = await clubStore.fetchClubPostComments(postId, page.value, pageSize)
+    replies.value = res.list
+    total.value = res.total
   } finally {
     repliesLoading.value = false
   }
@@ -176,8 +176,8 @@ const handleReply = async () => {
   replyLoading.value = true
   try {
     await replyClubPost({
-      postId,
-      authorId: authStore.user?.id || 0,
+      post_id: postId,
+      user_id: authStore.user?.id || 0,
       authorName: authStore.user?.realName || '匿名',
       authorAvatar: authStore.user?.avatar_url || defaultAvatar,
       content: replyContent.value,

@@ -177,14 +177,14 @@ export interface ClubPost {
 }
 
 // 帖子回复类型
-export interface ClubPostReply {
-  id: string
-  postId: string
-  authorId: number
-  authorName: string
+export interface ClubPostComment {
+  comment_id: string
+  post_id: string
+  user_id: number
+  authorName?: string
   authorAvatar?: string
   content: string
-  createdAt: string
+  created_at: string
 }
 
 // 社团成员类型

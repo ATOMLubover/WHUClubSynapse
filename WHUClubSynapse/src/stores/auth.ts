@@ -4,6 +4,7 @@ import { ElMessage, type MessageParamsWithType } from 'element-plus'
 import * as authApi from '@/api/auth'
 import { getUserIdFromToken, getUserRoleFromToken, isTokenExpired, getUserInfoFromToken } from '@/utils/jwt'
 import type { User, LoginRequest, RegisterRequest, UserPreferences } from '@/types'
+import { config } from '@/config'
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
@@ -63,6 +64,16 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const userInfo = await authApi.getCurrentUser()
+      if (userInfo.avatar_url == '') {
+        userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/default.jpg`
+        // userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/_${userInfo.user_id}`
+
+      }
+      else{
+         userInfo.avatar_url=`${config.apiBaseUrl}/`+userInfo.avatar_url
+      }
+
+      console.log('userInfo.avatar_url', userInfo.avatar_url)
       user.value = userInfo
       return userInfo
     } catch (error) {
@@ -71,6 +82,18 @@ export const useAuthStore = defineStore('auth', () => {
       logout()
       throw error
     }
+  }
+  //
+  const uploadAvatar=async(file: File)=>{
+    try{
+      await authApi.uploadAvatar(file)
+      await fetchUserInfo()
+
+    }
+    catch(error){
+      console.error("上传用户头像失败",error)
+    }
+
   }
 
   // 退出登录
@@ -154,6 +177,8 @@ export const useAuthStore = defineStore('auth', () => {
     return !!token.value && !isTokenExpired()
   }
 
+
+
   return {
     // 状态
     user,
@@ -175,5 +200,6 @@ export const useAuthStore = defineStore('auth', () => {
     updateUser,
     getCurrentUserId,
     checkTokenValidity,
+    uploadAvatar
   }
 })

@@ -43,15 +43,15 @@ watch(
   },
 )
 
-// 监听用户信息变化
-watch(
-  () => authStore.user,
-  (user) => {
-    if (user && !user.hasCompletedPreferences) {
-      showPreferenceDialog.value = true
-    }
-  },
-)
+// TODO:监听用户信息变化
+// watch(
+//   () => authStore.user,
+//   (user) => {
+//     if (user && !user.hasCompletedPreferences) {
+//       showPreferenceDialog.value = true
+//     }
+//   },
+// )
 
 // 初始化
 onMounted(async () => {
@@ -70,7 +70,7 @@ onMounted(async () => {
       console.error('分类数据初始化失败:', categoriesResult.reason)
     }
 
-    checkPreferenceSetup()
+    // checkPreferenceSetup()
     console.log('App初始化完成')
 
     ElNotification({
