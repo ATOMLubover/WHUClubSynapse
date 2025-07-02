@@ -395,11 +395,42 @@ func (h *ClubHandler) GetMyCreateApplis(ctx iris.Context) {
 
 	var resApplis []*dto.CreateClubAppliResponse
 	for _, appli := range applis {
+		var proposal dbstruct.Club
+		err = h.sProposalToClub(appli.Proposal, &proposal)
+		if err != nil {
+			h.Logger.Error("解析创建社团申请失败",
+				"error", err, "appli", appli,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析创建社团申请")
+			return
+		}
+
+		var tags []string
+		err = h.sTagsToArray(proposal.Tags, &tags)
+		if err != nil {
+			h.Logger.Error("解析社团标签失败",
+				"error", err, "club", proposal,
+			)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法解析社团标签")
+			return
+		}
+
 		resApplis = append(resApplis, &dto.CreateClubAppliResponse{
-			AppliId:      int(appli.CreateAppliId),
-			AppliedAt:    appli.AppliedAt.Format(time.RFC3339),
+			AppliId:   int(appli.CreateAppliId),
+			AppliedAt: appli.AppliedAt.Format("2006-01-02 15:04:05"),
+			Proposal: dto.CreateClubAppliProposalResponse{
+				Name:        proposal.Name,
+				Description: proposal.Description,
+				CategoryId:  int(proposal.CategoryId),
+				LeaderId:    int(proposal.LeaderId),
+				Tags:        tags,
+			},
 			RejectReason: appli.RejectedReason,
-			ReviewedAt:   appli.ReviewedAt.Format(time.RFC3339),
+			ReviewedAt:   appli.ReviewedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
@@ -550,12 +581,12 @@ func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
 	if len(reqBody.Tags) != 0 {
 		tags, err = json.Marshal(reqBody.Tags)
 		if err != nil {
-			h.Logger.Error("序列化社团标签失败",
+			h.Logger.Error("反序列化社团标签失败",
 				"error", err, "tags", reqBody.Tags,
 			)
 
 			ctx.StatusCode(iris.StatusInternalServerError)
-			ctx.Text("无法序列化社团标签")
+			ctx.Text("无法反序列化社团标签")
 			return
 		}
 	}
@@ -647,6 +678,19 @@ func (h *ClubHandler) sTagsToArray(raw []byte, v *[]string) error {
 
 	if err := json.Unmarshal(raw, v); err != nil {
 		h.Logger.Error("解析标签失败", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (h *ClubHandler) sProposalToClub(raw []byte, v *dbstruct.Club) error {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	if err := json.Unmarshal(raw, v); err != nil {
+		h.Logger.Error("解析社团申请proposal失败", "error", err)
 		return err
 	}
 
