@@ -12,6 +12,10 @@ import summary
 from openai import OpenAI
 from fastapi.responses import StreamingResponse
 import time
+import re
+import signal
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,11 +36,60 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 全局变量用于控制服务器状态
+server_should_exit = False
+active_tasks = set()
+shutdown_event = asyncio.Event()
+
+def handle_exit_signal(signum, frame):
+    """处理退出信号"""
+    global server_should_exit
+    signal_name = signal.Signals(signum).name
+    logger.info(f"收到退出信号 {signal_name}，开始优雅停机...")
+    server_should_exit = True
+    
+    # 如果在异步上下文中，设置关闭事件
+    try:
+        asyncio.get_event_loop().call_soon_threadsafe(shutdown_event.set)
+    except Exception:
+        pass
+
+def check_exit():
+    """检查是否应该退出"""
+    if server_should_exit:
+        logger.info(f"正在等待 {len(active_tasks)} 个活跃任务完成...")
+        # 等待所有活跃任务完成
+        while active_tasks:
+            time.sleep(0.1)
+        logger.info("所有任务已完成，服务器正在关闭...")
+        sys.exit(0)
+
+# 注册信号处理器
+signal.signal(signal.SIGINT, handle_exit_signal)  # Ctrl+C
+signal.signal(signal.SIGTERM, handle_exit_signal)  # kill
+
 app = FastAPI(
     title="vLLM Proxy Server",
     description="一个用于转发请求到vLLM服务器的代理服务器",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """服务器启动时的初始化"""
+    global server_should_exit, active_tasks
+    server_should_exit = False
+    active_tasks.clear()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """服务器关闭时的清理"""
+    global server_should_exit
+    server_should_exit = True
+    logger.info("等待所有任务完成...")
+    while active_tasks:
+        await asyncio.sleep(0.1)
+    logger.info("所有任务已完成")
 
 # 配置CORS
 if config.enable_cors:
@@ -1632,11 +1685,329 @@ async def update_club_data_endpoint():
         logger.error(f"手动更新社团信息接口失败: {e}")
         raise HTTPException(status_code=500, detail=f"手动更新社团信息接口失败: {e}")
 
+# 新增训练数据生成请求和响应模型
+class TrainingDataGenerationRequest(BaseModel):
+    batch_size: int = 100
+    total_count: int = 1000
+    save_file: Optional[str] = "training_data.jsonl"
+
+class TrainingDataGenerationResponse(BaseModel):
+    generated_count: int
+    message: str
+    sample_data: List[Dict[str, str]]
+
+@app.post("/generate_training_data", response_model=TrainingDataGenerationResponse)
+async def generate_training_data(request: TrainingDataGenerationRequest):
+    task_id = id(request)  # 使用请求对象的id作为任务id
+    active_tasks.add(task_id)
+    try:
+        prompt_template = """# 角色
+你是一名顶尖的AI微调数据生成专家，专门为"大学社团管理AI助手"项目创建高质量的训练数据。
+
+# 任务
+请一次性生成{batch_size}条高质量的社团管理场景训练数据。每条数据都应该模拟一个真实的社团管理场景。
+注意：必须一次性生成完整的{batch_size}条数据，不要分批生成。
+
+# 角色指令模板（每个模板应该被大致相等次数使用）
+
+1. 社团管理员视角（约占20%）：
+- "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。"
+- "作为社团的管理层成员，请针对以下问题提供专业的解决方案。"
+- "你是社团的活动主管，请就以下活动相关问题给出建议。"
+
+2. 社长/副社长视角（约占20%）：
+- "作为社团的最高负责人，请对以下情况作出决策和指导。"
+- "你是一位富有经验的社团社长，请为以下管理问题提供战略性建议。"
+- "作为社团领导者，请针对以下社团发展问题给出你的规划。"
+
+3. 普通社员视角（约占20%）：
+- "作为一名普通社员，请基于你的经验回答其他成员的疑问。"
+- "你是一位积极参与社团活动的成员，请分享你的见解。"
+- "作为社团的老成员，请为新成员解答以下问题。"
+
+4. 新成员/潜在成员视角（约占20%）：
+- "作为一名新加入的成员，请提供你对以下社团事务的理解和建议。"
+- "你是一位即将加入社团的新成员，请就以下入社相关问题寻求帮助。"
+- "作为对社团感兴趣的同学，请提出你的疑问和想法。"
+
+5. 跨部门协作视角（约占20%）：
+- "作为多个部门之间的协调者，请针对以下合作问题提供解决方案。"
+- "你同时参与多个社团项目，请就以下跨部门协作问题提供建议。"
+- "作为部门间的沟通桥梁，请协调解决以下问题。"
+
+# 数据格式要求
+必须严格按照以下格式生成数据，instruction必须从上述模板中选择，不能自行发明：
+[
+  {{
+    "instruction": "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。",
+    "input": "如何优化社团的财务管理流程？",
+    "output": "建议从以下几个方面入手：1. 建立电子账本，详细记录收支；2. 设置预算审批制度；3. 定期公示财务状况；4. 建立报销规范流程；5. 每月进行财务分析。"
+  }},
+  {{
+    "instruction": "作为社团的最高负责人，请对以下情况作出决策和指导。",
+    "input": "社团成员之间出现了分歧，影响了活动进展，该如何处理？",
+    "output": "1. 立即召开内部会议了解情况；2. 分别与相关成员沟通，听取各方意见；3. 制定折中方案，平衡各方诉求；4. 明确任务优先级，确保活动正常进行；5. 建立长期沟通机制，预防类似问题。"
+  }},
+  // ... 继续生成，直到达到{batch_size}条数据 ...
+]
+
+# 生成要求
+1. 必须一次性生成完整的{batch_size}条数据
+2. instruction字段必须从上述模板中直接复制，不能改变或发明新的
+3. 确保每个角色视角生成约 {role_count} 条数据（{batch_size}的20%）
+4. 每个角色下的3个模板使用次数应接近 {template_count} 次
+5. 确保生成的是一个有效的JSON数组，包含完整的{batch_size}条数据
+6. input必须是具体的问题，output必须是专业且实用的回答
+
+请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
+
+#         prompt_template = """# 角色
+# 你是一名顶尖的AI微调数据生成专家，专门为"大学社团管理AI助手"项目创建高质量的训练数据。
+
+# # 任务
+# 请一次性生成{batch_size}条高质量的社团管理场景训练数据。每条数据都应该模拟一个真实的社团管理场景。
+# 注意：必须一次性生成完整的{batch_size}条数据，不要分批生成。
+
+# # 角色指令模板（每个模板应该被大致相等次数使用）
+
+# "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。"
+
+# # 数据格式要求
+# 必须严格按照以下格式生成数据，instruction必须从上述模板中选择，不能自行发明：
+# [
+#   {{
+#     "instruction": "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。",
+#     "input": "如何优化社团的财务管理流程？",
+#     "output": "建议从以下几个方面入手：1. 建立电子账本，详细记录收支；2. 设置预算审批制度；3. 定期公示财务状况；4. 建立报销规范流程；5. 每月进行财务分析。"
+#   }},
+#   {{
+#     "instruction": "作为社团的最高负责人，请对以下情况作出决策和指导。",
+#     "input": "社团成员之间出现了分歧，影响了活动进展，该如何处理？",
+#     "output": "1. 立即召开内部会议了解情况；2. 分别与相关成员沟通，听取各方意见；3. 制定折中方案，平衡各方诉求；4. 明确任务优先级，确保活动正常进行；5. 建立长期沟通机制，预防类似问题。"
+#   }},
+#   // ... 继续生成，直到达到{batch_size}条数据 ...
+# ]
+
+# # 生成要求
+# 1. 必须一次性生成完整的{batch_size}条数据
+# 2. instruction字段必须从上述模板中直接复制，不能改变或发明新的
+# 3. 确保每个角色视角生成约 {role_count} 条数据（{batch_size}的20%）
+# 4. 每个角色下的3个模板使用次数应接近 {template_count} 次
+# 5. 确保生成的是一个有效的JSON数组，包含完整的{batch_size}条数据
+# 6. input必须是具体的问题，output必须是专业且实用的回答
+
+# 请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
+        # 计算每种类型应该生成的数量
+        role_count = request.batch_size // 5  # 每个角色视角的数量
+        topic_count = request.batch_size // 5  # 每个主题的数量
+        template_count = role_count // 3  # 每个模板的使用次数
+        
+        # 格式化提示词
+        current_prompt = prompt_template.format(
+            batch_size=request.batch_size,
+            role_count=role_count,
+            topic_count=topic_count,
+            template_count=template_count
+        )
+
+        total_generated = 0
+        all_data = []
+        
+        while total_generated < request.total_count and not server_should_exit:
+            batch_size = min(request.batch_size, request.total_count - total_generated)
+            
+            # 计算每种类型应该生成的数量
+            role_count = batch_size // 5  # 每个角色视角的数量
+            topic_count = batch_size // 5  # 每个主题的数量
+            template_count = role_count // 3  # 每个模板的使用次数
+            
+            # 格式化提示词
+            current_prompt = prompt_template.format(
+                batch_size=batch_size,
+                role_count=role_count,
+                topic_count=topic_count,
+                template_count=template_count
+            )
+
+            # 检查是否应该退出
+            check_exit()
+            
+            # 构造发送给vLLM的payload
+            payload = {
+                "model": config.default_model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "你是一个专业的训练数据生成助手。请严格按照要求的JSON格式生成数据。"
+                    },
+                    {
+                        "role": "user",
+                        "content": current_prompt
+                    }
+                ],
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "max_tokens": 8000,  # 增加token限制以支持更大批量
+                "stream": True
+            }
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            # 收集完整的响应
+            llm_response_content = ""
+            try:
+                response = requests.post(
+                    config.vllm_api_url,
+                    headers=headers,
+                    json=payload,
+                    stream=True,
+                    timeout=300  # 增加超时时间到5分钟
+                )
+                response.raise_for_status()
+                
+                # 使用更健壮的SSE处理
+                buffer = ""
+                for line in response.iter_lines():
+                    if not line:
+                        continue
+                        
+                    line = line.decode('utf-8')
+                    if not line.startswith("data: "):
+                        continue
+                        
+                    # 移除"data: "前缀
+                    data = line[6:]
+                    if data == "[DONE]":
+                        break
+                        
+                    try:
+                        json_data = json.loads(data)
+                        if json_data.get("choices") and len(json_data["choices"]) > 0:
+                            choice = json_data["choices"][0]
+                            if choice.get("delta") and "content" in choice["delta"]:
+                                content = choice["delta"]["content"]
+                                llm_response_content += content
+                                buffer += content
+                    except json.JSONDecodeError:
+                        logger.debug(f"无法解析的SSE数据行: {data}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"处理流式响应数据时出错: {e}")
+                        continue
+                            
+            except requests.exceptions.RequestException as e:
+                logger.error(f"请求vLLM服务失败: {e}")
+                continue
+            except Exception as e:
+                logger.error(f"生成过程出错: {e}")
+                continue
+            
+            if not llm_response_content.strip():
+                logger.warning("本批次生成的内容为空，跳过")
+                continue
+
+            # 清理响应文本并尝试解析
+            json_string = llm_response_content.strip()
+            
+            # 记录原始响应以便调试
+            logger.debug(f"原始响应: {json_string[:200]}...")
+            
+            try:
+                # 如果响应已经是一个有效的JSON数组，直接解析
+                if json_string.startswith('[') and json_string.endswith(']'):
+                    try:
+                        batch_data = json.loads(json_string)
+                    except json.JSONDecodeError:
+                        # 如果解析失败，尝试清理JSON字符串
+                        json_string = re.sub(r',\s*]$', ']', json_string)
+                        json_string = re.sub(r'^\[\s*,', '[', json_string)
+                        batch_data = json.loads(json_string)
+                else:
+                    # 如果响应不是直接的JSON数组，尝试提取
+                    start_idx = json_string.find('[')
+                    end_idx = json_string.rfind(']')
+                    
+                    if start_idx == -1 or end_idx == -1:
+                        logger.warning(f"响应中未找到JSON数组标记: {json_string[:200]}...")
+                        continue
+                    
+                    json_string = json_string[start_idx:end_idx + 1]
+                    json_string = re.sub(r',\s*]$', ']', json_string)
+                    json_string = re.sub(r'^\[\s*,', '[', json_string)
+                    batch_data = json.loads(json_string)
+                
+                if not isinstance(batch_data, list):
+                    logger.warning(f"解析结果不是JSON数组: {type(batch_data)}")
+                    continue
+                
+                # 验证每条数据的格式
+                valid_data = []
+                invalid_count = 0
+                for item in batch_data:
+                    try:
+                        if not all(key in item for key in ["instruction", "input", "output"]):
+                            invalid_count += 1
+                            continue
+                        if not all(isinstance(item[key], str) for key in ["instruction", "input", "output"]):
+                            invalid_count += 1
+                            continue
+                        valid_data.append(item)
+                    except Exception as e:
+                        invalid_count += 1
+                        continue
+                
+                if invalid_count > 0:
+                    logger.debug(f"本批次有 {invalid_count} 条无效数据被过滤")
+                
+                if valid_data:
+                    all_data.extend(valid_data)
+                    total_generated += len(valid_data)
+                    
+                    # 保存到文件
+                    if request.save_file:
+                        save_path = os.path.join(current_dir, "generated_data", request.save_file)
+                        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                        with open(save_path, 'a', encoding='utf-8') as f:
+                            for item in valid_data:
+                                json.dump(item, f, ensure_ascii=False)
+                                f.write('\n')
+                    
+                    logger.info(f"已生成 {total_generated}/{request.total_count} 条数据")
+                else:
+                    logger.warning("本批次所有数据都无效")
+                    
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON解析错误: {e}, 响应内容: {json_string[:200]}...")
+                continue
+            except Exception as e:
+                logger.warning(f"处理本批次数据时出错: {e}")
+                continue
+
+        if not all_data:
+            raise ValueError("未能生成任何有效数据")
+
+        return TrainingDataGenerationResponse(
+            generated_count=total_generated,
+            message=f"成功生成 {total_generated} 条训练数据" + 
+                   (f"并保存到 {request.save_file}" if request.save_file else "") +
+                   (" (因收到退出信号提前结束)" if server_should_exit else ""),
+            sample_data=all_data[:3]
+        )
+
+    except Exception as e:
+        logger.error(f"生成训练数据失败: {e}")
+        raise HTTPException(status_code=500, detail=f"生成训练数据失败: {e}")
+    finally:
+        active_tasks.remove(task_id)
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")
     print(f"vLLM API地址: {config.vllm_api_url}")
     print(f"默认模型: {config.default_model}")
+    print(f"按Ctrl+C可以优雅停机")
     print(f"健康检查: http://{config.server_host}:{config.server_port}/health")
     print(f"聊天接口: http://{config.server_host}:{config.server_port}/chat")
     print(f"简化接口: http://{config.server_host}:{config.server_port}/simple_chat")
@@ -1654,10 +2025,27 @@ if __name__ == "__main__":
     print(f"修改预算接口: http://{config.server_host}:{config.server_port}/update_budget")
     print(f"社团推荐接口: http://{config.server_host}:{config.server_port}/club_recommend")
     print(f"更新社团信息接口: http://{config.server_host}:{config.server_port}/update_club_data")
+    print(f"训练数据生成接口: http://{config.server_host}:{config.server_port}/generate_training_data")
     
-    uvicorn.run(
+    # 使用自定义的uvicorn配置类来支持优雅停机
+    class UvicornServer(uvicorn.Server):
+        def handle_exit(self, sig: int, frame: Optional[Any]) -> None:
+            handle_exit_signal(sig, frame)
+            return super().handle_exit(sig, frame)
+
+    config = uvicorn.Config(
         app,
         host=config.server_host,
         port=config.server_port,
         log_level=config.log_level.lower()
-    ) 
+    )
+    server = UvicornServer(config=config)
+    
+    try:
+        server.run()
+    except KeyboardInterrupt:
+        logger.info("收到键盘中断，正在关闭服务器...")
+    except Exception as e:
+        logger.error(f"服务器运行出错: {e}")
+    finally:
+        logger.info("服务器已关闭")
