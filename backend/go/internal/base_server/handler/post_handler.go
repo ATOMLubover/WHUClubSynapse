@@ -33,7 +33,7 @@ func (h *PostHandler) GetPostList(ctx iris.Context, id int) {
 	postNum := ctx.URLParamIntDefault("post_num", 10)
 	offset := ctx.URLParamIntDefault("offset", 0)
 
-	userRole := ctx.Values().GetString("user_claims_role")
+	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" {
 		ctx.StopWithStatus(iris.StatusBadRequest)
 		return
@@ -96,7 +96,7 @@ func (h *PostHandler) GetPinnedPost(ctx iris.Context, id int) {
 }
 
 func (h *PostHandler) GetPostComments(ctx iris.Context, id int) {
-	userRole := ctx.Values().GetString("user_claims_role")
+	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" {
 		ctx.StopWithStatus(iris.StatusBadRequest)
 		return

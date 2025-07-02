@@ -7,7 +7,6 @@ import (
 	"whuclubsynapse-server/internal/shared/dbstruct"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type JoinClubAppliRepo interface {
@@ -38,7 +37,7 @@ func (r *sJoinClubAppliRepo) AddJoinClubAppli(appli *dbstruct.JoinClubAppli) err
 	return r.database.Transaction(func(tx *gorm.DB) error {
 		var existing dbstruct.JoinClubAppli
 		err := tx.
-			Clauses(clause.Locking{Strength: "UPDATE"}).
+			//Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("user_id = ? AND club_id = ? AND (status = 'pending' OR status = 'approved')",
 				appli.UserId, appli.ClubId).
 			First(&existing).Error
@@ -85,7 +84,7 @@ func (r *sJoinClubAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstr
 
 	var appli dbstruct.JoinClubAppli
 	err := tx.
-		Clauses(clause.Locking{Strength: "UPDATE"}).
+		//Clauses(clause.Locking{Strength: "UPDATE"}).
 		Model(&dbstruct.JoinClubAppli{}).
 		Where("id = ?", appliId).Error
 

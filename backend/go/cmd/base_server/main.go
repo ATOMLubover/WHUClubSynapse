@@ -190,7 +190,7 @@ func InitApiHandler(
 		}
 
 		ctx.Values().Set("user_claims_user_id", userClaims.UserId)
-		ctx.Values().Set("user_claims_role", userClaims.Role)
+		ctx.Values().Set("user_claims_user_role", userClaims.Role)
 
 		ctx.Next()
 	})
@@ -215,6 +215,7 @@ func InitClubHandler(
 	clubApp.Handle(new(handler.ClubHandler))
 
 	InitClubPubHandler(clubApp, jwtFct, lgr)
+	InitClubAdminHandler(clubApp, jwtFct, lgr)
 	InitPostHandler(clubApp)
 }
 

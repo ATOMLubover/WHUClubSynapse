@@ -21,5 +21,18 @@ func NewTransactionCoordinator(tx *gorm.DB) TransactionCoordinator {
 }
 
 func (c *sTransactionCoordinator) RunInTransaction(ctx context.Context, handler func(tx *gorm.DB) error) error {
-	return c.tx.WithContext(ctx).Transaction(handler)
+	transaction := c.tx.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			transaction.Rollback()
+		}
+	}()
+
+	if err := transaction.WithContext(ctx).Transaction(handler); err != nil {
+		transaction.Rollback()
+		return err
+
+	}
+
+	return transaction.Commit().Error
 }

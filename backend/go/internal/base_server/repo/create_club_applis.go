@@ -7,7 +7,6 @@ import (
 	"whuclubsynapse-server/internal/shared/dbstruct"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type CreateClubAppliRepo interface {
@@ -38,7 +37,7 @@ func (r *sCreateClubAppliRepo) AddCreateClubAppli(appli *dbstruct.CreateClubAppl
 	return r.database.Transaction(func(tx *gorm.DB) error {
 		var existing dbstruct.CreateClubAppli
 		err := tx.
-			Clauses(clause.Locking{Strength: "UPDATE"}).
+			//Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("user_id = ? AND status = 'pending'", appli.UserId).
 			First(&existing).Error
 
@@ -70,7 +69,7 @@ func (r *sCreateClubAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbs
 
 	var appli dbstruct.CreateClubAppli
 	err := tx.
-		Clauses(clause.Locking{Strength: "UPDATE"}).
+		//Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("create_appli_id = ?", appliId).
 		First(&appli).Error
 

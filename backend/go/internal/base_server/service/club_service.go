@@ -150,6 +150,7 @@ func (s *sClubService) ApplyForCreateClub(newClub dbstruct.Club) error {
 }
 
 func (s *sClubService) ApplyForJoinClub(userId, expectedClubId uint, reason string) error {
+	s.logger.Info("申请加入社团", "user_id", userId, "club_id", expectedClubId)
 	return s.joinClubAppliRepo.AddJoinClubAppli(&dbstruct.JoinClubAppli{
 		UserId:      userId,
 		ClubId:      expectedClubId,
@@ -173,7 +174,7 @@ func (s *sClubService) ApplyForUpdateClub(newInfo dbstruct.Club) error {
 }
 
 func (s *sClubService) ApproveAppliForCreateClub(appliId int) (uint, error) {
-	ctxTmt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxTmt, cancel := context.WithTimeout(context.Background(), 1000*time.Second)
 	defer cancel()
 
 	var newClubId uint
@@ -193,7 +194,7 @@ func (s *sClubService) ApproveAppliForCreateClub(appliId int) (uint, error) {
 		}
 
 		var newClub dbstruct.Club
-		if err := jsonbutil.FromJsonb(appli.Proposal, &dbstruct.Club{}); err != nil {
+		if err := jsonbutil.FromJsonb(appli.Proposal, &newClub); err != nil {
 			return err
 		}
 

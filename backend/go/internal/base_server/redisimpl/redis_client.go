@@ -97,7 +97,13 @@ func (s *sRedisClientService) UploadClubInfo(clubInfo *dbstruct.Club) error {
 		return errors.New("无法转化club_id为字符串")
 	}
 
-	metadataJson, err := json.Marshal(map[string]any{})
+	metadataJson, err := json.Marshal(map[string]any{
+		"name":         clubInfo.Name,
+		"description":  clubInfo.Description,
+		"requirements": clubInfo.Requirements,
+		"tags":         clubInfo.Tags,
+		"category":     clubInfo.CategoryId,
+	})
 	if err != nil {
 		return err
 	}
@@ -144,7 +150,11 @@ func (s *sRedisClientService) UploadPostInfo(postInfo *dbstruct.ClubPost) error 
 		return err
 	}
 
-	metadataJson, err := json.Marshal(map[string]any{})
+	metadataJson, err := json.Marshal(map[string]any{
+		"title":     postInfo.Title,
+		"author_id": postInfo.UserId,
+		"is_pinned": postInfo.IsPinned,
+	})
 	if err != nil {
 		return err
 	}

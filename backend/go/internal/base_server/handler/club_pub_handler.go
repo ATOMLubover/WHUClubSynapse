@@ -99,7 +99,7 @@ func (h *ClubPubHandler) PutProcAppliForJoinClub(ctx iris.Context) {
 	ctx.Text("通过社团更新申请成功")
 }
 
-func (h *ClubHandler) GetJoinApplisForClub(ctx iris.Context, id int) {
+func (h *ClubPubHandler) GetJoinApplisForClub(ctx iris.Context, id int) {
 	joinApplis, err := h.ClubService.
 		GetJoinApplisForClub(id)
 	if err != nil {

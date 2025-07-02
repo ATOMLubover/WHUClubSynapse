@@ -103,7 +103,7 @@ func (h *UserHandler) GetPing(ctx iris.Context) {
 		return
 	}
 
-	userRole := ctx.Values().GetString("user_claims_role")
+	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" {
 		ctx.StatusCode(iris.StatusForbidden)
 		return
