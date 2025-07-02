@@ -399,6 +399,125 @@
                 <span>标签限制4字以内，最多可添加8个标签</span>
               </div>
             </div>
+
+            <!-- AI智能推荐社团 -->
+            <div class="preference-section">
+              <div class="ai-recommend-window">
+                <div class="recommend-header">
+                  <div class="recommend-title">
+                    <el-icon class="ai-icon"><MagicStick /></el-icon>
+                    AI 智能推荐社团
+                    <el-tag 
+                      :type="aiServiceAvailable ? 'success' : 'danger'" 
+                      size="small" 
+                      style="margin-left: 8px;"
+                    >
+                      {{ aiServiceAvailable ? '在线' : '离线' }}
+                    </el-tag>
+                  </div>
+                  <div class="header-actions">
+                    <el-button 
+                      type="text" 
+                      size="small" 
+                      @click="checkAIService"
+                      :loading="checkingStatus"
+                    >
+                      <el-icon><Refresh /></el-icon>
+                      检查状态
+                    </el-button>
+                    <el-button 
+                      type="text" 
+                      size="small" 
+                      @click="clearRecommendations"
+                      :disabled="!aiRecommendResult"
+                    >
+                      清空结果
+                    </el-button>
+                  </div>
+                </div>
+                
+                <div class="recommend-content">
+                  <div v-if="!aiRecommendResult && !aiRecommendLoading" class="empty-state">
+                    <el-button 
+                      type="primary" 
+                      @click="getAIRecommendations" 
+                      :loading="aiRecommendLoading"
+                      :disabled="!canGetRecommendations || aiRecommendLoading"
+                      class="recommend-btn"
+                      size="large"
+                    >
+                      <el-icon><MagicStick /></el-icon>
+                      开始AI智能推荐
+                    </el-button>
+                    <div v-if="!canGetRecommendations" class="requirement-tip">
+                      <el-icon><InfoFilled /></el-icon>
+                      <span>请完善一些基本信息（姓名、简介、专业或兴趣标签）后再获取推荐</span>
+                    </div>
+                    <div v-if="!aiServiceAvailable" class="service-tip">
+                      <el-icon><Warning /></el-icon>
+                      <span>AI服务暂时不可用，请检查网络连接</span>
+                    </div>
+                    <p class="empty-tip">AI将基于您的个人信息、专业背景和兴趣标签，智能推荐最适合的社团</p>
+                  </div>
+                  
+                  <div v-if="aiRecommendLoading" class="loading-state">
+                    <el-icon class="loading-icon"><Loading /></el-icon>
+                    <p>AI正在分析您的信息并生成推荐...</p>
+                    <div class="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                  
+                  <div v-if="aiRecommendResult" class="recommend-result">
+                    <div class="result-section">
+                      <h4>推荐总结</h4>
+                      <div class="summary-content">
+                        <p>{{ aiRecommendResult.Summary_text }}</p>
+                      </div>
+                    </div>
+                    
+                    <el-divider />
+                    
+                    <div class="result-section">
+                      <h4>推荐社团</h4>
+                      <div class="clubs-container">
+                        <div 
+                          v-for="(club, index) in aiRecommendResult.Recommend_club_list" 
+                          :key="index"
+                          class="club-item"
+                        >
+                          <div class="club-header">
+                            <h6 class="club-name">{{ club.club_name }}</h6>
+                            <div class="club-tags">
+                              <el-tag 
+                                v-for="tag in club.tags" 
+                                :key="tag" 
+                                size="small" 
+                                class="club-tag"
+                              >
+                                {{ tag }}
+                              </el-tag>
+                            </div>
+                          </div>
+                          <p class="club-description">{{ club.description }}</p>
+                          <div class="recommend-reason">
+                            <el-icon><StarFilled /></el-icon>
+                            <span>推荐理由：{{ club.recommend_reason }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div v-if="errorMessage" class="error-state">
+                    <el-icon class="error-icon" color="#F56C6C"><Warning /></el-icon>
+                    <p>{{ errorMessage }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </el-card>
       </div>
@@ -478,11 +597,17 @@ import {
   View,
   PriceTag,
   InfoFilled,
+  MagicStick,
+  StarFilled,
+  Refresh,
+  Warning,
+  Loading,
 } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
-import type { User as UserType, UserStats, UserPreferences, ClubCategory } from '@/types'
+import { getClubRecommendations, checkAIStatus } from '@/api/ai'
+import type { User as UserType, UserStats, UserPreferences, ClubCategory, ClubRecommendResponse } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 import { allUserTags } from '@/utils/mockData'
 import { useRouter } from 'vue-router'
@@ -503,6 +628,13 @@ const uploadedAvatar = ref('')
 const tagLoading = ref(false)
 const tagOptions = ref<string[]>([])
 const tagInput = ref('')
+
+// AI推荐相关
+const aiRecommendLoading = ref(false)
+const aiRecommendResult = ref<ClubRecommendResponse | null>(null)
+const aiServiceAvailable = ref(true)
+const checkingStatus = ref(false)
+const errorMessage = ref('')
 
 // 用户信息
 const userInfo = ref<UserType | null>(null)
@@ -869,8 +1001,110 @@ const handleStatClick = (index: number) => {
   }
 }
 
+// AI推荐相关方法
+const canGetRecommendations = computed(() => {
+  const hasUserInfo = !!userInfo.value
+  const hasRealName = !!(userInfo.value?.realName)
+  const hasBio = !!(userInfo.value?.bio)
+  const hasTags = !!(preferences.tags && preferences.tags.length > 0)
+  const hasMajor = !!(userInfo.value?.major)
+  
+  console.log('AI推荐条件检查:', {
+    hasUserInfo,
+    hasRealName,
+    hasBio,
+    hasTags,
+    hasMajor,
+    userInfo: userInfo.value,
+    tags: preferences.tags
+  })
+  
+  // 放宽条件：只要有基本信息就可以
+  return hasUserInfo && (hasRealName || hasBio || hasTags || hasMajor)
+})
+
+const getAIRecommendations = async () => {
+  if (!canGetRecommendations.value) {
+    ElMessage.warning('请完善一些基本信息（姓名、简介、专业或兴趣标签）后再获取推荐')
+    return
+  }
+
+  if (!aiServiceAvailable.value) {
+    ElMessage.warning('AI服务暂时不可用，正在尝试重新连接...')
+    // 尝试重新检查AI服务状态
+    await checkAIService()
+    if (!aiServiceAvailable.value) {
+      ElMessage.error('AI服务连接失败，请检查网络连接或联系管理员')
+      return
+    }
+  }
+
+  try {
+    aiRecommendLoading.value = true
+    errorMessage.value = ''
+    aiRecommendResult.value = null
+    
+    // 构建请求数据，确保所有必填字段都有值
+    const request = {
+      User_name: userInfo.value?.realName || userInfo.value?.username || '用户',
+      User_description: userInfo.value?.bio || '暂无个人描述',
+      User_tags: preferences.tags && preferences.tags.length > 0 ? preferences.tags : ['通用'],
+      User_major: userInfo.value?.major || '未指定专业'
+    }
+
+    console.log('开始AI智能推荐，请求数据:', request)
+    
+    // 验证请求数据
+    if (!request.User_name || !request.User_description || !request.User_tags || !request.User_major) {
+      throw new Error('请求数据不完整，请完善个人信息')
+    }
+    
+    const result = await getClubRecommendations(request)
+    aiRecommendResult.value = result
+    
+    ElMessage.success('AI推荐获取成功')
+  } catch (error: any) {
+    console.error('AI推荐失败:', error)
+    errorMessage.value = 'AI推荐失败: ' + (error.message || '请稍后重试')
+    ElMessage.error(errorMessage.value)
+  } finally {
+    aiRecommendLoading.value = false
+  }
+}
+
+const checkAIService = async () => {
+  if (checkingStatus.value) return
+  
+  checkingStatus.value = true
+  
+  try {
+    console.log('开始检查AI服务状态...')
+    aiServiceAvailable.value = await checkAIStatus()
+    console.log('AI服务状态检查结果:', aiServiceAvailable.value)
+    
+    if (!aiServiceAvailable.value) {
+      ElMessage.warning('AI服务暂时不可用，请检查网络连接或联系管理员')
+    } else {
+      ElMessage.success('AI服务连接正常')
+    }
+  } catch (error) {
+    console.error('检查AI服务失败:', error)
+    aiServiceAvailable.value = false
+    ElMessage.error('AI服务检查失败: ' + (error instanceof Error ? error.message : '未知错误'))
+  } finally {
+    checkingStatus.value = false
+  }
+}
+
+const clearRecommendations = () => {
+  aiRecommendResult.value = null
+  ElMessage.success('AI推荐结果已清空')
+}
+
 onMounted(() => {
   loadUserData()
+  // 检查AI服务可用性
+  checkAIService()
 })
 </script>
 
@@ -1314,198 +1548,363 @@ onMounted(() => {
 
 /* 偏好设置样式 */
 .preferences-content {
-  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .preference-section {
-  margin-bottom: 32px;
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 24px;
 }
 
 .preference-section:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .preference-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 20px 0;
-  font-size: 18px;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-size: 16px;
   font-weight: 600;
-  color: #1a202c;
-}
-
-.preference-title .el-icon {
-  color: #667eea;
-  font-size: 20px;
+  color: #303133;
 }
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 }
 
-.checkbox-item :deep(.el-checkbox__label) {
-  font-weight: 500;
-  color: #4a5568;
-}
-
-.checkbox-item :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  background-color: #667eea;
-  border-color: #667eea;
+.checkbox-item {
+  margin: 0;
 }
 
 .switch-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .switch-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.switch-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px 0;
 }
 
 .switch-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .switch-label {
-  display: block;
-  font-weight: 600;
-  color: #1a202c;
-  font-size: 16px;
-  margin-bottom: 4px;
+  font-weight: 500;
+  color: #303133;
 }
 
 .switch-desc {
-  display: block;
-  color: #718096;
-  font-size: 14px;
-}
-
-.switch-item .el-switch {
-  margin-left: 16px;
-}
-
-.switch-item .el-switch :deep(.el-switch__core) {
-  border-color: #667eea;
-}
-
-.switch-item .el-switch.is-checked :deep(.el-switch__core) {
-  background-color: #667eea;
+  font-size: 12px;
+  color: #909399;
 }
 
 .tag-selector {
   width: 100%;
-  margin-bottom: 12px;
-}
-
-.tag-selector :deep(.el-select__wrapper) {
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  min-height: 80px;
-  padding: 12px;
-}
-
-.tag-selector :deep(.el-select__wrapper:hover) {
-  border-color: #667eea;
-}
-
-.tag-selector :deep(.el-select__wrapper.is-focused) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .tag-hint {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #718096;
-  font-size: 13px;
-  padding: 8px 0;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
 }
 
-.tag-hint .el-icon {
-  color: #a0aec0;
+/* AI推荐样式 */
+.ai-recommend-window {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8eaed;
+  min-height: 500px;
 }
 
-/* .security-items {
-  space-y: 20px;
-} */
-
-.security-item {
+.recommend-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4e7ed;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  color: white;
 }
 
-.security-info h4 {
-  margin: 0 0 4px 0;
+.recommend-title {
+  display: flex;
+  align-items: center;
   font-size: 16px;
-  color: #303133;
+  font-weight: 600;
+  color: white;
 }
 
-.security-info p {
-  margin: 0;
-  color: #606266;
-  font-size: 14px;
+.ai-icon {
+  margin-right: 8px;
+  color: white;
 }
 
-.avatar-uploader {
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.header-actions .el-button {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-actions .el-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.recommend-content {
+  height: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   text-align: center;
+  padding: 32px;
 }
 
-.avatar-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 6px;
-  object-fit: cover;
+.recommend-btn {
+  width: 320px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 24px;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.12);
+  border-radius: 8px;
 }
 
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 120px;
-  height: 120px;
-  border: 1px dashed #d9d9d9;
-  border-radius: 6px;
+.recommend-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.18);
+}
+
+.recommend-btn:disabled {
+  background: #f0f2f5 !important;
+  color: #b1b3b8 !important;
+  border: 1.5px dashed #c0c4cc !important;
+  box-shadow: none;
+  opacity: 1 !important;
+}
+
+.requirement-tip, .service-tip {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-}
-
-.avatar-uploader-icon:hover {
-  border-color: #409eff;
-  color: #409eff;
-}
-
-.upload-tips {
-  text-align: center;
-  margin-top: 10px;
-}
-
-.upload-tips p {
-  margin: 0;
+  padding: 10px 0 0 0;
   color: #909399;
+  font-size: 14px;
+  background: none;
+  border-radius: 4px;
+}
+
+.requirement-tip .el-icon, .service-tip .el-icon {
+  margin-right: 8px;
+  color: #909399;
+  font-size: 18px;
+}
+
+.empty-tip {
   font-size: 12px;
+  margin-top: 8px;
+  color: #c0c4cc;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #667eea;
+  text-align: center;
+  padding: 32px;
+}
+
+.loading-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #667eea;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.recommend-result {
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  width: 100%;
+}
+
+.result-section {
+  margin-bottom: 16px;
+}
+
+.result-section:last-child {
+  margin-bottom: 0;
+}
+
+.result-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.summary-content {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.summary-content p {
+  margin: 0;
+  line-height: 1.6;
+  color: #303133;
+}
+
+.clubs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.club-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.club-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.club-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.club-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.club-tag {
+  font-size: 12px;
+}
+
+.club-description {
+  margin: 0 0 12px 0;
+  color: #606266;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.recommend-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #f39c12;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recommend-reason .el-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #f56c6c;
+  text-align: center;
+  padding: 32px;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 /* 响应式设计 */

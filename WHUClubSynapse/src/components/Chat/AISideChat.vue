@@ -136,7 +136,7 @@
             </div>
             <div class="message-content">
               <div class="message-text">
-                <MarkdownRenderer :content="message.content" />
+                <SmartStreamingRenderer :content="message.content" />
               </div>
               <div class="message-time">{{ formatTime(message.timestamp) }}</div>
             </div>
@@ -168,8 +168,7 @@
             type="textarea"
             :rows="1"
             :autosize="{ minRows: 1, maxRows: 4 }"
-            @keydown.enter.prevent="handleEnter"
-            @keydown.ctrl.enter="sendMessage"
+            @keydown="handleKeyDown"
             resize="none"
             class="message-input"
             :disabled="!aiAvailable"
@@ -206,10 +205,12 @@ import {
   Position,
   Warning,
 } from '@element-plus/icons-vue'
-import { sideChat, checkAiServiceHealth } from '@/api/ai-search'
+import { checkAiServiceHealth } from '@/api/ai-search'
+import { sideChatStream } from '@/api/ai-search'
 import { isSideChatEnabled as checkSideChatEnabled } from '@/config/ai-search'
 import type { ChatMessage, SmartSearchSource } from '@/types'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import SmartStreamingRenderer from '@/components/SmartStreamingRenderer.vue'
 
 // 响应式数据
 const isChatOpen = ref(false)
@@ -265,68 +266,99 @@ const checkAiAvailability = async () => {
 }
 
 const sendMessage = async (message?: string) => {
+  console.log('sendMessage被调用，参数:', message, '类型:', typeof message)
+  console.log('inputMessage.value:', inputMessage.value, '类型:', typeof inputMessage.value)
+  
   const content = message || inputMessage.value.trim()
-  if (!content || !aiAvailable.value) return
+  console.log('处理后的content:', content, '类型:', typeof content)
+  
+  if (!content || !aiAvailable.value) {
+    console.log('sendMessage提前返回，content:', content, 'aiAvailable:', aiAvailable.value)
+    return
+  }
 
+  console.log('开始处理消息发送，content:', content)
+  
   // 添加用户消息
   const userMessage: ChatMessage = {
     role: 'user',
     content,
     timestamp: new Date().toISOString()
   }
+  console.log('创建的用户消息:', userMessage)
+  
   chatHistory.value.push(userMessage)
-
-  // 清空输入框
   inputMessage.value = ''
-
-  // 滚动到底部
   await nextTick()
   scrollToBottom()
 
-  // 发送到AI
+  // 流式AI回复
   isLoading.value = true
-  try {
-    const response = await sideChat({
+  let answer = ''
+  let sources: any[] = []
+  let aiMsgIndex = -1
+  
+  console.log('准备调用sideChatStream，请求参数:', {
+    query: content,
+    history: chatHistory.value.slice(0, -1)
+  })
+  
+  sideChatStream(
+    {
       query: content,
-      history: chatHistory.value.slice(0, -1) // 不包含当前消息
-    })
-
-    // 添加AI回复
-    const aiMessage: ChatMessage & { sources?: SmartSearchSource[] } = {
-      role: 'assistant',
-      content: response.answer,
-      timestamp: new Date().toISOString(),
-      sources: response.source
+      history: chatHistory.value.slice(0, -1)
+    },
+    {
+      onSource: (src) => {
+        console.log('收到source:', src)
+        sources = src
+      },
+      onToken: (token) => {
+        console.log('收到token:', token, '类型:', typeof token)
+        answer += token
+        // 实时更新最后一条assistant消息
+        if (aiMsgIndex === -1) {
+          chatHistory.value.push({
+            role: 'assistant',
+            content: answer,
+            timestamp: new Date().toISOString(),
+            sources
+          })
+          aiMsgIndex = chatHistory.value.length - 1
+        } else {
+          chatHistory.value[aiMsgIndex].content = answer
+        }
+        nextTick(scrollToBottom)
+      },
+      onEnd: () => {
+        console.log('AI回复结束')
+        isLoading.value = false
+      },
+      onError: (err) => {
+        console.error('AI回复错误:', err)
+        isLoading.value = false
+        ElMessage.error('AI回复失败，请稍后重试')
+      }
     }
-    chatHistory.value.push(aiMessage)
-
-    // 滚动到底部
-    await nextTick()
-    scrollToBottom()
-  } catch (error) {
-    console.error('发送消息失败:', error)
-    
-    // 检查是否是AI连接失败
-    if (error instanceof Error && error.message.includes('AI连接失败')) {
-      aiAvailable.value = false
-      ElMessage.error('AI连接失败，请稍后重试')
-    } else {
-      ElMessage.error('发送失败，请稍后重试')
-    }
-    
-    // AI连接失败时不添加任何错误消息
-  } finally {
-    isLoading.value = false
-  }
+  )
 }
 
-const handleEnter = (event: KeyboardEvent) => {
-  if (event.ctrlKey) {
-    // Ctrl + Enter 换行
-    return
+const handleKeyDown = (event: KeyboardEvent) => {
+  console.log('handleKeyDown被调用，事件:', event)
+  console.log('按键代码:', event.key, 'Ctrl键状态:', event.ctrlKey)
+  
+  if (event.key === 'Enter') {
+    if (event.ctrlKey) {
+      // Ctrl + Enter 换行，不阻止默认行为
+      console.log('Ctrl+Enter，允许换行')
+      return
+    } else {
+      // Enter 发送，阻止默认行为
+      console.log('Enter键，准备发送消息')
+      event.preventDefault()
+      sendMessage()
+    }
   }
-  // Enter 发送
-  sendMessage()
 }
 
 const scrollToBottom = () => {

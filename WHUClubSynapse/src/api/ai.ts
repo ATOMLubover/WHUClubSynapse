@@ -1,4 +1,5 @@
-import { AI_CONFIG, getChatApiUrl, getStatusApiUrl } from '@/config/ai'
+import { AI_CONFIG, getChatApiUrl, getStatusApiUrl, getAIApiUrl } from '@/config/ai'
+import type { ClubRecommendRequest, ClubRecommendResponse } from '@/types'
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -344,6 +345,41 @@ export const generateFinancialReport = async (requestData: FinancialReportReques
     return data
   } catch (error) {
     console.error('生成财务报表请求失败:', error)
+    throw error
+  }
+}
+
+// AI智能推荐社团
+export const getClubRecommendations = async (request: ClubRecommendRequest): Promise<ClubRecommendResponse> => {
+  try {
+    const url = getAIApiUrl('/club_recommend')
+    console.log('AI推荐社团请求URL:', url)
+    console.log('AI推荐社团请求数据:', request)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('AI推荐社团响应状态:', response.status)
+    console.log('AI推荐社团响应头:', Object.fromEntries(response.headers.entries()))
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI推荐社团HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP ${response.status}: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('AI推荐社团响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('AI推荐社团请求失败:', error)
     throw error
   }
 } 

@@ -124,6 +124,11 @@ const router = createRouter({
       component: () => import('@/examples/jwt-usage-example.vue'),
     },
     {
+      path: '/test-streaming',
+      name: 'test-streaming',
+      component: () => import('@/views/test-streaming.vue'),
+    },
+    {
       path:'/admin',
       name:'admin',
       component:()=>import("@/views/Admin/index.vue")
