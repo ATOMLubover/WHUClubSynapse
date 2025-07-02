@@ -27,6 +27,7 @@ func (h *PostHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/comments/{id:int}", "GetPostComments")
 
 	b.Handle("POST", "/create", "PostCreatePost")
+	b.Handle("POST", "/comment", "PostCreatePostComment")
 }
 
 func (h *PostHandler) GetPostList(ctx iris.Context, id int) {
@@ -188,4 +189,32 @@ func (h *PostHandler) PostCreatePost(ctx iris.Context) {
 	}
 
 	ctx.Text("创建帖子成功")
+}
+
+func (h *PostHandler) PostCreatePostComment(ctx iris.Context) {
+	var newComment dto.CreateCommentRequest
+	if err := ctx.ReadJSON(&newComment); err != nil {
+		h.Logger.Error("解析请求失败",
+			"error", err,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("解析请求失败")
+		return
+	}
+
+	if err := h.PostService.CreatePostComment(dbstruct.ClubPostComment{
+		Content: newComment.Content,
+		PostId:  uint(newComment.PostId),
+		UserId:  uint(newComment.UserId),
+	}); err != nil {
+		h.Logger.Error("创建帖子评论失败",
+			"error", err,
+		)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("创建帖子评论失败")
+	}
+
+	ctx.Text("创建帖子评论成功")
 }

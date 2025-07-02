@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"whuclubsynapse-server/internal/base_server/baseconfig"
+	"whuclubsynapse-server/internal/base_server/esimpl"
 	"whuclubsynapse-server/internal/base_server/grpcimpl"
 	"whuclubsynapse-server/internal/base_server/handler"
 	"whuclubsynapse-server/internal/base_server/model"
@@ -61,6 +62,9 @@ func main() {
 	jwtFactory := CreateJwtFactory(config, logger)
 
 	redisService := redisimpl.NewRedisClientService(config, logger)
+	if err := esimpl.InitElasticsearch(); err != nil {
+		panic(err)
+	}
 
 	userRepo := repo.CreateUserRepo(database, logger)
 	categoryRepo := repo.CreateCategoryRepo(database, logger)

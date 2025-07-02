@@ -7,3 +7,9 @@ type PostComment struct {
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`
 }
+
+type CreateCommentRequest struct {
+	UserId  int    `json:"user_id"`
+	PostId  int    `json:"post_id"`
+	Content string `json:"content"`
+}
