@@ -94,7 +94,15 @@ const handleLogin = async () => {
     await authStore.login(loginForm)
 
     ElMessage.success('登录成功')
-    router.push('/')
+
+    // 方案1：直接刷新页面（推荐）
+    await router.push('/')
+    window.location.reload()
+
+    // 方案2：如果不想刷新页面，可以使用以下代码替代上面两行：
+    // setTimeout(() => {
+    //   router.push('/')
+    // }, 500)
   } catch (error) {
     console.error('登录失败:', error)
   }

@@ -35,10 +35,14 @@ const handlePreferenceSave = async (preferences: UserPreferences) => {
 // 监听登录状态变化
 watch(
   () => authStore.isLoggedIn,
-  (isLoggedIn) => {
-    if (isLoggedIn) {
-      // 延迟检查，确保用户信息已加载
-      setTimeout(checkPreferenceSetup, 500)
+  (isLoggedIn, wasLoggedIn) => {
+    if (isLoggedIn && !wasLoggedIn) {
+      // 刚刚登录成功，刷新用户信息
+      console.log('检测到用户登录，刷新用户信息')
+      authStore.fetchUserInfo().then(() => {
+        // 延迟检查，确保用户信息已加载
+        setTimeout(checkPreferenceSetup, 500)
+      })
     }
   },
 )

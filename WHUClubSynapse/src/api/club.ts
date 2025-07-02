@@ -750,6 +750,10 @@ export const getUserCreatedApplications = async (): Promise<ClubCreatedApplicati
  const response = await request.get('/api/club/my_createapplis')
   const clubcreateapplication: ClubCreatedApplication[] = response.data
   console.log(clubcreateapplication)
+
+  if(clubcreateapplication==null){
+    return []
+  }
   
   return clubcreateapplication.map((item)=>{
     if(item.reviewed_at=="0001-01-01 00:00:00"){
