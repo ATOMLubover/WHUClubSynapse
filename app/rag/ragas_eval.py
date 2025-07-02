@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import json
 import httpx
@@ -11,16 +12,17 @@ from ragas.metrics import (
     context_precision,
 )
 from langchain_openai import ChatOpenAI
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from app.configs.config import settings
 
 # 1. 定义评估用的 LLM
 # RAGAS 评估需要一个 LLM 来判断 Faithfulness, Answer Relevancy 等。
-# 这里我们使用和项目里一致的 vLLM 部署的 OpenAI-compatible API
+# 引入先进的 deepseek-v3
 llm = ChatOpenAI(
-    openai_api_base=settings.VLLM_API_URL,
-    openai_api_key=settings.VLLM_API_KEY or "dummy_key",
-    model_name=settings.VLLM_MODEL_NAME,
-    temperature=0.0,
+    openai_api_base=settings.DEEPSEEK_API_URL,
+    openai_api_key=settings.DEEPSEEK_API_KEY,
+    model_name=settings.DEEPSEEK_MODEL,
+    temperature=0.6,
     max_tokens=4096,
     top_p=0.9,
     stop=["<|eot_id|>", "<|end_of_text|>", "<|im_end|>"],
