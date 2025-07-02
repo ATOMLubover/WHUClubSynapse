@@ -352,12 +352,12 @@
         <!-- 左侧：申请者信息 -->
         <div class="application-info-section">
           <div class="member-header">
-            <el-avatar :src="currentApplication.avatar_url" :size="80" />
+            <el-avatar :src="currentApplication.club?.logo_url" :size="80" />
             <div class="member-basic-info">
               <h3 class="member-name">
-                {{ currentApplication.realName || currentApplication.username }}
+                {{ currentApplication.club?.club_name }}
               </h3>
-              <p class="member-username">@{{ currentApplication.username }}</p>
+              <p class="member-username">@{{ currentApplication.club?.club_name }}</p>
             </div>
           </div>
           <el-divider />
@@ -608,7 +608,7 @@ const loadApplications = async () => {
     // 使用 nextTick 确保 DOM 更新完成
     await nextTick()
 
-    const response = await getClubApplications(club.value.club_id, {
+    const response = await clubStore.fetchPendingClubApplications({
       page: applicationCurrentPage.value,
       pageSize: applicationPageSize.value,
       status: applicationStatusFilter.value,

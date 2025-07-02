@@ -214,17 +214,14 @@ export const mockApplyToClub = async (data: {
 
   // 添加到申请记录
   mockApplications.push({
-    id: (mockApplications.length + 1).toString(),
-    userId: 'user1',
-    clubId: club.club_id,
-    clubName: club.club_name,
-    clubCoverImage: club.logo_url,
-    status: 'approved', // 直接批准加入
+    appli_id: (mockApplications.length + 1).toString(),
+    club_id: club.club_id,
+    status: 'pending', // 直接批准加入
     reason: data.reason,
-    applyReason: data.reason,
-    createdAt: new Date().toISOString(),
-    clubCategory: categories.find((c) => c.category_id === club.category)?.name||' ',
-    feedback: '申请已通过，欢迎加入我们！',
+    applied_at: new Date().toISOString(),
+    reviewed_at: new Date().toISOString(),
+    reject_reason: '',
+    club: club,
   });
 
   // 更新用户统计信息
@@ -239,47 +236,6 @@ export const mockApplyToClub = async (data: {
   }
 }
 
-// 模拟撤销申请
-export const mockCancelApplication = async (applicationId: string)
-: Promise<{ data: ApiResponse<null> }> => {
-  await delay(400)
-  const application = mockApplications.find((app) => app.id === applicationId)
-  const club = mockClubs.find((c) => c.club_id === application?.clubId)
-  if (!club) {
-    throw new Error('社团不存在')
-  }
-  
-  // 如果申请状态是已批准，需要减少成员人数
-  if (application?.status === 'approved') {
-    if (club.member_count > 0) {
-      club.member_count--
-    }
-    // 从用户加入的社团列表中移除
-    const joinedIndex = userJoinedClubIds.indexOf(application.clubId)
-    if (joinedIndex > -1) {
-      userJoinedClubIds.splice(joinedIndex, 1)
-      // 更新用户统计信息
-      mockUser.stats!.joinedClubs--
-    }
-  }
-  
-  club.status = 'not_applied'
-  if (!application) {
-    throw new Error('申请不存在')
-  }
-  const filteredApplications = mockApplications.filter((app) => app.id !== applicationId)
-  mockApplications.length = 0
-  mockApplications.push(...filteredApplications)
-  mockUser.stats!.appliedClubs--
-
-  return {
-    data: {
-      code: 200,
-      message: '撤销申请成功',
-      data: null,
-    },
-  }
-}
 
 // 模拟收藏社团
 export const mockFavoriteClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
@@ -355,7 +311,7 @@ export const mockGetUserApplications = async (
     category?: string
     keyword?: string
   } = {},
-): Promise<{ data: ApiResponse<PaginatedData<any>> }> => {
+): Promise<PaginatedData<ClubApplication>> => {
   await delay(500)
 
   let filteredApplications = mockApplications
@@ -365,12 +321,12 @@ export const mockGetUserApplications = async (
   }
 
   if (params.category) {
-    filteredApplications = filteredApplications.filter((app) => app.clubCategory == params.category)
+    filteredApplications = filteredApplications.filter((app) => app.club?.category?.toString() == params.category)
   }
 
   if (params.keyword) {
     const keyword = params.keyword.toLowerCase()
-    filteredApplications = filteredApplications.filter((app) => app.clubName.toLowerCase().includes(keyword) || app.clubCategory.toLowerCase().includes(keyword))
+    filteredApplications = filteredApplications.filter((app) => app.club?.club_name?.toLowerCase().includes(keyword) || app.club?.category?.toString().includes(keyword))
   }
 
   const page = params.page || 1
@@ -380,18 +336,12 @@ export const mockGetUserApplications = async (
   const list = filteredApplications.slice(start, end)
 
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
         list,
         total: filteredApplications.length,
         page,
         pageSize,
-      },
-    },
+      }
   }
-}
 
 // 模拟创建社团
 export const mockCreateClub = async (data:  {
@@ -418,9 +368,9 @@ export const mockCreateClub = async (data:  {
     adminName: '测试用户',
     member_count: 1, // 创建者自动成为成员
     maxMembers: data.maxMembers,
-    tags: data.tags,
+    tags: data.tags||[],
     isHot: false,
-    status: 'managed', // 创建者创建的社团直接为管理中状态
+    status_for_create: 'pending',
     created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     qq: '1234567890',
@@ -706,13 +656,19 @@ export const mockGetClubPostReplies = async (
 }
 
 export const mockCreateClubPost = async (
-  post: Omit<ClubPost, 'id' | 'createdAt' | 'replyCount'>
-): Promise<{ data: ApiResponse<ClubPost> }> => {
+  data: {
+    club_id: number
+    title: string
+    content: string
+  }
+): Promise<{ data: ApiResponse<null> }> => {
   await delay(400)
   
   const newPost: ClubPost = {
-    ...post,
-    post_id: 'p' + (mockClubPosts.length + 1),
+    club_id: data.club_id.toString(),
+    title: data.title,
+    content: data.content,
+    post_id: (mockClubPosts.length + 1).toString(),
     created_at: new Date().toISOString(),
     comment_count: 0
   }
@@ -722,7 +678,7 @@ export const mockCreateClubPost = async (
     data: {
       code: 200,
       message: '发帖成功',
-      data: newPost
+      data: null
     }
   }
 }
@@ -740,7 +696,7 @@ export const mockReplyClubPost = async (
   mockClubPostReplies.push(newReply)
   // 更新主贴回复数
   const post = mockClubPosts.find(p => p.post_id === reply.postId)
-  if (post) post.comment_count++
+  if (post) post.comment_count=post.comment_count?post.comment_count+1:1
   
   return {
     data: {
@@ -757,7 +713,7 @@ export const mockApplyToCreateClub = async (data: {
   desc: string
   requirements: string
   category_id: number
-  tags: string
+  tags: string[]
 }): Promise<{ data: ApiResponse<null> }> => {
   await delay(800)
 
@@ -765,7 +721,7 @@ export const mockApplyToCreateClub = async (data: {
   const newId = (mockClubApplications.length + 1).toString()
 
   //将tags转换为数组
-  const tags = data.tags.split(',')
+  const tags = data.tags
 
   // 创建申请对象
   const newApplication: ClubCreationApplication = {
@@ -881,7 +837,7 @@ export const mockReviewClubApplication = async (applicationId: string, data: {
       maxMembers: application.maxMembers,
       tags: application.tags,
       isHot: false,
-      status: 'managed',
+      status_for_create: 'approved',
       created_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       qq: application.contactInfo?.qq || '',

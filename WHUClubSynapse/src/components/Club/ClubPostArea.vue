@@ -27,7 +27,7 @@
           <div class="post-meta">
             <el-avatar :size="28" :src="post.authorAvatar || ''" />
             <span class="author">{{ post.authorName }}</span>
-            <span class="time">{{ formatDate(post.created_at) }}</span>
+            <span class="time">{{ formatDate(post?.created_at || '') }}</span>
             <span class="reply"
               ><el-icon><ChatLineRound /></el-icon> {{ post.comment_count }}</span
             >
@@ -115,7 +115,7 @@ const fetchPosts = async () => {
 
 const goToPost = (row: ClubPost) => {
   // 对content_url进行URL编码，避免路径中的特殊字符导致路由解析错误
-  const encodedContentUrl = encodeURIComponent(row.content_url)
+  const encodedContentUrl = encodeURIComponent(row?.content_url || '')
   router.push(`/club/post/${props.clubId}/${row.post_id}/${encodedContentUrl}`)
 }
 
@@ -127,16 +127,9 @@ const handleCreate = async () => {
   createLoading.value = true
   try {
     await createClubPost({
-      club_id: props.clubId,
+      club_id: Number(props.clubId),
       title: createForm.value.title,
       content: createForm.value.content,
-      author_id: authStore.user?.id || 0,
-      authorName: authStore.user?.realName || '匿名',
-      authorAvatar: authStore.user?.avatar_url || '',
-      post_id: '',
-      created_at: '',
-      comment_count: 0,
-      content_url: '',
     })
     ElMessage.success('发帖成功')
     showCreate.value = false

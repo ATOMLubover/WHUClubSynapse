@@ -106,7 +106,7 @@ export const getCurrentUser = async (): Promise<User> => {
   }
   // TODO:这个接口可能需要后端补充，或者使用getUserById结合token解析
   // 暂时使用mock实现
-  return await request.get('/auth/my_info')
+  return (await request.get('/auth/my_info')).data as User
 }
 // TODO:用户退出登录
 export const logout = async (): Promise<ApiResponse<null>> => {

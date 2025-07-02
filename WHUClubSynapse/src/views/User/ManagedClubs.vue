@@ -167,11 +167,12 @@
         <el-form-item label="最大成员数" prop="maxMembers">
           <el-input-number v-model="createForm.maxMembers" :min="1" :max="1000" />
         </el-form-item>
-        <el-form-item label="社团标签">
+        <el-form-item label="社团标签" prop="tags">
           <el-select
             v-model="createForm.tags"
             multiple
             filterable
+            :rules="[{ required: true, message: '请选择社团标签', trigger: 'change' }]"
             allow-create
             placeholder="请选择或输入标签"
           >
@@ -281,6 +282,7 @@ const createRules = {
   description: [{ required: true, message: '请输入社团简介', trigger: 'blur' }],
   category_id: [{ required: true, message: '请选择社团类型', trigger: 'change' }],
   maxMembers: [{ required: true, message: '请输入最大成员数', trigger: 'blur' }],
+  tags: [{ required: true, message: '请选择社团标签', trigger: 'change' }],
 }
 
 // 获取分类标签列表
@@ -439,7 +441,7 @@ const confirmCreate = async () => {
       desc: createForm.value.description,
       requirements: createForm.value.requirements,
       category_id: createForm.value.category_id,
-      tags: createForm.value.tags.join(','),
+      tags: createForm.value.tags,
     })
     showCreateDialog.value = false
     // 重置表单

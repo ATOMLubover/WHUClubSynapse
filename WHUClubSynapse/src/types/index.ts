@@ -57,10 +57,11 @@ export interface Club {
   adminId?: string
   adminName?: string
   maxMembers?: number
-  tags?: string[]
+  tags: string[]
   isHot?: boolean
   isFavorite?: boolean
-  status?: 'pending' | 'joined' | 'managed' | 'not_applied'
+  status?: 'pending' | 'joined' |  'not_applied'
+  status_for_create?: 'pending' | 'approved' | 'rejected'
   updatedAt?: string
   activities?: Activity[]
   location?: string
@@ -90,22 +91,6 @@ export interface ClubCategory {
   count?: number
 }
 
-// 申请记录
-export interface Application {
-  id: string
-  userId: string
-  clubId: string
-  clubName: string
-  clubCoverImage: string
-  status: 'pending' | 'approved' | 'rejected'
-  reason?: string
-  applyReason: string
-  createdAt: string
-  reviewedAt?: string
-  reviewerId?: string
-  clubCategory: string
-  feedback?: string
-}
 
 // 收藏记录
 export interface Favorite {
@@ -187,13 +172,13 @@ export interface UserPreferences {
 
 // 社团帖子类型
 export interface ClubPost {
-  post_id: string
-  club_id: string
+  post_id?: string
+  club_id?: string
   title: string
-  created_at: string
-  comment_count: number
-  author_id: number
-  content_url: string
+  created_at?: string
+  comment_count?: number
+  author_id?: number
+  content_url?: string
 
   content?: string
   authorName?: string
@@ -238,27 +223,18 @@ export interface ClubApplication {
   reason: string
   applied_at: string
   reviewed_at: string
-
-  userId?: string
-  username?: string
-  realName?: string
-  avatar_url?: string
-  status?: 'pending' | 'approved' | 'rejected'
-  studentId?: string
-  major?: string
-  phone?: string
-  email?: string
-  // 新增字段：用户偏好社团和特质标签
-  interestedCategories?: string[] // 偏好社团类型
-  tags?: string[] // 用户特质标签
+  status: string
+  club:Club
 }
 
 // 用户创建的社团申请记录
-export interface UserCreatedApplication {
+export interface ClubCreatedApplication {
   appli_id: number
   applied_at: string  // RFC3339格式
-  reject_reason?: string
-  reviewed_at?: string  // RFC3339格式
+  reject_reason: string
+  reviewed_at: string  // RFC3339格式
+  club_id:number
+  club?:Club
 }
 
 // 社团创建申请类型

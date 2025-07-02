@@ -96,7 +96,12 @@
 
   <!-- 管理员登录弹窗 -->
   <el-dialog v-model="adminLoginDialogVisible" title="管理员登录" width="400px">
-    <el-form :model="adminLoginForm" :rules="adminLoginRules" ref="adminLoginFormRef" label-width="80px">
+    <el-form
+      :model="adminLoginForm"
+      :rules="adminLoginRules"
+      ref="adminLoginFormRef"
+      label-width="80px"
+    >
       <el-form-item label="用户名" prop="username">
         <el-input v-model="adminLoginForm.username" autocomplete="off" />
       </el-form-item>
@@ -106,13 +111,15 @@
     </el-form>
     <template #footer>
       <el-button @click="adminLoginDialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="handleAdminLogin" :loading="adminLoginLoading">登录</el-button>
+      <el-button type="primary" @click="handleAdminLogin" :loading="adminLoginLoading"
+        >登录</el-button
+      >
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   House,
@@ -233,10 +240,7 @@ const handleAdminLogin = async () => {
   await adminLoginFormRef.value?.validate()
   adminLoginLoading.value = true
   try {
-    if (
-      adminLoginForm.value.username === 'admin' &&
-      adminLoginForm.value.password === '123456'
-    ) {
+    if (adminLoginForm.value.username === 'admin' && adminLoginForm.value.password === '123456') {
       ElMessage.success('登录成功')
       adminLoginDialogVisible.value = false
       router.push('/admin')
@@ -255,6 +259,10 @@ const handleAdmin = () => {
 const handleNotification = () => {
   notificationDialogVisible.value = true
 }
+
+onMounted(() => {
+  console.log('authStore.user', authStore.user)
+})
 </script>
 
 <style scoped>
