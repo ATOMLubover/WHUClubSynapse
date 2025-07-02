@@ -34,10 +34,6 @@ def build_final_prompt(user_query: str, history_str: str, context_str: str) -> s
     Constructs the final prompt string to be sent to the language model. Pure function.
     """
     return f"""你是一个“社团管理系统”的AI助手。你的核心任务是为用户提供清晰、准确、有用的信息。请根据下面的对话历史和为最新问题提供的参考资料来回答。
-
----
-**对话历史:**
-{history_str}
 ---
 **为最新问题检索到的参考上下文:**
 {context_str}
@@ -88,19 +84,22 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
         final_prompt = build_final_prompt(user_query, history_str, context_str)
         logger.debug(f"构建的最终提示 (前100字符): {final_prompt[:100]}...")
 
+        history_messages = [msg.model_dump() for msg in chat_query.history]
+        messages_for_llm = history_messages + [{"role": "user", "content": final_prompt}]
+
     except Exception as e:
         logger.error(f"RAG 检索或格式化失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"检索相关文档时出错: {str(e)}")
 
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
-        yield f"event: source\ndata: {json.dumps(retrieved_docs)}\n\n"
+        yield f"event: source\ndata: {json.dumps(retrieved_docs, ensure_ascii=False)}\n\n"
         logger.info("已将溯源文档事件发送到前端")
 
         # b. 准备并开始流式调用 vLLM
         payload = {
             "model": settings.VLLM_MODEL_NAME,
-            "messages": [{"role": "user", "content": final_prompt}],
+            "messages": messages_for_llm,
             "max_tokens": 1024,
             "stream": True,
             "enable_thinking": enable_thinking
@@ -125,7 +124,7 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
                                 chunk = json.loads(data_str)
                                 if 'choices' in chunk and chunk['choices'][0].get('delta', {}).get('content'):
                                     token = chunk['choices'][0]['delta']['content']
-                                    yield f"event: token\ndata: {json.dumps({'token': token})}\n\n"
+                                    yield f"event: token\ndata: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
                             except json.JSONDecodeError:
                                 continue
             logger.info("vLLM 流式传输完成")

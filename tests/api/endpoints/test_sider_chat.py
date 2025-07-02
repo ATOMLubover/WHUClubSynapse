@@ -13,15 +13,15 @@ def test_sider_chat_streaming():
     """
     # Define a sample chat query with history
     chat_query = {
-        "query": "审核一般需要多久？",
+        "query": "Generally speaking, how long does the reviewing take?",
         "history": [
             {
                 "role": "user",
-                "content": "如何创建一个新的社团？"
+                "content": "How to create a club?"
             },
             {
                 "role": "assistant",
-                "content": "要创建一个新的社团，您需要先提交一份包含社团基本信息的申请表..."
+                "content": "To create a club, you should hand in a table first..."
             }
         ]
     }

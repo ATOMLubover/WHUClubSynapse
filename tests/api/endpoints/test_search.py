@@ -8,7 +8,7 @@ client = TestClient(app)
 def test_smart_search():
     # Define a sample search query
     search_query = {
-        "query": "如何创建一个社团？"
+        "query": "社团分哪些类别？"
     }
     
     headers = {

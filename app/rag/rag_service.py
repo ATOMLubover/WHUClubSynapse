@@ -4,6 +4,7 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 from app.configs.config import settings
+from app.utils.singleton import logger
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline, EmbeddingsFilter
 from langchain_community.document_transformers import LongContextReorder
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -72,10 +73,16 @@ def retrieve(query: str, n_results: int = 5) -> List[Dict[str, Any]]:
 
     compressed_docs = pipeline_compressor.compress_documents(docs, query)
 
-    return [
+    results = [
         {"content": doc.page_content, "metadata": doc.metadata}
         for doc in compressed_docs
     ]
+
+    for i, result in enumerate(results):
+        logger.debug(f"""第{i+1}篇文档，前30个字符为'{result['content'][:30]}'，
+                     与prompt的相似度为{result['metadata']['similarity_score']}""")
+
+    return results
 
 
 '''格式化检索结果为 LLM 输入'''

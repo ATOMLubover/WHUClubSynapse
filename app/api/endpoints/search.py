@@ -68,7 +68,7 @@ async def smart_search(search_query: SearchQuery):
     # 3. 定义一个异步生成器，用于流式处理
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
-        logger.debug(f"retrieved_docs: {type(retrieved_docs[0])}")
+        # logger.debug(f"retrieved_docs: {type(retrieved_docs[0])}")
         yield f"event: source\ndata: {json.dumps(retrieved_docs)}\n\n"
         logger.info("已将溯源文档事件发送到前端")
 
