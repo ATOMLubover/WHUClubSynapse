@@ -17,6 +17,10 @@ import (
 	"github.com/kataras/iris/v12/mvc"
 )
 
+const (
+	USR_LOGO_DIR = "pub/user_logos"
+)
+
 type UserHandler struct {
 	JwtFactory  *jwtutil.CliamsFactory[model.UserClaims]
 	UserService service.UserService
@@ -28,6 +32,8 @@ func (h *UserHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/{id:int}", "GetUserInfo")
 	b.Handle("GET", "/list", "GetUserList")
 	b.Handle("GET", "/ping", "GetPing")
+
+	b.Handle("POST", "/upload_avatar", "PostUploadAvatar")
 }
 
 func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
@@ -142,13 +148,13 @@ func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
 
 	defer file.Close()
 
-	if err := os.MkdirAll(CLUB_LOGO_DIR, os.ModePerm); err != nil {
+	if err := os.MkdirAll(USR_LOGO_DIR, os.ModePerm); err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		ctx.Text("目录创建失败")
 		return
 	}
 
-	filePath := filepath.Join(CLUB_LOGO_DIR, "_"+strconv.Itoa(userId))
+	filePath := filepath.Join(USR_LOGO_DIR, "_"+strconv.Itoa(userId))
 	dst, err := os.Create(filePath)
 	if err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
