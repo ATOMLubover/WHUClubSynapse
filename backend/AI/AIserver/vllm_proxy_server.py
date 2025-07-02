@@ -167,6 +167,45 @@ class UpdateBudgetResponse(BaseModel):
     new_budget_limit: float
     budget_description: Optional[str] = None
 
+# 新增外部API的Pydantic模型
+class ClubListResponseItem(BaseModel):
+    club_id: int
+    club_name: str
+    category: int
+    tags: str # 原始是字符串，后续需要反序列化
+    logo_url: str
+    desc: str
+    created_at: str
+    member_count: int
+
+class MemberInfo(BaseModel):
+    member_id: int
+    user_id: int
+    club_id: int
+    role_in_club: str
+    joined_at: str
+    last_active: str
+
+class PostInfo(BaseModel):
+    post_id: int
+    club_id: int
+    author_id: int
+    title: str
+    comment_count: int
+    created_at: str
+
+class ClubDetailResponse(BaseModel):
+    club_id: int
+    club_name: str
+    category: int
+    tags: str # 原始是字符串，后续需要反序列化
+    logo_url: str
+    desc: str
+    created_at: str
+    member_count: int
+    members: List[MemberInfo]
+    posts: List[PostInfo]
+
 class ClubInfo(BaseModel):
     club_name: str
     description: str
@@ -247,6 +286,130 @@ def save_financial_data(data: Dict[str, Any]):
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         logger.error(f"保存财务数据文件失败: {e}")
+
+# 全局社团信息存储路径
+CLUB_INFORMATION_FILE = os.path.join(current_dir, config.club_information_file) if hasattr(config, 'club_information_file') else os.path.join(current_dir, 'Club_information.json')
+
+def load_club_information() -> Dict[str, Any]:
+    """从JSON文件加载所有社团的信息"""
+    if not os.path.exists(CLUB_INFORMATION_FILE):
+        return {} # 如果文件不存在，返回一个空字典
+    try:
+        with open(CLUB_INFORMATION_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if not isinstance(data, dict): # 确保加载的是字典
+                logger.error(f"社团信息文件格式错误，应为字典，但加载到: {type(data)}")
+                os.rename(CLUB_INFORMATION_FILE, f"{CLUB_INFORMATION_FILE}.bak_{int(time.time())}")
+                logger.warning(f"已备份损坏的社团信息文件到 {CLUB_INFORMATION_FILE}.bak_{int(time.time())}")
+                return {}
+            return data
+    except json.JSONDecodeError as e:
+        logger.error(f"加载社团信息文件时JSON解析错误: {e}")
+        os.rename(CLUB_INFORMATION_FILE, f"{CLUB_INFORMATION_FILE}.bak_{int(time.time())}")
+        logger.warning(f"已备份损坏的社团信息文件到 {CLUB_INFORMATION_FILE}.bak_{int(time.time())}")
+        return {}
+    except Exception as e:
+        logger.error(f"加载社团信息文件失败: {e}")
+        return {}
+
+def save_club_information(data: Dict[str, Any]):
+    """将所有社团的信息保存到JSON文件"""
+    try:
+        with open(CLUB_INFORMATION_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"保存社团信息文件失败: {e}")
+
+async def fetch_club_list(offset: int = 0, num: int = 100) -> List[ClubListResponseItem]:
+    """从远程API获取社团列表"""
+    try:
+        if not hasattr(config, 'external_api') or not hasattr(config.external_api, 'base_url'):
+            logger.error("config.json中未配置external_api.base_url")
+            raise HTTPException(status_code=500, detail="外部API基础URL未配置")
+        
+        url = f"{config.external_api.base_url}/api/club/list?offset={offset}&num={num}"
+        logger.info(f"正在从 {url} 获取社团列表")
+        response = requests.get(url, timeout=config.request_timeout)
+        response.raise_for_status() # 检查HTTP错误
+        
+        club_list_data = response.json()
+        clubs = [ClubListResponseItem(**item) for item in club_list_data]
+        logger.info(f"成功获取 {len(clubs)} 个社团的列表")
+        return clubs
+    except requests.exceptions.Timeout:
+        logger.error("获取社团列表超时")
+        raise HTTPException(status_code=504, detail="获取社团列表超时")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"获取社团列表失败: {e}")
+        raise HTTPException(status_code=500, detail=f"获取社团列表失败: {e}")
+    except Exception as e:
+        logger.error(f"处理社团列表时发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"服务器内部错误: {e}")
+
+async def fetch_club_details(club_id: int, post_num: int = 5) -> ClubDetailResponse:
+    """从远程API获取单个社团的详细信息"""
+    try:
+        if not hasattr(config, 'external_api') or not hasattr(config.external_api, 'base_url'):
+            logger.error("config.json中未配置external_api.base_url")
+            raise HTTPException(status_code=500, detail="外部API基础URL未配置")
+
+        url = f"{config.external_api.base_url}/api/club/{club_id}/info?post_num={post_num}"
+        logger.info(f"正在从 {url} 获取社团详情 (ID: {club_id})")
+        response = requests.get(url, timeout=config.request_timeout)
+        response.raise_for_status() # 检查HTTP错误
+
+        club_detail_data = response.json()
+        club_detail = ClubDetailResponse(**club_detail_data)
+        logger.info(f"成功获取社团 (ID: {club_id}) 的详情")
+        return club_detail
+    except requests.exceptions.Timeout:
+        logger.error(f"获取社团 (ID: {club_id}) 详情超时")
+        raise HTTPException(status_code=504, detail=f"获取社团 (ID: {club_id}) 详情超时")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"获取社团 (ID: {club_id}) 详情失败: {e}")
+        raise HTTPException(status_code=500, detail=f"获取社团 (ID: {club_id}) 详情失败: {e}")
+    except Exception as e:
+        logger.error(f"处理社团 (ID: {club_id}) 详情时发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"服务器内部错误: {e}")
+
+async def update_club_information():
+    """获取所有社团列表和详情，并保存到本地JSON文件"""
+    try:
+        all_clubs_data = {}
+        offset = 0
+        num = 100
+        while True:
+            club_list = await fetch_club_list(offset=offset, num=num)
+            if not club_list:
+                break
+            
+            for club_item in club_list:
+                try:
+                    club_detail = await fetch_club_details(club_id=club_item.club_id)
+                    # 反序列化tags字段
+                    try:
+                        club_detail.tags = json.loads(club_detail.tags)
+                    except json.JSONDecodeError:
+                        logger.warning(f"社团 {club_detail.club_name} (ID: {club_detail.club_id}) 的tags字段无法解析为JSON: {club_detail.tags}")
+                        club_detail.tags = [club_detail.tags] # 如果解析失败，将其作为单个标签列表
+
+                    # 将ClubDetailResponse对象转换为字典并存储
+                    all_clubs_data[str(club_detail.club_id)] = club_detail.dict()
+                except HTTPException as e:
+                    logger.error(f"获取社团 {club_item.club_name} (ID: {club_item.club_id}) 详情失败: {e.detail}")
+                except Exception as e:
+                    logger.error(f"处理社团 {club_item.club_name} (ID: {club_item.club_id}) 详情时发生未知错误: {e}")
+            
+            offset += num
+            if len(club_list) < num: # 如果返回的列表数量小于请求的数量，说明已经到末尾
+                break
+        
+        save_club_information(all_clubs_data)
+        logger.info(f"成功更新了 {len(all_clubs_data)} 个社团的信息到 {CLUB_INFORMATION_FILE}")
+        return {"message": f"成功更新了 {len(all_clubs_data)} 个社团的信息", "status": "success"}
+    except Exception as e:
+        logger.error(f"更新社团信息失败: {e}")
+        raise HTTPException(status_code=500, detail=f"更新社团信息失败: {e}")
 
 @app.get("/")
 async def root():
@@ -1277,15 +1440,197 @@ async def update_budget(request: UpdateBudgetRequest):
         logger.error(f"AI修改预算失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI修改预算失败: {e}")
 
+LOCAL_SYNCED_DATA_FILE = os.path.join(current_dir, '..', 'data', 'local_synced_data.jsonl')
+
+def load_local_synced_data() -> Dict[str, Any]:
+    """
+    从 local_synced_data.jsonl 文件加载社团和帖子信息。
+    将帖子归类到对应的社团下。
+    """
+    clubs_data = {}
+    
+    if not os.path.exists(LOCAL_SYNCED_DATA_FILE):
+        logger.warning(f"本地同步数据文件不存在: {LOCAL_SYNCED_DATA_FILE}")
+        return {}
+
+    try:
+        with open(LOCAL_SYNCED_DATA_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                try:
+                    entry = json.loads(line.strip())
+                    doc_id = entry.get("id", "")
+                    metadata = entry.get("metadata", {})
+                    document_content = entry.get("document", "")
+
+                    if doc_id.startswith("dynamic::club_id::"):
+                        club_id = doc_id.replace("dynamic::club_id::", "")
+                        if club_id not in clubs_data:
+                            clubs_data[club_id] = {
+                                "club_name": metadata.get("name", f"未知社团 {club_id}"),
+                                "description": metadata.get("description", document_content),
+                                "tags": [],
+                                "posts": []
+                            }
+                        # Parse tags, which might be a JSON string
+                        raw_tags = metadata.get("tags", "[]")
+                        try:
+                            parsed_tags = json.loads(raw_tags)
+                            if isinstance(parsed_tags, list) and all(isinstance(t, str) for t in parsed_tags):
+                                clubs_data[club_id]["tags"] = parsed_tags
+                            else:
+                                clubs_data[club_id]["tags"] = [raw_tags] # Fallback if not a proper list
+                        except json.JSONDecodeError:
+                            clubs_data[club_id]["tags"] = [raw_tags] # Treat as single tag if not JSON array
+
+                        # Update description if document_content is more relevant
+                        if document_content and document_content != "some description":
+                            clubs_data[club_id]["description"] = document_content
+
+                    elif doc_id.startswith("dynamic::post_id::"):
+                        post_club_id = str(metadata.get("club_id")) # Ensure it's a string to match club_id keys
+                        if post_club_id in clubs_data:
+                            post_info = {
+                                "id": doc_id,
+                                "document": document_content,
+                                "title": metadata.get("title", ""),
+                                "author_id": metadata.get("author_id"),
+                                "is_pinned": metadata.get("is_pinned")
+                            }
+                            clubs_data[post_club_id]["posts"].append(post_info)
+                        else:
+                            logger.warning(f"发现孤立帖子，club_id {post_club_id} 未找到对应社团: {entry}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"解析 local_synced_data.jsonl 中的JSON行错误: {line.strip()} - {e}")
+                except Exception as e:
+                    logger.error(f"处理 local_synced_data.jsonl 中的行时发生未知错误: {line.strip()} - {e}")
+    except Exception as e:
+        logger.error(f"读取本地同步数据文件失败: {LOCAL_SYNCED_DATA_FILE} - {e}")
+    
+    return clubs_data
+
 @app.post("/club_recommend", response_model=Club_Recommend_Response)
 async def club_recommend(request: Club_Recommend_Request):
     """
     社团推荐助手 - 根据用户信息推荐社团。
     根据用户信息，AI推荐适合的社团。
     """
-    try:1
+    try:
+        clubs_data = load_local_synced_data()
+        
+        if not clubs_data:
+            raise HTTPException(status_code=404, detail="未找到社团信息进行推荐。")
 
-    except Exception as e: 1
+        # 准备社团信息字符串，用于LLM的Prompt
+        club_info_str = []
+        for club_id, club in clubs_data.items():
+            club_name = club.get("club_name", f"未知社团 {club_id}")
+            description = club.get("description", "无描述")
+            tags = ", ".join(club.get("tags", [])) if club.get("tags") else "无标签"
+            posts_summary = ""
+            if club.get("posts"):
+                post_titles = [post.get("title", post.get("document", "无标题")) for post in club["posts"]]
+                posts_summary = "，相关帖子有：" + "，".join(post_titles[:3]) + ("..." if len(post_titles) > 3 else "")
+            
+            club_info_str.append(f"""社团名称: {club_name}\n描述: {description}\n标签: {tags}{posts_summary}\n""")
+
+        clubs_list_for_prompt = "\n---\n".join(club_info_str)
+
+        prompt_template = """
+你是一个智能社团推荐助手。你的任务是根据用户的个人信息、兴趣标签和专业，从我提供的社团列表中，智能推荐最适合用户的社团。
+对于每个推荐的社团，请说明推荐理由。
+
+请按照以下JSON格式返回结果：
+{{
+  \"Summary_text\": \"[AI生成的推荐总结，概括推荐理由]\",
+  \"Recommend_club_list\": [
+    {{
+      \"club_name\": \"[社团名称]\",
+      \"description\": \"[社团描述]\",
+      \"tags\": [\"[标签1]\", \"[标签2]\"],
+      \"recommend_reason\": \"[推荐该社团的理由]\"
+    }},
+    // 可以推荐多个社团
+  ]
+}}
+
+--- 用户信息 ---
+用户姓名: {user_name}
+用户个人描述: {user_description}
+用户兴趣标签: {user_tags}
+用户专业: {user_major}
+
+--- 可选社团列表 ---
+{clubs_list}
+
+请开始生成社团推荐。
+"""
+        user_tags_str = ", ".join(request.User_tags) if request.User_tags else "无"
+
+        full_prompt = prompt_template.format(
+            user_name=request.User_name,
+            user_description=request.User_description,
+            user_tags=user_tags_str,
+            user_major=request.User_major,
+            clubs_list=clubs_list_for_prompt
+        )
+
+        logger.info(f"AI社团推荐Prompt: {full_prompt[:200]}...")
+
+        llm_response_content = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                llm_response_content += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not llm_response_content.strip():
+            raise ValueError("AI未返回有效的响应内容。")
+
+        json_string = llm_response_content.strip()
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[len("```json"): -len("```")].strip()
+
+        try:
+            parsed_response = json.loads(json_string)
+            summary_text = parsed_response.get("Summary_text", "")
+            recommend_club_list_data = parsed_response.get("Recommend_club_list", [])
+
+            if not summary_text or not isinstance(recommend_club_list_data, list):
+                raise ValueError("AI返回的JSON格式不完整或字段类型不正确。")
+
+            recommend_club_list = []
+            for club_data in recommend_club_list_data:
+                try:
+                    club_info = ClubInfo(**club_data)
+                    recommend_club_list.append(club_info)
+                except Exception as e:
+                    logger.warning(f"解析单个推荐社团信息时出错: {club_data}, 错误: {e}")
+
+            return Club_Recommend_Response(
+                Summary_text=summary_text.strip(),
+                Recommend_club_list=recommend_club_list
+            )
+
+        except json.JSONDecodeError:
+            logger.error(f"AI响应不是有效的JSON: {llm_response_content}")
+            raise ValueError(f"AI返回的响应格式错误，无法解析为JSON: {llm_response_content[:100]}...")
+
+    except Exception as e:
+        logger.error(f"AI社团推荐失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI社团推荐失败: {e}")
+
+@app.post("/update_club_data")
+async def update_club_data_endpoint():
+    """手动触发更新社团信息。"""
+    logger.info("收到更新社团信息的请求...")
+    try:
+        result = await update_club_information()
+        return result
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"手动更新社团信息接口失败: {e}")
+        raise HTTPException(status_code=500, detail=f"手动更新社团信息接口失败: {e}")
 
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
@@ -1307,6 +1652,8 @@ if __name__ == "__main__":
     print(f"财务报表生成接口: http://{config.server_host}:{config.server_port}/generate_financial_report")
     print(f"预算超支预警接口: http://{config.server_host}:{config.server_port}/budget_warning")
     print(f"修改预算接口: http://{config.server_host}:{config.server_port}/update_budget")
+    print(f"社团推荐接口: http://{config.server_host}:{config.server_port}/club_recommend")
+    print(f"更新社团信息接口: http://{config.server_host}:{config.server_port}/update_club_data")
     
     uvicorn.run(
         app,

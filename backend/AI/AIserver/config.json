@@ -32,5 +32,8 @@
   },
   "financial_assistant": {
     "data_file": "financial_data.json"
+  },
+  "external_api": {
+    "base_url": "http://127.0.0.1:8000"
   }
 } 

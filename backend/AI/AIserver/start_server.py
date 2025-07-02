@@ -82,6 +82,20 @@ def ensure_financial_data_file():
     else:
         print(f"✅ 财务数据文件已存在: {data_file_path}")
 
+def ensure_club_information_file():
+    """确保社团信息文件存在，如果不存在则创建空文件"""
+    club_info_file_path = os.path.join(current_dir, config.club_information_file) if hasattr(config, 'club_information_file') else os.path.join(current_dir, 'Club_information.json')
+    if not os.path.exists(club_info_file_path):
+        try:
+            with open(club_info_file_path, 'w', encoding='utf-8') as f:
+                json.dump({}, f) # 写入一个空的JSON对象
+            print(f"✅ 社团信息文件已创建: {club_info_file_path}")
+        except Exception as e:
+            print(f"❌ 创建社团信息文件失败: {e}")
+            sys.exit(1)
+    else:
+        print(f"✅ 社团信息文件已存在: {club_info_file_path}")
+
 def print_server_info():
     """打印服务器信息"""
     print("\n" + "="*60)
@@ -93,6 +107,7 @@ def print_server_info():
     print(f"请求超时: {config.request_timeout}秒")
     print(f"日志级别: {config.log_level}")
     print(f"财务数据文件: {os.path.join(current_dir, config.financial_data_file)}")
+    print(f"社团信息文件: {os.path.join(current_dir, config.club_information_file) if hasattr(config, 'club_information_file') else os.path.join(current_dir, 'Club_information.json')}")
     print("="*60)
 
 def print_api_endpoints():
@@ -110,6 +125,8 @@ def print_api_endpoints():
     print(f"   POST /screen_application  - 智能申请筛选助手接口")
     print(f"   POST /club_atmosphere      - 社团\"氛围\"透视镜接口")
     print(f"   POST /plan_event           - 智能活动策划参谋接口")
+    print(f"   POST /club_recommend       - 社团推荐接口")
+    print(f"   POST /update_club_data     - 更新社团信息接口")
     print(f"   GET  /docs                - API文档 (Swagger UI)")
     print(f"   GET  /redoc               - API文档 (ReDoc)")
 
@@ -151,6 +168,9 @@ def main():
 
     # 确保财务数据文件存在
     ensure_financial_data_file()
+    
+    # 确保社团信息文件存在
+    ensure_club_information_file()
     
     # 检查vLLM服务器
     print("\n🔍 检查vLLM服务器连接...")
