@@ -93,7 +93,7 @@
             </template>
             <div class="ai-result-content">
               <div class="ai-answer">
-                <MarkdownRenderer :content="aiSearchResult.answer" />
+                <SmartStreamingRenderer :content="aiSearchResult.answer" />
               </div>
             </div>
           </el-card>
@@ -276,6 +276,7 @@ import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import ClubCard from '@/components/Club/ClubCard.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import SmartStreamingRenderer from '@/components/SmartStreamingRenderer.vue'
 import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { ElMessage } from 'element-plus'
 import { smartSearchStream, checkAiServiceHealth } from '@/api/ai-search'
