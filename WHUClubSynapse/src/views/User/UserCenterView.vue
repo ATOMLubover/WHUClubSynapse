@@ -407,27 +407,27 @@
                   <div class="recommend-title">
                     <el-icon class="ai-icon"><MagicStick /></el-icon>
                     AI 智能推荐社团
-                    <el-tag 
-                      :type="aiServiceAvailable ? 'success' : 'danger'" 
-                      size="small" 
-                      style="margin-left: 8px;"
+                    <el-tag
+                      :type="aiServiceAvailable ? 'success' : 'danger'"
+                      size="small"
+                      style="margin-left: 8px"
                     >
                       {{ aiServiceAvailable ? '在线' : '离线' }}
                     </el-tag>
                   </div>
                   <div class="header-actions">
-                    <el-button 
-                      type="text" 
-                      size="small" 
+                    <el-button
+                      type="text"
+                      size="small"
                       @click="checkAIService"
                       :loading="checkingStatus"
                     >
                       <el-icon><Refresh /></el-icon>
                       检查状态
                     </el-button>
-                    <el-button 
-                      type="text" 
-                      size="small" 
+                    <el-button
+                      type="text"
+                      size="small"
                       @click="clearRecommendations"
                       :disabled="!aiRecommendResult"
                     >
@@ -435,12 +435,12 @@
                     </el-button>
                   </div>
                 </div>
-                
+
                 <div class="recommend-content">
                   <div v-if="!aiRecommendResult && !aiRecommendLoading" class="empty-state">
-                    <el-button 
-                      type="primary" 
-                      @click="getAIRecommendations" 
+                    <el-button
+                      type="primary"
+                      @click="getAIRecommendations"
                       :loading="aiRecommendLoading"
                       :disabled="!canGetRecommendations || aiRecommendLoading"
                       class="recommend-btn"
@@ -457,9 +457,11 @@
                       <el-icon><Warning /></el-icon>
                       <span>AI服务暂时不可用，请检查网络连接</span>
                     </div>
-                    <p class="empty-tip">AI将基于您的个人信息、专业背景和兴趣标签，智能推荐最适合的社团</p>
+                    <p class="empty-tip">
+                      AI将基于您的个人信息、专业背景和兴趣标签，智能推荐最适合的社团
+                    </p>
                   </div>
-                  
+
                   <div v-if="aiRecommendLoading" class="loading-state">
                     <el-icon class="loading-icon"><Loading /></el-icon>
                     <p>AI正在分析您的信息并生成推荐...</p>
@@ -469,7 +471,7 @@
                       <span></span>
                     </div>
                   </div>
-                  
+
                   <div v-if="aiRecommendResult" class="recommend-result">
                     <div class="result-section">
                       <h4>推荐总结</h4>
@@ -477,24 +479,24 @@
                         <p>{{ aiRecommendResult.Summary_text }}</p>
                       </div>
                     </div>
-                    
+
                     <el-divider />
-                    
+
                     <div class="result-section">
                       <h4>推荐社团</h4>
                       <div class="clubs-container">
-                        <div 
-                          v-for="(club, index) in aiRecommendResult.Recommend_club_list" 
+                        <div
+                          v-for="(club, index) in aiRecommendResult.Recommend_club_list"
                           :key="index"
                           class="club-item"
                         >
                           <div class="club-header">
                             <h6 class="club-name">{{ club.club_name }}</h6>
                             <div class="club-tags">
-                              <el-tag 
-                                v-for="tag in club.tags" 
-                                :key="tag" 
-                                size="small" 
+                              <el-tag
+                                v-for="tag in club.tags"
+                                :key="tag"
+                                size="small"
                                 class="club-tag"
                               >
                                 {{ tag }}
@@ -510,7 +512,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <div v-if="errorMessage" class="error-state">
                     <el-icon class="error-icon" color="#F56C6C"><Warning /></el-icon>
                     <p>{{ errorMessage }}</p>
@@ -607,13 +609,21 @@ import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
 import { getClubRecommendations, checkAIStatus } from '@/api/ai'
-import type { User as UserType, UserStats, UserPreferences, ClubCategory, ClubRecommendResponse } from '@/types'
+import type {
+  User as UserType,
+  UserStats,
+  UserPreferences,
+  ClubCategory,
+  ClubRecommendResponse,
+} from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 import { allUserTags } from '@/utils/mockData'
 import { useRouter } from 'vue-router'
+import { useClubStore } from '@/stores/club'
 
 // Stores
 const authStore = useAuthStore()
+const clubStore = useClubStore()
 
 // 响应式数据
 const activeTab = ref('info')
@@ -887,6 +897,38 @@ const handleChangeEmail = async () => {
   }
 }
 
+const getUserStats = async () => {
+  if (useClubStore().favoriteClubs.length == 0) {
+    await useClubStore().fetchFavoriteClubs()
+  }
+  if (useClubStore().applications.length == 0) {
+    await useClubStore().fetchPendingClubApplications({})
+  }
+  if (useClubStore().joinedClubs.length == 0) {
+    await useClubStore().fetchJoinedClubs()
+  }
+  if (useClubStore().managedClubs.length == 0) {
+    await useClubStore().fetchManagedClubs()
+  }
+
+  return {
+    appliedClubs: useClubStore().applications.length,
+    favoriteClubs: useClubStore().favoriteClubs.length,
+    joinedClubs: useClubStore().joinedClubs.length,
+    managedClubs: useClubStore().managedClubs.length,
+  }
+}
+
+// 响应式统计数据，会自动根据 clubStore 状态更新
+const currentStats = computed(() => {
+  return {
+    appliedClubs: clubStore.applications.length,
+    favoriteClubs: clubStore.favoriteClubs.length,
+    joinedClubs: clubStore.joinedClubs.length,
+    managedClubs: clubStore.managedClubs.length,
+  }
+})
+
 // 加载用户数据
 const loadUserData = async () => {
   try {
@@ -899,6 +941,9 @@ const loadUserData = async () => {
     } else {
       userInfo.value = currentUser
     }
+
+    //初始化统计数据（如果还未加载）
+    await getUserStats()
 
     console.log(userInfo.value)
 
@@ -963,23 +1008,23 @@ const filteredTags = computed(() => {
   return base
 })
 
-// 统计数据
+// 统计数据 - 使用响应式数据，会自动更新
 const statsData = computed(() => [
   {
     label: '申请社团',
-    value: userInfo.value?.stats?.appliedClubs || 0,
+    value: currentStats.value.appliedClubs,
     icon: 'Star',
     color: '#409eff',
   },
   {
     label: '收藏社团',
-    value: userInfo.value?.stats?.favoriteClubs || 0,
+    value: currentStats.value.favoriteClubs,
     icon: 'Collection',
     color: '#f56c6c',
   },
   {
     label: '已加入',
-    value: userInfo.value?.stats?.joinedClubs || 0,
+    value: currentStats.value.joinedClubs,
     icon: 'Trophy',
     color: '#67c23a',
   },
@@ -1004,11 +1049,11 @@ const handleStatClick = (index: number) => {
 // AI推荐相关方法
 const canGetRecommendations = computed(() => {
   const hasUserInfo = !!userInfo.value
-  const hasRealName = !!(userInfo.value?.realName)
-  const hasBio = !!(userInfo.value?.bio)
+  const hasRealName = !!userInfo.value?.realName
+  const hasBio = !!userInfo.value?.bio
   const hasTags = !!(preferences.tags && preferences.tags.length > 0)
-  const hasMajor = !!(userInfo.value?.major)
-  
+  const hasMajor = !!userInfo.value?.major
+
   console.log('AI推荐条件检查:', {
     hasUserInfo,
     hasRealName,
@@ -1016,9 +1061,9 @@ const canGetRecommendations = computed(() => {
     hasTags,
     hasMajor,
     userInfo: userInfo.value,
-    tags: preferences.tags
+    tags: preferences.tags,
   })
-  
+
   // 放宽条件：只要有基本信息就可以
   return hasUserInfo && (hasRealName || hasBio || hasTags || hasMajor)
 })
@@ -1043,25 +1088,30 @@ const getAIRecommendations = async () => {
     aiRecommendLoading.value = true
     errorMessage.value = ''
     aiRecommendResult.value = null
-    
+
     // 构建请求数据，确保所有必填字段都有值
     const request = {
       User_name: userInfo.value?.realName || userInfo.value?.username || '用户',
       User_description: userInfo.value?.bio || '暂无个人描述',
       User_tags: preferences.tags && preferences.tags.length > 0 ? preferences.tags : ['通用'],
-      User_major: userInfo.value?.major || '未指定专业'
+      User_major: userInfo.value?.major || '未指定专业',
     }
 
     console.log('开始AI智能推荐，请求数据:', request)
-    
+
     // 验证请求数据
-    if (!request.User_name || !request.User_description || !request.User_tags || !request.User_major) {
+    if (
+      !request.User_name ||
+      !request.User_description ||
+      !request.User_tags ||
+      !request.User_major
+    ) {
       throw new Error('请求数据不完整，请完善个人信息')
     }
-    
+
     const result = await getClubRecommendations(request)
     aiRecommendResult.value = result
-    
+
     ElMessage.success('AI推荐获取成功')
   } catch (error: any) {
     console.error('AI推荐失败:', error)
@@ -1074,14 +1124,14 @@ const getAIRecommendations = async () => {
 
 const checkAIService = async () => {
   if (checkingStatus.value) return
-  
+
   checkingStatus.value = true
-  
+
   try {
     console.log('开始检查AI服务状态...')
     aiServiceAvailable.value = await checkAIStatus()
     console.log('AI服务状态检查结果:', aiServiceAvailable.value)
-    
+
     if (!aiServiceAvailable.value) {
       ElMessage.warning('AI服务暂时不可用，请检查网络连接或联系管理员')
     } else {
@@ -1722,7 +1772,8 @@ onMounted(() => {
   opacity: 1 !important;
 }
 
-.requirement-tip, .service-tip {
+.requirement-tip,
+.service-tip {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1733,7 +1784,8 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-.requirement-tip .el-icon, .service-tip .el-icon {
+.requirement-tip .el-icon,
+.service-tip .el-icon {
   margin-right: 8px;
   color: #909399;
   font-size: 18px;
@@ -1763,8 +1815,12 @@ onMounted(() => {
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .typing-indicator {
@@ -1781,11 +1837,17 @@ onMounted(() => {
   animation: typing 1.4s infinite ease-in-out;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8);
     opacity: 0.5;
   }

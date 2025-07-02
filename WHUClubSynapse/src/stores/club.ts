@@ -204,6 +204,7 @@ export const useClubStore = defineStore('club', () => {
       const response=await clubApi.favoriteClub(clubId);
       const data=response.data.data;
       ElMessage.success('收藏成功')
+      await fetchFavoriteClubs()
       return data;
     } catch (error) {
       console.error('收藏社团失败:', error)
@@ -218,6 +219,7 @@ export const useClubStore = defineStore('club', () => {
       const response=await clubApi.unfavoriteClub(clubId);
       const data=response.data.data;
       ElMessage.success('取消收藏成功')
+      await fetchFavoriteClubs()
       return data;
     } catch (error) {
       console.error('取消收藏社团失败:', error)
@@ -239,6 +241,7 @@ export const useClubStore = defineStore('club', () => {
           clubs.value[clubIndex].isFavorite = true
         }
       })
+
       return response;
     }
     catch (error){
