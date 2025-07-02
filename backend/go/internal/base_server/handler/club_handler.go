@@ -25,6 +25,7 @@ type ClubHandler struct {
 
 func (h *ClubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/list", "GetClubList")
+	b.Handle("GET", "/{id:int}/basic", "GetClubBasicInfo")
 	b.Handle("GET", "/{id:int}/info", "GetClubInfo")
 	b.Handle("GET", "/categories", "GetClubCategories")
 	b.Handle("GET", "/category/{catId:int}", "GetClubsByCategory")
@@ -108,6 +109,30 @@ func (h *ClubHandler) GetClubCategories(ctx iris.Context) {
 	}
 
 	ctx.JSON(resCategories)
+}
+
+func (h *ClubHandler) GetClubBasicInfo(ctx iris.Context, id int) {
+	club, err := h.ClubService.GetClubInfo(id)
+	if err != nil {
+		h.Logger.Error("获取社团信息失败",
+			"error", err, "club_id", id,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法获取指定社团信息")
+		return
+	}
+
+	ctx.JSON(dto.ClubBasic{
+		ClubId:    int(club.ClubId),
+		ClubName:  club.Name,
+		LeaderId:  int(club.LeaderId),
+		Desc:      club.Description,
+		LogoUrl:   club.LogoUrl,
+		Category:  int(club.CategoryId),
+		Tags:      nil,
+		CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+	})
 }
 
 func (h *ClubHandler) GetClubInfo(ctx iris.Context, id int) {
@@ -465,6 +490,7 @@ func (h *ClubHandler) GetMyJoinApplis(ctx iris.Context) {
 			ClubId:       int(appli.ClubId),
 			ApplicantId:  int(appli.UserId),
 			Reason:       appli.ApplyReason,
+			Status:       appli.Status,
 			RejectReason: appli.RejectedReason,
 			ReviewedAt:   appli.ReviewedAt.Format(time.RFC3339),
 		})

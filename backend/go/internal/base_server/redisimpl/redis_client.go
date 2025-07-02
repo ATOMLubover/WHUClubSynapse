@@ -152,6 +152,7 @@ func (s *sRedisClientService) UploadPostInfo(postInfo *dbstruct.ClubPost) error 
 
 	metadataJson, err := json.Marshal(map[string]any{
 		"title":     postInfo.Title,
+		"club_id":   postInfo.ClubId,
 		"author_id": postInfo.UserId,
 		"is_pinned": postInfo.IsPinned,
 	})
