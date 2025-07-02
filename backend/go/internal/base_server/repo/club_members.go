@@ -67,8 +67,8 @@ func (r *sClubMemberRepo) GetMemberListByClubId(clubId int) ([]*dbstruct.ClubMem
 func (r *sClubMemberRepo) GetClubListByUserId(userId int) ([]*dbstruct.Club, error) {
 	var members []*dbstruct.ClubMember
 	err := r.database.
+		Model(&dbstruct.ClubMember{}).
 		Where("user_id = ?", userId).
-		Preload("Club").
 		Find(&members).Error
 	if err != nil {
 		return nil, err
@@ -76,7 +76,16 @@ func (r *sClubMemberRepo) GetClubListByUserId(userId int) ([]*dbstruct.Club, err
 
 	var clubs []*dbstruct.Club
 	for _, m := range members {
-		clubs = append(clubs, &m.Club)
+		var club dbstruct.Club
+		err := r.database.
+			Model(&dbstruct.Club{}).
+			Where("club_id = ?", m.ClubId).
+			Find(&club).Error
+		if err != nil {
+			return nil, err
+		}
+
+		clubs = append(clubs, &club)
 	}
 
 	return clubs, nil

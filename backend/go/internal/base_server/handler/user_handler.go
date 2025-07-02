@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/model"
@@ -120,4 +124,50 @@ func (h *UserHandler) GetPing(ctx iris.Context) {
 	}
 
 	ctx.Text("pong")
+}
+
+func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		return
+	}
+
+	file, _, err := ctx.FormFile("avatar")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("未成功获取上传的logo文件")
+		return
+	}
+
+	defer file.Close()
+
+	if err := os.MkdirAll(CLUB_LOGO_DIR, os.ModePerm); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("目录创建失败")
+		return
+	}
+
+	filePath := filepath.Join(CLUB_LOGO_DIR, "_"+strconv.Itoa(userId))
+	dst, err := os.Create(filePath)
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("文件创建失败")
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("文件保存失败")
+		return
+	}
+
+	if err := h.UserService.UpdateAvatar(userId, filePath); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("数据库更新失败")
+		return
+	}
+
+	ctx.JSON(iris.Map{"status": "文件上传成功", "path": filePath})
 }

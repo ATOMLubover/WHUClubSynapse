@@ -17,6 +17,7 @@ type ClubRepo interface {
 	GetLatestClubs() ([]*dbstruct.Club, error)
 	GetClubNum() (int64, error)
 	UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error
+	UpdateClubLogo(clubId int, logoUrl string) error
 }
 
 type sClubRepo struct {
@@ -102,4 +103,10 @@ func (r *sClubRepo) UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error {
 	return tx.
 		Where("club_id = ?", newInfo.ClubId).
 		Updates(newInfo).Error
+}
+
+func (r *sClubRepo) UpdateClubLogo(clubId int, logoUrl string) error {
+	return r.database.
+		Where("club_id = ?", clubId).
+		Update("logo_url", logoUrl).Error
 }

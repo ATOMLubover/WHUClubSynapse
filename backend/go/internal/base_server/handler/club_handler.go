@@ -14,6 +14,10 @@ import (
 	"github.com/kataras/iris/v12/mvc"
 )
 
+const (
+	CLUB_LOGO_DIR = "pub/club_logos/"
+)
+
 type ClubHandler struct {
 	JwtFactory *jwtutil.CliamsFactory[model.UserClaims]
 
@@ -454,6 +458,7 @@ func (h *ClubHandler) GetMyCreateApplis(ctx iris.Context) {
 				LeaderId:    int(proposal.LeaderId),
 				Tags:        tags,
 			},
+			Status:       appli.Status,
 			RejectReason: appli.RejectedReason,
 			ReviewedAt:   appli.ReviewedAt.Format("2006-01-02 15:04:05"),
 		})

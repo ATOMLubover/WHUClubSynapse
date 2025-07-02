@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"strconv"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/model"
 	"whuclubsynapse-server/internal/base_server/service"
@@ -24,6 +28,7 @@ func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/join_applis/{id:int}", "GetJoinApplisForClub")
 
 	b.Handle("POST", "/update", "PostApplyForUpdateClubInfo")
+	b.Handle("POST", "/update_logo", "PostUploadLogo")
 
 	b.Handle("PUT", "/proc_join", "PutProcAppliForJoinClub")
 }
@@ -125,4 +130,68 @@ func (h *ClubPubHandler) GetJoinApplisForClub(ctx iris.Context, id int) {
 	}
 
 	ctx.JSON(resApplisList)
+}
+
+func (h *ClubPubHandler) PostUploadLogo(ctx iris.Context, id int) {
+	userRole := ctx.Values().GetString("user_claims_role")
+	if userRole == "" {
+		ctx.StatusCode(iris.StatusForbidden)
+		return
+	}
+
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		return
+	}
+
+	clubs, err := h.ClubService.GetClubListByUserId(userId)
+	isLeader := false
+	for _, club := range clubs {
+		if int(club.ClubId) != id {
+			continue
+		}
+
+		if club.LeaderId == uint(userId) {
+			isLeader = true
+			break
+		}
+	}
+
+	if !isLeader {
+		ctx.StatusCode(iris.StatusForbidden)
+		return
+	}
+
+	file, _, err := ctx.FormFile("logo")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("未成功获取上传的logo文件")
+		return
+	}
+
+	defer file.Close()
+
+	if err := os.MkdirAll(CLUB_LOGO_DIR, os.ModePerm); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("目录创建失败")
+		return
+	}
+
+	filePath := filepath.Join(CLUB_LOGO_DIR, "_"+strconv.Itoa(id))
+	dst, err := os.Create(filePath)
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("文件创建失败")
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("文件保存失败")
+		return
+	}
+
+	ctx.JSON(iris.Map{"status": "文件上传成功", "path": filePath})
 }

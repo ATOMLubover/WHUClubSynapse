@@ -61,8 +61,8 @@ type ClubMember struct {
 	JoinedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	LastActive time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
-	User User `gorm:"foreignKey:UserId"`
-	Club Club `gorm:"foreignKey:ClubId"`
+	User *User `gorm:"foreignKey:UserId"`
+	Club *Club `gorm:"foreignKey:ClubId"`
 }
 
 const (
