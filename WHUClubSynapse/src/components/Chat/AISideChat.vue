@@ -206,7 +206,8 @@ import {
   Position,
   Warning,
 } from '@element-plus/icons-vue'
-import { sideChat, checkAiServiceHealth } from '@/api/ai-search'
+import { checkAiServiceHealth } from '@/api/ai-search'
+import { sideChatStream } from '@/api/ai-search'
 import { isSideChatEnabled as checkSideChatEnabled } from '@/config/ai-search'
 import type { ChatMessage, SmartSearchSource } from '@/types'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
@@ -275,49 +276,49 @@ const sendMessage = async (message?: string) => {
     timestamp: new Date().toISOString()
   }
   chatHistory.value.push(userMessage)
-
-  // 清空输入框
   inputMessage.value = ''
-
-  // 滚动到底部
   await nextTick()
   scrollToBottom()
 
-  // 发送到AI
+  // 流式AI回复
   isLoading.value = true
-  try {
-    const response = await sideChat({
+  let answer = ''
+  let sources: any[] = []
+  let aiMsgIndex = -1
+  sideChatStream(
+    {
       query: content,
-      history: chatHistory.value.slice(0, -1) // 不包含当前消息
-    })
-
-    // 添加AI回复
-    const aiMessage: ChatMessage & { sources?: SmartSearchSource[] } = {
-      role: 'assistant',
-      content: response.answer,
-      timestamp: new Date().toISOString(),
-      sources: response.source
+      history: chatHistory.value.slice(0, -1)
+    },
+    {
+      onSource: (src) => {
+        sources = src
+      },
+      onToken: (token) => {
+        answer += token
+        // 实时更新最后一条assistant消息
+        if (aiMsgIndex === -1) {
+          chatHistory.value.push({
+            role: 'assistant',
+            content: answer,
+            timestamp: new Date().toISOString(),
+            sources
+          })
+          aiMsgIndex = chatHistory.value.length - 1
+        } else {
+          chatHistory.value[aiMsgIndex].content = answer
+        }
+        nextTick(scrollToBottom)
+      },
+      onEnd: () => {
+        isLoading.value = false
+      },
+      onError: (err) => {
+        isLoading.value = false
+        ElMessage.error('AI回复失败，请稍后重试')
+      }
     }
-    chatHistory.value.push(aiMessage)
-
-    // 滚动到底部
-    await nextTick()
-    scrollToBottom()
-  } catch (error) {
-    console.error('发送消息失败:', error)
-    
-    // 检查是否是AI连接失败
-    if (error instanceof Error && error.message.includes('AI连接失败')) {
-      aiAvailable.value = false
-      ElMessage.error('AI连接失败，请稍后重试')
-    } else {
-      ElMessage.error('发送失败，请稍后重试')
-    }
-    
-    // AI连接失败时不添加任何错误消息
-  } finally {
-    isLoading.value = false
-  }
+  )
 }
 
 const handleEnter = (event: KeyboardEvent) => {

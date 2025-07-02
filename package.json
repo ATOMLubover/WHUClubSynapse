@@ -1,6 +1,10 @@
 {
+  "scripts": {
+    "dev": "cd WHUClubSynapse && npm run dev"
+  },
   "dependencies": {
     "@types/marked": "^5.0.2",
+    "event-source-polyfill": "^1.0.31",
     "katex": "^0.16.22",
     "marked": "^16.0.0"
   }

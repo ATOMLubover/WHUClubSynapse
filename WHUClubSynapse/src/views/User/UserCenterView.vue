@@ -399,6 +399,69 @@
                 <span>标签限制4字以内，最多可添加8个标签</span>
               </div>
             </div>
+
+            <!-- AI智能推荐社团 -->
+            <div class="preference-section">
+              <h4 class="preference-title">
+                <el-icon><MagicStick /></el-icon>
+                AI智能推荐社团
+              </h4>
+              <div class="ai-recommend-content">
+                <div class="ai-recommend-info">
+                  <p class="ai-recommend-desc">
+                    基于您的个人信息、专业背景和兴趣标签，AI将为您智能推荐最适合的社团
+                  </p>
+                  <el-button 
+                    type="primary" 
+                    @click="getAIRecommendations" 
+                    :loading="aiRecommendLoading"
+                    :disabled="!canGetRecommendations"
+                    class="ai-recommend-btn"
+                  >
+                    <el-icon><MagicStick /></el-icon>
+                    获取AI推荐
+                  </el-button>
+                </div>
+                
+                <!-- AI推荐结果 -->
+                <div v-if="aiRecommendResult" class="ai-recommend-result">
+                  <div class="recommend-summary">
+                    <h5>推荐总结</h5>
+                    <p>{{ aiRecommendResult.Summary_text }}</p>
+                  </div>
+                  
+                  <div class="recommend-clubs">
+                    <h5>推荐社团</h5>
+                    <div class="club-list">
+                      <div 
+                        v-for="(club, index) in aiRecommendResult.Recommend_club_list" 
+                        :key="index"
+                        class="club-item"
+                      >
+                        <div class="club-header">
+                          <h6 class="club-name">{{ club.club_name }}</h6>
+                          <div class="club-tags">
+                            <el-tag 
+                              v-for="tag in club.tags" 
+                              :key="tag" 
+                              size="small" 
+                              class="club-tag"
+                            >
+                              {{ tag }}
+                            </el-tag>
+                          </div>
+                        </div>
+                        <p class="club-description">{{ club.description }}</p>
+                        <div class="recommend-reason">
+                          <el-icon><StarFilled /></el-icon>
+                          <span>推荐理由：{{ club.recommend_reason }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </el-card>
       </div>
@@ -478,11 +541,14 @@ import {
   View,
   PriceTag,
   InfoFilled,
+  MagicStick,
+  StarFilled,
 } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser, changePassword } from '@/api/auth'
-import type { User as UserType, UserStats, UserPreferences, ClubCategory } from '@/types'
+import { getClubRecommendations } from '@/api/ai'
+import type { User as UserType, UserStats, UserPreferences, ClubCategory, ClubRecommendResponse } from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 import { allUserTags } from '@/utils/mockData'
 import { useRouter } from 'vue-router'
@@ -503,6 +569,10 @@ const uploadedAvatar = ref('')
 const tagLoading = ref(false)
 const tagOptions = ref<string[]>([])
 const tagInput = ref('')
+
+// AI推荐相关
+const aiRecommendLoading = ref(false)
+const aiRecommendResult = ref<ClubRecommendResponse | null>(null)
 
 // 用户信息
 const userInfo = ref<UserType | null>(null)
@@ -866,6 +936,43 @@ const handleStatClick = (index: number) => {
     router.push('/user/favorites')
   } else if (index === 2) {
     router.push('/user/clubs/joined')
+  }
+}
+
+// AI推荐相关方法
+const canGetRecommendations = computed(() => {
+  return userInfo.value && 
+         userInfo.value.realName && 
+         userInfo.value.bio && 
+         preferences.tags && 
+         preferences.tags.length > 0 &&
+         userInfo.value.major
+})
+
+const getAIRecommendations = async () => {
+  if (!canGetRecommendations.value) {
+    ElMessage.warning('请完善个人信息、个人简介、专业信息和兴趣标签后再获取推荐')
+    return
+  }
+
+  try {
+    aiRecommendLoading.value = true
+    
+    const request = {
+      User_name: userInfo.value!.realName!,
+      User_description: userInfo.value!.bio!,
+      User_tags: preferences.tags || [],
+      User_major: userInfo.value!.major!
+    }
+
+    const result = await getClubRecommendations(request)
+    aiRecommendResult.value = result
+    ElMessage.success('AI推荐获取成功')
+  } catch (error: any) {
+    console.error('AI推荐失败:', error)
+    ElMessage.error(error.message || 'AI推荐失败，请稍后重试')
+  } finally {
+    aiRecommendLoading.value = false
   }
 }
 
@@ -1314,198 +1421,215 @@ onMounted(() => {
 
 /* 偏好设置样式 */
 .preferences-content {
-  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .preference-section {
-  margin-bottom: 32px;
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 24px;
 }
 
 .preference-section:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .preference-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 20px 0;
-  font-size: 18px;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-size: 16px;
   font-weight: 600;
-  color: #1a202c;
-}
-
-.preference-title .el-icon {
-  color: #667eea;
-  font-size: 20px;
+  color: #303133;
 }
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 }
 
-.checkbox-item :deep(.el-checkbox__label) {
-  font-weight: 500;
-  color: #4a5568;
-}
-
-.checkbox-item :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  background-color: #667eea;
-  border-color: #667eea;
+.checkbox-item {
+  margin: 0;
 }
 
 .switch-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .switch-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.switch-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px 0;
 }
 
 .switch-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .switch-label {
-  display: block;
-  font-weight: 600;
-  color: #1a202c;
-  font-size: 16px;
-  margin-bottom: 4px;
+  font-weight: 500;
+  color: #303133;
 }
 
 .switch-desc {
-  display: block;
-  color: #718096;
-  font-size: 14px;
-}
-
-.switch-item .el-switch {
-  margin-left: 16px;
-}
-
-.switch-item .el-switch :deep(.el-switch__core) {
-  border-color: #667eea;
-}
-
-.switch-item .el-switch.is-checked :deep(.el-switch__core) {
-  background-color: #667eea;
+  font-size: 12px;
+  color: #909399;
 }
 
 .tag-selector {
   width: 100%;
-  margin-bottom: 12px;
-}
-
-.tag-selector :deep(.el-select__wrapper) {
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  min-height: 80px;
-  padding: 12px;
-}
-
-.tag-selector :deep(.el-select__wrapper:hover) {
-  border-color: #667eea;
-}
-
-.tag-selector :deep(.el-select__wrapper.is-focused) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .tag-hint {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #718096;
-  font-size: 13px;
-  padding: 8px 0;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
 }
 
-.tag-hint .el-icon {
-  color: #a0aec0;
+/* AI推荐样式 */
+.ai-recommend-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* .security-items {
-  space-y: 20px;
-} */
-
-.security-item {
+.ai-recommend-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
-.security-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: #303133;
-}
-
-.security-info p {
+.ai-recommend-desc {
   margin: 0;
-  color: #606266;
+  color: #6c757d;
   font-size: 14px;
+  line-height: 1.5;
 }
 
-.avatar-uploader {
-  text-align: center;
-}
-
-.avatar-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 120px;
-  height: 120px;
-  border: 1px dashed #d9d9d9;
-  border-radius: 6px;
+.ai-recommend-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  gap: 6px;
 }
 
-.avatar-uploader-icon:hover {
-  border-color: #409eff;
-  color: #409eff;
+.ai-recommend-result {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.upload-tips {
-  text-align: center;
-  margin-top: 10px;
+.recommend-summary {
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.upload-tips p {
+.recommend-summary h5 {
+  margin: 0 0 8px 0;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.recommend-summary p {
   margin: 0;
-  color: #909399;
-  font-size: 12px;
+  color: #6c757d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recommend-clubs {
+  padding: 16px;
+}
+
+.recommend-clubs h5 {
+  margin: 0 0 16px 0;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.club-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.club-item {
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.club-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.club-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.club-name {
+  margin: 0;
+  color: #212529;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.club-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.club-tag {
+  font-size: 11px;
+}
+
+.club-description {
+  margin: 0 0 12px 0;
+  color: #6c757d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recommend-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.recommend-reason .el-icon {
+  margin-top: 1px;
+  color: #f39c12;
 }
 
 /* 响应式设计 */

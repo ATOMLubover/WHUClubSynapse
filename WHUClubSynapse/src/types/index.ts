@@ -343,3 +343,23 @@ export interface SideChatResponse {
   answer: string
   source: SmartSearchSource[]
 }
+
+// AI智能推荐社团相关类型
+export interface ClubRecommendRequest {
+  User_name: string
+  User_description: string
+  User_tags: string[]
+  User_major: string
+}
+
+export interface ClubInfo {
+  club_name: string
+  description: string
+  tags: string[]
+  recommend_reason: string
+}
+
+export interface ClubRecommendResponse {
+  Summary_text: string
+  Recommend_club_list: ClubInfo[]
+}

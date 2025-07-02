@@ -39,72 +39,125 @@ export const checkAiServiceHealth = async (): Promise<boolean> => {
   }
 }
 
-// AI智能搜索API
-export const smartSearch = async (request: SmartSearchRequest): Promise<SmartSearchResponse> => {
-  if (!isAiSearchEnabled()) {
-    throw new Error('AI搜索功能未启用')
-  }
-
-  // 检查AI服务是否可用
-  const isHealthy = await checkAiServiceHealth()
-  if (!isHealthy) {
-    throw new Error('AI连接失败，请稍后重试')
-  }
-
+// 工具函数：fetch+SSE流式处理
+export async function fetchSSE({
+  url,
+  body,
+  headers,
+  onSource,
+  onToken,
+  onEnd,
+  onError,
+}: {
+  url: string
+  body: any
+  headers: Record<string, string>
+  onSource?: (sources: any[]) => void
+  onToken?: (token: string) => void
+  onEnd?: () => void
+  onError?: (err: any) => void
+}) {
   try {
-    const response = await fetch(getSmartSearchURL(), {
+    const resp = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify(request),
+      headers,
+      body: JSON.stringify(body),
     })
-
-    if (!response.ok) {
-      const errorData: SmartSearchError = await response.json()
-      throw new Error(errorData.detail || `AI连接失败，请稍后重试`)
+    
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
     }
-
-    const data: SmartSearchResponse = await response.json()
-    return data
-  } catch (error) {
-    console.error('AI智能搜索请求失败:', error)
-    throw new Error('AI连接失败，请稍后重试')
+    
+    if (!resp.body) throw new Error('No response body')
+    const reader = resp.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+    let isEnded = false
+    let eventType = ''
+    
+    while (!isEnded) {
+      const { value, done } = await reader.read()
+      if (done) break
+      
+      buffer += decoder.decode(value, { stream: true })
+      let lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (!trimmedLine) continue
+        
+        if (trimmedLine.startsWith('event:')) {
+          eventType = trimmedLine.replace('event:', '').trim()
+        } else if (trimmedLine.startsWith('data:')) {
+          const data = trimmedLine.replace('data:', '').trim()
+          if (!data) continue
+          
+          try {
+            if (eventType === 'source') {
+              const parsedData = JSON.parse(data)
+              onSource && onSource(parsedData)
+            } else if (eventType === 'token') {
+              const parsedData = JSON.parse(data)
+              // 处理不同的token格式
+              const token = parsedData.token || parsedData.content || parsedData
+              onToken && onToken(token)
+            } else if (eventType === 'end') {
+              isEnded = true
+              onEnd && onEnd()
+            } else if (eventType === 'error') {
+              const parsedData = JSON.parse(data)
+              onError && onError(parsedData.error || parsedData)
+              isEnded = true
+            }
+          } catch (parseError) {
+            console.error('SSE数据解析错误:', parseError, '原始数据:', data)
+            // 对于token事件，尝试直接使用原始数据
+            if (eventType === 'token') {
+              onToken && onToken(data)
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('fetchSSE错误:', err)
+    onError && onError(err)
   }
 }
 
-// 侧边栏对话API
-export const sideChat = async (request: SideChatRequest): Promise<SideChatResponse> => {
-  if (!isSideChatEnabled()) {
-    throw new Error('侧边栏对话功能未启用')
-  }
+export function smartSearchStream(
+  request: SmartSearchRequest,
+  { onSource, onToken, onEnd, onError }: { onSource?: (sources: any[]) => void; onToken?: (token: string) => void; onEnd?: () => void; onError?: (err: any) => void }
+) {
+  return fetchSSE({
+    url: getSmartSearchURL(),
+    body: request,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': getApiKey(),
+    },
+    onSource,
+    onToken,
+    onEnd,
+    onError,
+  })
+}
 
-  // 检查AI服务是否可用
-  const isHealthy = await checkAiServiceHealth()
-  if (!isHealthy) {
-    throw new Error('AI连接失败，请稍后重试')
-  }
-
-  try {
-    const response = await fetch(getSideChatURL(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-      const errorData: SmartSearchError = await response.json()
-      throw new Error(errorData.detail || `AI连接失败，请稍后重试`)
-    }
-
-    const data: SideChatResponse = await response.json()
-    return data
-  } catch (error) {
-    console.error('侧边栏对话请求失败:', error)
-    throw new Error('AI连接失败，请稍后重试')
-  }
+export function sideChatStream(
+  request: SideChatRequest,
+  { onSource, onToken, onEnd, onError }: { onSource?: (sources: any[]) => void; onToken?: (token: string) => void; onEnd?: () => void; onError?: (err: any) => void }
+) {
+  return fetchSSE({
+    url: getSideChatURL(),
+    body: request,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': getApiKey(),
+    },
+    onSource,
+    onToken,
+    onEnd,
+    onError,
+  })
 } 

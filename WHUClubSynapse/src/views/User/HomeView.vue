@@ -280,7 +280,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { resetMockData } from '@/utils/mockData'
 import { ElMessage } from 'element-plus'
-import { smartSearch, checkAiServiceHealth } from '@/api/ai-search'
+import { smartSearchStream, checkAiServiceHealth, sideChatStream } from '@/api/ai-search'
 import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
 
 const router = useRouter()
@@ -413,36 +413,62 @@ const handleSearch = async () => {
   searchLoading.value = true
   try {
     if (useAiSearch.value) {
-      // 检查AI可用性
       if (!aiAvailable.value) {
         ElMessage.error('AI服务暂时不可用，请稍后重试')
         return
       }
       
-      // 调用AI搜索
-      const result = await smartSearch({ query: searchKeyword.value })
-      aiSearchResult.value = result
+      // 完全照搬AISideChat的实现方式
+      const content = searchKeyword.value.trim()
+      
+      // 流式AI回复
+      searchLoading.value = true
+      let answer = ''
+      let sources: any[] = []
+      let aiMsgIndex = -1
+      
+      // 初始化AI搜索结果
+      aiSearchResult.value = { answer: '', source: [] } as any
       showAiResult.value = true
+      
+      sideChatStream(
+        {
+          query: content,
+          history: [] // 主页搜索不需要历史记录
+        },
+        {
+          onSource: (src) => {
+            sources = src
+          },
+          onToken: (token) => {
+            answer += token
+            // 实时更新AI搜索结果
+            if (aiMsgIndex === -1) {
+              aiMsgIndex = 0
+            }
+            (aiSearchResult.value as any).answer = answer
+            (aiSearchResult.value as any).source = sources
+          },
+          onEnd: () => {
+            searchLoading.value = false
+          },
+          onError: (err) => {
+            searchLoading.value = false
+            ElMessage.error('AI搜索失败，请稍后重试')
+            showAiResult.value = false
+            aiSearchResult.value = null
+          }
+        }
+      )
     } else {
-      // 普通搜索，跳转到搜索页面
       router.push({
         path: '/search',
         query: { keyword: searchKeyword.value.trim() },
       })
     }
   } catch (error) {
-    console.error('搜索失败:', error)
-    if (error instanceof Error && error.message.includes('AI连接失败')) {
-      aiAvailable.value = false
-      ElMessage.error('AI连接失败，请稍后重试')
-      // AI连接失败时不显示任何搜索结果
-      showAiResult.value = false
-      aiSearchResult.value = null
-    } else {
-      ElMessage.error('搜索失败，请稍后再试')
-    }
-  } finally {
     searchLoading.value = false
+    ElMessage.error('搜索失败，请稍后再试')
   }
 }
 

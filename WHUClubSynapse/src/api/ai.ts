@@ -1,4 +1,5 @@
-import { AI_CONFIG, getChatApiUrl, getStatusApiUrl } from '@/config/ai'
+import { AI_CONFIG, getChatApiUrl, getStatusApiUrl, getAIApiUrl } from '@/config/ai'
+import type { ClubRecommendRequest, ClubRecommendResponse } from '@/types'
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -344,6 +345,29 @@ export const generateFinancialReport = async (requestData: FinancialReportReques
     return data
   } catch (error) {
     console.error('生成财务报表请求失败:', error)
+    throw error
+  }
+}
+
+// AI智能推荐社团
+export const getClubRecommendations = async (request: ClubRecommendRequest): Promise<ClubRecommendResponse> => {
+  try {
+    const response = await fetch(getAIApiUrl('/club_recommend'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('AI推荐社团失败:', error)
     throw error
   }
 } 
