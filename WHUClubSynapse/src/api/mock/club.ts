@@ -451,7 +451,9 @@ export const mockGetJoinedClubs = async (
   const joinedClubs = mockClubs
     .filter(club => userJoinedClubIds.includes(club.club_id))
     .map(club => ({
-      ...club
+      ...club,
+      // 如果这个社团是用户管理的，设置leader_id为当前用户ID
+      leader_id: userManagedClubIds.includes(club.club_id) ? '2' : undefined
     }))
 
   const page = params.page || 1

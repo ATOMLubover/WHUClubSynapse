@@ -322,16 +322,18 @@ export const useClubStore = defineStore('club', () => {
   // 获取用户管理的社团
   const fetchManagedClubs = async (params?: { page?: number; pageSize?: number }) => {
     try {
-      if(joinedClubs.value.length==0){
-        const response = await clubApi.getJoinedClubs(params)
-        joinedClubs.value = response.list
-      }
-      managedClubs.value=joinedClubs.value.filter((club)=>club.leader_id==authStore.user?.user_id)
+      // 确保总是获取最新的加入社团数据
+      const response = await clubApi.getJoinedClubs(params)
+      joinedClubs.value = response.list
+      
+      // 过滤出用户管理的社团
+      managedClubs.value = joinedClubs.value.filter((club) => club.leader_id == String(authStore.user?.user_id))
+      
       return {
-        list:managedClubs.value,
-        total:managedClubs.value.length,
-        page:params?.page||1,
-        pageSize:params?.pageSize||12,
+        list: managedClubs.value,
+        total: managedClubs.value.length,
+        page: params?.page || 1,
+        pageSize: params?.pageSize || 12,
       }
     } catch (error) {
       console.error('获取管理的社团失败:', error)
