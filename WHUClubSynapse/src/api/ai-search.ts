@@ -99,9 +99,21 @@ export async function fetchSSE({
               onSource && onSource(parsedData)
             } else if (eventType === 'token') {
               const parsedData = JSON.parse(data)
+              console.log('解析的token数据:', parsedData)
               // 处理不同的token格式
-              const token = parsedData.token || parsedData.content || parsedData
-              onToken && onToken(token)
+              let token = parsedData.token || parsedData.content || parsedData
+              console.log('提取的token:', token, '类型:', typeof token)
+              // 确保token是字符串类型
+              if (typeof token !== 'string') {
+                console.log('token不是字符串，转换为字符串')
+                token = String(token)
+              }
+              console.log('最终token:', token, '类型:', typeof token)
+              if (typeof onToken === 'function') {
+                onToken(token)
+              } else {
+                console.error('onToken不是函数:', onToken)
+              }
             } else if (eventType === 'end') {
               isEnded = true
               onEnd && onEnd()
@@ -114,7 +126,19 @@ export async function fetchSSE({
             console.error('SSE数据解析错误:', parseError, '原始数据:', data)
             // 对于token事件，尝试直接使用原始数据
             if (eventType === 'token') {
-              onToken && onToken(data)
+              let token = data
+              console.log('catch块中的原始token数据:', token, '类型:', typeof token)
+              // 确保token是字符串类型
+              if (typeof token !== 'string') {
+                console.log('catch块中token不是字符串，转换为字符串')
+                token = String(token)
+              }
+              console.log('catch块中最终token:', token, '类型:', typeof token)
+              if (typeof onToken === 'function') {
+                onToken(token)
+              } else {
+                console.error('catch块中onToken不是函数:', onToken)
+              }
             }
           }
         }

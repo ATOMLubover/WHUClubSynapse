@@ -278,7 +278,7 @@ import ClubCard from '@/components/Club/ClubCard.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { ElMessage } from 'element-plus'
-import { smartSearchStream, checkAiServiceHealth, sideChatStream } from '@/api/ai-search'
+import { smartSearchStream, checkAiServiceHealth } from '@/api/ai-search'
 import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
 
 const router = useRouter()
@@ -418,43 +418,44 @@ const handleSearch = async () => {
         return
       }
       
-      // 完全照搬AISideChat的实现方式
-      const content = searchKeyword.value.trim()
-      
-      // 流式AI回复
-      searchLoading.value = true
-      let answer = ''
-      let sources: any[] = []
-      let aiMsgIndex = -1
+      console.log('开始AI搜索:', searchKeyword.value.trim())
       
       // 初始化AI搜索结果
       aiSearchResult.value = { answer: '', source: [] } as any
       showAiResult.value = true
       
-      sideChatStream(
-        {
-          query: content,
-          history: [] // 主页搜索不需要历史记录
-        },
+      let answer = ''
+      let sources: any[] = []
+      
+      smartSearchStream(
+        { query: searchKeyword.value.trim() },
         {
           onSource: (src) => {
+            console.log('收到source事件:', src)
             sources = src
+            if (aiSearchResult.value) {
+              (aiSearchResult.value as any).source = sources
+            }
           },
           onToken: (token) => {
-            answer += token
-            // 实时更新AI搜索结果
-            if (aiMsgIndex === -1) {
-              aiMsgIndex = 0
+            console.log('HomeView收到token:', token, '类型:', typeof token)
+            if (typeof token === 'string') {
+              answer += token
+              if (aiSearchResult.value) {
+                (aiSearchResult.value as any).answer = answer
+              }
+            } else {
+              console.error('HomeView收到非字符串token:', token)
             }
-            (aiSearchResult.value as any).answer = answer
-            (aiSearchResult.value as any).source = sources
           },
           onEnd: () => {
+            console.log('AI搜索完成')
             searchLoading.value = false
           },
           onError: (err) => {
+            console.error('AI搜索错误:', err)
             searchLoading.value = false
-            ElMessage.error('AI搜索失败，请稍后重试')
+            ElMessage.error(`AI搜索失败: ${err.message || '请稍后重试'}`)
             showAiResult.value = false
             aiSearchResult.value = null
           }
@@ -466,9 +467,10 @@ const handleSearch = async () => {
         query: { keyword: searchKeyword.value.trim() },
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('搜索异常:', error)
     searchLoading.value = false
-    ElMessage.error('搜索失败，请稍后再试')
+    ElMessage.error(`搜索失败: ${error.message || '请稍后再试'}`)
   }
 }
 
