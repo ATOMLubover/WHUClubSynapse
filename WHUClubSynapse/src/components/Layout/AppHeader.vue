@@ -50,7 +50,7 @@
             <el-avatar :src="authStore.user?.avatar_url" :size="32">
               {{ authStore.user?.realName?.charAt(0) }}
             </el-avatar>
-            <span class="username">{{ authStore.user?.realName }}</span>
+            <span class="username">{{ authStore.user?.username }}</span>
             <el-icon><ArrowDown /></el-icon>
           </div>
           <template #dropdown>
@@ -260,9 +260,7 @@ const handleNotification = () => {
   notificationDialogVisible.value = true
 }
 
-onMounted(() => {
-  console.log('authStore.user', authStore.user)
-})
+onMounted(() => {})
 </script>
 
 <style scoped>

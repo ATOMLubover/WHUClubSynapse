@@ -11,6 +11,8 @@ import type {
 } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockAuth from './mock/auth'
+import { useAuthStore } from '@/stores/auth'
+
 
 // 获取动态配置
 const getIsUsingMockAPI = () => {
@@ -70,7 +72,7 @@ export const getUserById = async (
     return await mockAuth.mockGetUserById(id)
   }
   
-  const response = await request.get(`/api/v1/auth/user/${id}`)
+  const response = await request.get(`/api/user/${id}`)
   // 直接返回用户对象
   return response.data
 }
@@ -104,9 +106,8 @@ export const getCurrentUser = async (): Promise<User> => {
   if (getIsUsingMockAPI()) {
     return await mockAuth.mockGetCurrentUser()
   }
-  // TODO:这个接口可能需要后端补充，或者使用getUserById结合token解析
-  // 暂时使用mock实现
-  return (await request.get('/auth/my_info')).data as User
+  const id=useAuthStore().currentUserId
+  return await getUserById(id as number)
 }
 // TODO:用户退出登录
 export const logout = async (): Promise<ApiResponse<null>> => {

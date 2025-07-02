@@ -4,6 +4,7 @@ import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
 import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost } from './mock/club'
+import { getUserById } from './auth'
 
 // 获取动态配置
 const getIsUsingMockAPI = () => {
@@ -60,6 +61,15 @@ export const getClubList = async (
     page: params.page || 1,
     pageSize: params.pageSize || 10,
   }
+}
+
+// 获取社团基本信息
+export const getClubBasic = async (clubId: string): Promise<Club> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockGetClubBasic(clubId)
+  }
+  const response = await request.get(`/api/club/${clubId}/basic`)
+  return response.data as Club
 }
 
 // 获取社团详情
@@ -388,9 +398,9 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
     const queryString = queryParams.toString()
     const url = queryString ? `/api/club/post/posts/${clubId}?${queryString}` : `/api/club/post/posts/${clubId}`
 
-    const res = (await request.get(url))
+    const res = (await request.get(url)).data as ClubPost[]
 
-    if(res.data==null){
+    if(res==null){
       return{
         list:[],
         total:0,
@@ -399,10 +409,16 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
 
       }
     }
+
+    res.forEach(async(item)=>{
+      const user= await getUserById(item.author_id!)
+      item.authorName=user.username
+      item.authorAvatar=user.avatar_url
+    })
     //const total=?
     return {
-      list: res.data,
-      total: res.data.length,
+      list: res,
+      total: res.length,
       page: page,
       pageSize: pageSize,
 
@@ -431,11 +447,23 @@ export const createClubPost = async (data: {
   if(getIsUsingMockAPI()){
     return await mockClub.mockCreateClubPost(data)
   }
-  const response = await request.post('/api/club/post/create', data)
-  return{
+  
+  // 使用FormData构建multipart/form-data请求
+  const formData = new FormData()
+  formData.append('title', data.title)
+  formData.append('club_id', data.club_id.toString())
+  formData.append('content', data.content)
+  
+  const response = await request.post('/api/club/post/create', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+  
+  return {
     data: {
       code: response.status,
-      message: response.data,
+      message: '创建成功',
       data: null,
     },
   }
@@ -650,49 +678,53 @@ export const getUserCreatedApplications = async (): Promise<ClubCreatedApplicati
       {
         appli_id: 1,
         applied_at: '2024-06-25T10:00:00Z',
-        club_id: 1,
+        proposal: JSON.stringify({ name: '计算机协会', description: '面向编程爱好者的学术社团' }),
         reject_reason: '',
         reviewed_at: '2024-06-25T10:00:00Z',
+        status: 'pending',
       },
       {
         appli_id: 2,
         applied_at: '2024-06-26T14:30:00Z',
-        club_id: 2,
+        proposal: JSON.stringify({ name: '篮球俱乐部', description: '篮球运动爱好者社团' }),
         reject_reason: '',
         reviewed_at: '2024-06-26T14:30:00Z',
+        status: 'approved',
       },
       {
         appli_id: 3,
         applied_at: '2024-06-20T09:15:00Z',
-        club_id: 3,
+        proposal: JSON.stringify({ name: '音乐社', description: '音乐爱好者交流社团' }),
+        club_id: '3',
         reject_reason: '',
         reviewed_at: '2024-06-21T16:00:00Z',
+        status: 'approved',
       },
       {
         appli_id: 4,
         applied_at: '2024-06-27T08:00:00Z',
+        proposal: JSON.stringify({ name: '创业社', description: '创新创业社团' }),
         reject_reason: '申请材料不完整',
         reviewed_at: '2024-06-28T10:00:00Z',
-        club_id: 4,
+        club_id: '4',
+        status: 'rejected',
       },
       {
         appli_id: 5,
         applied_at: '2024-06-27T15:20:00Z',
-        club_id: 5,
+        proposal: JSON.stringify({ name: '摄影协会', description: '摄影技术交流社团' }),
+        club_id: '5',
         reject_reason: '',
         reviewed_at: '2024-06-27T15:20:00Z',
+        status: 'approved',
       },
     ]
 
     return mockApplications
   }
-
-  const response = await request.get('/api/club/my_create_applications')
-  
-  // 检查响应数据
-  if (!response.data) {
-    return []
-  }
+ const response = await request.get('/api/club/my_createapplis')
+  const clubcreateapplication: ClubCreatedApplication[] = response.data
+  console.log(clubcreateapplication)
   
   return response.data as ClubCreatedApplication[]
 }

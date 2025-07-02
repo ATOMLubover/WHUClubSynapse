@@ -91,15 +91,6 @@ export interface ClubCategory {
   count?: number
 }
 
-
-// 收藏记录
-export interface Favorite {
-  id: string
-  userId: string
-  clubId: string
-  createdAt: string
-}
-
 // API响应类型（保持原有，但很多接口不使用这个格式）
 export interface ApiResponse<T = any> {
   code: number
@@ -231,10 +222,11 @@ export interface ClubApplication {
 export interface ClubCreatedApplication {
   appli_id: number
   applied_at: string  // RFC3339格式
+  proposal: string | object  // JSON字符串或对象
   reject_reason: string
   reviewed_at: string  // RFC3339格式
-  club_id:number
-  club?:Club
+  status: string
+  club_id?: string  // 审核通过后会有对应的社团ID
 }
 
 // 社团创建申请类型

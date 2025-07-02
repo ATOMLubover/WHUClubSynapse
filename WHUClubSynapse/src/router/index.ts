@@ -121,7 +121,7 @@ const router = createRouter({
     {
       path: '/test',
       name: 'test',
-      component: () => import('@/views/test2.vue'),
+      component: () => import('@/examples/jwt-usage-example.vue'),
     },
     {
       path:'/admin',

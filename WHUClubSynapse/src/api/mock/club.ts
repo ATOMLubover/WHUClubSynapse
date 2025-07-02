@@ -67,6 +67,16 @@ export const mockGetClubList = async (
   }
 }
 
+// 模拟获取社团基本信息
+export const mockGetClubBasic = async (clubId: string): Promise<Club> => {
+  await delay(500)
+  const club = mockClubs.find((c) => c.club_id === clubId)
+  if (!club) {
+    throw new Error('社团不存在')
+  }
+  return club
+}
+
 // 模拟获取社团详情
 export const mockGetClubDetail = async (id: string): Promise<Club > => {
   await delay(500)
