@@ -84,6 +84,18 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  //获取社团基本信息
+  const fetchClubBasic=async(clubId:string)=>{
+    try{
+      const response=await clubApi.getClubBasic(clubId)
+      return response
+    }
+    catch(error){
+      console.error('获取社团基本信息失败:', error)
+      throw error
+    }
+  }
+
   // 搜索社团
   const searchClubs = async (keyword: string, params?: Partial<SearchParams>) => {
     try {
@@ -258,13 +270,16 @@ export const useClubStore = defineStore('club', () => {
       if(params.page!=null&&params.pageSize!=null){
         list=list.slice((params.page-1)*params.pageSize,params.page*params.pageSize)
       }
+
+      list.forEach(async(application)=>{
+        const club=await fetchClubBasic(application.club_id)
+        if(club){
+          application.club=club
+        }
+      })
+
       return {
-        list:list.map((application)=>{
-          return {
-            ...application,
-            club:clubs.value.find((club)=>club.club_id===application.club_id),
-          }
-        }),
+        list:list,
         total:response.total,
         page:params.page||1,
         pageSize:params.pageSize||10,
@@ -291,6 +306,18 @@ export const useClubStore = defineStore('club', () => {
     } catch (error) {
       console.error('申请创建社团失败:', error)
       ElMessage.error('申请创建社团失败')
+      throw error
+    }
+  }
+
+  // 获取用户创建的社团申请列表
+  const fetchUserCreatedApplications = async () => {
+    try {
+      const response = await clubApi.getUserCreatedApplications()
+      return response
+    } catch (error) {
+      console.error('获取用户创建申请失败:', error)
+      ElMessage.error('获取用户创建申请失败')
       throw error
     }
   }
@@ -520,6 +547,7 @@ export const useClubStore = defineStore('club', () => {
     getPostById,
     updateClub,
     applyToCreateClub,
+    fetchUserCreatedApplications,
     fetchPendingClubApplications,
   }
 })

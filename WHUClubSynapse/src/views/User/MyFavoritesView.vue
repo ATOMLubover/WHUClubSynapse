@@ -130,7 +130,9 @@
                       {{ club.club_name }}
                     </h3>
                     <p class="club-category">{{ getCategoryText(club.category) }}</p>
-                    <p class="club-members">{{ club.member_count }}</p>
+                    <p class="club-members">
+                      {{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }}
+                    </p>
                     <p class="favorite-time">{{ formatDate(club.favoriteAt) }}</p>
                   </div>
 
@@ -180,7 +182,9 @@
 
                 <div class="club-meta">
                   <el-tag size="small">{{ getCategoryText(club.category) }}</el-tag>
-                  <span class="club-members">{{ club.member_count }} 人</span>
+                  <span class="club-members"
+                    >{{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }}</span
+                  >
                 </div>
 
                 <div class="club-favorite-time">

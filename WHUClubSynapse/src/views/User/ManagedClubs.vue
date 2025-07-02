@@ -53,6 +53,182 @@
       </el-card>
     </div>
 
+    <!-- 创建申请列表 -->
+    <div class="created-applications-section">
+      <el-card>
+        <template #header>
+          <div class="card-header">
+            <span>我的创建申请 ({{ userCreatedApplications.length }})</span>
+            <el-button @click="loadUserCreatedApplications" :loading="applicationsLoading">
+              <el-icon><Refresh /></el-icon>
+              刷新申请
+            </el-button>
+          </div>
+        </template>
+
+        <div v-loading="applicationsLoading">
+          <!-- 空状态 -->
+          <div v-if="!userCreatedApplications.length && !applicationsLoading" class="empty-state">
+            <el-empty description="您还没有提交创建社团申请">
+              <el-button type="primary" @click="showCreateDialog = true"> 申请创建社团 </el-button>
+            </el-empty>
+          </div>
+
+          <!-- 申请列表 -->
+          <div v-else class="applications-list">
+            <el-row :gutter="24">
+              <el-col
+                v-for="application in userCreatedApplications"
+                :key="application.appli_id"
+                :xs="24"
+                :sm="12"
+                :md="8"
+                :lg="6"
+                class="application-card-col"
+              >
+                <div class="application-card" :class="`status-${application.status}`">
+                  <!-- 卡片头部 -->
+                  <div class="card-header">
+                    <div class="status-indicator">
+                      <div class="status-dot" :class="`status-${application.status}`"></div>
+                      <el-tag
+                        :type="getApplicationStatusType(application.status)"
+                        size="small"
+                        effect="dark"
+                        class="status-tag"
+                      >
+                        {{ getApplicationStatusText(application.status) }}
+                      </el-tag>
+                    </div>
+                  </div>
+
+                  <!-- 申请方案预览 -->
+                  <div v-if="application.proposal" class="proposal-preview-card">
+                    <span class="proposal-label">申请方案</span>
+
+                    <template v-if="parseProposal(application.proposal)">
+                      <div class="proposal-main-info">
+                        <h3 class="club-name">
+                          社团名:{{ parseProposal(application.proposal).name || '未命名社团' }}
+                        </h3>
+                        <p class="club-description">
+                          简介:{{ parseProposal(application.proposal).description || '暂无简介' }}
+                        </p>
+                      </div>
+
+                      <div class="proposal-meta">
+                        <div
+                          v-if="parseProposal(application.proposal).category_id"
+                          class="meta-item"
+                        >
+                          <el-icon><Collection /></el-icon>
+                          <el-tag size="small" type="primary" class="category-tag">
+                            {{ getCategoryName(parseProposal(application.proposal).category_id) }}
+                          </el-tag>
+                        </div>
+
+                        <div
+                          v-if="parseProposal(application.proposal).tags?.length"
+                          class="meta-item tags-section"
+                        >
+                          <el-icon><PriceTag /></el-icon>
+                          <div class="tags-container">
+                            <el-tag
+                              v-for="tag in parseProposal(application.proposal).tags.slice(0, 3)"
+                              :key="tag"
+                              size="small"
+                              class="tag-item"
+                              effect="plain"
+                            >
+                              {{ tag }}
+                            </el-tag>
+                            <span
+                              v-if="parseProposal(application.proposal).tags.length > 3"
+                              class="more-tags"
+                            >
+                              +{{ parseProposal(application.proposal).tags.length - 3 }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="proposal-error">
+                        <el-icon><Warning /></el-icon>
+                        <span>方案数据异常</span>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- 时间信息 -->
+                  <div class="time-info">
+                    <div class="time-item">
+                      <el-icon class="time-icon"><Clock /></el-icon>
+                      <div class="time-content">
+                        <span class="time-label">申请时间</span>
+                        <span class="time-value">{{ formatDate(application.applied_at) }}</span>
+                      </div>
+                    </div>
+
+                    <div v-if="application.reviewed_at" class="time-item">
+                      <el-icon class="time-icon"><CircleCheck /></el-icon>
+                      <div class="time-content">
+                        <span class="time-label">审核时间</span>
+                        <span class="time-value">{{ formatDate(application.reviewed_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 拒绝原因 -->
+                  <div v-if="application.reject_reason" class="reject-reason-card">
+                    <div class="reject-header">
+                      <el-icon class="reject-icon"><CircleClose /></el-icon>
+                      <span class="reject-title">拒绝原因</span>
+                    </div>
+                    <p class="reject-content">{{ application.reject_reason }}</p>
+                  </div>
+
+                  <!-- 操作按钮 -->
+                  <div class="card-actions">
+                    <el-button
+                      v-if="application.status === 'approved' && application.club_id"
+                      type="success"
+                      size="default"
+                      @click="goToClubDetail(application.club_id!)"
+                      class="action-button success-button"
+                    >
+                      <el-icon><View /></el-icon>
+                      查看社团
+                    </el-button>
+                    <el-button
+                      v-else-if="application.status === 'pending'"
+                      type="primary"
+                      size="default"
+                      disabled
+                      class="action-button pending-button"
+                    >
+                      <el-icon><Loading /></el-icon>
+                      等待审核
+                    </el-button>
+                    <el-button
+                      v-else
+                      type="primary"
+                      size="default"
+                      @click="showCreateDialog = true"
+                      class="action-button retry-button"
+                    >
+                      <el-icon><Refresh /></el-icon>
+                      重新申请
+                    </el-button>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
     <!-- 社团列表 -->
     <div class="favorites-section">
       <el-card>
@@ -78,7 +254,7 @@
 
           <!-- 卡片视图 -->
           <div v-else class="card-view">
-            <el-row :gutter="20">
+            <el-row :gutter="24">
               <el-col
                 v-for="club in managedClubs"
                 :key="club.club_id"
@@ -94,7 +270,13 @@
                   <div class="club-cover" @click="goToClubDetail(club.club_id)">
                     <img :src="club.logo_url" :alt="club.club_name" />
                     <div class="cover-overlay">
-                      <el-button type="primary" size="small">查看详情</el-button>
+                      <div class="overlay-content">
+                        <el-icon class="view-icon"><View /></el-icon>
+                        <span>查看详情</span>
+                      </div>
+                    </div>
+                    <div class="club-badge">
+                      <el-tag size="small" type="success" effect="dark">管理中</el-tag>
                     </div>
                   </div>
 
@@ -103,17 +285,53 @@
                     <h3 class="club-name" @click="goToClubDetail(club.club_id)">
                       {{ club.club_name }}
                     </h3>
-                    <p class="club-category">{{ club.category }}</p>
-                    <p class="club-members">{{ club.member_count }}/{{ club.maxMembers }} 人</p>
-                    <p class="favorite-time">创建于 {{ formatDate(club.created_at) }}</p>
+
+                    <div class="club-meta">
+                      <div class="meta-item">
+                        <el-icon class="meta-icon"><Collection /></el-icon>
+                        <span class="club-category">{{ club.category }}</span>
+                      </div>
+
+                      <div class="meta-item">
+                        <el-icon class="meta-icon"><User /></el-icon>
+                        <span class="club-members"
+                          >{{ club.member_count }}/{{ club.maxMembers }} 人</span
+                        >
+                      </div>
+
+                      <div class="meta-item">
+                        <el-icon class="meta-icon"><Calendar /></el-icon>
+                        <span class="favorite-time">{{ formatDate(club.created_at) }}</span>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- 操作按钮 -->
                   <div class="club-actions">
-                    <el-button size="small" @click="editClub(club)">编辑信息</el-button>
-                    <el-button size="small" @click="manageMembers(club)">成员管理</el-button>
-                    <el-button size="small" @click="manageFinance(club)">经费管理</el-button>
-                    <el-button size="small" type="danger" @click="handledelete(club)">
+                    <el-button
+                      size="small"
+                      @click="editClub(club)"
+                      class="action-btn primary-action"
+                    >
+                      <el-icon><Edit /></el-icon>
+                      编辑信息
+                    </el-button>
+                    <el-button size="small" @click="manageMembers(club)" class="action-btn">
+                      <el-icon><User /></el-icon>
+                      成员管理
+                    </el-button>
+                    <el-button size="small" @click="manageFinance(club)" class="action-btn">
+                      <el-icon><Money /></el-icon>
+                      经费管理
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="handledelete(club)"
+                      class="action-btn danger-action"
+                      plain
+                    >
+                      <el-icon><Delete /></el-icon>
                       删除社团
                     </el-button>
                   </div>
@@ -239,12 +457,21 @@ import {
   ArrowDown,
   Warning,
   CircleCheck,
+  CircleClose,
   Clock,
   Document,
+  Star,
+  Collection,
+  PriceTag,
+  View,
+  Loading,
+  Edit,
+  Money,
+  Delete,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
-import type { Club, ClubCategory } from '@/types'
+import type { Club, ClubCategory, ClubCreatedApplication } from '@/types'
 
 const router = useRouter()
 const clubStore = useClubStore()
@@ -266,6 +493,10 @@ const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const deleteClub = ref<Club | null>(null)
 const categoriesList = ref<ClubCategory[]>([])
+
+// 用户创建申请相关数据
+const userCreatedApplications = ref<ClubCreatedApplication[]>([])
+const applicationsLoading = ref(false)
 // 创建表单
 const createForm = ref({
   name: '',
@@ -316,6 +547,45 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
+// 获取申请状态类型
+const getApplicationStatusType = (status: string) => {
+  const typeMap: Record<string, string> = {
+    pending: 'warning',
+    approved: 'success',
+    rejected: 'danger',
+  }
+  return typeMap[status] || 'info'
+}
+
+// 获取申请状态文本
+const getApplicationStatusText = (status: string) => {
+  const textMap: Record<string, string> = {
+    pending: '待审核',
+    approved: '已通过',
+    rejected: '已拒绝',
+  }
+  return textMap[status] || '未知状态'
+}
+
+// 解析申请方案
+const parseProposal = (proposal: string | object) => {
+  try {
+    if (typeof proposal === 'string') {
+      return JSON.parse(proposal)
+    }
+    return proposal
+  } catch (error) {
+    console.error('解析申请方案失败:', error)
+    return null
+  }
+}
+
+// 获取社团类型名称
+const getCategoryName = (categoryId: number) => {
+  const category = categoriesList.value.find((cat) => cat.category_id === categoryId)
+  return category?.name || '未知类型'
+}
+
 // TODO:加载管理的社团
 const loadManagedClubs = async () => {
   if (!authStore.isLoggedIn) {
@@ -336,6 +606,22 @@ const loadManagedClubs = async () => {
     console.error('加载管理的社团失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 加载用户创建申请
+const loadUserCreatedApplications = async () => {
+  if (!authStore.isLoggedIn) {
+    return
+  }
+
+  try {
+    applicationsLoading.value = true
+    userCreatedApplications.value = await clubStore.fetchUserCreatedApplications()
+  } catch (error) {
+    console.error('加载用户创建申请失败:', error)
+  } finally {
+    applicationsLoading.value = false
   }
 }
 
@@ -469,8 +755,8 @@ const confirmDelete = async () => {
 
   try {
     deleteLoading.value = true
-    await clubStore.deleteClub(deleteClub.value.club_id)
-    ElMessage.success('社团删除成功')
+    // TODO: 实现删除社团功能
+    ElMessage.info('删除社团功能暂未实现')
     showDeleteDialog.value = false
     deleteClub.value = null
     // 重新加载列表
@@ -487,6 +773,7 @@ const confirmDelete = async () => {
 onMounted(() => {
   getCategoriesList()
   loadManagedClubs()
+  loadUserCreatedApplications()
   const isOpen = route.query.isOpen
   if (isOpen == 'true') {
     showCreateDialog.value = true
@@ -518,7 +805,8 @@ onMounted(() => {
 }
 
 .toolbar,
-.favorites-section {
+.favorites-section,
+.created-applications-section {
   margin-bottom: 20px;
 }
 
@@ -531,7 +819,7 @@ onMounted(() => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 5px;
 }
 
 .card-view {
@@ -542,41 +830,42 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+/* 社团卡片样式 */
 .club-card {
   position: relative;
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+  border: 1px solid #e8eaed;
+  border-radius: 16px;
   overflow: hidden;
-  transition: all 0.3s;
-  background: #fff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.club-card:hover {
-  border-color: #409eff;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
-}
-
-.cover-overlay {
+.club-card::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 3px;
+  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }
 
-.club-cover:hover .cover-overlay {
+.club-card:hover {
+  transform: translateY(-6px);
+  border-color: #409eff;
+  box-shadow: 0 16px 48px rgba(64, 158, 255, 0.15);
+}
+
+.club-card:hover::before {
   opacity: 1;
 }
 
+/* 社团封面 */
 .club-cover {
   position: relative;
-  height: 150px;
+  height: 160px;
   overflow: hidden;
   cursor: pointer;
 }
@@ -585,38 +874,130 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .club-cover:hover img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
+.cover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.8) 0%, rgba(103, 194, 58, 0.8) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+}
+
+.club-cover:hover .cover-overlay {
+  opacity: 1;
+}
+
+.overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.club-cover:hover .overlay-content {
+  transform: translateY(0);
+}
+
+.view-icon {
+  font-size: 24px;
+}
+
+.overlay-content span {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.club-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+/* 社团信息 */
 .club-info {
   padding: 16px;
 }
 
 .club-name {
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
   font-size: 16px;
-  font-weight: 600;
-  color: #303133;
+  font-weight: 700;
+  color: #1d2129;
   cursor: pointer;
   transition: color 0.2s;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .club-name:hover {
   color: #409eff;
 }
 
-.club-category,
-.club-members,
-.favorite-time {
-  margin: 4px 0;
-  color: #606266;
-  font-size: 13px;
+.club-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4e5969;
+  padding: 6px 10px;
+  background: rgba(64, 158, 255, 0.05);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.meta-item:hover {
+  background: rgba(64, 158, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.meta-icon {
+  color: #409eff;
+  font-size: 16px;
+}
+
+.club-category {
+  font-weight: 600;
+  color: #409eff;
+}
+
+.club-members {
+  font-weight: 500;
+}
+
+.favorite-time {
+  color: #86909c;
+  font-size: 12px;
+}
+
+/* 操作按钮 */
 .club-actions {
   padding: 0 16px 16px;
   display: flex;
@@ -624,17 +1005,54 @@ onMounted(() => {
   gap: 8px;
 }
 
-.club-actions .el-button {
+.action-btn {
   width: 100%;
-  min-height: 38px;
-  font-size: 15px;
-  box-sizing: border-box;
-  border-radius: 6px;
-  margin: 0;
-  text-align: center;
-  justify-content: center;
-  align-items: center;
+  height: 38px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+}
+
+.primary-action {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.primary-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
+}
+
+.action-btn:not(.primary-action):not(.danger-action) {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e8eaed;
+  color: #4e5969;
+}
+
+.action-btn:not(.primary-action):not(.danger-action):hover {
+  background: rgba(64, 158, 255, 0.05);
+  border-color: #409eff;
+  color: #409eff;
+  transform: translateY(-1px);
+}
+
+.danger-action {
+  border-color: #f56c6c;
+  color: #f56c6c;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.danger-action:hover {
+  background: rgba(245, 108, 108, 0.1);
+  transform: translateY(-1px);
 }
 
 .pagination-section {
@@ -647,33 +1065,34 @@ onMounted(() => {
   padding: 60px 20px;
 }
 
-@media (max-width: 768px) {
-  .card-view .el-col {
-    width: 100%;
+/* 平板响应式 */
+@media (max-width: 992px) {
+  .application-card-col,
+  .club-card-col {
+    margin-bottom: 20px;
   }
 
-  .club-actions {
-    padding: 0 12px 12px;
+  .application-card,
+  .club-card {
+    border-radius: 12px;
   }
 
-  .club-info {
-    padding: 12px;
-  }
-
-  .club-name {
-    font-size: 14px;
-  }
-
-  .club-category,
-  .club-members,
-  .favorite-time {
-    font-size: 12px;
+  .action-button,
+  .action-btn {
+    height: 40px;
+    font-size: 13px;
   }
 }
 
-@media (max-width: 480px) {
+/* 手机端响应式 */
+@media (max-width: 768px) {
   .my-favorites {
-    padding: 10px;
+    padding: 16px;
+  }
+
+  .card-view .el-col,
+  .application-card-col {
+    width: 100%;
   }
 
   .page-header h1 {
@@ -684,9 +1103,639 @@ onMounted(() => {
     font-size: 14px;
   }
 
-  .club-actions .el-button {
+  .toolbar .el-row {
+    gap: 12px;
+  }
+
+  .toolbar .el-col {
+    margin-bottom: 8px;
+  }
+
+  /* 申请卡片移动端优化 */
+  .application-card {
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .status-indicator {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+
+  .club-name {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .club-description {
+    margin-top: 20px;
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+
+  .proposal-meta {
+    gap: 8px;
+  }
+
+  .meta-item {
     font-size: 12px;
-    padding: 6px 12px;
+    padding: 6px 10px;
+  }
+
+  .time-info {
+    margin: 16px 0;
+    gap: 8px;
+  }
+
+  .time-item {
+    padding: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .time-content {
+    gap: 0;
+  }
+
+  .time-label {
+    font-size: 11px;
+  }
+
+  .time-value {
+    font-size: 13px;
+  }
+
+  .reject-reason-card {
+    padding: 12px;
+    margin: 16px 0;
+  }
+
+  .reject-content {
+    font-size: 12px;
+    padding-left: 20px;
+  }
+
+  .action-button {
+    height: 42px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  /* 社团卡片移动端优化 */
+  .club-cover {
+    height: 140px;
+  }
+
+  .club-info {
+    padding: 16px;
+  }
+
+  .club-name {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .club-meta {
+    gap: 8px;
+  }
+
+  .meta-item {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .meta-icon {
+    font-size: 14px;
+  }
+
+  .club-actions {
+    padding: 0 16px 16px;
+    gap: 8px;
+  }
+
+  .action-btn {
+    height: 40px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .overlay-content {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .club-cover .cover-overlay {
+    opacity: 0.9;
+  }
+}
+
+/* 申请卡片样式 */
+.applications-list {
+  min-height: 150px;
+}
+
+.application-card-col {
+  margin-bottom: 24px;
+}
+
+.application-card {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  border: 1px solid #e8eaed;
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.application-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #409eff 0%, #67c23a 50%, #e6a23c 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.application-card:hover {
+  transform: translateY(-4px);
+  border-color: #409eff;
+  box-shadow: 0 12px 32px rgba(64, 158, 255, 0.15);
+}
+
+.application-card:hover::before {
+  opacity: 1;
+}
+
+.application-card.status-approved {
+  border-color: #e7f5e7;
+  background: linear-gradient(135deg, #f7fff7 0%, #e7f5e7 100%);
+}
+
+.application-card.status-rejected {
+  border-color: #fde2e2;
+  background: linear-gradient(135deg, #fffafa 0%, #fde2e2 100%);
+}
+
+.application-card.status-pending {
+  border-color: #fef3e7;
+  background: linear-gradient(135deg, #fffcf7 0%, #fef3e7 100%);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.status-pending {
+  background: #e6a23c;
+}
+
+.status-dot.status-approved {
+  background: #67c23a;
+  animation: none;
+}
+
+.status-dot.status-rejected {
+  background: #f56c6c;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.8);
+  }
+}
+
+.status-tag {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.application-id {
+  color: #8c939d;
+  font-size: 12px;
+  font-weight: 500;
+  background: #f5f7fa;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* 申请方案预览卡片 */
+.proposal-preview-card {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 14px;
+}
+
+.proposal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #409eff;
+  margin-bottom: 10px;
+  border-left: 3px solid #409eff;
+  padding-left: 8px;
+}
+
+.proposal-main-info {
+  margin-bottom: 12px;
+}
+
+.club-name {
+  display: flex;
+  align-items: center;
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d2129;
+  line-height: 1.3;
+}
+
+.name-icon {
+  margin-right: 6px;
+  color: #ffd700;
+  font-size: 18px;
+}
+
+.club-description {
+  margin: 0;
+  color: #4e5969;
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.proposal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.meta-item .el-icon {
+  color: #86909c;
+  font-size: 16px;
+}
+
+.category-tag {
+  font-weight: 600;
+}
+
+.tags-section {
+  align-items: flex-start;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag-item {
+  margin: 0;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.more-tags {
+  font-size: 12px;
+  color: #86909c;
+  background: #f2f3f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.proposal-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f56c6c;
+  font-size: 13px;
+  padding: 12px;
+  background: #fef0f0;
+  border-radius: 8px;
+}
+
+/* 时间信息 */
+.time-info {
+  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  border: 1px solid #f0f2f5;
+}
+
+.time-icon {
+  color: #409eff;
+  font-size: 16px;
+}
+
+.time-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.time-label {
+  font-size: 12px;
+  color: #86909c;
+}
+
+.time-value {
+  font-size: 14px;
+  color: #1d2129;
+  font-weight: 500;
+}
+
+/* 拒绝原因卡片 */
+.reject-reason-card {
+  margin: 14px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #fef5f5 0%, #fef0f0 100%);
+  border: 1px solid #fbc4c4;
+  border-radius: 8px;
+}
+
+.reject-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.reject-icon {
+  color: #f56c6c;
+  font-size: 14px;
+}
+
+.reject-title {
+  font-weight: 600;
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+.reject-content {
+  margin: 0;
+  color: #c53030;
+  font-size: 12px;
+  line-height: 1.5;
+  padding-left: 20px;
+}
+
+/* 操作按钮 */
+.card-actions {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.action-button {
+  width: 100%;
+  height: 38px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.success-button {
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
+}
+
+.success-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(103, 194, 58, 0.4);
+}
+
+.pending-button {
+  background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
+  border: none;
+  opacity: 0.8;
+}
+
+.retry-button {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
+}
+
+/* 小屏手机端优化 */
+@media (max-width: 480px) {
+  .my-favorites {
+    padding: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+  .toolbar .el-col {
+    width: 100% !important;
+    margin-bottom: 8px;
+  }
+
+  /* 申请卡片小屏优化 */
+  .application-card {
+    padding: 12px 10px;
+    border-radius: 10px;
+  }
+
+  .proposal-preview-card {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .proposal-label {
+    font-size: 11px;
+    margin-bottom: 8px;
+    padding-left: 6px;
+  }
+
+  .club-name {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .club-description {
+    font-size: 11px;
+  }
+
+  .proposal-meta {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .meta-item {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .time-info {
+    margin: 10px 0;
+    gap: 6px;
+  }
+
+  .time-item {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .time-label {
+    font-size: 10px;
+  }
+
+  .time-value {
+    font-size: 12px;
+  }
+
+  .reject-reason-card {
+    padding: 8px;
+    margin: 10px 0;
+  }
+
+  .reject-content {
+    font-size: 11px;
+    padding-left: 16px;
+  }
+
+  .card-actions {
+    margin-top: 10px;
+  }
+
+  .tags-container {
+    gap: 3px;
+  }
+
+  .tag-item {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+
+  .more-tags {
+    font-size: 10px;
+    padding: 1px 3px;
+  }
+
+  .action-button {
+    height: 34px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  /* 社团卡片小屏优化 */
+  .club-cover {
+    height: 120px;
+  }
+
+  .club-info {
+    padding: 12px;
+  }
+
+  .club-meta {
+    gap: 6px;
+  }
+
+  .meta-item {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+
+  .meta-icon {
+    font-size: 13px;
+  }
+
+  .club-actions {
+    padding: 0 12px 12px;
+    gap: 6px;
+  }
+
+  .action-btn {
+    height: 36px;
+    font-size: 11px;
+    gap: 4px;
+    border-radius: 8px;
+  }
+
+  .view-icon {
+    font-size: 20px;
+  }
+
+  .overlay-content span {
+    font-size: 12px;
   }
 }
 </style>

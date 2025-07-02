@@ -101,6 +101,17 @@
 
                   <!-- 社团信息 -->
                   <div class="club-info">
+                    <el-tag
+                      type="error"
+                      size="small"
+                      v-if="Number(club.leader_id) == authStore.currentUserId"
+                      style="margin-bottom: 10px"
+                    >
+                      我创建的
+                    </el-tag>
+                    <el-tag type="success" size="small" v-else style="margin-bottom: 10px">
+                      我加入的
+                    </el-tag>
                     <h3 class="club-name" @click="goToClubDetail(club.club_id)">
                       {{ club.club_name }}
                     </h3>
@@ -111,7 +122,9 @@
                         )?.name
                       }}
                     </p>
-                    <p class="club-members">{{ club.member_count }}/{{ club.maxMembers }} 人</p>
+                    <p class="club-members">
+                      {{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }} 人
+                    </p>
                     <p class="favorite-time">加入于 {{ formatDate(club.created_at) }}</p>
                   </div>
 
@@ -236,6 +249,8 @@ const loadJoinedClubs = async () => {
       pageSize: pageSize.value,
     })
     joinedClubs.value = clubStore.joinedClubs
+    console.log('joinedClubs', joinedClubs.value)
+    console.log('user', authStore.user?.user_id)
     total.value = data.total
   } catch (error) {
     console.error('加载已加入社团失败:', error)

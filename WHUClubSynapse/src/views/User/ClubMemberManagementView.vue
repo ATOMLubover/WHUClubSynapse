@@ -53,31 +53,77 @@
               </div>
             </div>
 
-            <el-table v-loading="memberLoading" :data="members" style="width: 100%" row-key="id">
-              <el-table-column label="成员信息" min-width="300">
-                <template #default="{ row }">
-                  <div class="member-info-button" @click="showMemberDetail(row)">
-                    <el-avatar :src="row.avatar_url" :size="40" />
-                    <div class="member-details">
-                      <div class="member-name">{{ row.realName || row.username }}</div>
-                      <div class="member-username">@{{ row.username }}</div>
-                      <div class="member-student-id">学号: {{ row.studentId || '未填写' }}</div>
+            <!-- 成员卡片网格 -->
+            <div v-loading="memberLoading" class="members-grid">
+              <div v-if="!members.length && !memberLoading" class="empty-state">
+                <el-empty description="暂无成员" :image-size="120" />
+              </div>
+
+              <div
+                v-for="member in members"
+                :key="member.member_id"
+                class="member-card"
+                @click="showMemberDetail(member)"
+              >
+                <div class="member-card-header">
+                  <el-avatar :src="member.avatar_url" :size="60" class="member-avatar" />
+                  <div class="member-role-badge">
+                    <el-tag
+                      :type="member.role_in_club === 'admin' ? 'danger' : 'primary'"
+                      size="small"
+                      effect="dark"
+                    >
+                      {{ member.role_in_club === 'admin' ? '管理员' : '成员' }}
+                    </el-tag>
+                  </div>
+                </div>
+
+                <div class="member-card-body">
+                  <h4 class="member-name">{{ member.realName || member.username }}</h4>
+                  <p class="member-username">@{{ member.username }}</p>
+
+                  <div class="member-info-grid">
+                    <div class="info-item">
+                      <el-icon class="info-icon"><User /></el-icon>
+                      <span class="info-label">学号</span>
+                      <span class="info-value">{{ member.studentId || '未填写' }}</span>
                     </div>
-                    <div class="member-role">
-                      <el-tag :type="row.role === 'admin' ? 'danger' : 'primary'">
-                        {{ row.role === 'admin' ? '管理员' : '成员' }}
-                      </el-tag>
+
+                    <div class="info-item">
+                      <el-icon class="info-icon"><Calendar /></el-icon>
+                      <span class="info-label">加入时间</span>
+                      <span class="info-value">{{ formatDate(member.joined_at) }}</span>
+                    </div>
+
+                    <div class="info-item">
+                      <el-icon class="info-icon"><Phone /></el-icon>
+                      <span class="info-label">联系方式</span>
+                      <span class="info-value">{{ member.phone || '未填写' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                      <el-icon class="info-icon"><Location /></el-icon>
+                      <span class="info-label">专业</span>
+                      <span class="info-value">{{ member.major || '未填写' }}</span>
                     </div>
                   </div>
-                </template>
-              </el-table-column>
+                </div>
 
-              <el-table-column label="加入时间" width="150">
-                <template #default="{ row }">
-                  {{ formatDate(row.joinTime) }}
-                </template>
-              </el-table-column>
-            </el-table>
+                <div class="member-card-footer">
+                  <div class="member-status">
+                    <el-tag :type="member.status === 'active' ? 'success' : 'info'" size="small">
+                      {{ member.status === 'active' ? '活跃' : '非活跃' }}
+                    </el-tag>
+                  </div>
+                  <div class="member-actions">
+                    <el-button size="small" type="primary" text>
+                      <el-icon><View /></el-icon>
+                      查看详情
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div v-if="memberTotal > 0" class="pagination-section">
               <el-pagination
@@ -132,59 +178,99 @@
               </div>
             </div>
 
-            <el-table
-              v-loading="applicationLoading"
-              :data="applications"
-              style="width: 100%"
-              row-key="id"
-            >
-              <el-table-column label="申请人信息" min-width="200">
-                <template #default="{ row }">
-                  <div class="applicant-info-button" @click="showApplicationDetail(row)">
-                    <el-avatar :src="row.avatar_url" :size="40" />
-                    <div class="applicant-details">
-                      <div class="applicant-name">{{ row.realName || row.username }}</div>
-                      <div class="applicant-username">@{{ row.username }}</div>
+            <!-- 申请卡片网格 -->
+            <div v-loading="applicationLoading" class="applications-grid">
+              <div v-if="!applications.length && !applicationLoading" class="empty-state">
+                <el-empty description="暂无申请" :image-size="120" />
+              </div>
+
+              <div
+                v-for="application in applications"
+                :key="application.appli_id"
+                class="application-card"
+                @click="showApplicationDetail(application)"
+              >
+                <div class="application-card-header">
+                  <el-avatar
+                    :src="application.club?.logo_url || ''"
+                    :size="50"
+                    class="applicant-avatar"
+                  />
+                  <div class="application-status-badge">
+                    <el-tag :type="getStatusType(application.status)" size="small" effect="dark">
+                      {{ getStatusText(application.status) }}
+                    </el-tag>
+                  </div>
+                </div>
+
+                <div class="application-card-body">
+                  <h4 class="applicant-name">{{ application.club?.club_name || '申请人' }}</h4>
+                  <p class="application-id">申请ID: #{{ application.appli_id }}</p>
+
+                  <div class="application-info-grid">
+                    <div class="info-item">
+                      <el-icon class="info-icon"><Message /></el-icon>
+                      <span class="info-label">申请理由</span>
+                      <span class="info-value reason-text">{{
+                        application.reason || '未填写'
+                      }}</span>
+                    </div>
+
+                    <div class="info-item">
+                      <el-icon class="info-icon"><Calendar /></el-icon>
+                      <span class="info-label">申请时间</span>
+                      <span class="info-value">{{ formatDate(application.applied_at) }}</span>
+                    </div>
+
+                    <div v-if="application.reviewed_at" class="info-item">
+                      <el-icon class="info-icon"><Clock /></el-icon>
+                      <span class="info-label">审核时间</span>
+                      <span class="info-value">{{ formatDate(application.reviewed_at) }}</span>
+                    </div>
+
+                    <div v-if="application.reject_reason" class="info-item">
+                      <el-icon class="info-icon"><Warning /></el-icon>
+                      <span class="info-label">拒绝原因</span>
+                      <span class="info-value reject-text">{{ application.reject_reason }}</span>
                     </div>
                   </div>
-                </template>
-              </el-table-column>
+                </div>
 
-              <el-table-column label="学号" prop="studentId" width="120" />
-              <el-table-column label="专业" prop="major" width="150" />
-              <el-table-column label="申请理由" min-width="200">
-                <template #default="{ row }">
-                  <div class="apply-reason-text">{{ row.applyReason }}</div>
-                </template>
-              </el-table-column>
+                <div class="application-card-footer">
+                  <div class="application-meta">
+                    <span class="club-name">{{ application.club?.club_name }}</span>
+                  </div>
 
-              <el-table-column label="状态" width="100">
-                <template #default="{ row }">
-                  <el-tag :type="getStatusType(row.status)">
-                    {{ getStatusText(row.status) }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="申请时间" width="150">
-                <template #default="{ row }">
-                  {{ formatDate(row.applyTime) }}
-                </template>
-              </el-table-column>
-
-              <el-table-column label="操作" width="150" fixed="right">
-                <template #default="{ row }">
-                  <div v-if="row.status === 'pending'" class="application-actions">
-                    <el-button size="small" type="success" @click="approveApplication(row)">
+                  <div v-if="application.status === 'pending'" class="application-actions">
+                    <el-button
+                      size="small"
+                      type="success"
+                      @click.stop="approveApplication(application)"
+                      text
+                    >
+                      <el-icon><CircleCheck /></el-icon>
                       同意
                     </el-button>
-                    <el-button size="small" type="danger" @click="rejectApplication(row)">
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click.stop="rejectApplication(application)"
+                      text
+                    >
+                      <el-icon><CircleClose /></el-icon>
                       拒绝
                     </el-button>
                   </div>
-                </template>
-              </el-table-column>
-            </el-table>
+
+                  <div v-else class="application-actions">
+                    <el-button size="small" type="primary" text>
+                      <el-icon><View /></el-icon>
+                      查看详情
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div v-if="applicationTotal > 0" class="pagination-section">
               <el-pagination
@@ -466,7 +552,21 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Search, Warning, Refresh } from '@element-plus/icons-vue'
+import {
+  ArrowLeft,
+  Search,
+  Warning,
+  Refresh,
+  User,
+  Calendar,
+  Phone,
+  Location,
+  View,
+  Message,
+  Clock,
+  CircleCheck,
+  CircleClose,
+} from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue'

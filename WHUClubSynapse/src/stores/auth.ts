@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage, type MessageParamsWithType } from 'element-plus'
 import * as authApi from '@/api/auth'
+import { getUserIdFromToken, getUserRoleFromToken, isTokenExpired, getUserInfoFromToken } from '@/utils/jwt'
 import type { User, LoginRequest, RegisterRequest, UserPreferences } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -13,6 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
+  
+  // 从JWT中获取用户信息的计算属性
+  const currentUserId = computed(() => getUserIdFromToken())
+  const currentUserRole = computed(() => getUserRoleFromToken())
 
   // 登录
   const login = async (loginData: LoginRequest) => {
@@ -139,6 +144,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 快速获取当前用户ID（从JWT解析）
+  const getCurrentUserId = (): number | null => {
+    return getUserIdFromToken()
+  }
+
+  // 检查token有效性
+  const checkTokenValidity = (): boolean => {
+    return !!token.value && !isTokenExpired()
+  }
+
   return {
     // 状态
     user,
@@ -147,6 +162,8 @@ export const useAuthStore = defineStore('auth', () => {
     // 计算属性
     isLoggedIn,
     isAdmin,
+    currentUserId,
+    currentUserRole,
     // 方法
     login,
     register,
@@ -156,5 +173,7 @@ export const useAuthStore = defineStore('auth', () => {
     updatePreferences,
     fetchAllUsers,
     updateUser,
+    getCurrentUserId,
+    checkTokenValidity,
   }
 })

@@ -141,18 +141,8 @@ const fetchPost = async () => {
       }
     }
 
-    // 更新content字段为返回的markdown内容
-    if (res && typeof res === 'string') {
-      // 如果返回的直接是字符串内容
-      post.value.content = res
-      console.log('post.value.content:', post.value.content)
-    } else if (res && res.data) {
-      // 如果返回的是包装的对象
-      post.value.content = typeof res.data === 'string' ? res.data : res.data.content || ''
-    } else {
-      console.warn('无法解析markdown内容:', res)
-      post.value.content = '内容加载失败'
-    }
+    post.value.content = res
+    console.log('post.value.content:', post.value.content)
 
     console.log('帖子内容已更新:', post.value)
   } catch (error) {
