@@ -16,7 +16,8 @@ def generate_training_data(
     server_url: str = "http://localhost:8080",
     batch_size: int = 100,
     total_count: int = 1000,
-    output_dir: str = "generated_data"
+    output_dir: str = "generated_data",
+    data_type: str = "general",
 ):
     """
     生成训练数据并保存到文件
@@ -40,7 +41,8 @@ def generate_training_data(
         payload = {
             "batch_size": batch_size,
             "total_count": total_count,
-            "save_file": output_file
+            "save_file": output_file,
+            "data_type": data_type
         }
         
         logger.info(f"开始生成训练数据，目标数量: {total_count}")
@@ -122,7 +124,7 @@ def main():
     # 配置参数
     server_url = "http://localhost:8080"  # 根据实际情况修改
     batch_size = 20
-    total_count = 100
+    total_count = 500
     output_dir = "generated_data"
     
     try:
@@ -131,7 +133,8 @@ def main():
             server_url=server_url,
             batch_size=batch_size,
             total_count=total_count,
-            output_dir=output_dir
+            output_dir=output_dir,
+            data_type="faq"
         )
         
         if output_file and os.path.exists(output_file):

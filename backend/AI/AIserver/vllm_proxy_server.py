@@ -1687,9 +1687,10 @@ async def update_club_data_endpoint():
 
 # 新增训练数据生成请求和响应模型
 class TrainingDataGenerationRequest(BaseModel):
-    batch_size: int = 100
-    total_count: int = 1000
+    batch_size: int = 10
+    total_count: int = 100
     save_file: Optional[str] = "training_data.jsonl"
+    data_type: Optional[str] = "general"  # 可选值: "general", "knowledge" 或 "faq"
 
 class TrainingDataGenerationResponse(BaseModel):
     generated_count: int
@@ -1761,54 +1762,110 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
 
 请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
 
-#         prompt_template = """# 角色
-# 你是一名顶尖的AI微调数据生成专家，专门为"大学社团管理AI助手"项目创建高质量的训练数据。
+        # 知识信息查询类问题的prompt模板
+        knowledge_prompt_template = """你是一名严谨、专业的大学社团信息查询AI助手，专注于为用户提供清晰、准确、具体的社团相关知识性信息。
 
-# # 任务
-# 请一次性生成{batch_size}条高质量的社团管理场景训练数据。每条数据都应该模拟一个真实的社团管理场景。
-# 注意：必须一次性生成完整的{batch_size}条数据，不要分批生成。
+你的任务是为大学社团场景生成**真实、准确且高质量的信息查询问答对**，每个问答对必须是独立的，且`output`应直接针对`input`给出答案，不包含额外说明或寒暄。
 
-# # 角色指令模板（每个模板应该被大致相等次数使用）
+**场景约束**：仅限于大学社团的常见知识和信息查询，包括但不限于：
+1.  **社团简介**：如社团的成立时间、主要活动、特色、联系方式等。
+2.  **规章制度解读**：如社团注册规定、经费使用细则、活动审批流程中的具体条款等。
+3.  **资源信息**：如可用的活动场地、宣传渠道、物资借用流程等。
+4.  **历史数据**：如往届社团评优结果、经典活动回顾等（使用占位符）。
 
-# "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。"
+**生成要求**：
+* 所有信息必须具体化，禁止出现模糊表述。
+* 涉及名称、日期、地点、联系方式等信息时，请使用占位符（如"XXXX年XX月XX日"、"活动中心X楼X室"、"邮箱xxx@xxx.com"、"电话13X XXXX XXXX"）。
+* 避免生成重复或逻辑错误的问答。
 
-# # 数据格式要求
-# 必须严格按照以下格式生成数据，instruction必须从上述模板中选择，不能自行发明：
-# [
-#   {{
-#     "instruction": "你是一名经验丰富的社团管理员，请简洁、专业地回答以下成员提问。",
-#     "input": "如何优化社团的财务管理流程？",
-#     "output": "建议从以下几个方面入手：1. 建立电子账本，详细记录收支；2. 设置预算审批制度；3. 定期公示财务状况；4. 建立报销规范流程；5. 每月进行财务分析。"
-#   }},
-#   {{
-#     "instruction": "作为社团的最高负责人，请对以下情况作出决策和指导。",
-#     "input": "社团成员之间出现了分歧，影响了活动进展，该如何处理？",
-#     "output": "1. 立即召开内部会议了解情况；2. 分别与相关成员沟通，听取各方意见；3. 制定折中方案，平衡各方诉求；4. 明确任务优先级，确保活动正常进行；5. 建立长期沟通机制，预防类似问题。"
-#   }},
-#   // ... 继续生成，直到达到{batch_size}条数据 ...
-# ]
+请一次性生成{batch_size}条高质量的社团知识信息查询数据。每条数据都应该模拟一个真实的社团信息查询场景。
+注意：必须一次性生成完整的{batch_size}条数据，不要分批生成。
 
-# # 生成要求
-# 1. 必须一次性生成完整的{batch_size}条数据
-# 2. instruction字段必须从上述模板中直接复制，不能改变或发明新的
-# 3. 确保每个角色视角生成约 {role_count} 条数据（{batch_size}的20%）
-# 4. 每个角色下的3个模板使用次数应接近 {template_count} 次
-# 5. 确保生成的是一个有效的JSON数组，包含完整的{batch_size}条数据
-# 6. input必须是具体的问题，output必须是专业且实用的回答
+请严格按照以下JSON格式输出，不要包含任何额外文字、说明或代码注释，直接输出JSON数组：
 
-# 请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
+[
+  {{
+    "instruction": "请作为社团信息管理员，为用户提供关于指定社团的详细介绍。",
+    "input": "请介绍一下学校的摄影社。",
+    "output": "学校摄影社成立于XXXX年，是一个汇集摄影爱好者的艺术社团，致力于提升成员的摄影技术和审美能力。社团每周X在教学楼A座X楼举办主题分享会和作品点评，定期组织外拍活动，并承办校园各项活动的摄影记录工作。社长联系方式：XXX，社团官方邮箱：photo.club@xxx.edu.cn。"
+  }},
+  {{
+    "instruction": "请作为规章制度专家，详细解释社团经费使用规定中的具体条款。",
+    "input": "社团经费中，购买固定资产的上限是多少？",
+    "output": "根据《XXX大学学生社团经费管理办法》第五条规定，社团使用经费购买单项价值超过XXX元的固定资产，需提前向社团联合会提交申请，并经审批同意后方可执行。年度内累计购买固定资产总额不得超过社团年度总预算的XX%。"
+  }}
+]
+
+# 生成要求
+1. 必须一次性生成完整的{batch_size}条数据
+2. 确保生成的是一个有效的JSON数组，包含完整的{batch_size}条数据
+3. input必须是具体的问题，output必须是专业且实用的回答
+
+请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
+
+        # FAQ类问题的prompt模板
+        faq_prompt_template = """你是一名经验丰富的社团问题解决专家，专注于为用户提供简洁、专业且具有可操作性的故障排除和常见问题解答。
+
+你的任务是为大学社团场景生成**真实、具体且高质量的常见问题解答对**，每个问答对必须是独立的，且`output`应直接针对`input`给出解决方案或指引，不包含额外说明或寒暄。
+
+**场景约束**：仅限于大学社团运营中常见的系统问题、流程障碍、突发情况及日常疑问，包括但不限于：
+1.  **系统使用问题**：如登录失败、文件上传错误、信息提交不成功等。
+2.  **流程卡滞问题**：如审批进度异常、材料提交不符合要求、流程中断等。
+3.  **日常操作疑问**：如社团邮箱密码忘记、活动物料遗失、通知未能及时送达等。
+4.  **轻微突发状况**：如活动现场设备故障、报名人数不足等。
+
+**生成要求**：
+* 所有解决方案必须具体、可执行，禁止出现模糊或无效的指引。
+* 涉及联系方式、具体部门、系统模块等信息时，请使用占位符（如"联系社联办公室（电话：12345678）"、"登录社团管理系统'反馈'模块"、"行政楼X楼X室"）。
+* 避免生成重复或逻辑错误的问答。
+
+请一次性生成{batch_size}条高质量的社团FAQ数据。每条数据都应该模拟一个真实的社团问题解决场景。
+注意：必须一次性生成完整的{batch_size}条数据，不要分批生成。
+
+请严格按照以下JSON格式输出，不要包含任何额外文字、说明或代码注释，直接输出JSON数组：
+
+[
+  {{
+    "instruction": "请作为社团系统技术支持，指导用户解决常见的系统操作问题。",
+    "input": "我在社团管理系统登录时总是显示"密码错误"，但我的密码是正确的，怎么办？",
+    "output": "1. 确认大小写锁定键是否开启。2. 尝试使用"忘记密码"功能重置密码。3. 如果问题仍然存在，请清除浏览器缓存和Cookie后重试。4. 若以上方法无效，请联系学校信息技术中心（电话：12345678）或社联技术支持邮箱（tech@xxx.edu.cn）寻求帮助。"
+  }},
+  {{
+    "instruction": "请作为流程顾问，帮助用户理解并解决审批流程中的疑问。",
+    "input": "我的社团活动场地申请提交一周了，还没有任何审批进展，该怎么办？",
+    "output": "通常场地申请的审批周期为3个工作日。若已超过一周仍无进展，建议您：1. 登录社团管理系统，进入"我的申请"查看具体审批状态及反馈。2. 确认是否所有附件（如活动策划书）都已完整上传。3. 直接联系学校场地管理中心（电话：12345678）或相关审批负责人查询进度。"
+  }}
+]
+
+# 生成要求
+1. 必须一次性生成完整的{batch_size}条数据
+2. 确保生成的是一个有效的JSON数组，包含完整的{batch_size}条数据
+3. input必须是具体的问题，output必须是专业且实用的回答
+
+请直接返回一个包含{batch_size}条数据的完整JSON数组，不要包含任何其他文本。"""
+
         # 计算每种类型应该生成的数量
         role_count = request.batch_size // 5  # 每个角色视角的数量
         topic_count = request.batch_size // 5  # 每个主题的数量
         template_count = role_count // 3  # 每个模板的使用次数
         
         # 格式化提示词
-        current_prompt = prompt_template.format(
-            batch_size=request.batch_size,
-            role_count=role_count,
-            topic_count=topic_count,
-            template_count=template_count
-        )
+        current_prompt = None
+        if request.data_type == "knowledge":
+            current_prompt = knowledge_prompt_template.format(
+                batch_size=request.batch_size
+            )
+        elif request.data_type == "faq":
+            current_prompt = faq_prompt_template.format(
+                batch_size=request.batch_size
+            )
+        else:  # 默认使用general模板
+            current_prompt = prompt_template.format(
+                batch_size=request.batch_size,
+                role_count=role_count,
+                topic_count=topic_count,
+                template_count=template_count
+            )
 
         total_generated = 0
         all_data = []
@@ -1816,18 +1873,31 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
         while total_generated < request.total_count and not server_should_exit:
             batch_size = min(request.batch_size, request.total_count - total_generated)
             
+            # 实际生成的数量比请求的多2条，因为前两条会被忽略
+            actual_batch_size = batch_size + 2
+            
             # 计算每种类型应该生成的数量
-            role_count = batch_size // 5  # 每个角色视角的数量
-            topic_count = batch_size // 5  # 每个主题的数量
+            role_count = actual_batch_size // 5  # 每个角色视角的数量
+            topic_count = actual_batch_size // 5  # 每个主题的数量
             template_count = role_count // 3  # 每个模板的使用次数
             
             # 格式化提示词
-            current_prompt = prompt_template.format(
-                batch_size=batch_size,
-                role_count=role_count,
-                topic_count=topic_count,
-                template_count=template_count
-            )
+            current_prompt = None
+            if request.data_type == "knowledge":
+                current_prompt = knowledge_prompt_template.format(
+                    batch_size=actual_batch_size
+                )
+            elif request.data_type == "faq":
+                current_prompt = faq_prompt_template.format(
+                    batch_size=actual_batch_size
+                )
+            else:  # 默认使用general模板
+                current_prompt = prompt_template.format(
+                    batch_size=actual_batch_size,
+                    role_count=role_count,
+                    topic_count=topic_count,
+                    template_count=template_count
+                )
 
             # 检查是否应该退出
             check_exit()
@@ -1847,7 +1917,7 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
                 ],
                 "temperature": 0.7,
                 "top_p": 0.95,
-                "max_tokens": 8000,  # 增加token限制以支持更大批量
+                "max_tokens": 8000,
                 "stream": True
             }
             
@@ -1945,8 +2015,12 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
                 # 验证每条数据的格式
                 valid_data = []
                 invalid_count = 0
-                for item in batch_data:
+                for i, item in enumerate(batch_data):
                     try:
+                        # 跳过前两条数据
+                        if i < 2:
+                            continue
+                            
                         if not all(key in item for key in ["instruction", "input", "output"]):
                             invalid_count += 1
                             continue
@@ -1959,7 +2033,7 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
                         continue
                 
                 if invalid_count > 0:
-                    logger.debug(f"本批次有 {invalid_count} 条无效数据被过滤")
+                    logger.debug(f"本批次有 {invalid_count} 条无效数据被过滤（包括前两条示例数据）")
                 
                 if valid_data:
                     all_data.extend(valid_data)
