@@ -715,8 +715,9 @@ export const getClubJoinApplications = async (
     }
   }
   
+  // 保持原始数据类型，不强制转换为字符串
   let list: ClubApplication[] = response.data.map((item: any) => ({
-    appli_id: item.appli_id?.toString(),
+    appli_id: item.appli_id, // 保持原始类型
     applied_at: item.applied_at,
     club_id: item.club_id?.toString(),
     applicant_id: item.applicant_id?.toString(),
@@ -726,6 +727,8 @@ export const getClubJoinApplications = async (
     reviewed_at: item.reviewed_at && item.reviewed_at !== "0001-01-01T00:00:00Z" ? item.reviewed_at : '',
     club: {} as Club
   }))
+  
+  console.log('📋 获取的申请列表数据:', list)
   
   // 前端处理筛选逻辑
   if (params.status) {
@@ -771,29 +774,53 @@ export const reviewJoinApplication = async (
     }
   }
 
-  // 使用正确的API路径审核社团加入申请
-  const requestBody: any = {
-    join_appli_id: parseInt(applicationId),
-    result: data.result
-  }
-  
-  // 只有在拒绝时才添加reason字段
-  if (data.result === 'reject' && data.reason) {
-    requestBody.reason = data.reason
-  }
-  
-  console.log('审核申请请求参数:', requestBody)
-  
-  const response = await request.put('/api/club/pub/proc_join', requestBody)
-  
-  console.log('审核申请响应:', response)
-  
-  return {
-    data: {
-      code: response.status,
-      message: typeof response.data === 'string' ? response.data : '通过社团更新申请成功',
-      data: null,
-    },
+  try {
+    // 使用正确的API路径审核社团加入申请
+    // 处理applicationId，确保是数字类型
+    let joinAppliId: number
+    if (typeof applicationId === 'string') {
+      joinAppliId = parseInt(applicationId)
+    } else {
+      joinAppliId = applicationId
+    }
+    
+    const requestBody: any = {
+      join_appli_id: joinAppliId,
+      result: data.result
+    }
+    
+    // 只有在拒绝时才添加reason字段
+    if (data.result === 'reject' && data.reason) {
+      requestBody.reason = data.reason
+    }
+    
+    console.log('🔍 审核申请请求详情:')
+    console.log('- 申请ID:', applicationId)
+    console.log('- 解析后的申请ID:', parseInt(applicationId))
+    console.log('- 审核结果:', data.result)
+    console.log('- 拒绝原因:', data.reason)
+    console.log('- 完整请求体:', requestBody)
+    
+    const response = await request.put('/api/club/pub/proc_join', requestBody)
+    
+    console.log('✅ 审核申请响应成功:', response)
+    
+    return {
+      data: {
+        code: response.status,
+        message: typeof response.data === 'string' ? response.data : '通过社团更新申请成功',
+        data: null,
+      },
+    }
+  } catch (error: any) {
+    console.error('❌ 审核申请失败详情:')
+    console.error('- 错误状态码:', error.response?.status)
+    console.error('- 错误消息:', error.response?.data)
+    console.error('- 错误详情:', error.response)
+    console.error('- 完整错误:', error)
+    
+    // 重新抛出错误，让上层处理
+    throw error
   }
 }
 
