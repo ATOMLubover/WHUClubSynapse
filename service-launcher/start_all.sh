@@ -33,6 +33,10 @@ tmux new-window -t $SESSION_NAME -n 'vllm' "$CMD_VLLM"
 tmux new-window -t $SESSION_NAME -n 'fastapi' "$CMD_FASTAPI"
 tmux new-window -t $SESSION_NAME -n 'cpolar' "$CMD_CPOLAR"
 
+# Send the command to the last window and exit
+tmux send-keys -t $SESSION_NAME:cpolar "$CMD_CPOLAR" C-m
+tmux send-keys -t $SESSION_NAME:cpolar "exit" C-m
+
 echo "All services started in tmux session '$SESSION_NAME'."
 echo "To attach to the session, run: tmux attach-session -t $SESSION_NAME"
 

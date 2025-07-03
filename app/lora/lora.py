@@ -1,13 +1,10 @@
+import pandas as pd
 import swanlab
+import torch
+from datasets import Dataset
 from swanlab.integration.transformers import SwanLabCallback
-from peft import LoraConfig, TaskType
+from peft import LoraConfig, TaskType, get_peft_model
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForSeq2Seq
-
-"""
-加载模型
-"""
-tokenizer = AutoTokenizer.from_pretrained('/root/autodl-tmp/Qwen/Qwen3-8B-AWQ')
-model = AutoModelForCausalLM.from_pretrained('/root/autodl-tmp/Qwen/Qwen3-8B-AWQ', device_map='auto')
 
 """
 预处理输入数据
@@ -42,39 +39,53 @@ def preprocess(sample):
         'labels': labels
     }    
 
-
-config = LoraConfig(
-    task_type=TaskType.CAUSAL_LM,  # 模型类型，CAUSAL_LM 表示因果语言模型
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],  # 需要训练的模型层的名字
-    r=8,  # LoRA 的秩，决定了低秩矩阵的维度
-    lora_alpha=32,  # 缩放参数，与 r 一起 决定了 LoRA 更新的强度。实际缩放比例为 lora_alpha / r = 4 倍
-    lora_dropout=0.1,  # 用于 LoRA 层的 Dropout 比例
-)
-
-args = TrainingArguments(
-    output_dir="/root/autodl-tmp/Qwen/Qwen3-8B-AWQ-LoRA",
-    per_device_train_batch_size=4,  # 每张卡上的 batch_size
-    gradient_accumulation_steps=4,  # 梯度累积
-    logging_steps=10,
-    num_train_epochs=3,  # epoch
-    save_steps=100,
-    learning_rate=1e-4,
-    save_on_each_node=True,
-    gradient_checkpointing=True,
-    report_to="none",
-)
-
-swanlab_callback = SwanLabCallback(
-    project="Qwen3-8B-AWQ-Lora",
-    experiment_name="Qwen3-8B-AWQ-LoRA-experiment",
-)
-
-trainer = Trainer(
-    model=model,
-    args=args,
-    train_dataset=tokenzied_id,
-    data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
-    callbacks=[swanlab_callback],
-)
-
-trainer.train()
+if __name__ == "__main__":
+    # 加载模型和分词器
+    model = AutoModelForCausalLM.from_pretrained('/root/autodl-tmp/Qwen/Qwen3-8B-AWQ', device_map='cuda')
+    model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方法
+    tokenizer = AutoTokenizer.from_pretrained('/root/autodl-tmp/Qwen/Qwen3-8B-AWQ')
+    tokenizer.pad_token = tokenizer.eos_token
+    # 加载和处理数据
+    csv_file_path = './app/data/lora_dataset.csv'
+    df = pd.read_csv(csv_file_path)
+    ds = Dataset.from_pandas(df)
+    tokenized_id = ds.map(preprocess)
+    # 配置 LORA
+    config = LoraConfig(
+        task_type=TaskType.CAUSAL_LM,  # 模型类型，CAUSAL_LM 表示因果语言模型
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],  # 需要训练的模型层的名字
+        inference_mode=False,
+        r=8,  # LoRA 的秩，决定了低秩矩阵的维度
+        lora_alpha=32,  # 缩放参数，与 r 一起 决定了 LoRA 更新的强度。实际缩放比例为 lora_alpha / r = 4 倍
+        lora_dropout=0.2,  # 用于 LoRA 层的 Dropout 比例
+    )
+    # 应用 PEFT，将 LoRA 配置应用到原始模型
+    model = get_peft_model(model, config)
+    model.print_trainable_parameters()  # 打印总训练参数
+    # 配置训练参数
+    args = TrainingArguments(
+        output_dir="/root/autodl-tmp/Qwen/Qwen3-8B-AWQ-LoRA",
+        per_device_train_batch_size=4,  # 每张卡上的 batch_size
+        gradient_accumulation_steps=4,  # 梯度累积
+        logging_steps=10,
+        num_train_epochs=3,  # epoch
+        save_steps=100,
+        learning_rate=1e-4,
+        save_on_each_node=True,
+        gradient_checkpointing=True,
+    )
+    # 设置回调，记录指标到 SwanLab
+    swanlab_callback = SwanLabCallback(
+        project="Qwen3-8B-AWQ-Lora",
+        experiment_name="Qwen3-8B-AWQ-LoRA-experiment",
+    )
+    # 初始化训练器
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=tokenized_id,
+        data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
+        callbacks=[swanlab_callback],
+    )
+    # 开始训练
+    trainer.train()
