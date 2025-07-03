@@ -74,6 +74,17 @@ onMounted(async () => {
       console.error('分类数据初始化失败:', categoriesResult.reason)
     }
 
+    // 获取社团数据
+    try {
+      await clubStore.fetchClubs()
+      await clubStore.fetchFavoriteClubs()
+      await clubStore.fetchPendingClubApplications({})
+      await clubStore.fetchJoinedClubs()
+      await clubStore.fetchLatestClubs(6)
+    } catch (error) {
+      console.error('获取社团数据失败:', error)
+    }
+
     // checkPreferenceSetup()
     console.log('App初始化完成')
 

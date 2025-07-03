@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const userInfo = await authApi.getCurrentUser()
       if (userInfo.avatar_url == '') {
-        userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/default.jpg`
+        userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_avatars/default.jpg`
         // userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/_${userInfo.user_id}`
 
       }

@@ -12,7 +12,7 @@
       <div class="header-right">
         <el-button @click="saveClub" type="primary" :loading="saving">
           <el-icon><Check /></el-icon>
-          保存更改
+          提交更改申请
         </el-button>
       </div>
     </div>
@@ -32,24 +32,20 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="社团类型" prop="category">
-                <el-select v-model="basicForm.category" placeholder="请选择社团类型">
-                  <el-option label="学术科技" value="学术科技" />
-                  <el-option label="文艺体育" value="文艺体育" />
-                  <el-option label="志愿服务" value="志愿服务" />
-                  <el-option label="创新创业" value="创新创业" />
-                  <el-option label="其他" value="其他" />
+              <el-form-item label="社团类型" prop="category_id">
+                <el-select v-model="basicForm.category_id" placeholder="请选择社团类型">
+                  <el-option
+                    v-for="category in clubStore.categoriesList"
+                    :key="category.category_id"
+                    :label="category.name"
+                    :value="category.category_id"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
           </el-row>
 
           <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="最大成员数" prop="maxMembers">
-                <el-input-number v-model="basicForm.maxMembers" :min="1" :max="1000" />
-              </el-form-item>
-            </el-col>
             <el-col :span="12">
               <el-form-item label="社团标签">
                 <el-select
@@ -82,7 +78,7 @@
               show-word-limit
             />
           </el-form-item>
-
+          <!-- 
           <el-form-item label="封面图片">
             <el-upload
               class="cover-uploader"
@@ -96,7 +92,7 @@
             <div class="upload-tip">
               建议尺寸：400x300px，支持 JPG、PNG 格式，文件大小不超过 2MB
             </div>
-          </el-form-item>
+          </el-form-item> -->
         </el-form>
       </div>
 
@@ -325,6 +321,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import type { Club, Activity } from '@/types'
+import { uploadClubLogo } from '@/api/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -345,11 +342,14 @@ const meetingFormRef = ref()
 const basicForm = reactive({
   name: '',
   description: '',
-  category: '',
+  category_id: 0,
   maxMembers: 50,
   tags: [] as string[],
   coverImage: '',
 })
+
+// 保存原始文件对象用于上传
+const coverImageFile = ref<File | null>(null)
 
 // 详细介绍表单
 const detailForm = reactive({
@@ -395,7 +395,7 @@ const loadClubInfo = async () => {
     // 填充基本信息
     basicForm.name = club?.club_name || ''
     basicForm.description = club?.desc || ''
-    basicForm.category = club?.category.toString() || ''
+    basicForm.category_id = club?.category || 0
     basicForm.maxMembers = club?.maxMembers || 50
     basicForm.tags = club?.tags || []
     basicForm.coverImage = club?.logo_url || ''
@@ -444,7 +444,10 @@ const beforeCoverUpload = (file: File) => {
     return false
   }
 
-  // 模拟上传，实际项目中应该上传到服务器
+  // 保存原始文件对象用于上传
+  coverImageFile.value = file
+
+  // 生成预览图片
   const reader = new FileReader()
   reader.onload = (e) => {
     basicForm.coverImage = e.target?.result as string
@@ -491,46 +494,19 @@ const saveClub = async () => {
     const updateData = {
       // 基本信息
       name: basicForm.name,
-      description: basicForm.description,
-      category: basicForm.category,
-      maxMembers: basicForm.maxMembers,
+      desc: basicForm.description,
+      category_id: basicForm.category_id,
       tags: basicForm.tags,
-      coverImage: basicForm.coverImage,
-
-      // 详细介绍
-      introduction: detailForm.introduction,
       requirements: detailForm.requirements,
-
-      // 联系方式
-      contactInfo: {
-        qq: contactForm.qq,
-        wechat: contactForm.wechat,
-        email: contactForm.email,
-        phone: contactForm.phone,
-        address: contactForm.address,
-      },
-
-      // 例会信息
-      meetingTime: meetingForm.meetingTime,
-      meetingLocation: meetingForm.meetingLocation,
-
-      // 公告
-      announcements: announcements.value.filter((announcement) => announcement.trim() !== ''),
-
-      // 动态
-      activities: activities.value
-        .filter((activity) => activity.title.trim() && activity.description.trim())
-        .map((activity) => ({
-          id: activity.id,
-          title: activity.title.trim(),
-          description: activity.description.trim(),
-          time: activity.time,
-        })),
     }
-
     await clubStore.updateClub(clubId, updateData)
 
-    ElMessage.success('社团信息更新成功')
+    // TODO: 只有当用户上传了新图片时才调用上传接口
+    // if (coverImageFile.value) {
+    //   await uploadClubLogo(clubId, coverImageFile.value)
+    // }
+
+    ElMessage.success('提交更新申请成功')
 
     // 返回管理页面
     router.push('/user/clubs/managed')
@@ -548,7 +524,8 @@ const goBack = () => {
 }
 
 // 页面加载时获取社团信息
-onMounted(() => {
+onMounted(async () => {
+  await clubStore.fetchCategoriesList()
   if (clubId) {
     loadClubInfo()
   } else {

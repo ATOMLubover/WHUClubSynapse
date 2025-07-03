@@ -198,3 +198,5 @@ export const uploadAvatar = async (file: File): Promise<{ data: ApiResponse<stri
     }
   }
 }
+
+// /api/club/pub/update_logo

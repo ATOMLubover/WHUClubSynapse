@@ -516,10 +516,6 @@ const getApplyButtonText = () => {
 const clubId = String(route.params.id)
 
 onMounted(async () => {
-  console.log('ClubDetailView 组件已挂载')
-  console.log('路由参数:', route.params)
-  console.log('当前路由:', route.path)
-
   try {
     await fetchClubDetail()
     console.log('社团详情获取完成')
@@ -554,17 +550,14 @@ onMounted(async () => {
   if (clubStore.favoriteClubs.find((club) => club.club_id == clubId)) {
     club.value!.isFavorite = true
   }
-  // 检查 URL 参数，如果有 isApply=true，自动打开申请弹窗
   const isApply = route.query.isApply
   if (isApply === 'true') {
-    // 检查用户是否已登录
     if (!authStore.isLoggedIn) {
       ElMessage.warning('请先登录')
       router.push('/login')
       return
     }
 
-    // 检查是否可以申请
     if (!isDisabled.value) {
       showApplyDialog.value = true
     }

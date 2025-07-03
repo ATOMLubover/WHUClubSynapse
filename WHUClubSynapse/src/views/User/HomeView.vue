@@ -512,38 +512,7 @@ const testAiConnectivity = async () => {
 onMounted(async () => {
   // 检查AI服务可用性
   await checkAiAvailability()
-
-  // 获取分类数据
-  try {
-    await clubStore.fetchCategoriesList()
-    categories.value = clubStore.categoriesList
-  } catch (error) {
-    console.error('获取分类数据失败:', error)
-  }
-
-  // 获取社团数据
-  try {
-    await clubStore.fetchClubs()
-    await clubStore.fetchFavoriteClubs()
-    await clubStore.fetchPendingClubApplications({})
-    await clubStore.fetchJoinedClubs()
-  } catch (error) {
-    console.error('获取社团数据失败:', error)
-  }
-
-  // 获取热门社团
-  try {
-    await clubStore.fetchLatestClubs(6)
-  } catch (error) {
-    console.error('获取热门社团失败:', error)
-  }
-
-  // 获取最新社团
-  try {
-    await clubStore.fetchLatestClubs(6)
-  } catch (error) {
-    console.error('获取最新社团失败:', error)
-  }
+  categories.value = clubStore.categoriesList
 })
 </script>
 

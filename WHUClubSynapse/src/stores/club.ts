@@ -374,55 +374,17 @@ export const useClubStore = defineStore('club', () => {
   // TODO:更新社团信息
   const updateClub = async (
     clubId: string,
-    data: Partial<{
+    data: {
       name: string
-      description: string
-      category: string
-      maxMembers: number
+      desc: string
+      category_id: number
       tags: string[]
-      coverImage: string
-      introduction: string
-      contactInfo: {
-        qq?: string
-        wechat?: string
-        email?: string
-        phone?: string
-        address?: string
-      }
-      announcements: string[]
       requirements: string
-      meetingTime: string
-      meetingLocation: string
-      activities: Array<{
-        id: number
-        title: string
-        description: string
-        time: string
-      }>
-    }>,
+    }
   ) => {
     try {
       const response = await clubApi.updateClub(clubId, data)
-      ElMessage.success('社团信息更新成功')
-      
-      // 如果当前正在查看这个社团，更新currentClub数据
-      if (currentClub.value && currentClub.value.club_id === clubId) {
-        // 只更新允许更新的字段
-        if (data.name) currentClub.value.club_name = data.name
-        if (data.description) currentClub.value.desc = data.description
-        if (data.category) currentClub.value.category = data.category as any
-        if (data.maxMembers) currentClub.value.maxMembers = data.maxMembers
-        if (data.tags) currentClub.value.tags = data.tags
-        if (data.coverImage) currentClub.value.logo_url = data.coverImage
-        if (data.introduction) currentClub.value.introduction = data.introduction
-        if (data.contactInfo) currentClub.value.contactInfo = data.contactInfo
-        if (data.announcements) currentClub.value.announcements = data.announcements
-        if (data.requirements) currentClub.value.requirements = data.requirements
-        if (data.meetingTime) currentClub.value.meetingTime = data.meetingTime
-        if (data.meetingLocation) currentClub.value.meetingLocation = data.meetingLocation
-        if (data.activities) currentClub.value.activities = data.activities
-      }
-      
+     
       return response.data.data
     } catch (error) {
       console.error('更新社团失败:', error)

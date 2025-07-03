@@ -169,17 +169,22 @@ const handleReply = async () => {
     ElMessage.warning('请先登录')
     return
   }
+
+  if (clubStore.clubs.find((c) => c.club_id == clubId)?.status != 'joined') {
+    ElMessage.warning('请先加入社团')
+    return
+  }
+
   if (!replyContent.value.trim()) {
     ElMessage.warning('回复内容不能为空')
     return
   }
   replyLoading.value = true
+  const user_id = authStore.getCurrentUserId()
   try {
     await replyClubPost({
-      post_id: postId,
-      user_id: authStore.user?.id || 0,
-      authorName: authStore.user?.realName || '匿名',
-      authorAvatar: authStore.user?.avatar_url || defaultAvatar,
+      post_id: Number(postId),
+      user_id: user_id || 0,
       content: replyContent.value,
     })
     ElMessage.success('回复成功')
