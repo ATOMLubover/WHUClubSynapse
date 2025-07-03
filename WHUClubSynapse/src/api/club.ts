@@ -774,16 +774,26 @@ export const reviewJoinApplication = async (
   }
 
   // 使用正确的API路径审核社团加入申请
-  const response = await request.put('/api/club/pub/proc_join', {
+  const requestBody: any = {
     join_appli_id: parseInt(applicationId),
-    result: data.result,
-    reason: data.reason || ''
-  })
+    result: data.result
+  }
+  
+  // 只有在拒绝时才添加reason字段
+  if (data.result === 'reject' && data.reason) {
+    requestBody.reason = data.reason
+  }
+  
+  console.log('审核申请请求参数:', requestBody)
+  
+  const response = await request.put('/api/club/pub/proc_join', requestBody)
+  
+  console.log('审核申请响应:', response)
   
   return {
     data: {
       code: response.status,
-      message: response.data || '通过社团更新申请成功',
+      message: typeof response.data === 'string' ? response.data : '通过社团更新申请成功',
       data: null,
     },
   }
