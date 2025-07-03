@@ -5,6 +5,7 @@ import * as authApi from '@/api/auth'
 import { getUserIdFromToken, getUserRoleFromToken, isTokenExpired, getUserInfoFromToken } from '@/utils/jwt'
 import type { User, LoginRequest, RegisterRequest, UserPreferences } from '@/types'
 import { config } from '@/config'
+import { prepareUserForBackend } from '@/utils/userExtension'
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
@@ -192,7 +193,45 @@ export const useAuthStore = defineStore('auth', () => {
     return !!token.value && !isTokenExpired()
   }
 
-
+  /**
+   * 🆕 更新用户信息
+   */
+  const updateUserInfo = async (userData: Partial<User>) => {
+    loading.value = true
+    try {
+      // 准备数据：自动处理extension字段
+      const currentUser = user.value
+      if (!currentUser) {
+        throw new Error('用户未登录')
+      }
+      
+      console.log('Store updateUserInfo 收到的数据:', userData)
+      console.log('当前用户:', currentUser)
+      
+      const mergedData = {
+        ...currentUser,
+        ...userData
+      }
+      console.log('合并后的数据:', mergedData)
+      
+      const updateData = prepareUserForBackend(mergedData)
+      console.log('准备发送到后端的数据:', updateData)
+      
+      await authApi.updateUserInfo(updateData)
+      
+      // 更新成功后重新获取用户信息
+      await fetchUserInfo()
+      
+      console.log('更新后的用户信息:', user.value)
+      
+      return '用户信息更新成功'
+    } catch (error: any) {
+      console.error('更新用户信息失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
 
   return {
     // 状态
@@ -215,6 +254,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateUser,
     getCurrentUserId,
     checkTokenValidity,
-    uploadAvatar
+    uploadAvatar,
+    updateUserInfo
   }
 })

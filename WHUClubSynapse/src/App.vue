@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useClubStore } from '@/stores/club'
 import PreferenceSetupDialog from '@/components/User/PreferenceSetupDialog.vue'
 import type { UserPreferences } from '@/types'
-import { ElNotification } from 'element-plus'
+import { ElNotification, ElMessage } from 'element-plus'
 
 // 认证store
 const authStore = useAuthStore()
@@ -25,10 +25,16 @@ const checkPreferenceSetup = () => {
 // 处理偏好设置保存
 const handlePreferenceSave = async (preferences: UserPreferences) => {
   try {
-    await authStore.updatePreferences(preferences)
+    // 使用新的updateUserInfo方法保存偏好设置
+    await authStore.updateUserInfo({
+      preferences: preferences,
+      tags: preferences.tags
+    })
     showPreferenceDialog.value = false
+    ElMessage.success('偏好设置保存成功')
   } catch (error) {
     console.error('保存偏好设置失败:', error)
+    ElMessage.error('保存偏好设置失败')
   }
 }
 

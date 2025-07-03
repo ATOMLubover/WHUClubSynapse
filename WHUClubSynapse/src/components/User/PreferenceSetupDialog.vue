@@ -221,6 +221,8 @@ const handleSave = async () => {
 
   try {
     loading.value = true
+    console.log('PreferenceSetupDialog保存的偏好设置:', preferences)
+    console.log('包含的标签:', preferences.tags)
     emit('save', { ...preferences })
     visible.value = false
     ElMessage.success('偏好设置保存成功')

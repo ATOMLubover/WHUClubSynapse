@@ -157,10 +157,10 @@
               </div>
 
               <div class="form-item">
-                <label class="form-label">学院</label>
+                <label class="form-label">专业</label>
                 <el-select
-                  v-model="editableUserInfo.college"
-                  placeholder="请选择学院"
+                  v-model="editableUserInfo.major"
+                  placeholder="请选择专业"
                   class="form-input"
                 >
                   <el-option
@@ -685,7 +685,7 @@ const editableUserInfo = reactive({
   username: '',
   realName: '',
   studentId: '',
-  college: '',
+  major: '', // 修正：使用major而不是college
   email: '',
   phone: '',
   bio: '',
@@ -800,14 +800,21 @@ const handleEditToggle = async () => {
 
     try {
       await userFormRef.value.validate()
-      // TODO: 调用更新用户信息API
+      
+      // 调用更新用户信息API（包含当前的tags）
+      await authStore.updateUserInfo({
+        ...editableUserInfo,
+        tags: preferences.tags // 确保不丢失当前的标签
+      })
+      
       ElMessage.success('保存成功')
       editMode.value = false
 
-      // 更新userInfo
-      Object.assign(userInfo.value!, editableUserInfo)
-    } catch (error) {
-      ElMessage.error('请检查表单填写')
+      // 重新加载用户数据以获取最新信息
+      await loadUserData()
+    } catch (error: any) {
+      console.error('保存用户信息失败:', error)
+      ElMessage.error(error.message || '保存失败，请检查表单填写')
     }
   } else {
     // 编辑模式
@@ -900,12 +907,21 @@ const confirmAvatarUpload = async () => {
 const savePreferences = async () => {
   try {
     preferencesLoading.value = true
-    // 调用后端API保存偏好设置
-    await authStore.updatePreferences(preferences)
+    
+    console.log('UserCenterView保存偏好设置:', preferences)
+    console.log('包含的标签:', preferences.tags)
+    
+    // 使用新的updateUserInfo方法保存偏好设置到extension字段
+    await authStore.updateUserInfo({
+      preferences: preferences,
+      tags: preferences.tags
+    })
+    
     ElMessage.success('偏好设置保存成功')
     // 重新拉取用户信息，刷新页面显示
     await loadUserData()
   } catch (error) {
+    console.error('保存偏好设置失败:', error)
     ElMessage.error('保存偏好设置失败')
   } finally {
     preferencesLoading.value = false
@@ -1021,7 +1037,7 @@ const loadUserData = async () => {
       username: userInfo.value.username,
       realName: userInfo.value.realName || '',
       studentId: userInfo.value.studentId || '',
-      college: userInfo.value.major || '', // 注意：使用 major 而不是 college
+      major: userInfo.value.major || '', // 修正：使用 major 字段
       email: userInfo.value.email || '',
       phone: userInfo.value.phone || '',
       bio: userInfo.value.bio || '',
@@ -1032,6 +1048,12 @@ const loadUserData = async () => {
       console.log(userInfo.value.preferences)
       Object.assign(preferences, userInfo.value.preferences)
       console.log(preferences)
+    }
+    
+    // 加载用户标签（如果存在）
+    if (userInfo.value.tags) {
+      preferences.tags = [...userInfo.value.tags]
+      console.log('加载用户标签:', preferences.tags)
     }
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户信息失败')
