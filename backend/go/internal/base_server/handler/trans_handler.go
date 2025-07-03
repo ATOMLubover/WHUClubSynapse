@@ -69,9 +69,14 @@ func (h *TransHandler) GetTransLlm(ctx iris.Context, route string) {
 func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 	req := ctx.Request().Clone(ctx.Request().Context())
 	req.URL, _ = url.Parse(h.LlmAddr + route)
+	req.RequestURI = ""
+
+	h.Logger.Info("LLM请求", "url", req.URL.String())
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		h.Logger.Error("无法访问LLM服务器", "error", err)
+
 		ctx.StatusCode(iris.StatusServiceUnavailable)
 		ctx.Text("LLM服务器暂不可用")
 		return

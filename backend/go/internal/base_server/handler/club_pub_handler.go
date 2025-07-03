@@ -36,6 +36,15 @@ func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
 }
 
 func (h *ClubPubHandler) PostApplyForUpdateClubInfo(ctx iris.Context, id int) {
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		h.Logger.Error("获取用户ID失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID无效")
+		return
+	}
+
 	var reqBody dto.UpdateClubInfoRequest
 	if err := ctx.ReadJSON(&reqBody); err != nil {
 		h.Logger.Error("请求格式错误", "error", err)
@@ -59,9 +68,10 @@ func (h *ClubPubHandler) PostApplyForUpdateClubInfo(ctx iris.Context, id int) {
 		jsonbData = datatypes.JSON(jsonbData)
 	}
 
-	err := h.ClubService.ApplyForUpdateClub(
+	err = h.ClubService.ApplyForUpdateClub(
 		dbstruct.Club{
 			ClubId:       uint(id),
+			LeaderId:     uint(userId),
 			Name:         reqBody.Name,
 			Description:  reqBody.Desc,
 			Requirements: reqBody.Requirements,
