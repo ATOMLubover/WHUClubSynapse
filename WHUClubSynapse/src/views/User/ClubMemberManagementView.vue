@@ -66,61 +66,65 @@
                 class="member-card"
                 @click="showMemberDetail(member)"
               >
-                <div class="member-card-header">
-                  <el-avatar :src="member.avatar_url" :size="60" class="member-avatar" />
-                  <div class="member-role-badge">
-                    <el-tag
-                      :type="member.role_in_club === 'leader' ? 'danger' : member.role_in_club === 'admin' ? 'warning' : 'primary'"
-                      size="small"
-                      effect="dark"
-                    >
-                      {{ member.role_in_club === 'leader' ? '社长' : member.role_in_club === 'admin' ? '管理员' : '成员' }}
-                    </el-tag>
-                  </div>
-                </div>
-
-                <div class="member-card-body">
-                  <h4 class="member-name">{{ member.realName || member.username }}</h4>
-                  <p class="member-username">@{{ member.username }}</p>
-
-                  <div class="member-info-grid">
-                    <div class="info-item">
-                      <el-icon class="info-icon"><User /></el-icon>
-                      <span class="info-label">学号</span>
-                      <span class="info-value">{{ member.studentId || '未填写' }}</span>
+                <div class="member-card-inner">
+                  <div class="member-card-header">
+                    <div class="avatar-container">
+                      <el-avatar :src="member.avatar_url" :size="64" class="member-avatar">
+                        <el-icon size="32"><User /></el-icon>
+                      </el-avatar>
+                      <div class="online-indicator" v-if="member.status === 'active'"></div>
                     </div>
-
-                    <div class="info-item">
-                      <el-icon class="info-icon"><Calendar /></el-icon>
-                      <span class="info-label">加入时间</span>
-                      <span class="info-value">{{ formatDate(member.joined_at) }}</span>
-                    </div>
-
-                    <div class="info-item">
-                      <el-icon class="info-icon"><Phone /></el-icon>
-                      <span class="info-label">联系方式</span>
-                      <span class="info-value">{{ member.phone || '未填写' }}</span>
-                    </div>
-
-                    <div class="info-item">
-                      <el-icon class="info-icon"><Location /></el-icon>
-                      <span class="info-label">专业</span>
-                      <span class="info-value">{{ member.major || '未填写' }}</span>
+                    <div class="member-role-badge">
+                      <el-tag
+                        :type="member.role_in_club === 'leader' ? 'danger' : member.role_in_club === 'admin' ? 'warning' : 'primary'"
+                        size="small"
+                        effect="dark"
+                        round
+                      >
+                        {{ member.role_in_club === 'leader' ? '社长' : member.role_in_club === 'admin' ? '管理员' : '成员' }}
+                      </el-tag>
                     </div>
                   </div>
-                </div>
 
-                <div class="member-card-footer">
-                  <div class="member-status">
-                    <el-tag :type="member.status === 'active' ? 'success' : 'info'" size="small">
-                      {{ member.status === 'active' ? '活跃' : '非活跃' }}
-                    </el-tag>
+                  <div class="member-card-body">
+                    <h4 class="member-name">{{ member.realName || member.username }}</h4>
+                    <p class="member-username">@{{ member.username }}</p>
+                    
+                    <div class="member-info-list">
+                      <div class="info-item" v-if="member.studentId">
+                        <el-icon class="info-icon"><CreditCard /></el-icon>
+                        <span class="info-text">{{ member.studentId }}</span>
+                      </div>
+                      
+                      <div class="info-item" v-if="member.major">
+                        <el-icon class="info-icon"><School /></el-icon>
+                        <span class="info-text">{{ member.major }}</span>
+                      </div>
+                      
+                      <div class="info-item">
+                        <el-icon class="info-icon"><Calendar /></el-icon>
+                        <span class="info-text">{{ formatDate(member.joined_at) }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="member-actions">
-                    <el-button size="small" type="primary" text>
-                      <el-icon><View /></el-icon>
-                      查看详情
-                    </el-button>
+
+                  <div class="member-card-footer">
+                    <div class="member-status">
+                      <el-tag 
+                        :type="member.status === 'active' ? 'success' : 'info'" 
+                        size="small"
+                        effect="light"
+                        round
+                      >
+                        {{ member.status === 'active' ? '活跃' : '非活跃' }}
+                      </el-tag>
+                    </div>
+                    <div class="member-actions">
+                      <el-button size="small" type="primary" link>
+                        <el-icon><View /></el-icon>
+                        详情
+                      </el-button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -189,85 +193,105 @@
                 v-for="application in applications"
                 :key="application.appli_id"
                 class="application-card"
+                :class="{ 'pending': application.status === 'pending', 'approved': application.status === 'approved', 'rejected': application.status === 'rejected' }"
                 @click="showApplicationDetail(application)"
               >
-                <div class="application-card-header">
-                  <el-avatar
-                    :src="application.avatar_url || ''"
-                    :size="50"
-                    class="applicant-avatar"
-                  />
-                  <div class="application-status-badge">
-                    <el-tag :type="getStatusType(application.status)" size="small" effect="dark">
-                      {{ getStatusText(application.status) }}
-                    </el-tag>
-                  </div>
-                </div>
-
-                <div class="application-card-body">
-                  <h4 class="applicant-name">{{ application.realName || application.username || '申请人' }}</h4>
-                  <p class="application-id">申请ID: #{{ application.appli_id }}</p>
-
-                  <div class="application-info-grid">
-                    <div class="info-item">
-                      <el-icon class="info-icon"><Message /></el-icon>
-                      <span class="info-label">申请理由</span>
-                      <span class="info-value reason-text">{{
-                        application.reason || '未填写'
-                      }}</span>
+                <div class="application-card-inner">
+                  <div class="application-card-header">
+                    <div class="avatar-container">
+                      <el-avatar
+                        :src="application.avatar_url || ''"
+                        :size="50"
+                        class="applicant-avatar"
+                      >
+                        <el-icon size="24"><User /></el-icon>
+                      </el-avatar>
+                      <div class="application-priority" v-if="application.status === 'pending'">
+                        <el-icon color="#F56C6C"><Bell /></el-icon>
+                      </div>
                     </div>
-
-                    <div class="info-item">
-                      <el-icon class="info-icon"><Calendar /></el-icon>
-                      <span class="info-label">申请时间</span>
-                      <span class="info-value">{{ formatDate(application.applied_at) }}</span>
-                    </div>
-
-                    <div v-if="application.reviewed_at" class="info-item">
-                      <el-icon class="info-icon"><Clock /></el-icon>
-                      <span class="info-label">审核时间</span>
-                      <span class="info-value">{{ formatDate(application.reviewed_at) }}</span>
-                    </div>
-
-                    <div v-if="application.reject_reason" class="info-item">
-                      <el-icon class="info-icon"><Warning /></el-icon>
-                      <span class="info-label">拒绝原因</span>
-                      <span class="info-value reject-text">{{ application.reject_reason }}</span>
+                    <div class="application-status-badge">
+                      <el-tag 
+                        :type="getStatusType(application.status)" 
+                        size="small" 
+                        effect="light"
+                        round
+                      >
+                        {{ getStatusText(application.status) }}
+                      </el-tag>
                     </div>
                   </div>
-                </div>
 
-                <div class="application-card-footer">
-                  <div class="application-meta">
-                    <span class="applicant-info">{{ application.studentId || '学号未填写' }} | {{ application.major || '专业未填写' }}</span>
+                  <div class="application-card-body">
+                    <div class="applicant-header">
+                      <h4 class="applicant-name">{{ application.realName || application.username || '申请人' }}</h4>
+                      <p class="application-id">#{{ application.appli_id }} · {{ formatDate(application.applied_at) }}</p>
+                    </div>
+
+                    <div class="application-info-list">
+                      <div class="info-item" v-if="application.studentId">
+                        <el-icon class="info-icon"><CreditCard /></el-icon>
+                        <span class="info-text">{{ application.studentId }}</span>
+                      </div>
+                      <div class="info-item" v-if="application.major">
+                        <el-icon class="info-icon"><School /></el-icon>
+                        <span class="info-text">{{ application.major }}</span>
+                      </div>
+                      <div class="info-item" v-if="application.phone">
+                        <el-icon class="info-icon"><Phone /></el-icon>
+                        <span class="info-text">{{ application.phone }}</span>
+                      </div>
+                    </div>
+
+                    <div class="application-reason" v-if="application.reason">
+                      <div class="reason-label">
+                        <el-icon><Message /></el-icon>
+                        申请理由
+                      </div>
+                      <p class="reason-text">{{ application.reason }}</p>
+                    </div>
+
+                    <div v-if="application.reject_reason" class="reject-reason">
+                      <div class="reason-label">
+                        <el-icon color="#F56C6C"><Warning /></el-icon>
+                        拒绝原因
+                      </div>
+                      <p class="reject-text">{{ application.reject_reason }}</p>
+                    </div>
                   </div>
 
-                  <div v-if="application.status === 'pending'" class="application-actions">
-                    <el-button
-                      size="small"
-                      type="success"
-                      @click.stop="approveApplication(application)"
-                      text
-                    >
-                      <el-icon><CircleCheck /></el-icon>
-                      同意
-                    </el-button>
-                    <el-button
-                      size="small"
-                      type="danger"
-                      @click.stop="rejectApplication(application)"
-                      text
-                    >
-                      <el-icon><CircleClose /></el-icon>
-                      拒绝
-                    </el-button>
-                  </div>
+                  <div class="application-card-footer">
+                    <div v-if="application.status === 'pending'" class="application-actions">
+                      <el-button
+                        size="small"
+                        type="success"
+                        @click.stop="approveApplication(application)"
+                        round
+                      >
+                        <el-icon><CircleCheck /></el-icon>
+                        同意
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="danger"
+                        @click.stop="rejectApplication(application)"
+                        round
+                      >
+                        <el-icon><CircleClose /></el-icon>
+                        拒绝
+                      </el-button>
+                    </div>
 
-                  <div v-else class="application-actions">
-                    <el-button size="small" type="primary" text>
-                      <el-icon><View /></el-icon>
-                      查看详情
-                    </el-button>
+                    <div v-else class="application-actions">
+                      <el-button size="small" type="primary" link>
+                        <el-icon><View /></el-icon>
+                        详情
+                      </el-button>
+                      <div class="reviewed-info" v-if="application.reviewed_at">
+                        <el-icon><Clock /></el-icon>
+                        <span>{{ formatDate(application.reviewed_at) }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -567,6 +591,9 @@ import {
   Clock,
   CircleCheck,
   CircleClose,
+  CreditCard,
+  School,
+  Bell,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
@@ -1087,13 +1114,19 @@ onMounted(async () => {
 
 <style scoped>
 .member-management {
-  width: 100%;
-  margin: 0 auto;
   padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .page-header {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .header-content {
@@ -1106,56 +1139,63 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border: none;
 }
 
 .back-button:hover {
-  background-color: #f5f7fa;
-  border-color: #c0c4cc;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
 .header-info h1 {
   margin: 0 0 8px 0;
   font-size: 28px;
-  color: #303133;
+  color: #2c3e50;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .header-info p {
   margin: 0;
-  color: #606266;
+  color: #7f8c8d;
   font-size: 16px;
 }
 
 .management-card {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+  background: white;
   min-height: 600px;
 }
 
 .tab-content {
+  padding: 24px;
+  max-width: 100%;
   width: 100%;
-  max-width: 900px;
-  min-width: 320px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  padding: 24px 0;
-}
-
-@media (max-width: 1000px) {
-  .tab-content {
-    max-width: 100%;
-    min-width: 0;
-    padding: 12px 0;
-  }
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
   gap: 20px;
 }
 
@@ -1165,7 +1205,389 @@ onMounted(async () => {
 
 .filter-section {
   display: flex;
+  gap: 16px;
+}
+
+/* 成员网格布局 */
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1400px) {
+  .members-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .members-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+  }
+}
+
+.member-card {
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.member-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.member-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.member-card:hover::before {
+  opacity: 1;
+}
+
+.member-card-inner {
+  padding: 24px;
+}
+
+.member-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.avatar-container {
+  position: relative;
+}
+
+.member-avatar {
+  border: 4px solid #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.member-card:hover .member-avatar {
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: #52c41a;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+}
+
+.member-role-badge {
+  margin-top: 4px;
+}
+
+.member-card-body {
+  margin-bottom: 20px;
+}
+
+.member-name {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.member-username {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.member-info-list {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.info-icon {
+  color: #667eea;
+  font-size: 16px;
+  min-width: 16px;
+}
+
+.info-text {
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.member-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid #f1f3f4;
+}
+
+/* 申请网格布局 */
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+  max-width: none;
+}
+
+.application-card {
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.application-card.pending {
+  border-left: 4px solid #f39c12;
+}
+
+.application-card.approved {
+  border-left: 4px solid #27ae60;
+}
+
+.application-card.rejected {
+  border-left: 4px solid #e74c3c;
+}
+
+.application-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.application-card.pending:hover {
+  border-color: #f39c12;
+  box-shadow: 0 12px 40px rgba(243, 156, 18, 0.2);
+}
+
+.application-card.approved:hover {
+  border-color: #27ae60;
+  box-shadow: 0 12px 40px rgba(39, 174, 96, 0.2);
+}
+
+.application-card.rejected:hover {
+  border-color: #e74c3c;
+  box-shadow: 0 12px 40px rgba(231, 76, 60, 0.2);
+}
+
+.application-card-inner {
+  padding: 16px;
+}
+
+.application-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.application-priority {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.applicant-avatar {
+  border: 3px solid #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.application-card:hover .applicant-avatar {
+  transform: scale(1.05);
+}
+
+.application-status-badge {
+  margin-top: 4px;
+}
+
+.application-card-body {
+  margin-bottom: 16px;
+}
+
+.applicant-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.applicant-name {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.application-id {
+  margin: 0;
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.application-reason {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.reason-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reason-text {
+  margin: 0;
+  color: #495057;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.application-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.reject-reason {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fde8e8 100%);
+  border-radius: 12px;
+  border-left: 4px solid #f56c6c;
+}
+
+.reject-text {
+  margin: 0;
+  color: #dc2626;
+  line-height: 1.6;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.application-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid #f1f3f4;
+}
+
+.application-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reviewed-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #7f8c8d;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  border: 2px dashed #dee2e6;
+}
+
+.pagination-section {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 16px;
 }
 
 .member-info-button {
@@ -1173,43 +1595,36 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: white;
+  border: 2px solid #f1f3f4;
 }
 
 .member-info-button:hover {
-  background-color: #f5f7fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
 }
 
 .member-info-button:active {
-  background-color: #e4e7ed;
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .member-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
 }
 
-.member-name {
-  font-weight: 500;
-  color: #303133;
-}
-
-.member-username {
-  font-size: 12px;
-  color: #909399;
-}
-
 .member-student-id {
-  font-size: 12px;
-  color: #909399;
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
 }
 
 .member-role {
@@ -1221,66 +1636,130 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: white;
+  border: 2px solid #f1f3f4;
 }
 
 .applicant-info-button:hover {
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
 }
 
 .applicant-info-button:active {
-  background-color: #e4e7ed;
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .applicant-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.applicant-name {
-  font-weight: 500;
-  color: #303133;
+  gap: 6px;
 }
 
 .applicant-username {
-  font-size: 12px;
-  color: #909399;
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
 }
 
 .apply-reason-text {
-  color: #606266;
-  line-height: 1.5;
+  color: #495057;
+  line-height: 1.6;
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 14px;
 }
 
 .apply-reason {
-  background-color: #f5f7fa;
-  padding: 12px;
-  border-radius: 6px;
-  border-left: 4px solid #409eff;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
 }
 
 .apply-reason p {
   margin: 0;
-  color: #303133;
+  color: #495057;
   line-height: 1.6;
+  font-size: 14px;
 }
 
-.application-actions {
-  display: flex;
-  gap: 8px;
+/* 响应式设计 */
+@media (max-width: 900px) {
+  .members-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .toolbar {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .search-section,
+  .filter-section {
+    justify-content: center;
+  }
 }
 
-.pagination-section {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
+@media (max-width: 600px) {
+  .applications-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .member-management {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .member-card-inner,
+  .application-card-inner {
+    padding: 16px;
+  }
+  
+  .member-card:hover,
+  .application-card:hover {
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 480px) {
+  .member-management {
+    padding: 12px;
+  }
+  
+  .page-header {
+    padding: 16px;
+  }
+  
+  .header-info h1 {
+    font-size: 24px;
+  }
+  
+  .toolbar {
+    padding: 16px;
+  }
+  
+  .members-grid,
+  .applications-grid {
+    gap: 12px;
+  }
 }
 
 .remove-dialog-content {

@@ -1007,10 +1007,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: stretch;
+}
+
+.club-actions .el-button {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  box-sizing: border-box;
 }
 
 .action-btn {
-  width: 100%;
+  width: 100% !important;
   height: 38px;
   font-size: 12px;
   font-weight: 600;
@@ -1021,6 +1029,9 @@ onMounted(() => {
   justify-content: center;
   gap: 5px;
   letter-spacing: 0.2px;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  box-sizing: border-box;
 }
 
 .primary-action {
@@ -1028,6 +1039,9 @@ onMounted(() => {
   border: none;
   color: white;
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  width: 100%;
+  margin: 0;
+  padding: 0 12px;
 }
 
 .primary-action:hover {
@@ -1223,6 +1237,14 @@ onMounted(() => {
   .club-actions {
     padding: 0 16px 16px;
     gap: 8px;
+    align-items: stretch;
+  }
+
+  .club-actions .el-button {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    box-sizing: border-box;
   }
 
   .action-btn {

@@ -113,6 +113,9 @@
               show-word-limit
             />
           </el-form-item>
+          
+          <!-- AI社团介绍生成器 -->
+          <AIIntroductionGenerator v-model="detailForm.introduction" />
 
           <el-form-item label="加入要求" prop="requirements">
             <el-input
@@ -199,6 +202,15 @@
             <el-empty description="暂无公告">
               <el-button type="primary" @click="addAnnouncement">添加公告</el-button>
             </el-empty>
+            
+            <!-- 空状态下的AI公告生成器 -->
+            <div class="empty-ai-generator">
+              <h3>或者使用AI生成公告</h3>
+              <AIAnnouncementGenerator 
+                v-model="tempAnnouncementText"
+                @update:modelValue="onTempAnnouncementGenerated"
+              />
+            </div>
           </div>
 
           <div v-else class="announcements-list">
@@ -207,23 +219,36 @@
               :key="index"
               class="announcement-item"
             >
-              <el-input
-                v-model="announcements[index]"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入公告内容"
-                maxlength="200"
-                show-word-limit
-              />
-              <el-button
-                type="danger"
-                size="small"
-                @click="removeAnnouncement(index)"
-                class="remove-btn"
-              >
-                <el-icon><Delete /></el-icon>
-                删除
-              </el-button>
+              <div class="announcement-content">
+                <div class="announcement-header">
+                  <span class="announcement-title">公告 {{ index + 1 }}</span>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    @click="removeAnnouncement(index)"
+                    class="remove-btn"
+                  >
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                </div>
+                
+                <el-input
+                  v-model="announcements[index]"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入公告内容"
+                  maxlength="500"
+                  show-word-limit
+                  class="announcement-input"
+                />
+                
+                <!-- AI公告生成器 -->
+                <AIAnnouncementGenerator 
+                  v-model="announcements[index]"
+                  :key="`announcement-ai-${index}`"
+                />
+              </div>
             </div>
 
             <el-button type="primary" @click="addAnnouncement" class="add-announcement-btn">
@@ -322,6 +347,8 @@ import {
 import { useClubStore } from '@/stores/club'
 import type { Club, Activity } from '@/types'
 import { uploadClubLogo } from '@/api/club'
+import AIIntroductionGenerator from '@/components/Chat/AIIntroductionGenerator.vue'
+import AIAnnouncementGenerator from '@/components/Chat/AIAnnouncementGenerator.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -374,6 +401,9 @@ const meetingForm = reactive({
 
 // 社团公告
 const announcements = ref<string[]>([])
+
+// 临时公告文本（用于空状态下的AI生成）
+const tempAnnouncementText = ref('')
 
 // 社团动态
 const activities = ref<Activity[]>([])
@@ -465,6 +495,15 @@ const addAnnouncement = () => {
 // 删除公告
 const removeAnnouncement = (index: number) => {
   announcements.value.splice(index, 1)
+}
+
+// 处理临时公告生成
+const onTempAnnouncementGenerated = (text: string) => {
+  if (text.trim()) {
+    announcements.value.push(text.trim())
+    tempAnnouncementText.value = ''
+    ElMessage.success('AI生成的公告已添加到列表')
+  }
 }
 
 // 添加动态
@@ -654,22 +693,56 @@ onMounted(async () => {
 }
 
 .announcement-item {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
 }
 
-.announcement-item .el-input {
-  flex: 1;
+.announcement-content {
+  padding: 20px;
+}
+
+.announcement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.announcement-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.announcement-input {
+  margin-bottom: 16px;
 }
 
 .remove-btn {
   flex-shrink: 0;
-  margin-top: 8px;
 }
 
 .add-announcement-btn {
   align-self: flex-start;
+}
+
+.empty-ai-generator {
+  margin-top: 40px;
+  padding: 20px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.empty-ai-generator h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #606266;
+  text-align: center;
 }
 
 .activities-container {

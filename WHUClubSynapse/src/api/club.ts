@@ -776,16 +776,8 @@ export const reviewJoinApplication = async (
 
   try {
     // 使用正确的API路径审核社团加入申请
-    // 处理applicationId，确保是数字类型
-    let joinAppliId: number
-    if (typeof applicationId === 'string') {
-      joinAppliId = parseInt(applicationId)
-    } else {
-      joinAppliId = applicationId
-    }
-    
     const requestBody: any = {
-      join_appli_id: joinAppliId,
+      join_appli_id: parseInt(applicationId),
       result: data.result
     }
     

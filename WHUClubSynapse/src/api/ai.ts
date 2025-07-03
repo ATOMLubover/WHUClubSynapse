@@ -349,6 +349,96 @@ export const generateFinancialReport = async (requestData: FinancialReportReques
   }
 }
 
+// AI社团介绍生成接口类型
+export interface ContentGenerationRequest {
+  content?: string
+  style?: string
+  target_people?: string
+}
+
+export interface ContentGenerationResponse {
+  generated_text: string
+}
+
+// AI公告内容生成接口类型
+export interface AnnouncementGenerationRequest {
+  content?: string
+  style?: string
+  expection?: string
+}
+
+export interface AnnouncementGenerationResponse {
+  generated_text: string
+}
+
+// AI社团介绍生成API
+export const generateClubIntroduction = async (requestData: ContentGenerationRequest): Promise<ContentGenerationResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/generate/introduction`
+    console.log('AI社团介绍生成请求URL:', url)
+    console.log('AI社团介绍生成请求数据:', requestData)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('AI社团介绍生成响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI社团介绍生成HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('AI社团介绍生成响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('AI社团介绍生成请求失败:', error)
+    throw error
+  }
+}
+
+// AI公告内容生成API
+export const generateAnnouncementContent = async (requestData: AnnouncementGenerationRequest): Promise<AnnouncementGenerationResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}/generate/content`
+    console.log('AI公告内容生成请求URL:', url)
+    console.log('AI公告内容生成请求数据:', requestData)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('AI公告内容生成响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI公告内容生成HTTP错误:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('AI公告内容生成响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('AI公告内容生成请求失败:', error)
+    throw error
+  }
+}
+
 // AI智能推荐社团
 export const getClubRecommendations = async (request: ClubRecommendRequest): Promise<ClubRecommendResponse> => {
   try {
