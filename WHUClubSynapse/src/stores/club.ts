@@ -58,14 +58,17 @@ export const useClubStore = defineStore('club', () => {
   const hasMore = computed(() => globalPageData.currentPage < totalPages.value)
 
   // 获取社团列表
-  const fetchClubs = async (params?: Partial<SearchParams>) => {
+
+  
+  
+  const fetchClubs = async (params?: Partial<SearchParams>,page?:number,pageSize?:number) => {
     try {
       loading.value = true
       const queryParams = {
         // ...searchParams.value,
         // ...params,
-        page: globalPageData.currentPage,
-        pageSize: globalPageData.pageSize,
+        page: page||globalPageData.currentPage,
+        pageSize: pageSize||globalPageData.pageSize,
       }
 
       const response = await clubApi.getClubList(queryParams)

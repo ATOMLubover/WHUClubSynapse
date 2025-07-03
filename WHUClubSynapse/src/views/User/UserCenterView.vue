@@ -27,7 +27,7 @@
             </div>
             <p class="user-join-time">
               <el-icon><Calendar /></el-icon>
-              加入时间：{{ formatDate(userInfo?.createdAt) }}
+              加入时间：{{ formatDate(userInfo?.created_at) }}
             </p>
           </div>
         </div>

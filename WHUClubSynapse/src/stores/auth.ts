@@ -151,7 +151,17 @@ export const useAuthStore = defineStore('auth', () => {
         offset: params?.offset || 0,
         num: params?.num || 10
       })
-      return response
+      console.log('response', response)
+      return response.map(user => {
+        if (user.avatar_url == '') {
+          user.avatar_url = `${config.apiBaseUrl}/pub/user_avatars/default.jpg`
+        }
+        else{
+          user.avatar_url=`${config.apiBaseUrl}/`+user.avatar_url
+        }
+        return user
+      })
+
     } catch (error) {
       console.error('获取用户列表失败:', error)
       ElMessage.error('获取用户列表失败')

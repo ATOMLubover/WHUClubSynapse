@@ -416,7 +416,7 @@ export const mockUser: User = {
   realName: '测试用户',
   major: '计算机学院',
   phone: '13800138000',
-  createdAt: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-01T00:00:00Z',
   emailVerified: '',
   phoneVerified: '',
   bio: '',

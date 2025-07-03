@@ -491,6 +491,7 @@ const confirmApply = async () => {
     reason.value = ''
     hasApplied.value = true // 标记为已申请
     console.log('已申请，按钮应该被禁用')
+    await clubStore.fetchPendingClubApplications({})
   } catch (error) {
     console.error('申请加入社团失败:', error)
   } finally {

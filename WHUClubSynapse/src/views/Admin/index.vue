@@ -24,7 +24,6 @@
             <span>用户管理</span>
           </template>
           <el-menu-item index="user-list">用户列表</el-menu-item>
-          <el-menu-item index="user-roles">角色权限</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="club">
@@ -93,7 +92,6 @@
 
         <!-- 用户管理 -->
         <UserList v-if="activeMenu === 'user-list'" />
-        <UserRoles v-if="activeMenu === 'user-roles'" />
 
         <!-- 社团管理 -->
         <ClubList v-if="activeMenu === 'club-list'" />
@@ -134,7 +132,6 @@ import {
 // 导入子组件
 import Dashboard from '../../components/Admin/Dashboard.vue'
 import UserList from '../../components/Admin/UserList.vue'
-import UserRoles from '../../components/Admin/UserRoles.vue'
 import ClubList from '../../components/Admin/ClubList.vue'
 import ClubCategories from '../../components/Admin/ClubCategories.vue'
 import ClubAudit from '../../components/Admin/ClubAudit.vue'
@@ -154,7 +151,6 @@ const activeMenu = ref('dashboard')
 const pageTitles: Record<string, string> = {
   dashboard: '数据看板',
   'user-list': '用户列表',
-  'user-roles': '角色权限',
   'club-list': '社团列表',
   'club-categories': '分类管理',
   'club-audit': '社团审核',

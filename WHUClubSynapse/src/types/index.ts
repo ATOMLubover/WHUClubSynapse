@@ -12,7 +12,7 @@ export interface User {
   realName?: string
   major?: string
   phone?: string
-  createdAt?: string
+  created_at?: string
   emailVerified?: string
   phoneVerified?: string
   bio?: string

@@ -26,7 +26,7 @@ export const mockAdmin: User = {
   studentId: '2021001001',
   major: '计算机科学与技术',
   phone: '13800138001',
-  createdAt: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-01T00:00:00Z',
   status: 'active'
 }
 
@@ -43,7 +43,7 @@ export const mockUser: User = {
   studentId: '2021002001',
   major: '软件工程',
   phone: '13800138002',
-  createdAt: '2024-01-15T10:00:00Z',
+  created_at: '2024-01-15T10:00:00Z',
   status: 'active',
   stats: {
     appliedClubs: 2,
@@ -159,7 +159,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021001001',
       major: '计算机科学与技术',
       phone: '13800138001',
-      createdAt: '2024-01-01T00:00:00Z',
+      created_at: '2024-01-01T00:00:00Z',
       status: 'active'
     },
     {
@@ -174,7 +174,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021002001',
       major: '软件工程',
       phone: '13800138002',
-      createdAt: '2024-01-15T10:00:00Z',
+      created_at: '2024-01-15T10:00:00Z',
       status: 'active'
     },
     {
@@ -189,7 +189,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021003001',
       major: '信息安全',
       phone: '13800138003',
-      createdAt: '2024-01-10T14:30:00Z',
+      created_at: '2024-01-10T14:30:00Z',
       status: 'active'
     },
     {
@@ -204,7 +204,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021004001',
       major: '人工智能',
       phone: '13800138004',
-      createdAt: '2024-01-05T09:15:00Z',
+      created_at: '2024-01-05T09:15:00Z',
       status: 'disabled'
     },
     {
@@ -219,7 +219,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021005001',
       major: '数据科学',
       phone: '13800138005',
-      createdAt: '2024-01-20T16:00:00Z',
+      created_at: '2024-01-20T16:00:00Z',
       status: 'active'
     },
     {
@@ -234,7 +234,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021006001',
       major: '网络工程',
       phone: '13800138006',
-      createdAt: '2024-01-12T11:30:00Z',
+      created_at: '2024-01-12T11:30:00Z',
       status: 'active'
     },
     {
@@ -249,7 +249,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021007001',
       major: '计算机科学与技术',
       phone: '13800138007',
-      createdAt: '2024-01-08T10:45:00Z',
+      created_at: '2024-01-08T10:45:00Z',
       status: 'active'
     },
     {
@@ -264,7 +264,7 @@ export const mockGetUserList = async (params: UserListParams): Promise<User[]> =
       studentId: '2021008001',
       major: '软件工程',
       phone: '13800138008',
-      createdAt: '2024-01-03T14:20:00Z',
+      created_at: '2024-01-03T14:20:00Z',
       status: 'active'
     }
   ]

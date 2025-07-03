@@ -40,7 +40,7 @@ export const getClubList = async (
   }
   const queryString = queryParams.toString()
   const url = queryString ? `/api/club/list?${queryString}` : '/api/club/list'
-  console.log(url)
+  console.log("url",url)
   const response = await request.get(url)
   if(response.data==null){
     return {
@@ -612,16 +612,27 @@ export const getClubMembers = async (
     phone: '',
     email: ''
   }))
-  
+
+   let updatedMembers = await Promise.all(
+      members.map(async (item) => {
+        const user = await getUserById(parseInt(item.user_id!))
+        return {
+          ...item,
+          username: user.username,
+          avatar_url:`${config.apiBaseUrl}/${user.avatar_url}`
+        }
+      })
+    )
+
   // 前端处理筛选逻辑
   if (params.role) {
-    members = members.filter(member => member.role_in_club === params.role)
+    updatedMembers = updatedMembers.filter(member => member.role_in_club === params.role)
   }
   if (params.status) {
-    members = members.filter(member => member.status === params.status)
+    updatedMembers = updatedMembers.filter(member => member.status === params.status)
   }
   if (params.keyword) {
-    members = members.filter(member => 
+    updatedMembers = updatedMembers.filter(member => 
       (member.realName && member.realName.includes(params.keyword!)) ||
       (member.username && member.username.includes(params.keyword!)) ||
       (member.studentId && member.studentId.includes(params.keyword!))
@@ -632,7 +643,7 @@ export const getClubMembers = async (
   const { page = 1, pageSize = 10 } = params
   const total = members.length
   const startIndex = (page - 1) * pageSize
-  const paginatedMembers = members.slice(startIndex, startIndex + pageSize)
+  const paginatedMembers = updatedMembers.slice(startIndex, startIndex + pageSize)
   
   return {
     data: {
@@ -729,13 +740,24 @@ export const getClubJoinApplications = async (
   }))
   
   console.log('📋 获取的申请列表数据:', list)
+
+  let updatedList = await Promise.all(
+    list.map(async (item) => {
+      const user = await getUserById(parseInt(item.applicant_id!))
+      return {
+        ...item,
+        username: user.username,
+        avatar_url:`${config.apiBaseUrl}/${user.avatar_url}`
+      }
+    })
+  )
   
   // 前端处理筛选逻辑
   if (params.status) {
-    list = list.filter(app => app.status === params.status)
+    updatedList = updatedList.filter(app => app.status === params.status)
   }
-  if (params.keyword) {
-    list = list.filter(app => 
+  if (params.keyword) { 
+    updatedList = updatedList.filter(app => 
       (app.reason && app.reason.includes(params.keyword!)) || 
       (app.applicant_id && app.applicant_id.includes(params.keyword!))
     )
@@ -745,11 +767,11 @@ export const getClubJoinApplications = async (
   const { page = 1, pageSize = 10 } = params
   const start = (page - 1) * pageSize
   const end = start + pageSize
-  const paginatedList = list.slice(start, end)
+  const paginatedList = updatedList.slice(start, end)
 
   return {
     list: paginatedList,
-    total: list.length,
+    total: updatedList.length,
     page,
     pageSize,
   }

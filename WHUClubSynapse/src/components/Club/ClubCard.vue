@@ -64,7 +64,7 @@
         <!-- 登录用户显示申请按钮和加入状态 -->
         <template v-if="authStore.isLoggedIn">
           <el-button type="primary" size="small" @click.stop="handleApply" :disabled="isDisabled">
-            {{ getApplyButtonText() }}
+            {{ applyButtonText }}
           </el-button>
         </template>
         <!-- 未登录用户显示登录提示 -->
@@ -181,7 +181,7 @@ const handleApply = () => {
   router.push(`/club/${props.club.club_id}?isApply=true`)
 }
 
-const getApplyButtonText = () => {
+const applyButtonText = computed(() => {
   if (!props.club) return '加载中...'
   if (!authStore.isLoggedIn) return '登录后申请'
 
@@ -191,7 +191,7 @@ const getApplyButtonText = () => {
   if (props.club.member_count >= clubStore.MAX_MEMBER_NUM) return '已满员'
 
   return '立即申请'
-}
+})
 </script>
 
 <style scoped>

@@ -100,21 +100,22 @@
 
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
+            <!-- <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
               {{ row.status === 'active' ? '正常' : '禁用' }}
-            </el-tag>
+            </el-tag> -->
+            <el-tag type="success">正常</el-tag>
           </template>
         </el-table-column>
 
         <el-table-column prop="lastLogin" label="最后登录" width="180">
           <template #default="{ row }">
-            {{ formatDate(row.lastLogin) }}
+            {{ formatDate(row.last_active) }}
           </template>
         </el-table-column>
 
         <el-table-column prop="createdAt" label="注册时间" width="180">
           <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
+            {{ formatDate(row.created_at) }}
           </template>
         </el-table-column>
 
@@ -122,13 +123,7 @@
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="showUserDetail(row)"> 详情 </el-button>
             <el-button type="warning" size="small" @click="editUser(row)"> 编辑 </el-button>
-            <el-button
-              :type="row.status === 'active' ? 'danger' : 'success'"
-              size="small"
-              @click="toggleUserStatus(row)"
-            >
-              {{ row.status === 'active' ? '禁用' : '启用' }}
-            </el-button>
+            <el-button type="danger" size="small" @click="deleteUser(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -148,7 +143,12 @@
     </el-card>
 
     <!-- 添加/编辑用户对话框 -->
-    <el-dialog v-model="editDialogVisible" :title="editDialogTitle" width="600px" @close="resetForm">
+    <el-dialog
+      v-model="editDialogVisible"
+      :title="editDialogTitle"
+      width="600px"
+      @close="resetForm"
+    >
       <el-form ref="editFormRef" :model="editUserForm" :rules="editFormRules" label-width="100px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="editUserForm.username" placeholder="请输入用户名" />
@@ -269,7 +269,7 @@ const loadUsers = async () => {
     const offset = (pageData.currentPage - 1) * pageData.pageSize
     const usersData = await authStore.fetchAllUsers({
       offset: offset,
-      num: pageData.pageSize
+      num: pageData.pageSize,
     })
     users.value = usersData
     // 模拟总数，实际应该从API返回
@@ -299,9 +299,9 @@ const showUserDetail = (user: any) => {
   ElMessage.info(`查看用户详情: ${user.realName}`)
 }
 
-// 切换用户状态
-const toggleUserStatus = async (user: any) => {
-  const action = user.status === 'active' ? '禁用' : '启用'
+// 删除用户
+const deleteUser = async (user: any) => {
+  const action = '删除'
   try {
     await ElMessageBox.confirm(`确定要${action}用户 "${user.realName}" 吗？`, '确认操作', {
       confirmButtonText: '确定',

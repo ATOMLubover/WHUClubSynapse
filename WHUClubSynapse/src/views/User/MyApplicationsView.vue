@@ -347,7 +347,7 @@ onMounted(() => {
 
 .applications-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 350px));
+  grid-template-columns: repeat(auto-fill, minmax(500px, 500px));
   gap: 24px;
   margin-bottom: 24px;
 }

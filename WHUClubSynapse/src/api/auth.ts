@@ -86,8 +86,11 @@ export const getUserList = async (
   }
   
   const response = await request.get('/api/user/list', { params })
+  if (response.data==null) {
+    return []
+  }
   // 返回用户数组
-  return response.data
+  return response.data as User[]
 }
 
 // 6. 用户活跃状态刷新（心跳检测）

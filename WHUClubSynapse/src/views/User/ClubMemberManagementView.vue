@@ -76,12 +76,24 @@
                     </div>
                     <div class="member-role-badge">
                       <el-tag
-                        :type="member.role_in_club === 'leader' ? 'danger' : member.role_in_club === 'admin' ? 'warning' : 'primary'"
+                        :type="
+                          member.role_in_club === 'leader'
+                            ? 'danger'
+                            : member.role_in_club === 'admin'
+                              ? 'warning'
+                              : 'primary'
+                        "
                         size="small"
                         effect="dark"
                         round
                       >
-                        {{ member.role_in_club === 'leader' ? '社长' : member.role_in_club === 'admin' ? '管理员' : '成员' }}
+                        {{
+                          member.role_in_club === 'leader'
+                            ? '社长'
+                            : member.role_in_club === 'admin'
+                              ? '管理员'
+                              : '成员'
+                        }}
                       </el-tag>
                     </div>
                   </div>
@@ -89,18 +101,18 @@
                   <div class="member-card-body">
                     <h4 class="member-name">{{ member.realName || member.username }}</h4>
                     <p class="member-username">@{{ member.username }}</p>
-                    
+
                     <div class="member-info-list">
                       <div class="info-item" v-if="member.studentId">
                         <el-icon class="info-icon"><CreditCard /></el-icon>
                         <span class="info-text">{{ member.studentId }}</span>
                       </div>
-                      
+
                       <div class="info-item" v-if="member.major">
                         <el-icon class="info-icon"><School /></el-icon>
                         <span class="info-text">{{ member.major }}</span>
                       </div>
-                      
+
                       <div class="info-item">
                         <el-icon class="info-icon"><Calendar /></el-icon>
                         <span class="info-text">{{ formatDate(member.joined_at) }}</span>
@@ -110,8 +122,8 @@
 
                   <div class="member-card-footer">
                     <div class="member-status">
-                      <el-tag 
-                        :type="member.status === 'active' ? 'success' : 'info'" 
+                      <el-tag
+                        :type="member.status === 'active' ? 'success' : 'info'"
                         size="small"
                         effect="light"
                         round
@@ -193,7 +205,11 @@
                 v-for="application in applications"
                 :key="application.appli_id"
                 class="application-card"
-                :class="{ 'pending': application.status === 'pending', 'approved': application.status === 'approved', 'rejected': application.status === 'rejected' }"
+                :class="{
+                  pending: application.status === 'pending',
+                  approved: application.status === 'approved',
+                  rejected: application.status === 'rejected',
+                }"
                 @click="showApplicationDetail(application)"
               >
                 <div class="application-card-inner">
@@ -211,9 +227,9 @@
                       </div>
                     </div>
                     <div class="application-status-badge">
-                      <el-tag 
-                        :type="getStatusType(application.status)" 
-                        size="small" 
+                      <el-tag
+                        :type="getStatusType(application.status)"
+                        size="small"
                         effect="light"
                         round
                       >
@@ -224,8 +240,12 @@
 
                   <div class="application-card-body">
                     <div class="applicant-header">
-                      <h4 class="applicant-name">{{ application.realName || application.username || '申请人' }}</h4>
-                      <p class="application-id">#{{ application.appli_id }} · {{ formatDate(application.applied_at) }}</p>
+                      <h4 class="applicant-name">
+                        {{ application.realName || application.username || '申请人' }}
+                      </h4>
+                      <p class="application-id">
+                        #{{ application.appli_id }} · {{ formatDate(application.applied_at) }}
+                      </p>
                     </div>
 
                     <div class="application-info-list">
@@ -374,8 +394,22 @@
           <div class="member-basic-info">
             <h3 class="member-name">{{ currentMember.realName || currentMember.username }}</h3>
             <p class="member-username">@{{ currentMember.username }}</p>
-            <el-tag :type="currentMember.role_in_club === 'leader' ? 'danger' : currentMember.role_in_club === 'admin' ? 'warning' : 'primary'">
-              {{ currentMember.role_in_club === 'leader' ? '社长' : currentMember.role_in_club === 'admin' ? '管理员' : '成员' }}
+            <el-tag
+              :type="
+                currentMember.role_in_club === 'leader'
+                  ? 'danger'
+                  : currentMember.role_in_club === 'admin'
+                    ? 'warning'
+                    : 'primary'
+              "
+            >
+              {{
+                currentMember.role_in_club === 'leader'
+                  ? '社长'
+                  : currentMember.role_in_club === 'admin'
+                    ? '管理员'
+                    : '成员'
+              }}
             </el-tag>
           </div>
         </div>
@@ -458,7 +492,7 @@
     </el-dialog>
 
     <!-- 申请详情对话框 -->
-    <el-dialog v-model="showApplicationDetailDialog" title="申请详情" width="1200px">
+    <el-dialog v-model="showApplicationDetailDialog" title="申请详情" width="1000px">
       <div v-if="currentApplication" class="application-detail-layout">
         <!-- 左侧：申请者信息 -->
         <div class="application-info-section">
@@ -805,34 +839,28 @@ const handleApplicationCurrentChange = (page: number) => {
 
 const approveApplication = async (application: ClubApplication) => {
   try {
-    await ElMessageBox.confirm(
-      `确定同意申请人的加入申请吗？`,
-      '确认操作',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success',
-      },
-    )
+    await ElMessageBox.confirm(`确定同意申请人的加入申请吗？`, '确认操作', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'success',
+    })
 
     const response = await reviewJoinApplication(application.appli_id, {
-      result: 'approve'
+      result: 'approve',
     })
 
     if (response.data.code === 200) {
       ElMessage.success('申请已通过')
-      
+
       // 立即更新本地数据
-      const index = applications.value.findIndex(
-        (app) => app.appli_id === application.appli_id,
-      )
+      const index = applications.value.findIndex((app) => app.appli_id === application.appli_id)
       if (index !== -1) {
         applications.value[index].status = 'approved'
         applications.value[index].reviewed_at = new Date().toISOString()
         applications.value[index].reviewerId = authStore.user?.id?.toString()
         applications.value[index].reviewerName = authStore.user?.username
       }
-      
+
       loadMembers()
     } else {
       ElMessage.error(response.data.message || '审核申请失败')
@@ -1021,18 +1049,14 @@ const showApplicationDetail = (application: ClubApplication) => {
 
 const approveApplicationFromDetail = async (application: ClubApplication) => {
   try {
-    await ElMessageBox.confirm(
-      `确定同意申请人的加入申请吗？`,
-      '确认操作',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success',
-      },
-    )
+    await ElMessageBox.confirm(`确定同意申请人的加入申请吗？`, '确认操作', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'success',
+    })
 
     const response = await reviewJoinApplication(application.appli_id, {
-      result: 'approve'
+      result: 'approve',
     })
 
     if (response.data.code === 200) {
@@ -1115,7 +1139,7 @@ onMounted(async () => {
 <style scoped>
 .member-management {
   padding: 20px;
-  max-width: 1800px;
+  width: 100%;
   margin: 0 auto;
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -1697,13 +1721,13 @@ onMounted(async () => {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .toolbar {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .search-section,
   .filter-section {
     justify-content: center;
@@ -1721,18 +1745,18 @@ onMounted(async () => {
   .member-management {
     padding: 16px;
   }
-  
+
   .header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .member-card-inner,
   .application-card-inner {
     padding: 16px;
   }
-  
+
   .member-card:hover,
   .application-card:hover {
     transform: translateY(-4px);
@@ -1743,19 +1767,19 @@ onMounted(async () => {
   .member-management {
     padding: 12px;
   }
-  
+
   .page-header {
     padding: 16px;
   }
-  
+
   .header-info h1 {
     font-size: 24px;
   }
-  
+
   .toolbar {
     padding: 16px;
   }
-  
+
   .members-grid,
   .applications-grid {
     gap: 12px;
@@ -1866,7 +1890,8 @@ onMounted(async () => {
 .application-detail-layout {
   display: flex;
   gap: 20px;
-  min-height: 600px;
+  min-height: 400px;
+  max-height: 600px;
 }
 
 .application-info-section {
