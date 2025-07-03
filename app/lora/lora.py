@@ -1,7 +1,7 @@
 import swanlab
 from swanlab.integration.transformers import SwanLabCallback
 from peft import LoraConfig, TaskType
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForSeq2Seq
 
 """
 加载模型
@@ -68,3 +68,13 @@ swanlab_callback = SwanLabCallback(
     project="Qwen3-8B-AWQ-Lora",
     experiment_name="Qwen3-8B-AWQ-LoRA-experiment",
 )
+
+trainer = Trainer(
+    model=model,
+    args=args,
+    train_dataset=tokenzied_id,
+    data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
+    callbacks=[swanlab_callback],
+)
+
+trainer.train()
