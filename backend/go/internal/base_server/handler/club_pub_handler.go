@@ -29,8 +29,8 @@ type ClubPubHandler struct {
 func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/join_applis/{id:int}", "GetJoinApplisForClub")
 
-	b.Handle("POST", "/update", "PostApplyForUpdateClubInfo")
-	b.Handle("POST", "/update_logo", "PostUploadLogo")
+	b.Handle("POST", "/update/{id:int}", "PostApplyForUpdateClubInfo")
+	b.Handle("POST", "/update_logo/{id:int}", "PostUploadLogo")
 
 	b.Handle("PUT", "/proc_join", "PutProcAppliForJoinClub")
 }
