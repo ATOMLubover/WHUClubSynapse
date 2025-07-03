@@ -40,7 +40,6 @@ def preprocess(sample):
     }    
 
 if __name__ == "__main__":
-    swanlab.login()
     # 加载模型和分词器
     model = AutoModelForCausalLM.from_pretrained('/root/autodl-tmp/Qwen/Qwen3-8B-AWQ', device_map='cuda')
     model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方法
