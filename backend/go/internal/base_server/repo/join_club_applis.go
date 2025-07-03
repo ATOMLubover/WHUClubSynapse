@@ -14,7 +14,7 @@ type JoinClubAppliRepo interface {
 	GetJoinClubAppliList(clubId int) ([]*dbstruct.JoinClubAppli, error)
 	GetApplisByUserId(userId int) ([]*dbstruct.JoinClubAppli, error)
 	GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstruct.JoinClubAppli, error)
-	ApproveAppli(appliId int) error
+	ApproveAppli(tx *gorm.DB, appliId int) error
 	RejectAppli(appliId int, reason string) error
 }
 
@@ -86,12 +86,13 @@ func (r *sJoinClubAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstr
 	err := tx.
 		//Clauses(clause.Locking{Strength: "UPDATE"}).
 		Model(&dbstruct.JoinClubAppli{}).
-		Where("id = ?", appliId).Error
+		Where("join_appli_id = ?", appliId).
+		Find(&appli).Error
 
 	return &appli, err
 }
 
-func (r *sJoinClubAppliRepo) ApproveAppli(appliId int) error {
+func (r *sJoinClubAppliRepo) ApproveAppli(tx *gorm.DB, appliId int) error {
 	if appliId <= 0 {
 		return errors.New("无效参数")
 	}

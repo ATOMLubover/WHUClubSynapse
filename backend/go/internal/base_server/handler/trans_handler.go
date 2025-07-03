@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"io"
 	"log/slog"
 	"net/http"
@@ -67,9 +68,47 @@ func (h *TransHandler) GetTransLlm(ctx iris.Context, route string) {
 }
 
 func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
-	req := ctx.Request().Clone(ctx.Request().Context())
-	req.URL, _ = url.Parse(h.LlmAddr + route)
+	bodyBytes, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		h.Logger.Error("读取原始请求体失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：读取请求体失败")
+		return
+	}
+
+	targetURL := h.LlmAddr + "/" + route
+	parsedURL, err := url.Parse(targetURL)
+	if err != nil {
+		h.Logger.Error("解析LLM目标URL失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：LLM目标URL解析失败")
+		return
+	}
+
+	req, err := http.NewRequest(ctx.Request().Method, parsedURL.String(), io.NopCloser(bytes.NewBuffer(bodyBytes)))
+	if err != nil {
+		h.Logger.Error("创建LLM请求失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：创建LLM请求失败")
+		return
+	}
+
 	req.RequestURI = ""
+
+	req.Host = strings.TrimPrefix(h.LlmAddr, "https://")
+	req.Header.Set("Host", req.Host)
+
+	for key, values := range ctx.Request().Header {
+		if strings.EqualFold(key, "Host") || strings.EqualFold(key, "Connection") || strings.EqualFold(key, "Content-Length") {
+			continue
+		}
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
 
 	h.Logger.Info("LLM请求", "url", req.URL.String())
 
@@ -90,19 +129,65 @@ func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 	}
 
 	ctx.StatusCode(res.StatusCode)
-	for true {
-		if _, err := io.Copy(ctx.ResponseWriter(), res.Body); err != nil {
-			h.Logger.Error("SSE转发中错误: %w", "error", err)
+
+	for {
+		_, err := io.Copy(ctx.ResponseWriter(), res.Body)
+		if err != nil {
+			if err != io.EOF {
+				h.Logger.Error("SSE转发中错误", "error", err)
+			}
 			break
 		}
 		ctx.ResponseWriter().Flush()
 	}
+
+	h.Logger.Debug("SSE 转发结束")
 }
 
 func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
-	req := ctx.Request().Clone(ctx.Request().Context())
-	req.URL, _ = url.Parse(h.RagAddr + route)
+	bodyBytes, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		h.Logger.Error("读取原始请求体失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：读取请求体失败")
+		return
+	}
+
+	targetURL := h.RagAddr + "/" + route
+	parsedURL, err := url.Parse(targetURL)
+	if err != nil {
+		h.Logger.Error("解析RAG目标URL失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：RAG目标URL解析失败")
+		return
+	}
+
+	req, err := http.NewRequest(ctx.Request().Method, parsedURL.String(), io.NopCloser(bytes.NewBuffer(bodyBytes)))
+	if err != nil {
+		h.Logger.Error("创建RAG请求失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("内部错误：创建RAG请求失败")
+		return
+	}
+
 	req.RequestURI = ""
+
+	req.Host = strings.TrimPrefix(h.RagAddr, "http://")
+	req.Header.Set("Host", req.Host)
+
+	for key, values := range ctx.Request().Header {
+		if strings.EqualFold(key, "Host") || strings.EqualFold(key, "Connection") || strings.EqualFold(key, "Content-Length") {
+			continue
+		}
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
+
+	h.Logger.Info("RAG请求", "url", req.URL.String())
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -121,5 +206,17 @@ func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
 	}
 
 	ctx.StatusCode(res.StatusCode)
-	io.Copy(ctx.ResponseWriter(), res.Body)
+
+	for {
+		_, err := io.Copy(ctx.ResponseWriter(), res.Body)
+		if err != nil {
+			if err != io.EOF {
+				h.Logger.Error("SSE转发中错误", "error", err)
+			}
+			break
+		}
+		ctx.ResponseWriter().Flush()
+	}
+
+	h.Logger.Debug("SSE 转发结束")
 }

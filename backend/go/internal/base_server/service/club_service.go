@@ -46,7 +46,7 @@ type ClubService interface {
 	UnfavouriteClub(userId, clubId int) error
 	GetFavoriteClubs(userId int) ([]*dbstruct.Club, error)
 
-	UpdateClubLogo(clubId int, logoUrl string) error 
+	UpdateClubLogo(clubId int, logoUrl string) error
 }
 
 type sClubService struct {
@@ -245,10 +245,14 @@ func (s *sClubService) ApproveAppliForJoinClub(appliId int) error {
 		userId := appli.UserId
 		clubId := appli.ClubId
 
-		return s.clubMemberRepo.AppendClubMember(tx, &dbstruct.ClubMember{
+		if err := s.clubMemberRepo.AppendClubMember(tx, &dbstruct.ClubMember{
 			ClubId: clubId,
 			UserId: userId,
-		})
+		}); err != nil {
+			return err
+		}
+
+		return s.joinClubAppliRepo.ApproveAppli(tx, appliId)
 	})
 }
 

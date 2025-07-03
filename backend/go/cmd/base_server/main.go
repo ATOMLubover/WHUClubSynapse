@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strings"
 	"time"
 
@@ -46,6 +47,13 @@ var routeLogger MiddlewareFunc = func(ctx iris.Context) {
 }
 
 func main() {
+	http.DefaultClient = &http.Client{
+		Transport: &http.Transport{
+			ForceAttemptHTTP2: false,
+		},
+		Timeout: 30 * time.Second, // 确保有超时设置
+	}
+
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
 
