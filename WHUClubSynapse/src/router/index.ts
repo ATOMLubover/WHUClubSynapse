@@ -139,6 +139,16 @@ const router = createRouter({
       component: () => import('@/views/test-ai-announcement.vue'),
     },
     {
+      path: '/test-club-announcements',
+      name: 'test-club-announcements',
+      component: () => import('@/views/test-club-announcements.vue'),
+    },
+    {
+      path: '/test-password-fix',
+      name: 'test-password-fix',
+      component: () => import('@/views/test-password-fix.vue'),
+    },
+    {
       path:'/admin',
       name:'admin',
       component:()=>import("@/views/Admin/index.vue")

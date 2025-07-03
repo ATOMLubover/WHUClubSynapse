@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { Club, PaginatedData, SearchParams, ApiResponse, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory, ClubCreationApplication, ClubCreatedApplication, ClubPostComment } from '@/types'
+import type { Club, PaginatedData, SearchParams, ApiResponse, ClubMember, ClubApplication, ApplicationReviewRequest, ClubPost, ClubCategory, ClubCreationApplication, ClubCreatedApplication, ClubPostComment, ClubAnnouncement, ClubActivity, PinnedPostContent, PinnedPostResponse } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
@@ -1132,3 +1132,278 @@ export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data
 }
 
 // /api/club/pub/update_logo
+
+// 社团公告和动态相关API
+
+/**
+ * 获取社团置顶帖子
+ */
+export async function getClubPinnedPost(clubId: string): Promise<PinnedPostResponse | null> {
+  try {
+    const response = await request.get<PinnedPostResponse>(`/api/club/post/pinned/${clubId}`)
+    return response.data
+  } catch (error: any) {
+    if (error.response?.status === 400) {
+      // 社团没有置顶帖子
+      return null
+    }
+    throw error
+  }
+}
+
+/**
+ * 设置帖子为置顶
+ */
+export async function pinPost(postId: string): Promise<void> {
+  await request.put(`/api/club/post/pub/pin/${postId}`)
+}
+
+/**
+ * 获取社团公告列表
+ */
+export async function getClubAnnouncements(clubId: string): Promise<ClubAnnouncement[]> {
+  try {
+    const pinnedPost = await getClubPinnedPost(clubId)
+    if (!pinnedPost) {
+      return []
+    }
+
+    // 获取帖子内容
+    let content = pinnedPost.content
+    if (!content && pinnedPost.content_url) {
+      // 如果没有直接内容，从content_url获取
+      const contentResponse = await request.get(pinnedPost.content_url)
+      content = contentResponse.data
+    }
+
+    if (!content) {
+      return []
+    }
+
+    // 解析JSON内容
+    const parsedContent: PinnedPostContent = JSON.parse(content)
+    return parsedContent.announcements || []
+  } catch (error) {
+    console.error('获取社团公告失败:', error)
+    return []
+  }
+}
+
+/**
+ * 获取社团动态列表
+ */
+export async function getClubActivities(clubId: string): Promise<ClubActivity[]> {
+  try {
+    const pinnedPost = await getClubPinnedPost(clubId)
+    if (!pinnedPost) {
+      return []
+    }
+
+    // 获取帖子内容
+    let content = pinnedPost.content
+    if (!content && pinnedPost.content_url) {
+      // 如果没有直接内容，从content_url获取
+      const contentResponse = await request.get(pinnedPost.content_url)
+      content = contentResponse.data
+    }
+
+    if (!content) {
+      return []
+    }
+
+    // 解析JSON内容
+    const parsedContent: PinnedPostContent = JSON.parse(content)
+    return parsedContent.activities || []
+  } catch (error) {
+    console.error('获取社团动态失败:', error)
+    return []
+  }
+}
+
+/**
+ * 添加社团公告
+ */
+export async function addClubAnnouncement(
+  clubId: string, 
+  announcement: Omit<ClubAnnouncement, 'id' | 'created_at'>
+): Promise<void> {
+  try {
+    // 获取当前置顶帖子
+    const pinnedPost = await getClubPinnedPost(clubId)
+    
+    let currentContent: PinnedPostContent = {
+      announcements: [],
+      activities: []
+    }
+
+    if (pinnedPost) {
+      // 获取现有内容
+      let content = pinnedPost.content
+      if (!content && pinnedPost.content_url) {
+        const contentResponse = await request.get(pinnedPost.content_url)
+        content = contentResponse.data
+      }
+      
+      if (content) {
+        currentContent = JSON.parse(content)
+      }
+    }
+
+    // 添加新公告
+    const newAnnouncement: ClubAnnouncement = {
+      ...announcement,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString()
+    }
+
+    currentContent.announcements.unshift(newAnnouncement)
+
+    // 创建或更新置顶帖子
+    await updatePinnedPostContent(clubId, currentContent, pinnedPost)
+  } catch (error) {
+    console.error('添加社团公告失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 添加社团动态
+ */
+export async function addClubActivity(
+  clubId: string, 
+  activity: Omit<ClubActivity, 'id' | 'created_at'>
+): Promise<void> {
+  try {
+    // 获取当前置顶帖子
+    const pinnedPost = await getClubPinnedPost(clubId)
+    
+    let currentContent: PinnedPostContent = {
+      announcements: [],
+      activities: []
+    }
+
+    if (pinnedPost) {
+      // 获取现有内容
+      let content = pinnedPost.content
+      if (!content && pinnedPost.content_url) {
+        const contentResponse = await request.get(pinnedPost.content_url)
+        content = contentResponse.data
+      }
+      
+      if (content) {
+        currentContent = JSON.parse(content)
+      }
+    }
+
+    // 添加新动态
+    const newActivity: ClubActivity = {
+      ...activity,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString()
+    }
+
+    currentContent.activities.unshift(newActivity)
+
+    // 创建或更新置顶帖子
+    await updatePinnedPostContent(clubId, currentContent, pinnedPost)
+  } catch (error) {
+    console.error('添加社团动态失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 删除社团公告
+ */
+export async function deleteClubAnnouncement(clubId: string, announcementId: string): Promise<void> {
+  try {
+    const pinnedPost = await getClubPinnedPost(clubId)
+    if (!pinnedPost) {
+      return
+    }
+
+    let content = pinnedPost.content
+    if (!content && pinnedPost.content_url) {
+      const contentResponse = await request.get(pinnedPost.content_url)
+      content = contentResponse.data
+    }
+
+    if (!content) {
+      return
+    }
+
+    const currentContent: PinnedPostContent = JSON.parse(content)
+    currentContent.announcements = currentContent.announcements.filter(
+      announcement => announcement.id !== announcementId
+    )
+
+    await updatePinnedPostContent(clubId, currentContent, pinnedPost)
+  } catch (error) {
+    console.error('删除社团公告失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 删除社团动态
+ */
+export async function deleteClubActivity(clubId: string, activityId: string): Promise<void> {
+  try {
+    const pinnedPost = await getClubPinnedPost(clubId)
+    if (!pinnedPost) {
+      return
+    }
+
+    let content = pinnedPost.content
+    if (!content && pinnedPost.content_url) {
+      const contentResponse = await request.get(pinnedPost.content_url)
+      content = contentResponse.data
+    }
+
+    if (!content) {
+      return
+    }
+
+    const currentContent: PinnedPostContent = JSON.parse(content)
+    currentContent.activities = currentContent.activities.filter(
+      activity => activity.id !== activityId
+    )
+
+    await updatePinnedPostContent(clubId, currentContent, pinnedPost)
+  } catch (error) {
+    console.error('删除社团动态失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 更新置顶帖子内容的辅助函数
+ */
+async function updatePinnedPostContent(
+  clubId: string, 
+  content: PinnedPostContent, 
+  existingPost: PinnedPostResponse | null
+): Promise<void> {
+  const contentString = JSON.stringify(content, null, 2)
+  
+  if (existingPost) {
+    // 更新现有置顶帖子
+    // 注意：这里需要根据实际的帖子更新接口来实现
+    // 目前接口文档中没有提供更新帖子内容的接口，这里假设有这样的接口
+    await request.put(`/api/club/post/${existingPost.post_id}`, {
+      content: contentString
+    })
+  } else {
+    // 创建新的置顶帖子
+    // 注意：这里需要根据实际的帖子创建接口来实现
+    // 目前接口文档中没有提供创建帖子的接口，这里假设有这样的接口
+    const newPost = await request.post(`/api/club/post`, {
+      club_id: clubId,
+      title: '社团公告与动态',
+      content: contentString
+    })
+    
+    // 设置为置顶
+    await pinPost(newPost.data.post_id)
+  }
+}
