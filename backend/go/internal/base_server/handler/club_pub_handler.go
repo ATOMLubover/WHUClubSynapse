@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
+	"gorm.io/datatypes"
 )
 
 type ClubPubHandler struct {
@@ -43,11 +45,28 @@ func (h *ClubPubHandler) PostApplyForUpdateClubInfo(ctx iris.Context, id int) {
 		return
 	}
 
+	var jsonbData datatypes.JSON
+
+	if len(reqBody.Tags) > 0 {
+		jsonbData, err := json.Marshal(reqBody.Tags)
+		if err != nil {
+			h.Logger.Error("序列化标签失败", "error", err)
+
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法序列化标签")
+			return
+		}
+		jsonbData = datatypes.JSON(jsonbData)
+	}
+
 	err := h.ClubService.ApplyForUpdateClub(
 		dbstruct.Club{
-			ClubId:      uint(id),
-			Name:        reqBody.Name,
-			Description: reqBody.Desc,
+			ClubId:       uint(id),
+			Name:         reqBody.Name,
+			Description:  reqBody.Desc,
+			Requirements: reqBody.Requirements,
+			CategoryId:   uint(reqBody.CatogoryId),
+			Tags:         jsonbData,
 		})
 	if err != nil {
 		h.Logger.Error("申请更新社团信息失败",
