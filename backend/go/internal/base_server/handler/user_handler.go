@@ -3,9 +3,12 @@ package handler
 import (
 	"io"
 	"log/slog"
+	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/model"
@@ -141,7 +144,7 @@ func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
 		return
 	}
 
-	file, _, err := ctx.FormFile("avatar")
+	file, header, err := ctx.FormFile("avatar")
 	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.Text("未成功获取上传的logo文件")
@@ -150,13 +153,48 @@ func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
 
 	defer file.Close()
 
+	var detectedContentType string
+
+	if clientContentType := header.Header.Get("Content-Type"); clientContentType != "" {
+		detectedContentType = clientContentType
+	} else {
+		fileHeaderBytes := make([]byte, 512)
+		_, readErr := file.Read(fileHeaderBytes)
+		if readErr != nil && readErr != io.EOF {
+			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.Text("无法读取文件头部以检测类型。")
+			return
+		}
+
+		_, seekErr := file.Seek(0, 0)
+		if seekErr != nil {
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.Text("无法重置文件读取位置。")
+			return
+		}
+
+		detectedContentType = http.DetectContentType(fileHeaderBytes)
+	}
+
+	var fileExtension string
+
+	extensions, err := mime.ExtensionsByType(detectedContentType)
+	if err == nil && len(extensions) > 0 {
+		fileExtension = extensions[0]
+		if !strings.HasPrefix(fileExtension, ".") {
+			fileExtension = "." + fileExtension
+		}
+	} else {
+		fileExtension = ".bin"
+	}
+
 	if err := os.MkdirAll(USR_AVATAR_DIR, os.ModePerm); err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		ctx.Text("目录创建失败")
 		return
 	}
 
-	filePath := filepath.Join(USR_AVATAR_DIR, "_"+strconv.Itoa(userId)+".jpg")
+	filePath := filepath.Join(USR_AVATAR_DIR, "avatar_"+strconv.Itoa(userId)+fileExtension)
 	dst, err := os.Create(filePath)
 	if err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
