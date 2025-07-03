@@ -17,6 +17,7 @@ type User struct {
 	CreatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	UpdatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP;not null"`
 	LastActive   time.Time
+	Extension    string `gorm:"type:text"`
 }
 
 const (

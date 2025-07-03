@@ -16,7 +16,8 @@ type UserRepo interface {
 	GetUserList(offset int, num int) ([]*dbstruct.User, error)
 	UpdateUserLastActive(id int) error
 	UpdateUserRole(tx *gorm.DB, id int, role string) error
-	UpdateAvatar(id int, avatarUrl string)  error
+	UpdateAvatar(id int, avatarUrl string) error
+	UpdateUser(newUser *dbstruct.User) error
 }
 
 type sUserRepo struct {
@@ -96,4 +97,11 @@ func (r *sUserRepo) UpdateAvatar(id int, avatarUrl string) error {
 		Model(&dbstruct.User{}).
 		Where("user_id = ?", id).
 		Update("avatar_url", avatarUrl).Error
+}
+
+func (r *sUserRepo) UpdateUser(newUser *dbstruct.User) error {
+	return r.database.
+		Model(&dbstruct.User{}).
+		Where("user_id = ?", newUser.UserId).
+		Updates(newUser).Error
 }

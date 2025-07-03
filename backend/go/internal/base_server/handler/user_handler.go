@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 	"whuclubsynapse-server/internal/base_server/dto"
 	"whuclubsynapse-server/internal/base_server/model"
 	"whuclubsynapse-server/internal/base_server/service"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -37,6 +37,7 @@ func (h *UserHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/ping", "GetPing")
 
 	b.Handle("POST", "/upload_avatar", "PostUploadAvatar")
+	b.Handle("PUT", "/update", "PutUpdateUserInfo")
 }
 
 func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
@@ -64,7 +65,8 @@ func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
 		Role:       user.Role,
 		AvatarUrl:  user.AvatarUrl,
 		Username:   user.Username,
-		LastActive: user.LastActive.Format(time.DateTime),
+		LastActive: user.LastActive.Format("2006-01-02 15:04:05"),
+		Extension:  user.Extension,
 	}
 
 	ctx.JSON(resUserInfo)
@@ -105,6 +107,7 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 			AvatarUrl:  userModel.AvatarUrl,
 			Role:       userModel.Role,
 			Username:   userModel.Username,
+			Extension:  userModel.Extension,
 		})
 	}
 
@@ -216,4 +219,54 @@ func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"status": "文件上传成功", "path": filePath})
+}
+
+func (h *UserHandler) PutUpdateUserInfo(ctx iris.Context) {
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID获取失败")
+		return
+	}
+
+	var reqBody dto.UpdateUserRequest
+	if err := ctx.ReadJSON(&reqBody); err != nil {
+		h.Logger.Info("UpdateUser请求格式错误", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("请求格式错误")
+		return
+	}
+
+	hashedBytes, err := bcrypt.GenerateFromPassword(
+		[]byte(reqBody.Password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		h.Logger.Info("bcrypt加密密码失败",
+			"error", err, "encrypted_password", reqBody.Password,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("密码无效")
+		return
+	}
+
+	if err := h.UserService.UpdateUser(&dbstruct.User{
+		UserId:       uint(userId),
+		Username:     reqBody.Username,
+		PasswordHash: string(hashedBytes),
+		Email:        reqBody.Email,
+		Extension:    reqBody.Extension,
+	}); err != nil {
+		h.Logger.Info("更新用户信息失败",
+			"error", err, "user_id", reqBody.UserId,
+		)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("更新用户信息失败")
+		return
+	}
+
+	ctx.Text("更新用户信息成功")
 }

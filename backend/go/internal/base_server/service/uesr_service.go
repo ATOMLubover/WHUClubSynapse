@@ -15,6 +15,7 @@ type UserService interface {
 	GetUserList(offset int, num int) ([]*dbstruct.User, error)
 	KeepUserActive(id int, role string) error
 	UpdateAvatar(id int, avatarUrl string) error
+	UpdateUser(newUser *dbstruct.User) error
 }
 
 type sUserService struct {
@@ -97,4 +98,12 @@ func (s *sUserService) KeepUserActive(id int, role string) error {
 
 func (s *sUserService) UpdateAvatar(id int, avatarUrl string) error {
 	return s.UserRepo.UpdateAvatar(id, avatarUrl)
+}
+
+func (s *sUserService) UpdateUser(newUser *dbstruct.User) error {
+	if newUser.UserId <= 0 {
+		return errors.New("无效用户ID")
+	}
+
+	return s.UserRepo.UpdateUser(newUser)
 }

@@ -7,4 +7,5 @@ type UserInfo struct {
 	AvatarUrl  string `json:"avatar_url"`
 	Role       string `json:"role"`
 	LastActive string `json:"last_active"`
+	Extension  string `json:"extension"` // 扩展字段，可以存储额外信息
 }
