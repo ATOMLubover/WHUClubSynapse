@@ -38,6 +38,7 @@
                   clearable
                   @change="handleMemberFilter"
                 >
+                  <el-option label="社长" value="leader" />
                   <el-option label="管理员" value="admin" />
                   <el-option label="普通成员" value="member" />
                 </el-select>
@@ -69,11 +70,11 @@
                   <el-avatar :src="member.avatar_url" :size="60" class="member-avatar" />
                   <div class="member-role-badge">
                     <el-tag
-                      :type="member.role_in_club === 'admin' ? 'danger' : 'primary'"
+                      :type="member.role_in_club === 'leader' ? 'danger' : member.role_in_club === 'admin' ? 'warning' : 'primary'"
                       size="small"
                       effect="dark"
                     >
-                      {{ member.role_in_club === 'admin' ? '管理员' : '成员' }}
+                      {{ member.role_in_club === 'leader' ? '社长' : member.role_in_club === 'admin' ? '管理员' : '成员' }}
                     </el-tag>
                   </div>
                 </div>
@@ -349,8 +350,8 @@
           <div class="member-basic-info">
             <h3 class="member-name">{{ currentMember.realName || currentMember.username }}</h3>
             <p class="member-username">@{{ currentMember.username }}</p>
-            <el-tag :type="currentMember.role_in_club === 'admin' ? 'danger' : 'primary'">
-              {{ currentMember.role_in_club === 'admin' ? '管理员' : '成员' }}
+            <el-tag :type="currentMember.role_in_club === 'leader' ? 'danger' : currentMember.role_in_club === 'admin' ? 'warning' : 'primary'">
+              {{ currentMember.role_in_club === 'leader' ? '社长' : currentMember.role_in_club === 'admin' ? '管理员' : '成员' }}
             </el-tag>
           </div>
         </div>

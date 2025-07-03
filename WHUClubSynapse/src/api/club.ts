@@ -579,17 +579,75 @@ export const getClubMembers = async (
     }
   }
 
-  const queryParams = new URLSearchParams()
-  if (params.page) queryParams.append('page', params.page.toString())
-  if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString())
-  if (params.role) queryParams.append('role', params.role)
-  if (params.status) queryParams.append('status', params.status)
-  if (params.keyword) queryParams.append('keyword', params.keyword)
-
-  const queryString = queryParams.toString()
-  const url = queryString ? `/clubs/${clubId}/members?${queryString}` : `/clubs/${clubId}/members`
-
-  return await request.get(url)
+  // 使用正确的API路径获取社团详情（包含成员列表）
+  const response = await request.get(`/api/club/${clubId}/info`)
+  if (!response.data || !response.data.members) {
+    return {
+      data: {
+        code: 200,
+        message: 'success',
+        data: {
+          list: [],
+          total: 0,
+          page: params.page || 1,
+          pageSize: params.pageSize || 10,
+        },
+      },
+    }
+  }
+  
+  // 转换后端数据格式为前端需要的格式
+  let members: ClubMember[] = response.data.members.map((item: any) => ({
+    member_id: item.member_id?.toString() || '',
+    user_id: item.member_id?.toString() || '', // 后端的member_id实际是user_id
+    club_id: item.club_id?.toString() || clubId,
+    joined_at: item.joined_at || '',
+    role_in_club: item.role_in_club || 'member',
+    last_active: item.last_active || '',
+    // 这些字段需要从其他地方获取，暂时设为空
+    username: '',
+    realName: '',
+    avatar_url: '',
+    status: 'active',
+    studentId: '',
+    major: '',
+    phone: '',
+    email: ''
+  }))
+  
+  // 前端处理筛选逻辑
+  if (params.role) {
+    members = members.filter(member => member.role_in_club === params.role)
+  }
+  if (params.status) {
+    members = members.filter(member => member.status === params.status)
+  }
+  if (params.keyword) {
+    members = members.filter(member => 
+      (member.realName && member.realName.includes(params.keyword!)) ||
+      (member.username && member.username.includes(params.keyword!)) ||
+      (member.studentId && member.studentId.includes(params.keyword!))
+    )
+  }
+  
+  // 前端处理分页逻辑
+  const { page = 1, pageSize = 10 } = params
+  const total = members.length
+  const startIndex = (page - 1) * pageSize
+  const paginatedMembers = members.slice(startIndex, startIndex + pageSize)
+  
+  return {
+    data: {
+      code: 200,
+      message: 'success',
+      data: {
+        list: paginatedMembers,
+        total,
+        page,
+        pageSize,
+      },
+    },
+  }
 }
 
 // 获取用户加入社团申请列表
@@ -648,7 +706,8 @@ export const getClubJoinApplications = async (
     return await mockGetClubJoinApplications(clubId, params)
   }
 
-  const response = await request.get(`/api/join_applis/${clubId}`)
+  // 使用正确的API路径获取社团加入申请列表
+  const response = await request.get(`/api/club/pub/join_applis/${clubId}`)
   if (response.data == null) {
     return {
       list: [],
@@ -670,7 +729,7 @@ export const getClubJoinApplications = async (
     club: {} as Club
   }))
   
-  // 应用筛选
+  // 前端处理筛选逻辑
   if (params.status) {
     list = list.filter(app => app.status === params.status)
   }
@@ -681,7 +740,7 @@ export const getClubJoinApplications = async (
     )
   }
 
-  // 应用分页
+  // 前端处理分页逻辑
   const { page = 1, pageSize = 10 } = params
   const start = (page - 1) * pageSize
   const end = start + pageSize
@@ -714,7 +773,8 @@ export const reviewJoinApplication = async (
     }
   }
 
-  const response = await request.put('/api/proc_join', {
+  // 使用正确的API路径审核社团加入申请
+  const response = await request.put('/api/club/pub/proc_join', {
     join_appli_id: parseInt(applicationId),
     result: data.result,
     reason: data.reason || ''

@@ -193,7 +193,7 @@ export interface ClubMember {
   user_id: string
   club_id: string
   joined_at: string
-  role_in_club: 'admin' | 'member' // 在社团中的角色
+  role_in_club: 'leader' | 'admin' | 'member' // 在社团中的角色
   last_active: string
 
   username?: string
