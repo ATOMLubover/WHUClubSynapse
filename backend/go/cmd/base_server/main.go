@@ -52,6 +52,8 @@ func main() {
 	app.Use(crs, routeLogger)
 
 	app.HandleDir("/pub/post_files/", service.POST_FILE_DIR)
+	app.HandleDir("/pub/club_logos/", handler.CLUB_LOGO_DIR)
+	app.HandleDir("/pub/user_avatars/", handler.USR_AVATAR_DIR)
 
 	rootApp := mvc.New(app.Party("/"))
 

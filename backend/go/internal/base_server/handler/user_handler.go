@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	USR_LOGO_DIR = "pub/user_logos"
+	USR_AVATAR_DIR = "pub/user_avatars"
 )
 
 type UserHandler struct {
@@ -59,6 +59,7 @@ func (h *UserHandler) GetUserInfo(ctx iris.Context, id int) {
 		UserId:     user.UserId,
 		Email:      user.Email,
 		Role:       user.Role,
+		AvatarUrl:  user.AvatarUrl,
 		Username:   user.Username,
 		LastActive: user.LastActive.Format(time.DateTime),
 	}
@@ -97,7 +98,8 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 		resUserList = append(resUserList, dto.UserInfo{
 			UserId:     userModel.UserId,
 			Email:      userModel.Email,
-			LastActive: userModel.LastActive.Format(time.DateTime),
+			LastActive: userModel.LastActive.Format("2006-01-02 15:04:05"),
+			AvatarUrl:  userModel.AvatarUrl,
 			Role:       userModel.Role,
 			Username:   userModel.Username,
 		})
@@ -148,13 +150,13 @@ func (h *UserHandler) PostUploadAvatar(ctx iris.Context) {
 
 	defer file.Close()
 
-	if err := os.MkdirAll(USR_LOGO_DIR, os.ModePerm); err != nil {
+	if err := os.MkdirAll(USR_AVATAR_DIR, os.ModePerm); err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		ctx.Text("目录创建失败")
 		return
 	}
 
-	filePath := filepath.Join(USR_LOGO_DIR, "_"+strconv.Itoa(userId))
+	filePath := filepath.Join(USR_AVATAR_DIR, "_"+strconv.Itoa(userId)+".jpg")
 	dst, err := os.Create(filePath)
 	if err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)

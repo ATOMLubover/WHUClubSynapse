@@ -38,7 +38,7 @@ func (r *sPostCommentRepo) GetPostComments(postId, visibility int) ([]*dbstruct.
 		Where("post_id = ? AND visibility <= ?", postId, visibility).
 		Find(&comments).Error
 
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
