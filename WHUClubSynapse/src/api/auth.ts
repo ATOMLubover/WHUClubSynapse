@@ -12,6 +12,7 @@ import type {
 import { useConfigStore } from '@/stores/config'
 import * as mockAuth from './mock/auth'
 import { useAuthStore } from '@/stores/auth'
+import { processUserFromBackend } from '@/utils/userExtension'
 
 
 // 获取动态配置

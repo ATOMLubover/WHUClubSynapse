@@ -23,25 +23,6 @@
           />
         </el-form-item>
 
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="registerForm.realName" placeholder="请输入真实姓名" clearable />
-        </el-form-item>
-
-        <el-form-item label="学号" prop="studentId">
-          <el-input v-model="registerForm.studentId" placeholder="请输入学号" clearable />
-        </el-form-item>
-
-        <el-form-item label="学院" prop="major">
-          <el-select v-model="registerForm.major" placeholder="请选择学院" style="width: 100%">
-            <el-option
-              v-for="college in colleges"
-              :key="college"
-              :label="college"
-              :value="college"
-            />
-          </el-select>
-        </el-form-item>
-
         <el-form-item label="邮箱" prop="email">
           <el-input
             v-model="registerForm.email"
@@ -183,40 +164,6 @@ const sendingCode = ref(false)
 const countdown = ref(0)
 const timer = ref<number | null>(null)
 
-// 学院列表
-const colleges = ref([
-  '计算机学院',
-  '数学与统计学院',
-  '物理科学与技术学院',
-  '化学与分子科学学院',
-  '生命科学学院',
-  '资源与环境科学学院',
-  '水利水电学院',
-  '电气与自动化学院',
-  '城市设计学院',
-  '土木建筑工程学院',
-  '机械与制造工程学院',
-  '动力与机械学院',
-  '遥感信息工程学院',
-  '国际软件学院',
-  '印刷与包装系',
-  '经济与管理学院',
-  '法学院',
-  '文学院',
-  '新闻与传播学院',
-  '外国语言文学学院',
-  '历史学院',
-  '哲学学院',
-  '艺术学院',
-  '政治与公共管理学院',
-  '教育科学研究院',
-  '社会学院',
-  '信息管理学院',
-  '国学院',
-  '马克思主义学院',
-  '体育部',
-])
-
 // 注册表单
 const registerForm = reactive<RegisterRequest & { confirmPassword: string }>({
   username: '',
@@ -224,9 +171,6 @@ const registerForm = reactive<RegisterRequest & { confirmPassword: string }>({
   password: '',
   vrfcode: '',
   confirmPassword: '',
-  realName: '',
-  studentId: '',
-  major: '',
   phone: '',
 })
 

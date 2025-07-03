@@ -239,11 +239,40 @@ export const getPendingClubApplications = async (params?: {
   if(getIsUsingMockAPI()){
     return await mockClub.mockGetPendingClubApplications(params)
   }
+  
   const response = await request.get('/api/admin/club-applications', { params })
+  
+  // 如果有数据，获取每个申请者的详细用户信息
+  if (response.data && response.data.list) {
+    const { getUserById } = await import('@/api/auth')
+    
+    for (const application of response.data.list) {
+      if (application.userId) {
+        try {
+          const userInfo = await getUserById(parseInt(application.userId))
+          // 补充用户信息
+          application.username = userInfo.username
+          application.realName = userInfo.realName || ''
+          application.avatar_url = userInfo.avatar_url
+          application.studentId = userInfo.studentId || ''
+          application.major = userInfo.major || ''
+          application.phone = userInfo.phone || ''
+          application.email = userInfo.email
+        } catch (error) {
+          console.warn(`获取申请者 ${application.userId} 信息失败:`, error)
+          // 设置默认值
+          application.username = application.username || `用户${application.userId}`
+          application.realName = application.realName || '未知用户'
+          application.avatar_url = application.avatar_url || ''
+        }
+      }
+    }
+  }
+  
   return{
     data: {
       code: response.status,
-      message: response.data,
+      message: response.data?.message || 'success',
       data: response.data,
     },
   }
@@ -602,7 +631,7 @@ export const getClubMembers = async (
     joined_at: item.joined_at || '',
     role_in_club: item.role_in_club || 'member',
     last_active: item.last_active || '',
-    // 这些字段需要从其他地方获取，暂时设为空
+    // 这些字段需要从用户API获取
     username: '',
     realName: '',
     avatar_url: '',
@@ -612,6 +641,27 @@ export const getClubMembers = async (
     phone: '',
     email: ''
   }))
+
+  // 获取每个成员的用户详细信息
+  const { getUserById } = await import('@/api/auth')
+  for (const member of members) {
+    try {
+      const userInfo = await getUserById(parseInt(member.user_id))
+      member.username = userInfo.username
+      member.realName = userInfo.realName || ''
+      member.avatar_url = userInfo.avatar_url
+      member.studentId = userInfo.studentId || ''
+      member.major = userInfo.major || ''
+      member.phone = userInfo.phone || ''
+      member.email = userInfo.email
+    } catch (error) {
+      console.warn(`获取用户 ${member.user_id} 信息失败:`, error)
+      // 设置默认值
+      member.username = `用户${member.user_id}`
+      member.realName = '未知用户'
+      member.avatar_url = ''
+    }
+  }
   
   // 前端处理筛选逻辑
   if (params.role) {
@@ -725,8 +775,39 @@ export const getClubJoinApplications = async (
     status: item.status,
     reject_reason: item.reject_reason || '',
     reviewed_at: item.reviewed_at && item.reviewed_at !== "0001-01-01T00:00:00Z" ? item.reviewed_at : '',
-    club: {} as Club
+    club: {} as Club,
+    // 添加用户信息字段
+    username: '',
+    realName: '',
+    avatar_url: '',
+    studentId: '',
+    major: '',
+    phone: '',
+    email: ''
   }))
+
+  // 获取每个申请者的用户详细信息
+  const { getUserById } = await import('@/api/auth')
+  for (const application of list) {
+    if (application.applicant_id) {
+      try {
+        const userInfo = await getUserById(parseInt(application.applicant_id))
+        application.username = userInfo.username
+        application.realName = userInfo.realName || ''
+        application.avatar_url = userInfo.avatar_url
+        application.studentId = userInfo.studentId || ''
+        application.major = userInfo.major || ''
+        application.phone = userInfo.phone || ''
+        application.email = userInfo.email
+      } catch (error) {
+        console.warn(`获取申请者 ${application.applicant_id} 信息失败:`, error)
+        // 设置默认值
+        application.username = `用户${application.applicant_id}`
+        application.realName = '未知用户'
+        application.avatar_url = ''
+      }
+    }
+  }
   
   console.log('📋 获取的申请列表数据:', list)
   

@@ -306,6 +306,43 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  // 获取待审核的社团创建申请列表（管理员功能）
+  const fetchPendingClubCreationApplications = async (params?: {
+    page?: number
+    pageSize?: number
+    status?: 'pending' | 'approved' | 'rejected'
+  }) => {
+    try {
+      const response = await clubApi.getPendingClubApplications(params)
+      return {
+        list: response.data.data?.list || [],
+        total: response.data.data?.total || 0,
+        page: params?.page || 1,
+        pageSize: params?.pageSize || 10,
+      }
+    } catch (error) {
+      console.error('获取待审核社团创建申请失败:', error)
+      ElMessage.error('获取待审核社团创建申请失败')
+      throw error
+    }
+  }
+
+  // 审核社团创建申请（管理员功能）
+  const reviewClubApplication = async (applicationId: string, data: {
+    status: 'approved' | 'rejected'
+    rejectReason?: string
+  }) => {
+    try {
+      const response = await clubApi.reviewClubApplication(applicationId, data)
+      ElMessage.success(data.status === 'approved' ? '申请审核通过' : '申请已拒绝')
+      return response.data
+    } catch (error) {
+      console.error('审核申请失败:', error)
+      ElMessage.error('审核申请失败')
+      throw error
+    }
+  }
+
   // 获取用户已加入的社团
   const fetchJoinedClubs = async (params?: { page?: number; pageSize?: number }) => {
     try {
@@ -525,6 +562,8 @@ export const useClubStore = defineStore('club', () => {
     applyToCreateClub,
     fetchUserCreatedApplications,
     fetchPendingClubApplications,
+    fetchPendingClubCreationApplications,
+    reviewClubApplication,
     fetchClubPostComments,
   }
 })

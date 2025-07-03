@@ -267,10 +267,10 @@ const formatDate = (dateStr: string) => {
 const loadApplications = async () => {
   try {
     loading.value = true
-    const data = await clubStore.fetchPendingClubApplications({
+    const data = await clubStore.fetchPendingClubCreationApplications({
       page: currentPage.value,
       pageSize: pageSize.value,
-      status: filterStatus.value || undefined
+      status: filterStatus.value as 'pending' | 'approved' | 'rejected' || undefined
     })
     applications.value = data.list
     total.value = data.total
