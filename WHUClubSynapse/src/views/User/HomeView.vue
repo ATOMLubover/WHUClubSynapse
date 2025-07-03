@@ -231,7 +231,7 @@
         </el-card>
 
         <!-- 快速入口 -->
-        <el-card v-if="authStore.isLoggedIn" class="sidebar-card">
+        <el-card v-if="authStore.isLoggedIn && !authStore.isGuest" class="sidebar-card">
           <template #header>
             <div class="card-header">
               <el-icon><Menu /></el-icon>
@@ -513,6 +513,17 @@ onMounted(async () => {
   // 检查AI服务可用性
   await checkAiAvailability()
   categories.value = clubStore.categoriesList
+
+  // 获取社团数据
+  try {
+    await clubStore.fetchClubs()
+    await clubStore.fetchFavoriteClubs()
+    await clubStore.fetchPendingClubApplications({})
+    await clubStore.fetchJoinedClubs()
+    await clubStore.fetchLatestClubs(6)
+  } catch (error) {
+    console.error('获取社团数据失败:', error)
+  }
 })
 </script>
 

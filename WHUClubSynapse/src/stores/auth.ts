@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(localStorage.getItem('token'))
   const loading = ref(false)
+  const isGuest=ref(true)
 
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
@@ -103,9 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 退出登录
   const logout = async () => {
     try {
-      if (token.value) {
-        // await authApi.logout()
-      }
+     isGuest.value=true
     } catch (error) {
       console.error('退出登录失败:', error)
     } finally {
@@ -238,6 +237,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     loading,
+    isGuest,
     // 计算属性
     isLoggedIn,
     isAdmin,

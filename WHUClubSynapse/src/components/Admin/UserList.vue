@@ -123,7 +123,6 @@
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="showUserDetail(row)"> 详情 </el-button>
             <el-button type="warning" size="small" @click="editUser(row)"> 编辑 </el-button>
-            <el-button type="danger" size="small" @click="deleteUser(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -297,24 +296,6 @@ const editUser = (user: any) => {
 // 查看用户详情
 const showUserDetail = (user: any) => {
   ElMessage.info(`查看用户详情: ${user.realName}`)
-}
-
-// 删除用户
-const deleteUser = async (user: any) => {
-  const action = '删除'
-  try {
-    await ElMessageBox.confirm(`确定要${action}用户 "${user.realName}" 吗？`, '确认操作', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-
-    user.status = user.status === 'active' ? 'disabled' : 'active'
-    ElMessage.success(`${action}成功`)
-    loadUsers()
-  } catch {
-    // 用户取消操作
-  }
 }
 
 // 提交表单

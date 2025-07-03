@@ -18,7 +18,7 @@
 
       <!-- 收藏按钮 - 仅登录用户显示 -->
       <el-button
-        v-if="authStore.isLoggedIn"
+        v-if="authStore.isLoggedIn && !authStore.isGuest"
         class="favorite-btn"
         circle
         size="small"
@@ -62,7 +62,7 @@
       <!-- 操作按钮 -->
       <div class="club-actions">
         <!-- 登录用户显示申请按钮和加入状态 -->
-        <template v-if="authStore.isLoggedIn">
+        <template v-if="authStore.isLoggedIn && !authStore.isGuest">
           <el-button type="primary" size="small" @click.stop="handleApply" :disabled="isDisabled">
             {{ applyButtonText }}
           </el-button>

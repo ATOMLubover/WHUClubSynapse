@@ -140,6 +140,8 @@ import ContentManagement from '../../components/Admin/ContentManagement.vue'
 import SystemSettings from '../../components/Admin/SystemSettings.vue'
 import SystemLogs from '../../components/Admin/SystemLogs.vue'
 import SystemBackup from '../../components/Admin/SystemBackup.vue'
+import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
@@ -178,6 +180,11 @@ const toggleSidebar = () => {
 
 onMounted(() => {
   // 默认显示数据看板
+  if (!useAuthStore().isLoggedIn) {
+    ElMessage.warning('您还未登录，部分功能可能无法正常使用')
+    router.push('/login')
+    return
+  }
   activeMenu.value = 'dashboard'
 })
 </script>

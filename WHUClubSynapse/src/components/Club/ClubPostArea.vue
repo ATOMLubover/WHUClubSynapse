@@ -7,7 +7,7 @@
         @click="showCreateDialog()"
         class="post-btn"
         plain
-        :disabled="!authStore.isLoggedIn"
+        :disabled="!authStore.isLoggedIn || authStore.isGuest"
       >
         <el-icon><Plus /></el-icon> 发帖
       </el-button>

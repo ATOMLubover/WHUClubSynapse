@@ -60,7 +60,12 @@
               placeholder="说点什么吧..."
               :maxlength="500"
             />
-            <el-button type="primary" @click="handleReply" :loading="replyLoading" class="reply-btn"
+            <el-button
+              type="primary"
+              @click="handleReply"
+              :loading="replyLoading"
+              class="reply-btn"
+              :disabled="!authStore.isLoggedIn || authStore.isGuest"
               >回复</el-button
             >
           </div>

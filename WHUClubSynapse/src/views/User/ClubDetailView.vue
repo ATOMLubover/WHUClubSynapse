@@ -395,7 +395,7 @@ const formatDate = (dateStr: string) => {
 }
 
 const handleApply = () => {
-  if (!authStore.isLoggedIn) {
+  if (!authStore.isLoggedIn || authStore.isGuest) {
     ElMessage.warning('请先登录')
     router.push('/login')
     return
@@ -406,7 +406,7 @@ const handleApply = () => {
 
 // 切换收藏状态
 const toggleFavorite = () => {
-  if (!authStore.isLoggedIn) {
+  if (!authStore.isLoggedIn || authStore.isGuest) {
     ElMessage.warning('请先登录')
     return
   }

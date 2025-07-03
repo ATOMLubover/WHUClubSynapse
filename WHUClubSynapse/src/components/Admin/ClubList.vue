@@ -181,9 +181,23 @@ const loadClubs = async () => {
     })
     clubs.value = res.list || res
     total.value = res.total || 0
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载社团列表失败:', error)
-    ElMessage.error('加载社团列表失败')
+
+    // 根据错误类型显示不同的提示
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录后再访问此功能')
+    } else if (error.response?.status === 403) {
+      ElMessage.error('权限不足，无法访问此功能')
+    } else if (error.code === 'ERR_NETWORK') {
+      ElMessage.error('网络连接失败，请检查网络设置')
+    } else {
+      ElMessage.error('加载社团列表失败，请稍后重试')
+    }
+
+    // 设置默认值
+    clubs.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }

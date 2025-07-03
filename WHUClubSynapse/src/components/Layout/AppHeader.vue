@@ -32,7 +32,7 @@
     <!-- 右侧用户操作区 -->
     <div class="header-right">
       <!-- 未登录状态 -->
-      <template v-if="!authStore.isLoggedIn">
+      <template v-if="!authStore.isLoggedIn || authStore.isGuest">
         <el-button @click="goToLogin">登录</el-button>
         <el-button type="primary" @click="goToRegister">注册</el-button>
       </template>
@@ -45,7 +45,10 @@
         </el-badge>
 
         <!-- 用户菜单 -->
-        <el-dropdown @command="handleUserMenuCommand">
+        <el-dropdown
+          @command="handleUserMenuCommand"
+          v-if="!authStore.isGuest && authStore.isLoggedIn"
+        >
           <div class="user-info">
             <el-avatar :src="authStore.user?.avatar_url" :size="32">
               {{ authStore.user?.realName?.charAt(0) }}
@@ -221,7 +224,9 @@ const handleNotification = () => {
   notificationDialogVisible.value = true
 }
 
-onMounted(() => {})
+onMounted(() => {
+  console.log(authStore.isGuest)
+})
 </script>
 
 <style scoped>

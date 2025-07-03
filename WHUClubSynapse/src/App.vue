@@ -6,6 +6,7 @@ import { useClubStore } from '@/stores/club'
 import PreferenceSetupDialog from '@/components/User/PreferenceSetupDialog.vue'
 import type { UserPreferences } from '@/types'
 import { ElNotification, ElMessage } from 'element-plus'
+import { fa } from 'element-plus/es/locales.mjs'
 
 // 认证store
 const authStore = useAuthStore()
@@ -28,7 +29,7 @@ const handlePreferenceSave = async (preferences: UserPreferences) => {
     // 使用新的updateUserInfo方法保存偏好设置
     await authStore.updateUserInfo({
       preferences: preferences,
-      tags: preferences.tags
+      tags: preferences.tags,
     })
     showPreferenceDialog.value = false
     ElMessage.success('偏好设置保存成功')
@@ -68,27 +69,29 @@ onMounted(async () => {
   console.log('App开始初始化')
   try {
     // 并行初始化认证和获取社团分类
-    const [authResult, categoriesResult] = await Promise.allSettled([
-      authStore.initialize(),
-      clubStore.fetchCategoriesList(),
-    ])
+    const [authResult] = await Promise.allSettled([authStore.initialize()])
 
     if (authResult.status === 'rejected') {
       console.error('认证初始化失败:', authResult.reason)
     }
+
+    if (!authStore.isLoggedIn) {
+      authStore.login({ username: 'guest', password: '123456a' })
+      ElMessage.warning('您还未登录，部分功能可能无法正常使用')
+      authStore.isGuest = true
+      //设计一个游客登录账号
+      return
+    }
+    if (authStore.user?.username == 'guest') {
+      ElMessage.warning('您还未登录，部分功能可能无法正常使用')
+      authStore.isGuest = true
+    } else {
+      authStore.isGuest = false
+    }
+    const [categoriesResult] = await Promise.allSettled([clubStore.fetchCategoriesList()])
+
     if (categoriesResult.status === 'rejected') {
       console.error('分类数据初始化失败:', categoriesResult.reason)
-    }
-
-    // 获取社团数据
-    try {
-      await clubStore.fetchClubs()
-      await clubStore.fetchFavoriteClubs()
-      await clubStore.fetchPendingClubApplications({})
-      await clubStore.fetchJoinedClubs()
-      await clubStore.fetchLatestClubs(6)
-    } catch (error) {
-      console.error('获取社团数据失败:', error)
     }
 
     // checkPreferenceSetup()
