@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
 import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost, mockGetClubJoinApplications } from './mock/club'
 import { getUserById } from './auth'
+import { config } from '@/config'
 
 // 获取动态配置
 const getIsUsingMockAPI = () => {
@@ -269,36 +270,17 @@ export const reviewClubApplication = async (applicationId: string, data: {
 // TODO:更新社团信息（社团管理员功能）
 export const updateClub = async (
   id: string,
-  data: Partial<{
+  data: {
     name: string
-    description: string
-    category: string
-    maxMembers: number
+    desc: string
+    category_id: number
     tags: string[]
-    coverImage: string
-    introduction: string
-    contactInfo: {
-      qq?: string
-      wechat?: string
-      email?: string
-      phone?: string
-      address?: string
-    }
-    announcements: string[]
     requirements: string
-    meetingTime: string
-    meetingLocation: string
-    activities: Array<{
-      id: number
-      title: string
-      description: string
-      time: string
-    }>
-  }>,
+  }
 ): Promise<{ data: ApiResponse<Club> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockUpdateClub(id, data)
-    : await request.put(`/clubs/${id}`, data)
+    : await request.post(`/api/club/pub/update/${id}`, data)
 }
 
 // TODO:删除社团（管理员功能）
@@ -402,7 +384,7 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
         return {
           ...item,
           authorName: user.username,
-          authorAvatar: user.avatar_url
+          authorAvatar:`${config.apiBaseUrl}/${user.avatar_url}`
         }
       })
     )
@@ -450,7 +432,7 @@ export const getClubPostComments = async (postId: string, page: number, pageSize
       return {
         ...item,
         authorName: user.username,
-        authorAvatar: user.avatar_url
+        authorAvatar:`${config.apiBaseUrl}/${ user.avatar_url}`
       }
     })
   )
@@ -494,7 +476,23 @@ export const createClubPost = async (data: {
 }
 
 // TODO:回复社团帖子
-export const replyClubPost = mockReplyClubPost
+export const replyClubPost = async (data: {
+  post_id: number
+  user_id: number
+  content: string
+}): Promise<{ data: ApiResponse<null> }> => {
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockReplyClubPost(data)
+  }
+  const response = await request.post('/api/club/post/comment', data)
+  return {
+    data: {
+      code: response.status,
+      message: '回复成功',
+      data: null,
+    },
+  }
+}
 
 // TODO:获取社团成员列表
 export const getClubMembers = async (
@@ -915,6 +913,10 @@ export const getUserCreatedApplications = async (): Promise<ClubCreatedApplicati
  const response = await request.get('/api/club/my_createapplis')
   const clubcreateapplication: ClubCreatedApplication[] = response.data
   console.log(clubcreateapplication)
+
+  if(clubcreateapplication==null){
+    return []
+  }
   
   return clubcreateapplication.map((item)=>{
     if(item.reviewed_at=="0001-01-01 00:00:00"){
@@ -924,3 +926,37 @@ export const getUserCreatedApplications = async (): Promise<ClubCreatedApplicati
   })  
 }
 
+
+// 上传社团logo
+export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data: ApiResponse<string> }> => {
+  if (getIsUsingMockAPI()) {
+    // 模拟上传成功，返回一个假的logoURL
+    return {
+      data: {
+        code: 200,
+        message: 'logo上传成功',
+        data: 'https://cdn.jsdelivr.net/gh/whu-asset/static/logo-default.png'
+      }
+    }
+  }
+
+  const formData = new FormData()
+  formData.append('logo', file)
+
+  const response = await request.post(`/api/club/pub/update_logo/${clubId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+  console.log('response', response)
+  
+  return {
+    data: {
+      code: response.status,
+      message: 'logo上传成功',
+      data: response.data.path // 假设后端返回的是新的logoURL
+    }
+  }
+}
+
+// /api/club/pub/update_logo

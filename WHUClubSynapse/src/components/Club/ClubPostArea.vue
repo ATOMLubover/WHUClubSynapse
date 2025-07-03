@@ -4,7 +4,7 @@
       <h2>社团帖子区</h2>
       <el-button
         type="primary"
-        @click="authStore.isLoggedIn ? (showCreate = true) : ElMessage.warning('请先登录')"
+        @click="showCreateDialog()"
         class="post-btn"
         plain
         :disabled="!authStore.isLoggedIn"
@@ -105,6 +105,16 @@ const pageSize = 5
 const showCreate = ref(false)
 const createForm = ref({ title: '', content: '' })
 const createLoading = ref(false)
+
+const showCreateDialog = () => {
+  if (authStore.isLoggedIn && props.club?.status == 'joined') {
+    showCreate.value = true
+  } else if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+  } else {
+    ElMessage.warning('请先加入社团')
+  }
+}
 
 // 使用store中的方法
 const fetchPosts = async () => {

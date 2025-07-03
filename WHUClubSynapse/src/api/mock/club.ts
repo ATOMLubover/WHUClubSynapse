@@ -787,12 +787,18 @@ export const mockCreateClubPost = async (
 }
 
 export const mockReplyClubPost = async (
-  reply: Omit<ClubPostComment, 'id' | 'createdAt'>
-): Promise<{ data: ApiResponse<ClubPostComment> }> => {
+  data: {
+  post_id: number,
+  user_id: number,
+  content: string
+  }
+): Promise<{ data: ApiResponse<null> }> => {
   await delay(300)
   
   const newReply: ClubPostComment = {
-    ...reply,
+    post_id: data.post_id.toString(),
+    user_id: data.user_id,
+    content: data.content,
     comment_id: 'r' + (mockClubPostReplies.length + 1),
     created_at: new Date().toISOString()
   }
@@ -805,7 +811,7 @@ export const mockReplyClubPost = async (
     data: {
       code: 200,
       message: '回复成功',
-      data: newReply
+      data: null
     }
   }
 }

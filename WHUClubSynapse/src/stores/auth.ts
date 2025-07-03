@@ -32,6 +32,9 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.token
       localStorage.setItem('token', response.token)
 
+      // 登录成功后获取完整的用户信息
+      await fetchUserInfo()
+
       return response.data
     } catch (error) {
       console.error('登录失败:', error)
@@ -65,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const userInfo = await authApi.getCurrentUser()
       if (userInfo.avatar_url == '') {
-        userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/default.jpg`
+        userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_avatars/default.jpg`
         // userInfo.avatar_url = `${config.apiBaseUrl}/pub/user_logos/_${userInfo.user_id}`
 
       }
@@ -100,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       if (token.value) {
-        await authApi.logout()
+        // await authApi.logout()
       }
     } catch (error) {
       console.error('退出登录失败:', error)
@@ -112,12 +115,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // TODO:初始化（检查登录状态）
+  // 初始化（检查登录状态）
   const initialize = async () => {
     if (token.value) {
       try {
         await fetchUserInfo()
+        console.log('用户信息初始化成功:', user.value)
       } catch (error) {
+        console.error('初始化失败，清除无效token:', error)
         // 自动清除无效token
         logout()
       }
