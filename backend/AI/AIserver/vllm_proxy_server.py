@@ -10,7 +10,7 @@ import os
 import sys
 import summary
 from openai import OpenAI
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 import time
 import re
 import signal
@@ -2076,6 +2076,65 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
     finally:
         active_tasks.remove(task_id)
 
+@app.post("/generate/activity_post", response_model=ContentGenerationResponse)
+async def generate_activity_post(request: ContentGenerationRequest):
+    """
+    根据社团活动的实际开展情况，生成活动总结性质的社团动态。
+    
+    Args:
+        request: 包含活动内容、文风和效果要求的请求体。
+        content应包含：活动名称、时间地点、参与人数、活动过程、活动亮点、反馈等信息。
+        
+    Returns:
+        ContentGenerationResponse: 包含生成的动态文本。
+    """
+    try:
+        base_prompt = """你是一位专业的社团活动总结撰写专家，擅长将活动的实际开展情况转化为引人入胜的社交媒体动态。
+请根据我提供的活动总结内容{content}，以{style}的文风进行改写，确保改写后的内容能达到{expection}的效果。
+
+要求：
+1. 突出活动的实际效果和价值
+2. 展现参与者的收获和感受
+3. 总结活动的精彩瞬间和亮点
+4. 适当引用参与者的反馈或感言
+5. 体现社团的专业性和影响力
+6. 为后续活动预热（如有类似活动计划）
+7. 增加适当的emoji表情增强表现力
+8. 适当添加图片位置提示（如：[此处可插入活动现场照片]）
+9. 添加合适的话题标签
+
+重点描述：
+- 活动实际效果
+- 参与者反馈
+- 精彩瞬间
+- 社团价值
+- 未来展望"""
+        
+        # 格式化Prompt
+        full_prompt = base_prompt.format(
+            content=request.content,
+            style=request.style,
+            expection=request.expection
+        )
+        
+        logger.info(f"生成社团动态总结Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        generated_text = ""
+        for chunk in tongyi_chat_embedded(messages=full_prompt):
+            if chunk.get("type") == "content":
+                generated_text += chunk.get("content", "")
+            elif chunk.get("type") == "error":
+                raise Exception(chunk.get("content", "AI生成服务错误"))
+
+        if not generated_text.strip():
+            raise ValueError("AI未返回有效的生成内容。")
+            
+        return ContentGenerationResponse(generated_text=generated_text.strip())
+
+    except Exception as e:
+        logger.error(f"AI社团动态总结生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI社团动态总结生成失败: {e}")
+
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
     print(f"服务器地址: http://{config.server_host}:{config.server_port}")
@@ -2111,7 +2170,8 @@ if __name__ == "__main__":
         app,
         host=config.server_host,
         port=config.server_port,
-        log_level=config.log_level.lower()
+        log_level=config.log_level.lower(),
+        http={'keepalive': 0}  # 禁用 keep-alive
     )
     server = UvicornServer(config=config)
     

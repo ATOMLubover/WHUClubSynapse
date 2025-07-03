@@ -891,6 +891,107 @@ def test_budget_warning():
         print(f"智能财务助理 - 预算超支预警测试错误: {e}")
         return False
 
+def test_generate_activity_post():
+    """测试社团动态总结生成接口"""
+    print("\n=== 测试社团动态总结生成 ===")
+    
+    url = f"{PROXY_SERVER_URL}/generate/activity_post"
+    
+    # 测试用例1：文艺活动总结
+    payload = {
+        "content": """吉他社"弦音之夜"音乐分享会
+时间：2024年3月15日晚7点-9点
+地点：学生活动中心音乐厅
+参与人数：约80人
+活动过程：
+1. 开场由社长带来一首《海阔天空》
+2. 6组同学进行了原创音乐展示
+3. 举办了即兴吉他弹唱互动环节
+4. 进行了乐器保养知识分享
+
+活动亮点：
+- 原创歌曲《校园晚风》获得热烈反响
+- 多名新成员首次登台表演
+- 现场观众积极参与互动环节
+
+参与者反馈：
+- "第一次在台上表演，很紧张但很快乐"
+- "学到了很多吉他保养知识"
+- "期待下次活动"
+
+后续计划：
+每月举办一次主题音乐分享会""",
+        "style": "温暖真诚",
+        "expection": "展现活动温暖氛围，吸引更多音乐爱好者加入"
+    }
+    
+    print("发送请求...")
+    print(f"活动内容: {payload['content'][:100]}...")
+    print(f"期望文风: {payload['style']}")
+    print(f"期望效果: {payload['expection']}")
+    
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        print("\n生成结果:")
+        print(result["generated_text"])
+        print("\n请求成功 ✓")
+    except Exception as e:
+        print(f"\n请求失败: {str(e)} ✗")
+        return False
+    
+    # 测试用例2：学术活动总结
+    payload = {
+        "content": """Python编程竞赛总结
+时间：2024年3月25日14:00-17:00
+地点：第一教学楼机房
+参与人数：42人
+
+比赛过程：
+1. 分为初级和高级两个组别
+2. 共设计10道算法题目
+3. 3小时比赛时间
+4. 设立多个奖项
+
+活动亮点：
+- 新生王同学以满分成绩获得初级组冠军
+- 高级组产生3个优秀解法
+- 参赛者普遍反映题目设计合理
+
+参与者反馈：
+- "题目难度递进，很适合学习"
+- "比赛平台很专业"
+- "希望能多举办类似比赛"
+
+数据统计：
+- 平均完成题目数：6道
+- 满分人数：2人
+- 参与年级：大一至大四
+
+后续计划：
+每学期举办两次编程竞赛""",
+        "style": "专业严谨",
+        "expection": "展示比赛专业性和含金量"
+    }
+    
+    print("\n发送第二个请求...")
+    print(f"活动内容: {payload['content'][:100]}...")
+    print(f"期望文风: {payload['style']}")
+    print(f"期望效果: {payload['expection']}")
+    
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        print("\n生成结果:")
+        print(result["generated_text"])
+        print("\n请求成功 ✓")
+        return True
+    except Exception as e:
+        print(f"\n请求失败: {str(e)} ✗")
+        return False
+
 def main():
     """
     运行所有测试
@@ -915,10 +1016,11 @@ def main():
         # ("智能申请筛选", test_screen_application),
         # ("社团氛围透视", test_club_atmosphere),
         # ("智能活动策划", test_plan_event),
-        ("智能财务助理 - 对话式记账", test_financial_bookkeeping),
-        ("智能财务助理 - 修改预算", test_update_budget),
-        ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
-        ("智能财务助理 - 预算超支预警", test_budget_warning)
+        # ("智能财务助理 - 对话式记账", test_financial_bookkeeping),
+        # ("智能财务助理 - 修改预算", test_update_budget),
+        # ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
+        # ("智能财务助理 - 预算超支预警", test_budget_warning),
+        ("社团动态生成", test_generate_activity_post)
     ]
     
     results = []
