@@ -134,7 +134,7 @@
                       >查看详情</el-button
                     >
                     <el-button size="small" @click="viewActivities(club)">查看活动</el-button>
-                    <el-button size="small" type="danger" @click=""> 退出社团 </el-button>
+                    <el-button size="small" type="danger" @click="quit(club)"> 退出社团 </el-button>
                   </div>
                 </div>
               </el-col>
@@ -208,6 +208,11 @@ const filterCategory = ref('')
 const sortBy = ref('joinedAt_desc')
 const showQuitDialog = ref(false)
 const quitClub = ref<Club | null>(null)
+
+const quit = (club: Club) => {
+  showQuitDialog.value = true
+  quitClub.value = club
+}
 
 // 获取状态类型
 const getStatusType = (status: string) => {

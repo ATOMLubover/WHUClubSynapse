@@ -376,9 +376,32 @@ export const getManagedClubs = async (
 
 // TODO:退出社团
 export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
-  return getIsUsingMockAPI()
-    ? await mockClub.mockQuitClub(clubId)
-    : await request.delete(`/user/joined-clubs/${clubId}`)
+  if(getIsUsingMockAPI()){
+    return await mockClub.mockQuitClub(clubId)
+  }
+  const response = await request.post(`/api/club/quit/${clubId}`)
+  return{
+    data: {
+      code: response.status, 
+      message: response.data,
+      data: null,
+    },
+  }
+}
+
+// TODO:解散社团（社团管理员功能）
+export const dismissClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
+  if(getIsUsingMockAPI()){
+    // return await mockClub.mockDismissClub(clubId)
+  }
+  const response = await request.post(`/api/club/pub/assemble/${clubId}`)
+  return{
+    data: {
+      code: response.status,
+      message: response.data,
+      data: null,
+    },
+  }
 }
 
 // 获取社团帖子列表

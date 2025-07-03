@@ -411,6 +411,20 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
+  //创建者解散社团
+  const dismissClub = async (clubId: string) => {
+    try {
+      const response = await clubApi.dismissClub(clubId)
+      ElMessage.success('解散社团成功')
+      return response.data.data
+    }
+    catch(error){
+      console.error('解散社团失败:', error)
+      ElMessage.error('解散社团失败')
+      throw error
+    }
+  }
+
   // TODO:更新社团信息
   const updateClub = async (
     clubId: string,
@@ -559,6 +573,7 @@ export const useClubStore = defineStore('club', () => {
     fetchJoinedClubs,
     fetchManagedClubs,
     quitClub,
+    dismissClub,
     fetchClubPosts,
     getPostById,
     updateClub,
