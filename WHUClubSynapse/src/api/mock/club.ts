@@ -77,6 +77,103 @@ export const mockGetClubBasic = async (clubId: string): Promise<Club> => {
   return club
 }
 
+// 模拟获取社团加入申请列表
+export const mockGetClubJoinApplications = async (
+  clubId: string,
+  params: {
+    page?: number
+    pageSize?: number
+    status?: string
+    keyword?: string
+  } = {}
+): Promise<PaginatedData<ClubApplication>> => {
+  await delay(500)
+  
+  // 模拟数据 - 申请加入列表
+  const mockApplications: ClubApplication[] = [
+    {
+      appli_id: '1',
+      applied_at: '2024-01-15T10:30:00Z',
+      club_id: clubId,
+      applicant_id: '456',
+      reason: '我对这个社团很感兴趣，希望能加入',
+      status: 'pending',
+      reject_reason: '',
+      reviewed_at: '',
+      club: {} as Club,
+      username: 'student001',
+      realName: '张三',
+      avatar_url: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+      studentId: '2021123001',
+      major: '计算机科学与技术',
+      phone: '13800138001',
+      email: 'zhangsan@example.com'
+    },
+    {
+      appli_id: '2',
+      applied_at: '2024-01-16T14:20:00Z',
+      club_id: clubId,
+      applicant_id: '789',
+      reason: '希望通过社团活动提升自己',
+      status: 'approved',
+      reject_reason: '',
+      reviewed_at: '2024-01-17T09:00:00Z',
+      club: {} as Club,
+      username: 'student002',
+      realName: '李四',
+      avatar_url: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+      studentId: '2021123002',
+      major: '软件工程',
+      phone: '13800138002',
+      email: 'lisi@example.com'
+    },
+    {
+      appli_id: '3',
+      applied_at: '2024-01-17T16:45:00Z',
+      club_id: clubId,
+      applicant_id: '123',
+      reason: '想要参与社团组织的各项活动',
+      status: 'rejected',
+      reject_reason: '当前成员已满',
+      reviewed_at: '2024-01-18T10:30:00Z',
+      club: {} as Club,
+      username: 'student003',
+      realName: '王五',
+      avatar_url: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+      studentId: '2021123003',
+      major: '信息安全',
+      phone: '13800138003',
+      email: 'wangwu@example.com'
+    }
+  ]
+
+  // 应用筛选
+  let filteredApplications = mockApplications
+  if (params.status) {
+    filteredApplications = filteredApplications.filter(app => app.status === params.status)
+  }
+  if (params.keyword) {
+    filteredApplications = filteredApplications.filter(app => 
+      (app.reason && app.reason.includes(params.keyword!)) ||
+      (app.realName && app.realName.includes(params.keyword!)) ||
+      (app.username && app.username.includes(params.keyword!)) ||
+      (app.studentId && app.studentId.includes(params.keyword!))
+    )
+  }
+
+  const { page = 1, pageSize = 10 } = params
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const list = filteredApplications.slice(start, end)
+
+  return {
+    list,
+    total: filteredApplications.length,
+    page,
+    pageSize,
+  }
+}
+
 // 模拟获取社团详情
 export const mockGetClubDetail = async (id: string): Promise<Club > => {
   await delay(500)

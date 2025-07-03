@@ -192,7 +192,7 @@
               >
                 <div class="application-card-header">
                   <el-avatar
-                    :src="application.club?.logo_url || ''"
+                    :src="application.avatar_url || ''"
                     :size="50"
                     class="applicant-avatar"
                   />
@@ -204,7 +204,7 @@
                 </div>
 
                 <div class="application-card-body">
-                  <h4 class="applicant-name">{{ application.club?.club_name || '申请人' }}</h4>
+                  <h4 class="applicant-name">{{ application.realName || application.username || '申请人' }}</h4>
                   <p class="application-id">申请ID: #{{ application.appli_id }}</p>
 
                   <div class="application-info-grid">
@@ -238,7 +238,7 @@
 
                 <div class="application-card-footer">
                   <div class="application-meta">
-                    <span class="club-name">{{ application.club?.club_name }}</span>
+                    <span class="applicant-info">{{ application.studentId || '学号未填写' }} | {{ application.major || '专业未填写' }}</span>
                   </div>
 
                   <div v-if="application.status === 'pending'" class="application-actions">
@@ -438,12 +438,12 @@
         <!-- 左侧：申请者信息 -->
         <div class="application-info-section">
           <div class="member-header">
-            <el-avatar :src="currentApplication.club?.logo_url" :size="80" />
+            <el-avatar :src="currentApplication.avatar_url" :size="80" />
             <div class="member-basic-info">
               <h3 class="member-name">
-                {{ currentApplication.club?.club_name }}
+                {{ currentApplication.realName || currentApplication.username }}
               </h3>
-              <p class="member-username">@{{ currentApplication.club?.club_name }}</p>
+              <p class="member-username">@{{ currentApplication.username }}</p>
             </div>
           </div>
           <el-divider />
@@ -573,7 +573,9 @@ import AIApplicationScreening from '@/components/Chat/AIApplicationScreening.vue
 import {
   getClubMembers,
   getClubApplications,
+  getClubJoinApplications,
   reviewApplication,
+  reviewJoinApplication,
   removeMember as removeMemberFromClub,
   changeMemberRole,
 } from '@/api/club'
@@ -708,19 +710,16 @@ const loadApplications = async () => {
     // 使用 nextTick 确保 DOM 更新完成
     await nextTick()
 
-    const response = await clubStore.fetchPendingClubApplications({
+    // 使用新的API获取社团加入申请列表
+    const response = await getClubJoinApplications(club.value.club_id, {
       page: applicationCurrentPage.value,
       pageSize: applicationPageSize.value,
       status: applicationStatusFilter.value,
       keyword: applicationSearchKeyword.value,
     })
 
-    if (response.data.code === 200) {
-      applications.value = response.data.data.list
-      applicationTotal.value = response.data.data.total
-    } else {
-      ElMessage.error(response.data.message || '加载申请列表失败')
-    }
+    applications.value = response.list
+    applicationTotal.value = response.total
   } catch (error) {
     console.error('加载申请列表失败:', error)
     ElMessage.error('加载申请列表失败，请重试')
@@ -779,7 +778,7 @@ const handleApplicationCurrentChange = (page: number) => {
 const approveApplication = async (application: ClubApplication) => {
   try {
     await ElMessageBox.confirm(
-      `确定同意 ${application.realName || application.username} 的加入申请吗？`,
+      `确定同意申请人的加入申请吗？`,
       '确认操作',
       {
         confirmButtonText: '确定',
@@ -788,15 +787,27 @@ const approveApplication = async (application: ClubApplication) => {
       },
     )
 
-    const response = await reviewApplication(club.value!.club_id, {
-      applicationId: application.appli_id,
-      action: 'approve',
+    const response = await reviewJoinApplication(application.appli_id, {
+      result: 'approve'
     })
 
     if (response.data.code === 200) {
       ElMessage.success('申请已通过')
-      loadApplications()
+      
+      // 立即更新本地数据
+      const index = applications.value.findIndex(
+        (app) => app.appli_id === application.appli_id,
+      )
+      if (index !== -1) {
+        applications.value[index].status = 'approved'
+        applications.value[index].reviewed_at = new Date().toISOString()
+        applications.value[index].reviewerId = authStore.user?.id?.toString()
+        applications.value[index].reviewerName = authStore.user?.username
+      }
+      
       loadMembers()
+    } else {
+      ElMessage.error(response.data.message || '审核申请失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -816,9 +827,8 @@ const confirmReject = async () => {
 
   try {
     rejectLoading.value = true
-    const response = await reviewApplication(club.value!.club_id, {
-      applicationId: currentApplication.value.appli_id,
-      action: 'reject',
+    const response = await reviewJoinApplication(currentApplication.value.appli_id, {
+      result: 'reject',
       reason: rejectForm.value.reason,
     })
 
@@ -840,6 +850,8 @@ const confirmReject = async () => {
       showRejectDialog.value = false
       rejectForm.value.reason = ''
       currentApplication.value = null
+    } else {
+      ElMessage.error(response.data.message || '拒绝申请失败')
     }
   } catch (error) {
     console.error('拒绝申请失败:', error)
@@ -982,7 +994,7 @@ const showApplicationDetail = (application: ClubApplication) => {
 const approveApplicationFromDetail = async (application: ClubApplication) => {
   try {
     await ElMessageBox.confirm(
-      `确定同意 ${application.realName || application.username} 的加入申请吗？`,
+      `确定同意申请人的加入申请吗？`,
       '确认操作',
       {
         confirmButtonText: '确定',
@@ -991,9 +1003,8 @@ const approveApplicationFromDetail = async (application: ClubApplication) => {
       },
     )
 
-    const response = await reviewApplication(club.value!.club_id, {
-      applicationId: application.appli_id,
-      action: 'approve',
+    const response = await reviewJoinApplication(application.appli_id, {
+      result: 'approve'
     })
 
     if (response.data.code === 200) {
@@ -1015,6 +1026,8 @@ const approveApplicationFromDetail = async (application: ClubApplication) => {
       setTimeout(() => {
         loadMembers()
       }, 100)
+    } else {
+      ElMessage.error(response.data.message || '审核申请失败')
     }
   } catch (error) {
     if (error !== 'cancel') {

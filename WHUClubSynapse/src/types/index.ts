@@ -211,11 +211,25 @@ export interface ClubApplication {
   appli_id: string
   reject_reason: string
   club_id: string
+  applicant_id?: string  // 申请者用户ID
   reason: string
   applied_at: string
   reviewed_at: string
   status: string
-  club:Club
+  club: Club
+  
+  // 扩展字段（前端使用）
+  username?: string
+  realName?: string
+  avatar_url?: string
+  studentId?: string
+  major?: string
+  phone?: string
+  email?: string
+  interestedCategories?: string[]
+  tags?: string[]
+  reviewerId?: string
+  reviewerName?: string
 }
 
 // 用户创建的社团申请记录

@@ -3,7 +3,7 @@ import type { Club, PaginatedData, SearchParams, ApiResponse, ClubMember, ClubAp
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import * as mockClub from './mock/club'
-import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost } from './mock/club'
+import { mockGetClubPosts, mockGetClubPostDetail, mockGetClubPostReplies, mockCreateClubPost, mockReplyClubPost, mockGetClubJoinApplications } from './mock/club'
 import { getUserById } from './auth'
 
 // 获取动态配置
@@ -609,7 +609,102 @@ export const getClubApplications = async (
   }
 }
 
-// 审核申请
+// 获取社团加入申请列表 (根据社团ID)
+export const getClubJoinApplications = async (
+  clubId: string,
+  params: {
+    page?: number
+    pageSize?: number
+    status?: string
+    keyword?: string
+  } = {},
+): Promise<PaginatedData<ClubApplication>> => {
+  if (getIsUsingMockAPI()) {
+    return await mockGetClubJoinApplications(clubId, params)
+  }
+
+  const response = await request.get(`/api/join_applis/${clubId}`)
+  if (response.data == null) {
+    return {
+      list: [],
+      total: 0,
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
+    }
+  }
+  
+  let list: ClubApplication[] = response.data.map((item: any) => ({
+    appli_id: item.appli_id?.toString(),
+    applied_at: item.applied_at,
+    club_id: item.club_id?.toString(),
+    applicant_id: item.applicant_id?.toString(),
+    reason: item.reason || '',
+    status: item.status,
+    reject_reason: item.reject_reason || '',
+    reviewed_at: item.reviewed_at && item.reviewed_at !== "0001-01-01T00:00:00Z" ? item.reviewed_at : '',
+    club: {} as Club
+  }))
+  
+  // 应用筛选
+  if (params.status) {
+    list = list.filter(app => app.status === params.status)
+  }
+  if (params.keyword) {
+    list = list.filter(app => 
+      (app.reason && app.reason.includes(params.keyword!)) || 
+      (app.applicant_id && app.applicant_id.includes(params.keyword!))
+    )
+  }
+
+  // 应用分页
+  const { page = 1, pageSize = 10 } = params
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const paginatedList = list.slice(start, end)
+
+  return {
+    list: paginatedList,
+    total: list.length,
+    page,
+    pageSize,
+  }
+}
+
+// 审核社团加入申请
+export const reviewJoinApplication = async (
+  applicationId: string,
+  data: {
+    result: 'approve' | 'reject'
+    reason?: string
+  }
+): Promise<{ data: ApiResponse<null> }> => {
+  if (getIsUsingMockAPI()) {
+    // 模拟审核
+    return {
+      data: {
+        code: 200,
+        message: data.result === 'approve' ? '通过社团更新申请成功' : '通过社团更新申请成功',
+        data: null,
+      },
+    }
+  }
+
+  const response = await request.put('/api/proc_join', {
+    join_appli_id: parseInt(applicationId),
+    result: data.result,
+    reason: data.reason || ''
+  })
+  
+  return {
+    data: {
+      code: response.status,
+      message: response.data || '通过社团更新申请成功',
+      data: null,
+    },
+  }
+}
+
+// 审核申请 (原有的方法，保持兼容)
 export const reviewApplication = async (
   clubId: string,
   data: ApplicationReviewRequest,
