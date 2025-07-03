@@ -7,7 +7,8 @@ import type {
   UserListParams,
   RegisterResponse,
   ApiResponse,
-  UserPreferences
+  UserPreferences,
+  UpdateUserRequest
 } from '@/types'
 import { useConfigStore } from '@/stores/config'
 import * as mockAuth from './mock/auth'
@@ -74,8 +75,8 @@ export const getUserById = async (
   }
   
   const response = await request.get(`/api/user/${id}`)
-  // 直接返回用户对象
-  return response.data
+  // 自动处理extension字段
+  return processUserFromBackend(response.data)
 }
 
 // 5. 管理员获取用户列表
@@ -87,8 +88,8 @@ export const getUserList = async (
   }
   
   const response = await request.get('/api/user/list', { params })
-  // 返回用户数组
-  return response.data
+  // 自动处理每个用户的extension字段
+  return response.data.map((user: any) => processUserFromBackend(user))
 }
 
 // 6. 用户活跃状态刷新（心跳检测）
@@ -201,3 +202,13 @@ export const uploadAvatar = async (file: File): Promise<{ data: ApiResponse<stri
 }
 
 // /api/club/pub/update_logo
+
+/**
+ * 🆕 更新用户信息
+ */
+export async function updateUserInfo(updateData: UpdateUserRequest): Promise<string> {
+  console.log('API updateUserInfo 发送的数据:', updateData)
+  const response = await request.put('/api/user/update', updateData)
+  console.log('API updateUserInfo 后端响应:', response.data)
+  return response.data || '更新用户信息成功'
+}

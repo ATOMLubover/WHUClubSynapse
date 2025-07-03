@@ -3,27 +3,54 @@ export interface User {
   user_id: number
   username: string
   email: string
-  avatar_url: string
-  role: 'user' | 'admin'
-  last_active: string
+  avatar_url?: string
+  role: string
+  last_active?: string
+  extension?: string // 🆕 扩展信息JSON字符串
+  
+  // 以下字段从extension中解析出来，用于前端显示
+  phone?: string
+  realName?: string
+  studentId?: string
+  major?: string
+  bio?: string
+  tags?: string[]
+  
   // 扩展字段（前端使用）
   id?: number // 兼容现有代码
-  studentId?: string
-  realName?: string
-  major?: string
-  phone?: string
   createdAt?: string
   emailVerified?: string
   phoneVerified?: string
-  bio?: string
   status?: 'active' | 'disabled'
+  
   // 用户统计信息
   stats?: UserStats
-  // 用户偏好设置
+  
+  // 用户偏好设置（详细版本，用于偏好设置页面）
   preferences?: UserPreferences
+  
   // 是否已完成偏好设置
   hasCompletedPreferences?: boolean
-  tags?: string[] // 用户特质/爱好标签
+}
+
+// 🆕 用户扩展信息结构
+export interface UserExtension {
+  realName?: string // 真实姓名
+  studentId?: string // 学号
+  major?: string // 专业
+  bio?: string // 个人简介
+  preferences?: Record<string, any> // 偏好设置
+  tags?: string[] // 特质标签
+  phone?: string // 手机号
+}
+
+// 🆕 更新用户信息请求
+export interface UpdateUserRequest {
+  user_id?: number
+  username?: string
+  password?: string
+  email?: string
+  extension?: string
 }
 
 // 用户统计信息类型
