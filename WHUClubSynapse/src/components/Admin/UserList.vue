@@ -295,7 +295,7 @@ const editUser = (user: any) => {
 
 // 查看用户详情
 const showUserDetail = (user: any) => {
-  ElMessage.info(`查看用户详情: ${user.realName}`)
+  ElMessage.info(`查看用户详情: ${user.username}`)
 }
 
 // 提交表单

@@ -51,7 +51,7 @@
         >
           <div class="user-info">
             <el-avatar :src="authStore.user?.avatar_url" :size="32">
-              {{ authStore.user?.realName?.charAt(0) }}
+              {{ authStore.user?.username?.charAt(0) }}
             </el-avatar>
             <span class="username">{{ authStore.user?.username }}</span>
             <el-icon><ArrowDown /></el-icon>
