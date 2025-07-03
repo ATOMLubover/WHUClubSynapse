@@ -114,22 +114,6 @@ export const logout = async (): Promise<ApiResponse<null>> => {
   return getIsUsingMockAPI() ? await mockAuth.mockLogout() : await request.post('/auth/logout')
 }
 
-//TODO:检查用户名是否可用
-export const checkUsername = async (
-  username: string,
-): Promise<{  }> => {
-  return Promise.resolve({})
-}
-
-// TODO:检查邮箱是否可用
-export const checkEmail = async (
-  email: string,
-): Promise<{ available: boolean }> => {
-  return Promise.resolve({
-    available: true,
-  })
-}
-
 // TODO:刷新token
 export const refreshToken = async (): Promise<{ token: string }> => {
   return Promise.resolve({
@@ -181,4 +165,36 @@ export const updateUserPreferences = async (preferences: UserPreferences): Promi
   return getIsUsingMockAPI()
     ? await mockAuth.mockUpdateUserPreferences(preferences)
     : (await request.put('/auth/preferences', preferences)).data
+}
+
+// 上传用户头像
+export const uploadAvatar = async (file: File): Promise<{ data: ApiResponse<string> }> => {
+  if (getIsUsingMockAPI()) {
+    // 模拟上传成功，返回一个假的头像URL
+    return {
+      data: {
+        code: 200,
+        message: '头像上传成功',
+        data: 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png'
+      }
+    }
+  }
+
+  const formData = new FormData()
+  formData.append('avatar', file)
+
+  const response = await request.post('/api/user/upload_avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
+  
+  return {
+    data: {
+      code: response.status,
+      message: '头像上传成功',
+      data: response.data.path // 假设后端返回的是新的头像URL
+    }
+  }
 }

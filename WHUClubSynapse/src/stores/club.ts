@@ -140,8 +140,6 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-
-
   // 获取最新社团
   const fetchLatestClubs = async (limit = 10) => {
     try {
@@ -151,23 +149,6 @@ export const useClubStore = defineStore('club', () => {
     } catch (error) {
       console.error('获取最新社团失败:', error) 
       throw error
-    }
-  }
-
-
-  // 获取社团分类统计
-  // 获取社团分类统计（保留以支持统计功能）
-  const fetchCategoriesStats = async () => {
-    try {
-      categoriesLoading.value = true
-      const response = await clubApi.getClubCategories()
-      // 这里可以更新统计数据，暂时保留接口
-      return response.data.data
-    } catch (error) {
-      console.error('获取社团分类统计失败:', error)
-      throw error
-    } finally {
-      categoriesLoading.value = false
     }
   }
 
@@ -204,6 +185,7 @@ export const useClubStore = defineStore('club', () => {
       const response=await clubApi.favoriteClub(clubId);
       const data=response.data.data;
       ElMessage.success('收藏成功')
+      await fetchFavoriteClubs()
       return data;
     } catch (error) {
       console.error('收藏社团失败:', error)
@@ -218,6 +200,7 @@ export const useClubStore = defineStore('club', () => {
       const response=await clubApi.unfavoriteClub(clubId);
       const data=response.data.data;
       ElMessage.success('取消收藏成功')
+      await fetchFavoriteClubs()
       return data;
     } catch (error) {
       console.error('取消收藏社团失败:', error)
@@ -239,6 +222,7 @@ export const useClubStore = defineStore('club', () => {
           clubs.value[clubIndex].isFavorite = true
         }
       })
+
       return response;
     }
     catch (error){
@@ -331,8 +315,13 @@ export const useClubStore = defineStore('club', () => {
       list=response.list.slice((params.page-1)*params.pageSize,params.page*params.pageSize)}
       else{
       list=response.list
-  }
-      joinedClubs.value = response.list
+      }
+      joinedClubs.value = list
+        clubs.value.forEach((club)=>{
+        if(list.some((c)=>c.club_id==club.club_id)){
+          club.status="joined"
+        }
+      })
       return {
         list:list,
         total:response.total,
@@ -369,7 +358,7 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-  // 退出社团
+  // TODO:退出社团
   const quitClub = async (clubId: string) => {
     try {
       const response = await clubApi.quitClub(clubId)
@@ -382,7 +371,7 @@ export const useClubStore = defineStore('club', () => {
     }
   }
 
-  // 更新社团信息
+  // TODO:更新社团信息
   const updateClub = async (
     clubId: string,
     data: Partial<{
@@ -471,14 +460,27 @@ export const useClubStore = defineStore('club', () => {
     globalPageData.currentPage = 1
   }
 
-  // 帖子相关操作方法
+
 
   // 获取特定社团的帖子
   const fetchClubPosts = async (clubId: string, page: number = 1, pageSize: number = 10) => {
     try {
       postsLoading.value = true
       const response = await clubApi.getClubPosts(clubId, page, pageSize)
+      
+      // 调试：打印原始响应数据
+      console.log('Club Store - 原始 API 响应:', response)
+      console.log('Club Store - 帖子列表:', response.list)
+      if (response.list.length > 0) {
+        console.log('Club Store - 第一个帖子原始数据:', response.list[0])
+        console.log('Club Store - 第一个帖子作者信息:', response.list[0].authorName, response.list[0].author_id)
+      }
+      
       currentClubPosts.value = response.list
+      
+      // 确认设置后的数据
+      console.log('Club Store - 设置后的 currentClubPosts:', currentClubPosts.value)
+      
       return response
     } catch (error) {
       console.error('获取社团帖子失败:', error)
@@ -493,6 +495,19 @@ export const useClubStore = defineStore('club', () => {
   // 根据ID查找帖子
   const getPostById = (postId: string): ClubPost | undefined => {
     return clubposts.value.find(post => post.post_id === postId)
+  }
+
+  // 获取社团帖子回复列表
+  const fetchClubPostComments = async (postId: string,page:number,pageSize:number) => {
+    try {
+      const response = await clubApi.getClubPostComments(postId,page,pageSize)
+      return response
+    }
+    catch(error){
+      console.error('获取社团帖子回复列表失败:', error)
+      ElMessage.error('获取社团帖子回复列表失败')
+      throw error
+    }
   }
 
   return {
@@ -528,7 +543,6 @@ export const useClubStore = defineStore('club', () => {
     searchClubs,
     fetchClubDetail,
     fetchLatestClubs,
-    fetchCategoriesStats, // 获取分类统计
     fetchCategoriesList, // 获取分类列表
     setSearchParams,
     setActiveCategory,
@@ -549,5 +563,6 @@ export const useClubStore = defineStore('club', () => {
     applyToCreateClub,
     fetchUserCreatedApplications,
     fetchPendingClubApplications,
+    fetchClubPostComments,
   }
 })

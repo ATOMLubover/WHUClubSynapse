@@ -407,27 +407,27 @@
                   <div class="recommend-title">
                     <el-icon class="ai-icon"><MagicStick /></el-icon>
                     AI 智能推荐社团
-                    <el-tag 
-                      :type="aiServiceAvailable ? 'success' : 'danger'" 
-                      size="small" 
-                      style="margin-left: 8px;"
+                    <el-tag
+                      :type="aiServiceAvailable ? 'success' : 'danger'"
+                      size="small"
+                      style="margin-left: 8px"
                     >
                       {{ aiServiceAvailable ? '在线' : '离线' }}
                     </el-tag>
                   </div>
                   <div class="header-actions">
-                    <el-button 
-                      type="text" 
-                      size="small" 
+                    <el-button
+                      type="text"
+                      size="small"
                       @click="checkAIService"
                       :loading="checkingStatus"
                     >
                       <el-icon><Refresh /></el-icon>
                       检查状态
                     </el-button>
-                    <el-button 
-                      type="text" 
-                      size="small" 
+                    <el-button
+                      type="text"
+                      size="small"
                       @click="clearRecommendations"
                       :disabled="!aiRecommendResult"
                     >
@@ -435,12 +435,12 @@
                     </el-button>
                   </div>
                 </div>
-                
+
                 <div class="recommend-content">
                   <div v-if="!aiRecommendResult && !aiRecommendLoading" class="empty-state">
-                    <el-button 
-                      type="primary" 
-                      @click="getAIRecommendations" 
+                    <el-button
+                      type="primary"
+                      @click="getAIRecommendations"
                       :loading="aiRecommendLoading"
                       :disabled="!canGetRecommendations || aiRecommendLoading"
                       class="recommend-btn"
@@ -457,9 +457,11 @@
                       <el-icon><Warning /></el-icon>
                       <span>AI服务暂时不可用，请检查网络连接</span>
                     </div>
-                    <p class="empty-tip">AI将基于您的个人信息、专业背景和兴趣标签，智能推荐最适合的社团</p>
+                    <p class="empty-tip">
+                      AI将基于您的个人信息、专业背景和兴趣标签，智能推荐最适合的社团
+                    </p>
                   </div>
-                  
+
                   <div v-if="aiRecommendLoading" class="loading-state">
                     <el-icon class="loading-icon"><Loading /></el-icon>
                     <p>AI正在分析您的信息并生成推荐...</p>
@@ -469,7 +471,7 @@
                       <span></span>
                     </div>
                   </div>
-                  
+
                   <div v-if="aiRecommendResult" class="recommend-result">
                     <div class="result-section">
                       <h4>推荐总结</h4>
@@ -477,24 +479,24 @@
                         <p>{{ aiRecommendResult.Summary_text }}</p>
                       </div>
                     </div>
-                    
+
                     <el-divider />
-                    
+
                     <div class="result-section">
                       <h4>推荐社团</h4>
                       <div class="clubs-container">
-                        <div 
-                          v-for="(club, index) in aiRecommendResult.Recommend_club_list" 
+                        <div
+                          v-for="(club, index) in aiRecommendResult.Recommend_club_list"
                           :key="index"
                           class="club-item"
                         >
                           <div class="club-header">
                             <h6 class="club-name">{{ club.club_name }}</h6>
                             <div class="club-tags">
-                              <el-tag 
-                                v-for="tag in club.tags" 
-                                :key="tag" 
-                                size="small" 
+                              <el-tag
+                                v-for="tag in club.tags"
+                                :key="tag"
+                                size="small"
                                 class="club-tag"
                               >
                                 {{ tag }}
@@ -510,7 +512,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <div v-if="errorMessage" class="error-state">
                     <el-icon class="error-icon" color="#F56C6C"><Warning /></el-icon>
                     <p>{{ errorMessage }}</p>
@@ -551,25 +553,57 @@
     </el-dialog>
 
     <!-- 头像上传对话框 -->
-    <el-dialog v-model="showAvatarUpload" title="更换头像" width="400px">
-      <el-upload
-        class="avatar-uploader"
-        :show-file-list="false"
-        :before-upload="beforeAvatarUpload"
-        :http-request="uploadAvatar"
-      >
-        <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
-        <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-      </el-upload>
-      <div class="upload-tips">
-        <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+    <el-dialog
+      v-model="showAvatarUpload"
+      title="更换头像"
+      width="400px"
+      :close-on-click-modal="false"
+    >
+      <div class="avatar-upload-container">
+        <el-upload
+          class="avatar-uploader"
+          :show-file-list="false"
+          :before-upload="beforeAvatarUpload"
+          :http-request="uploadAvatar"
+          :disabled="avatarUploading"
+        >
+          <div class="upload-area">
+            <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
+            <div v-else class="upload-placeholder">
+              <el-icon class="avatar-uploader-icon" :class="{ 'is-loading': avatarUploading }">
+                <Loading v-if="avatarUploading" />
+                <Plus v-else />
+              </el-icon>
+              <p class="upload-text">
+                {{ avatarUploading ? '正在上传...' : '点击选择头像' }}
+              </p>
+            </div>
+            <div v-if="avatarUploading" class="upload-progress">
+              <el-progress
+                :percentage="100"
+                :show-text="false"
+                status="success"
+                :indeterminate="true"
+              />
+            </div>
+          </div>
+        </el-upload>
+        <div class="upload-tips">
+          <el-icon><InfoFilled /></el-icon>
+          <span>支持 JPG、PNG 格式，文件大小不超过 2MB</span>
+        </div>
       </div>
 
       <template #footer>
-        <el-button @click="showAvatarUpload = false">取消</el-button>
-        <el-button type="primary" @click="confirmAvatarUpload" :disabled="!uploadedAvatar"
-          >确定</el-button
+        <el-button @click="cancelAvatarUpload" :disabled="avatarUploading">取消</el-button>
+        <el-button
+          type="primary"
+          @click="confirmAvatarUpload"
+          :disabled="!uploadedAvatar || avatarUploading"
+          :loading="avatarUploading"
         >
+          {{ avatarUploading ? '上传中...' : '确认上传' }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -605,15 +639,22 @@ import {
 } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRawFile } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
-import { getCurrentUser, changePassword } from '@/api/auth'
 import { getClubRecommendations, checkAIStatus } from '@/api/ai'
-import type { User as UserType, UserStats, UserPreferences, ClubCategory, ClubRecommendResponse } from '@/types'
+import type {
+  User as UserType,
+  UserStats,
+  UserPreferences,
+  ClubCategory,
+  ClubRecommendResponse,
+} from '@/types'
 import UserSidebar from '@/components/User/UserSidebar.vue'
 import { allUserTags } from '@/utils/mockData'
 import { useRouter } from 'vue-router'
+import { useClubStore } from '@/stores/club'
 
 // Stores
 const authStore = useAuthStore()
+const clubStore = useClubStore()
 
 // 响应式数据
 const activeTab = ref('info')
@@ -625,6 +666,8 @@ const verificationLoading = ref(false)
 const passwordLoading = ref(false)
 const preferencesLoading = ref(false)
 const uploadedAvatar = ref('')
+const uploadedFile = ref<File | null>(null)
+const avatarUploading = ref(false)
 const tagLoading = ref(false)
 const tagOptions = ref<string[]>([])
 const tagInput = ref('')
@@ -803,23 +846,55 @@ const beforeAvatarUpload = (rawFile: UploadRawFile) => {
 }
 
 const uploadAvatar = (params: any) => {
-  // 创建预览URL
   const file = params.file
+
+  // 只创建预览URL，不立即上传
   const reader = new FileReader()
   reader.onload = (e) => {
     uploadedAvatar.value = e.target?.result as string
   }
   reader.readAsDataURL(file)
+
+  // 保存文件对象供后续上传使用
+  uploadedFile.value = file
 }
 
-const confirmAvatarUpload = () => {
-  // TODO: 上传头像到服务器
-  if (userInfo.value) {
-    userInfo.value.avatar_url = uploadedAvatar.value
-  }
-  showAvatarUpload.value = false
+// 取消上传，清除预览状态
+const cancelAvatarUpload = () => {
   uploadedAvatar.value = ''
-  ElMessage.success('头像更新成功')
+  uploadedFile.value = null
+  showAvatarUpload.value = false
+}
+
+const confirmAvatarUpload = async () => {
+  if (!uploadedFile.value) {
+    ElMessage.warning('请先选择头像文件')
+    return
+  }
+
+  try {
+    avatarUploading.value = true
+
+    // 实际上传到服务器
+    const result = await authStore.uploadAvatar(uploadedFile.value)
+
+    // 更新用户信息
+    if (userInfo.value) {
+      // 关闭对话框并清除状态
+      showAvatarUpload.value = false
+      uploadedAvatar.value = ''
+      uploadedFile.value = null
+
+      ElMessage.success('请刷新后查看更新后的头像')
+    } else {
+      throw new Error('上传失败')
+    }
+  } catch (error: any) {
+    console.error('头像上传失败:', error)
+    ElMessage.error(error.message || '头像上传失败，请重试')
+  } finally {
+    avatarUploading.value = false
+  }
 }
 
 const savePreferences = async () => {
@@ -887,6 +962,38 @@ const handleChangeEmail = async () => {
   }
 }
 
+const getUserStats = async () => {
+  if (useClubStore().favoriteClubs.length == 0) {
+    await useClubStore().fetchFavoriteClubs()
+  }
+  if (useClubStore().applications.length == 0) {
+    await useClubStore().fetchPendingClubApplications({})
+  }
+  if (useClubStore().joinedClubs.length == 0) {
+    await useClubStore().fetchJoinedClubs()
+  }
+  if (useClubStore().managedClubs.length == 0) {
+    await useClubStore().fetchManagedClubs()
+  }
+
+  return {
+    appliedClubs: useClubStore().applications.length,
+    favoriteClubs: useClubStore().favoriteClubs.length,
+    joinedClubs: useClubStore().joinedClubs.length,
+    managedClubs: useClubStore().managedClubs.length,
+  }
+}
+
+// 响应式统计数据，会自动根据 clubStore 状态更新
+const currentStats = computed(() => {
+  return {
+    appliedClubs: clubStore.applications.length,
+    favoriteClubs: clubStore.favoriteClubs.length,
+    joinedClubs: clubStore.joinedClubs.length,
+    managedClubs: clubStore.managedClubs.length,
+  }
+})
+
 // 加载用户数据
 const loadUserData = async () => {
   try {
@@ -899,6 +1006,9 @@ const loadUserData = async () => {
     } else {
       userInfo.value = currentUser
     }
+
+    //初始化统计数据（如果还未加载）
+    await getUserStats()
 
     console.log(userInfo.value)
 
@@ -963,23 +1073,23 @@ const filteredTags = computed(() => {
   return base
 })
 
-// 统计数据
+// 统计数据 - 使用响应式数据，会自动更新
 const statsData = computed(() => [
   {
     label: '申请社团',
-    value: userInfo.value?.stats?.appliedClubs || 0,
+    value: currentStats.value.appliedClubs,
     icon: 'Star',
     color: '#409eff',
   },
   {
     label: '收藏社团',
-    value: userInfo.value?.stats?.favoriteClubs || 0,
+    value: currentStats.value.favoriteClubs,
     icon: 'Collection',
     color: '#f56c6c',
   },
   {
     label: '已加入',
-    value: userInfo.value?.stats?.joinedClubs || 0,
+    value: currentStats.value.joinedClubs,
     icon: 'Trophy',
     color: '#67c23a',
   },
@@ -1004,11 +1114,11 @@ const handleStatClick = (index: number) => {
 // AI推荐相关方法
 const canGetRecommendations = computed(() => {
   const hasUserInfo = !!userInfo.value
-  const hasRealName = !!(userInfo.value?.realName)
-  const hasBio = !!(userInfo.value?.bio)
+  const hasRealName = !!userInfo.value?.realName
+  const hasBio = !!userInfo.value?.bio
   const hasTags = !!(preferences.tags && preferences.tags.length > 0)
-  const hasMajor = !!(userInfo.value?.major)
-  
+  const hasMajor = !!userInfo.value?.major
+
   console.log('AI推荐条件检查:', {
     hasUserInfo,
     hasRealName,
@@ -1016,9 +1126,9 @@ const canGetRecommendations = computed(() => {
     hasTags,
     hasMajor,
     userInfo: userInfo.value,
-    tags: preferences.tags
+    tags: preferences.tags,
   })
-  
+
   // 放宽条件：只要有基本信息就可以
   return hasUserInfo && (hasRealName || hasBio || hasTags || hasMajor)
 })
@@ -1043,25 +1153,30 @@ const getAIRecommendations = async () => {
     aiRecommendLoading.value = true
     errorMessage.value = ''
     aiRecommendResult.value = null
-    
+
     // 构建请求数据，确保所有必填字段都有值
     const request = {
       User_name: userInfo.value?.realName || userInfo.value?.username || '用户',
       User_description: userInfo.value?.bio || '暂无个人描述',
       User_tags: preferences.tags && preferences.tags.length > 0 ? preferences.tags : ['通用'],
-      User_major: userInfo.value?.major || '未指定专业'
+      User_major: userInfo.value?.major || '未指定专业',
     }
 
     console.log('开始AI智能推荐，请求数据:', request)
-    
+
     // 验证请求数据
-    if (!request.User_name || !request.User_description || !request.User_tags || !request.User_major) {
+    if (
+      !request.User_name ||
+      !request.User_description ||
+      !request.User_tags ||
+      !request.User_major
+    ) {
       throw new Error('请求数据不完整，请完善个人信息')
     }
-    
+
     const result = await getClubRecommendations(request)
     aiRecommendResult.value = result
-    
+
     ElMessage.success('AI推荐获取成功')
   } catch (error: any) {
     console.error('AI推荐失败:', error)
@@ -1074,14 +1189,14 @@ const getAIRecommendations = async () => {
 
 const checkAIService = async () => {
   if (checkingStatus.value) return
-  
+
   checkingStatus.value = true
-  
+
   try {
     console.log('开始检查AI服务状态...')
     aiServiceAvailable.value = await checkAIStatus()
     console.log('AI服务状态检查结果:', aiServiceAvailable.value)
-    
+
     if (!aiServiceAvailable.value) {
       ElMessage.warning('AI服务暂时不可用，请检查网络连接或联系管理员')
     } else {
@@ -1722,7 +1837,8 @@ onMounted(() => {
   opacity: 1 !important;
 }
 
-.requirement-tip, .service-tip {
+.requirement-tip,
+.service-tip {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1733,7 +1849,8 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-.requirement-tip .el-icon, .service-tip .el-icon {
+.requirement-tip .el-icon,
+.service-tip .el-icon {
   margin-right: 8px;
   color: #909399;
   font-size: 18px;
@@ -1763,8 +1880,12 @@ onMounted(() => {
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .typing-indicator {
@@ -1781,11 +1902,17 @@ onMounted(() => {
   animation: typing 1.4s infinite ease-in-out;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8);
     opacity: 0.5;
   }
@@ -2038,5 +2165,108 @@ onMounted(() => {
 .stat-card.clickable:hover {
   background: rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
+}
+
+/* 头像上传样式 */
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.avatar-uploader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.upload-area {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.upload-area:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-uploader-icon {
+  font-size: 32px;
+  color: #8c939d;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.avatar-uploader-icon.is-loading {
+  animation: rotate 2s linear infinite;
+  color: #667eea;
+}
+
+.upload-text {
+  margin: 0;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.4;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.upload-progress {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.upload-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #909399;
+  text-align: center;
+  padding: 8px 16px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.upload-tips .el-icon {
+  color: #409eff;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

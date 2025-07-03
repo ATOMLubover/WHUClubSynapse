@@ -1,4 +1,4 @@
-import type {  Club, User, ClubPost, ClubPostReply, ClubCategory, ClubApplication } from '@/types'
+import type {  Club, User, ClubPost, ClubPostComment, ClubCategory, ClubApplication } from '@/types'
 
 export const categories: ClubCategory[] = [
   {
@@ -514,26 +514,26 @@ export const mockClubPosts: ClubPost[] = [
   }
 ]
 
-export const mockClubPostReplies: ClubPostReply[] = [
+export const mockClubPostReplies: ClubPostComment[] = [
   // p1
   {
-    id: 'r1', postId: 'p1', authorId: 2, authorName: '小红', authorAvatar: '', content: '我觉得可以多做一些线上宣传！', createdAt: '2024-06-01T11:00:00Z'
+    comment_id: 'r1', post_id: 'p1', user_id: 2, authorName: '小红', authorAvatar: '', content: '我觉得可以多做一些线上宣传！', created_at: '2024-06-01T11:00:00Z'
   },
   {
-    id: 'r2', postId: 'p1', authorId: 3, authorName: '小刚', authorAvatar: '', content: '建议邀请学长学姐分享经验。', createdAt: '2024-06-01T12:00:00Z'
+    comment_id: 'r2', post_id: 'p1', user_id: 3, authorName: '小刚', authorAvatar: '', content: '建议邀请学长学姐分享经验。', created_at: '2024-06-01T12:00:00Z'
   },
   // p2
   {
-    id: 'r3', postId: 'p2', authorId: 1, authorName: '小明', authorAvatar: '', content: '我报名！', createdAt: '2024-06-02T13:00:00Z'
+    comment_id: 'r3', post_id: 'p2', user_id: 1, authorName: '小明', authorAvatar: '', content: '我报名！', created_at: '2024-06-02T13:00:00Z'
   },
   // p3
   {
-    id: 'r4', postId: 'p3', authorId: 2, authorName: '小红', authorAvatar: '', content: '我也想参加！', createdAt: '2024-06-03T10:00:00Z'
+    comment_id: 'r4', post_id: 'p3', user_id: 2, authorName: '小红', authorAvatar: '', content: '我也想参加！', created_at: '2024-06-03T10:00:00Z'
   },
   {
-    id: 'r5', postId: 'p3', authorId: 3, authorName: '小明', authorAvatar: '', content: '请问需要自带相机吗？', createdAt: '2024-06-03T10:30:00Z'
+    comment_id: 'r5', post_id: 'p3', user_id: 3, authorName: '小明', authorAvatar: '', content: '请问需要自带相机吗？', created_at: '2024-06-03T10:30:00Z'
   },
   {
-    id: 'r6', postId: 'p3', authorId: 3, authorName: '小刚', authorAvatar: '', content: '可以自带，也可以现场借用。', createdAt: '2024-06-03T11:00:00Z'
+    comment_id: 'r6', post_id: 'p3', user_id: 3, authorName: '小刚', authorAvatar: '', content: '可以自带，也可以现场借用。', created_at: '2024-06-03T11:00:00Z'
   }
 ]

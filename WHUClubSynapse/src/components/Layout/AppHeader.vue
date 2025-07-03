@@ -59,17 +59,17 @@
                 <el-icon><User /></el-icon>
                 个人中心
               </el-dropdown-item>
-              <el-dropdown-item command="my-clubs">
-                <el-icon><UserFilled /></el-icon>
-                我的社团
-              </el-dropdown-item>
               <el-dropdown-item command="my-applications">
                 <el-icon><Document /></el-icon>
-                申请记录
+                我的申请
               </el-dropdown-item>
               <el-dropdown-item command="favorites">
                 <el-icon><Star /></el-icon>
                 我的收藏
+              </el-dropdown-item>
+              <el-dropdown-item command="my-clubs">
+                <el-icon><UserFilled /></el-icon>
+                我的社团
               </el-dropdown-item>
               <el-dropdown-item command="create-clubs">
                 <el-icon><Plus /></el-icon>

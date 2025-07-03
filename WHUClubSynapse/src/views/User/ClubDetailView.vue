@@ -537,12 +537,19 @@ onMounted(async () => {
     await clubStore.fetchPendingClubApplications({})
     console.log('获取加入社团申请完成')
   }
+  if (clubStore.joinedClubs.length == 0) {
+    await clubStore.fetchJoinedClubs()
+    console.log('获取加入社团完成')
+  }
 
   console.log('clubStore.applications:', clubStore.applications)
   console.log('clubStore.favoriteClubs:', clubStore.favoriteClubs)
 
   if (clubStore.applications.find((application) => application.club_id == clubId)) {
     club.value!.status = 'pending'
+  }
+  if (clubStore.joinedClubs.find((club) => club.club_id == clubId)) {
+    club.value!.status = 'joined'
   }
   if (clubStore.favoriteClubs.find((club) => club.club_id == clubId)) {
     club.value!.isFavorite = true

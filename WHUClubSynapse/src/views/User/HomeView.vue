@@ -390,6 +390,7 @@ const handlePageChange = async (page: number) => {
   await clubStore.fetchClubs()
   await clubStore.fetchFavoriteClubs()
   await clubStore.fetchPendingClubApplications({})
+  await clubStore.fetchJoinedClubs()
 }
 
 // 跳转到社团详情
@@ -418,16 +419,16 @@ const handleSearch = async () => {
         ElMessage.error('AI服务暂时不可用，请稍后重试')
         return
       }
-      
+
       console.log('开始AI搜索:', searchKeyword.value.trim())
-      
+
       // 初始化AI搜索结果
       aiSearchResult.value = { answer: '', source: [] } as any
       showAiResult.value = true
-      
+
       let answer = ''
       let sources: any[] = []
-      
+
       smartSearchStream(
         { query: searchKeyword.value.trim() },
         {
@@ -435,7 +436,7 @@ const handleSearch = async () => {
             console.log('收到source事件:', src)
             sources = src
             if (aiSearchResult.value) {
-              (aiSearchResult.value as any).source = sources
+              ;(aiSearchResult.value as any).source = sources
             }
           },
           onToken: (token) => {
@@ -443,7 +444,7 @@ const handleSearch = async () => {
             if (typeof token === 'string') {
               answer += token
               if (aiSearchResult.value) {
-                (aiSearchResult.value as any).answer = answer
+                ;(aiSearchResult.value as any).answer = answer
               }
             } else {
               console.error('HomeView收到非字符串token:', token)
@@ -459,8 +460,8 @@ const handleSearch = async () => {
             ElMessage.error(`AI搜索失败: ${err.message || '请稍后重试'}`)
             showAiResult.value = false
             aiSearchResult.value = null
-          }
-        }
+          },
+        },
       )
     } else {
       router.push({
@@ -525,6 +526,7 @@ onMounted(async () => {
     await clubStore.fetchClubs()
     await clubStore.fetchFavoriteClubs()
     await clubStore.fetchPendingClubApplications({})
+    await clubStore.fetchJoinedClubs()
   } catch (error) {
     console.error('获取社团数据失败:', error)
   }

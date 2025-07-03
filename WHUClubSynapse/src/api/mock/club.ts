@@ -1,7 +1,7 @@
 import type { Club, PaginatedData, SearchParams, ApiResponse, ClubCategory, ClubApplication, ClubCreationApplication } from '@/types'
 import { mockClubs, mockApplications, mockUser, mockClubPosts, mockClubPostReplies, userJoinedClubIds, userManagedClubIds, userFavoriteClubIds, categories } from '@/utils/mockData'
 import { config } from '@/config'
-import type { ClubPost, ClubPostReply } from '@/types'
+import type { ClubPost, ClubPostComment } from '@/types'
 
 // 模拟延迟
 const delay = (ms: number = config.mockDelay) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -742,25 +742,19 @@ export const mockGetClubPostReplies = async (
   postId: string,
   page = 1,
   pageSize = 10
-): Promise<{ data: ApiResponse<PaginatedData<ClubPostReply>> }> => {
+): Promise<PaginatedData<ClubPostComment>> => {
   await delay(200)
   
-  const all = mockClubPostReplies.filter(r => r.postId === postId)
+  const all = mockClubPostReplies.filter(r => r.post_id === postId)
   const start = (page - 1) * pageSize
   const end = start + pageSize
   const list = all.slice(start, end)
   
   return {
-    data: {
-      code: 200,
-      message: 'success',
-      data: {
-        list,
-        total: all.length,
-        page,
-        pageSize
-      }
-    }
+    list,
+    total: all.length,
+    page,
+    pageSize
   }
 }
 
@@ -793,18 +787,18 @@ export const mockCreateClubPost = async (
 }
 
 export const mockReplyClubPost = async (
-  reply: Omit<ClubPostReply, 'id' | 'createdAt'>
-): Promise<{ data: ApiResponse<ClubPostReply> }> => {
+  reply: Omit<ClubPostComment, 'id' | 'createdAt'>
+): Promise<{ data: ApiResponse<ClubPostComment> }> => {
   await delay(300)
   
-  const newReply: ClubPostReply = {
+  const newReply: ClubPostComment = {
     ...reply,
-    id: 'r' + (mockClubPostReplies.length + 1),
-    createdAt: new Date().toISOString()
+    comment_id: 'r' + (mockClubPostReplies.length + 1),
+    created_at: new Date().toISOString()
   }
   mockClubPostReplies.push(newReply)
   // 更新主贴回复数
-  const post = mockClubPosts.find(p => p.post_id === reply.postId)
+  const post = mockClubPosts.find(p => p.post_id === reply.post_id)
   if (post) post.comment_count=post.comment_count?post.comment_count+1:1
   
   return {

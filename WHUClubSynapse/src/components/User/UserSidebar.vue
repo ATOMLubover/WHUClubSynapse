@@ -118,7 +118,7 @@ const loadUserStats = async () => {
   try {
     // TODO: 调用API获取用户统计数据
     // 这里使用模拟数据
-    userInfo.value = await getCurrentUser()
+    userInfo.value = await authStore.fetchUserInfo()
   } catch (error) {
     console.error('加载用户统计失败:', error)
   }

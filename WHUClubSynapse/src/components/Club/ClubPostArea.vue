@@ -16,17 +16,25 @@
     <!-- 调试信息 -->
     <div v-if="loading" style="text-align: center; padding: 20px; color: #666">正在加载帖子...</div>
 
-    <div v-else-if="!posts.length" style="text-align: center; padding: 20px; color: #666">
+    <div
+      v-else-if="!clubStore.currentClubPosts.length"
+      style="text-align: center; padding: 20px; color: #666"
+    >
       暂无帖子 (总数: {{ total }})
     </div>
 
     <div v-else class="post-list">
-      <div v-for="post in posts" :key="post.post_id" class="post-card" @click="goToPost(post)">
+      <div
+        v-for="post in clubStore.currentClubPosts"
+        :key="post.post_id"
+        class="post-card"
+        @click="goToPost(post)"
+      >
         <div class="post-card-main">
           <div class="post-title">{{ post.title }}</div>
           <div class="post-meta">
             <el-avatar :size="28" :src="post.authorAvatar || ''" />
-            <span class="author">{{ post.authorName }}</span>
+            <span class="author">发布人:{{ getAuthorName(post) }}</span>
             <span class="time">{{ formatDate(post?.created_at || '') }}</span>
             <span class="reply"
               ><el-icon><ChatLineRound /></el-icon> {{ post.comment_count }}</span
@@ -70,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createClubPost } from '@/api/club'
@@ -89,7 +97,6 @@ const authStore = useAuthStore()
 const clubStore = useClubStore()
 
 // 使用store中的状态和方法
-const posts = computed(() => clubStore.currentClubPosts || [])
 const loading = computed(() => clubStore.postsLoading)
 const total = ref(0)
 const page = ref(1)
@@ -149,6 +156,11 @@ const formatDate = (date: string) => {
   return new Date(date).toLocaleString('zh-CN')
 }
 
+const getAuthorName = (post: ClubPost) => {
+  console.log('getAuthorName - post数据:', post)
+  return post.authorName || `用户${post.author_id}` || '匿名'
+}
+
 const stripMarkdown = (text: string) => {
   if (!text) return ''
 
@@ -180,7 +192,9 @@ const stripMarkdown = (text: string) => {
   )
 }
 
-onMounted(fetchPosts)
+onMounted(async () => {
+  await fetchPosts()
+})
 </script>
 
 <style scoped>

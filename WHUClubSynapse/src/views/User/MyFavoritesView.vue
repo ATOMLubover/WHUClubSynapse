@@ -437,15 +437,14 @@ const removeFavorite = async (clubId: string) => {
     })
 
     console.log(clubId)
-    await unfavoriteClub(clubId)
-    ElMessage.success('已取消收藏')
+    // 使用 clubStore 的方法，它会自动更新全局状态和显示成功消息
+    await clubStore.unfavoriteClub(clubId)
 
-    // 从列表中移除
-    favoriteClubs.value = favoriteClubs.value.filter((club) => club.club_id !== clubId)
+    // 重新加载收藏列表以同步显示
+    await loadFavorites()
+
+    // 清除选中状态
     selectedClubs.value = selectedClubs.value.filter((id) => id !== clubId)
-
-    // 更新统计
-    updateStats()
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '取消收藏失败')
@@ -465,20 +464,20 @@ const batchRemoveFavorites = async () => {
       },
     )
 
-    // 批量取消收藏
+    // 批量取消收藏，使用 API 方法避免多个成功消息
     const promises = selectedClubs.value.map((clubId) => unfavoriteClub(clubId))
     await Promise.all(promises)
 
     ElMessage.success(`已取消收藏 ${selectedClubs.value.length} 个社团`)
 
-    // 从列表中移除
-    favoriteClubs.value = favoriteClubs.value.filter(
-      (club) => !selectedClubs.value.includes(club.club_id),
-    )
-    selectedClubs.value = []
+    // 更新 clubStore 中的收藏列表以同步全局状态
+    await clubStore.fetchFavoriteClubs()
 
-    // 更新统计
-    updateStats()
+    // 重新加载收藏列表以同步显示
+    await loadFavorites()
+
+    // 清除选中状态
+    selectedClubs.value = []
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '批量操作失败')
