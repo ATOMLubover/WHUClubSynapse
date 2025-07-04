@@ -47,6 +47,9 @@ type ClubService interface {
 	GetFavoriteClubs(userId int) ([]*dbstruct.Club, error)
 
 	UpdateClubLogo(clubId int, logoUrl string) error
+
+	QuitClub(clubId, userId int) error
+	DissambleClub(clubId int) error
 }
 
 type sClubService struct {
@@ -314,4 +317,25 @@ func (s *sClubService) GetCreateApplisForUser(userId int) ([]*dbstruct.CreateClu
 
 func (s *sClubService) UpdateClubLogo(clubId int, logoUrl string) error {
 	return s.clubRepo.UpdateClubLogo(clubId, logoUrl)
+}
+
+func (s *sClubService) QuitClub(clubId, userId int) error {
+	return s.clubMemberRepo.DeleteMember(userId, clubId)
+}
+
+func (s *sClubService) DissambleClub(clubId int) error {
+	ctxTmt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.txCoordinator.RunInTransaction(ctxTmt, func(tx *gorm.DB) error {
+		if err := s.clubMemberRepo.DeleteClub(tx, clubId); err != nil {
+			return err
+		}
+
+		if err := s.clubRepo.DeleteClub(clubId); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

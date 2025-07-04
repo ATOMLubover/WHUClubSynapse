@@ -31,6 +31,7 @@ func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
 
 	b.Handle("POST", "/update/{id:int}", "PostApplyForUpdateClubInfo")
 	b.Handle("POST", "/update_logo/{id:int}", "PostUploadLogo")
+	b.Handle("POST", "/assemble/{id:int}", "PostAssembleClub")
 
 	b.Handle("PUT", "/proc_join", "PutProcAppliForJoinClub")
 }
@@ -223,4 +224,26 @@ func (h *ClubPubHandler) PostUploadLogo(ctx iris.Context, id int) {
 	}
 
 	ctx.JSON(iris.Map{"status": "文件上传成功", "path": filePath})
+}
+
+func (h *ClubPubHandler) PostAssembleClub(ctx iris.Context, id int) {
+	userRole := ctx.Values().GetString("user_claims_user_role")
+	if userRole == "" ||
+		userRole != dbstruct.ROLE_ADMIN &&
+		userRole != dbstruct.ROLE_CLUB_LEADER {
+		h.Logger.Error("用户权限错误", "role", userRole)
+
+		ctx.StatusCode(iris.StatusForbidden)
+		return
+	}
+
+	if err := h.ClubService.DissambleClub(id); err != nil {
+		h.Logger.Error("解散社团失败", "error", err, "club_id", id)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("无法解散社团")
+		return
+	}
+
+	ctx.Text("社团解散成功")
 }

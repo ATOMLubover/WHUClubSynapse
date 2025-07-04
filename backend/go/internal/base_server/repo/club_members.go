@@ -14,6 +14,9 @@ type ClubMemberRepo interface {
 	GetClubMemberInfo(id int) (*dbstruct.ClubMember, error)
 	GetMemberListByClubId(clubId int) ([]*dbstruct.ClubMember, error)
 	GetClubListByUserId(userId int) ([]*dbstruct.Club, error)
+
+	DeleteMember(userId, clubId int) error
+	DeleteClub(tx *gorm.DB, clubId int) error
 }
 
 type sClubMemberRepo struct {
@@ -89,4 +92,25 @@ func (r *sClubMemberRepo) GetClubListByUserId(userId int) ([]*dbstruct.Club, err
 	}
 
 	return clubs, nil
+}
+
+func (r *sClubMemberRepo) DeleteMember(userId, clubId int) error {
+	if err := r.database.
+		Where("user_id = ? AND club_id = ?", userId, clubId).
+		Delete(&dbstruct.ClubMember{}).Error; err != nil {
+		r.logger.Error("删除俱乐部成员失败", "user_id", userId, "club_id", clubId, "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *sClubMemberRepo) DeleteClub(tx *gorm.DB, clubId int) error {
+	if err := tx.
+		Where("club_id = ?", clubId).
+		Delete(&dbstruct.ClubMember{}).Error; err != nil {
+		r.logger.Error("删除俱乐部成员失败", "club_id", clubId, "error", err)
+	}
+
+	return nil
 }

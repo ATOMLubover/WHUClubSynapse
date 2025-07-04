@@ -46,6 +46,8 @@ func (h *ClubHandler) BeforeActivation(b mvc.BeforeActivation) {
 
 	b.Handle("POST", "/favorite", "PostFavoriteClub")
 	b.Handle("POST", "/unfavorite", "PostUnfavoriteClub")
+
+	b.Handle("POST", "/quit/{id:int}", "PostQuitClub")
 }
 
 func (h *ClubHandler) GetClubList(ctx iris.Context) {
@@ -726,4 +728,63 @@ func (h *ClubHandler) sProposalToClub(raw []byte, v *dbstruct.Club) error {
 	}
 
 	return nil
+}
+
+func (h *ClubHandler) PostQuitClub(ctx iris.Context, id int) {
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		h.Logger.Error("获取用户ID失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID无效")
+		return
+	}
+
+	clubs, err := h.ClubService.GetClubListByUserId(userId)
+	if err != nil {
+		h.Logger.Error("获取用户社团列表失败",
+			"error", err, "user_id", userId,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法获取用户社团列表")
+		return
+	}
+
+	inClub := false
+	for _, club := range clubs {
+		if club.LeaderId == uint(userId) {
+			h.Logger.Error("用户是社团的负责人，无法退出",
+				"user_id", userId, "club_id", id,
+			)
+			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.Text("用户是社团的负责人，无法退出")
+			return
+		}
+
+		if club.ClubId == uint(id) {
+			inClub = true
+			break
+		}
+	}
+	if !inClub {
+		h.Logger.Error("用户不可以退出该社团",
+			"user_id", userId, "club_id", id,
+		)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户不可以退出该社团")
+		return
+	}
+
+	if err := h.ClubService.QuitClub(id, userId); err != nil {
+		h.Logger.Error("退出社团失败",
+			"error", err, "club_id", id, "user_id", userId,
+		)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("无法退出社团")
+		return
+	}
+
+	ctx.Text("退出社团成功")
 }

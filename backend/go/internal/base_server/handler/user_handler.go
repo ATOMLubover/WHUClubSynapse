@@ -108,6 +108,9 @@ func (h *UserHandler) GetUserList(ctx iris.Context) {
 			Role:       userModel.Role,
 			Username:   userModel.Username,
 			Extension:  userModel.Extension,
+
+			CreatedAt: userModel.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: userModel.UpdatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
