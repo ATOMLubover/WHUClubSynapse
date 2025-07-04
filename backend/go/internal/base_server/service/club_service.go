@@ -53,6 +53,8 @@ type ClubService interface {
 
 	GetUpdateApplisForUser(userId int) ([]*dbstruct.UpdateClubInfoAppli, error)
 	GetUpdateList(offset, num int) ([]*dbstruct.UpdateClubInfoAppli, error)
+
+	GetCreateList(offset, num int) ([]*dbstruct.CreateClubAppli, error)
 }
 
 type sClubService struct {
@@ -349,4 +351,8 @@ func (s *sClubService) GetUpdateApplisForUser(userId int) ([]*dbstruct.UpdateClu
 
 func (s *sClubService) GetUpdateList(offset, num int) ([]*dbstruct.UpdateClubInfoAppli, error) {
 	return s.updateClubInfoAppliRepo.GetUpdateList(offset, num)
+}
+
+func (s *sClubService) GetCreateList(offset, num int) ([]*dbstruct.CreateClubAppli, error) {
+	return s.createClubAppliRepo.GetCreateList(offset, num)
 }

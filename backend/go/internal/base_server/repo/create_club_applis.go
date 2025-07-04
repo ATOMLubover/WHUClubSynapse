@@ -12,6 +12,7 @@ import (
 type CreateClubAppliRepo interface {
 	AddCreateClubAppli(appli *dbstruct.CreateClubAppli) error
 	GetCreateClubAppliList(userId int) ([]*dbstruct.CreateClubAppli, error)
+	GetCreateList(offset, num int) ([]*dbstruct.CreateClubAppli, error)
 	GetApplisByUserId(userId int) ([]*dbstruct.CreateClubAppli, error)
 	GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstruct.CreateClubAppli, error)
 	ApproveAppli(tx *gorm.DB, appliId int) error
@@ -108,4 +109,13 @@ func (r *sCreateClubAppliRepo) RejectAppli(appliId int, reason string) error {
 			Status:         "rejected",
 			RejectedReason: reason,
 		}).Error
+}
+
+func (r *sCreateClubAppliRepo) GetCreateList(offset, num int) ([]*dbstruct.CreateClubAppli, error) {
+	var applis []*dbstruct.CreateClubAppli
+	err := r.database.
+		Offset(offset).
+		Limit(num).
+		Find(&applis).Error
+	return applis, err
 }
