@@ -17,6 +17,7 @@ import signal
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import httpx
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -764,11 +765,24 @@ async def generate_content(request: ContentGenerationRequest):
         logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         generated_text = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                generated_text += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一位文案创作大师，擅长运用多种文体风格进行改写。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed for content length
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        generated_text = chat_response.response
 
         if not generated_text.strip():
             raise ValueError("AI未返回有效的生成内容。")
@@ -778,7 +792,6 @@ async def generate_content(request: ContentGenerationRequest):
     except Exception as e:
         logger.error(f"AI内容生成失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
-
 @app.post("/generate/introduction", response_model=ContentGenerationResponse)
 async def generate_content(request: ContentGenerationRequest):
     """
@@ -853,11 +866,24 @@ async def generate_content(request: SloganGenerationRequest):
         logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         generated_text = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                generated_text += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你擅长写宣传口号：1.简短有力；2.突出亮点；3.引发共鸣。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed for slogan length
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        generated_text = chat_response.response
 
         if not generated_text.strip():
             raise ValueError("AI未返回有效的生成内容。")
@@ -989,12 +1015,25 @@ async def screen_application(request: ApplicationScreeningRequest):
         logger.info(f"AI申请筛选Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个智能社团申请筛选助手，你的任务是根据申请者的资料和社团的招新要求，对申请进行评估，并生成简洁的摘要和明确的建议。"),
+            Message(role="user", content=full_prompt)
+        ]
         
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
+
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
 
@@ -1056,12 +1095,25 @@ async def club_atmosphere(request: ClubAtmosphereRequest):
         logger.info(f"AI社团氛围透视Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个社团氛围透视镜AI，你的任务是根据社团内部的交流内容，分析其情感和主题，并生成社团的\"氛围标签\"和一段\"文化摘要\"."),
+            Message(role="user", content=full_prompt)
+        ]
         
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
+
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
 
@@ -1135,12 +1187,25 @@ async def plan_event(request: EventPlanningRequest):
         logger.info(f"AI活动策划Prompt: {full_prompt[:200]}...")
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个智能活动策划参谋AI，你的任务是根据用户提供的活动想法，生成一份详尽的策划框架。"),
+            Message(role="user", content=full_prompt)
+        ]
         
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
+
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
 
@@ -1231,12 +1296,25 @@ async def financial_bookkeeping(request: FinancialBookkeepingRequest):
         logger.info(f"AI财务记账Prompt: {full_prompt[:200]}...")
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个智能财务助理，你的任务是根据用户输入的自然语言描述，解析出财务支出或收入的详细信息，并生成结构化的记账条目和友好的确认信息。"),
+            Message(role="user", content=full_prompt)
+        ]
         
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
+
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
 
@@ -1346,11 +1424,24 @@ async def generate_financial_report(request: FinancialReportRequest):
         logger.info(f"AI财务报表Prompt: {full_prompt[:200]}...")
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个智能财务报表生成助手，你的任务是根据用户提供的财务流水，生成一份清晰、专业的财务报表总结，并详细列出各项支出和收入的分类汇总。请注意，这里主要是支出，如果出现收入字样可以进行分类。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
 
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
@@ -1459,11 +1550,24 @@ async def budget_warning(request: BudgetWarningRequest):
         logger.info(f"AI预算预警Prompt: {full_prompt[:200]}...")
 
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个预算管理助手，你的任务是根据当前的支出和预算限额，判断是否超支，并生成一个友好的预警信息。如果用户提供了描述信息，请在预警信息中提及。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
 
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
@@ -1604,19 +1708,44 @@ def load_local_synced_data() -> Dict[str, Any]:
     
     return clubs_data
 
+# 添加推荐服务的配置
+RECOMMENDATION_SERVICE_URL = "http://localhost:8001"
+
 @app.post("/club_recommend", response_model=Club_Recommend_Response)
 async def club_recommend(request: Club_Recommend_Request):
     """
     社团推荐助手 - 根据用户信息推荐社团。
-    根据用户信息，AI推荐适合的社团。
+    结合AI推荐系统和大语言模型，为用户推荐适合的社团。
     """
     try:
-        clubs_data = load_local_synced_data()
+        # 1. 首先获取基于内容的推荐结果
+        user_profile = {
+            "user_id": request.User_name,
+            "interests": request.User_description,
+            "major": request.User_major,
+            "tags": request.User_tags
+        }
         
+        recommendations = None
+        try:
+            # 调用推荐服务
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{RECOMMENDATION_SERVICE_URL}/recommend",
+                    json=user_profile,
+                    timeout=5.0  # 5秒超时
+                )
+                if response.status_code == 200:
+                    recommendations = response.json()
+        except Exception as e:
+            logger.warning(f"推荐系统调用失败，将继续使用AI推荐: {str(e)}")
+
+        # 2. 获取社团信息
+        clubs_data = load_local_synced_data()
         if not clubs_data:
             raise HTTPException(status_code=404, detail="未找到社团信息进行推荐。")
 
-        # 准备社团信息字符串，用于LLM的Prompt
+        # 3. 准备社团信息字符串
         club_info_str = []
         for club_id, club in clubs_data.items():
             club_name = club.get("club_name", f"未知社团 {club_id}")
@@ -1631,19 +1760,35 @@ async def club_recommend(request: Club_Recommend_Request):
 
         clubs_list_for_prompt = "\n---\n".join(club_info_str)
 
+        # 4. 准备推荐系统结果的提示词
+        recommendation_prompt = ""
+        if recommendations and recommendations.get("recommendations"):
+            recommendation_prompt = "\n\n--- 推荐系统的建议（仅供参考） ---\n"
+            for idx, rec in enumerate(recommendations["recommendations"], 1):
+                score = float(rec.get("similarity_score", 0)) * 100
+                recommendation_prompt += f"{idx}. {rec['club_name']} (匹配度: {score:.1f}%)\n"
+                recommendation_prompt += f"   标签: {rec['tags']}\n"
+                recommendation_prompt += f"   描述: {rec['desc']}\n\n"
+
+        # 5. 构建完整的提示词
         prompt_template = """
 你是一个智能社团推荐助手。你的任务是根据用户的个人信息、兴趣标签和专业，从我提供的社团列表中，智能推荐最适合用户的社团。
 对于每个推荐的社团，请说明推荐理由。
 
+请注意：
+1. 推荐系统的建议仅供参考，你应该根据用户的具体情况和社团的详细信息做出独立判断
+2. 可以选择推荐系统建议的社团，也可以推荐其他更适合的社团
+3. 重点关注用户的兴趣、专业和社团的实际活动内容的匹配度
+
 请按照以下JSON格式返回结果：
 {{
-  \"Summary_text\": \"[AI生成的推荐总结，概括推荐理由]\",
-  \"Recommend_club_list\": [
+  "Summary_text": "[AI生成的推荐总结，概括推荐理由]",
+  "Recommend_club_list": [
     {{
-      \"club_name\": \"[社团名称]\",
-      \"description\": \"[社团描述]\",
-      \"tags\": [\"[标签1]\", \"[标签2]\"],
-      \"recommend_reason\": \"[推荐该社团的理由]\"
+      "club_name": "[社团名称]",
+      "description": "[社团描述]",
+      "tags": ["[标签1]", "[标签2]"],
+      "recommend_reason": "[推荐该社团的理由]"
     }},
     // 可以推荐多个社团
   ]
@@ -1654,7 +1799,7 @@ async def club_recommend(request: Club_Recommend_Request):
 用户个人描述: {user_description}
 用户兴趣标签: {user_tags}
 用户专业: {user_major}
-
+{recommendation_prompt}
 --- 可选社团列表 ---
 {clubs_list}
 
@@ -1667,21 +1812,37 @@ async def club_recommend(request: Club_Recommend_Request):
             user_description=request.User_description,
             user_tags=user_tags_str,
             user_major=request.User_major,
+            recommendation_prompt=recommendation_prompt,
             clubs_list=clubs_list_for_prompt
         )
 
         logger.info(f"AI社团推荐Prompt: {full_prompt[:200]}...")
 
+        # 6. 调用AI生成推荐
         llm_response_content = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                llm_response_content += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一个智能社团推荐助手，你的任务是根据用户的个人信息、兴趣标签和专业，从我提供的社团列表中，智能推荐最适合用户的社团。对于每个推荐的社团，请说明推荐理由。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        llm_response_content = chat_response.response
 
         if not llm_response_content.strip():
             raise ValueError("AI未返回有效的响应内容。")
 
+        # 7. 解析AI响应
         json_string = llm_response_content.strip()
         if json_string.startswith("```json") and json_string.endswith("```"):
             json_string = json_string[len("```json"): -len("```")].strip()
@@ -2132,7 +2293,7 @@ async def generate_activity_post(request: ContentGenerationRequest):
         ContentGenerationResponse: 包含生成的动态文本。
     """
     try:
-        base_prompt = """你是一位专业的社团活动总结撰写专家，擅长将活动的实际开展情况转化为引人入胜的社交媒体动态。
+        prompt_template = """你是一位专业的社团活动总结撰写专家，擅长将活动的实际开展情况转化为引人入胜的社交媒体动态。
 请根据我提供的活动总结内容{content}，以{style}的文风进行改写，确保改写后的内容能达到{expection}的效果。
 
 要求：
@@ -2154,7 +2315,7 @@ async def generate_activity_post(request: ContentGenerationRequest):
 - 未来展望"""
         
         # 格式化Prompt
-        full_prompt = base_prompt.format(
+        full_prompt = prompt_template.format(
             content=request.content,
             style=request.style,
             expection=request.expection

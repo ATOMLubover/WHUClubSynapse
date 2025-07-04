@@ -1,0 +1,7 @@
+{"id": "dynamic::club_id::100", "document": "学习编程，分享技术心得", "metadata": {"category": 4, "description": "学习编程，分享技术心得", "name": "旅游分享社", "requirements": "", "tags": "['编程', '技术', '学习']"}}
+{"id": "dynamic::club_id::101", "document": "品味美食，交流烹饪技巧", "metadata": {"category": 4, "description": "品味美食，交流烹饪技巧", "name": "历史爱好者协会", "requirements": "", "tags": "['摄影', '艺术', '创作']"}}
+{"id": "dynamic::club_id::102", "document": "挥洒汗水，强身健体", "metadata": {"category": 1, "description": "挥洒汗水，强身健体", "name": "历史爱好者协会", "requirements": "", "tags": "['美食', '烹饪', '交流']"}}
+{"id": "dynamic::club_id::103", "document": "探讨人生哲理，激发思想火花", "metadata": {"category": 5, "description": "探讨人生哲理，激发思想火花", "name": "旅游分享社", "requirements": "", "tags": "['户外', '探险', '自然']"}}
+{"id": "dynamic::club_id::104", "document": "探索宇宙奥秘，沉浸科幻世界", "metadata": {"category": 5, "description": "探索宇宙奥秘，沉浸科幻世界", "name": "摄影艺术学会", "requirements": "", "tags": "['电影', '艺术', '鉴赏']"}}
+{"id": "dynamic::club_id::105", "document": "探索宇宙奥秘，沉浸科幻世界", "metadata": {"category": 3, "description": "探索宇宙奥秘，沉浸科幻世界", "name": "摄影艺术学会", "requirements": "", "tags": "['哲学', '思辨', '讨论']"}}
+{"id": "dynamic::club_id::106", "document": "探索宇宙奥秘，沉浸科幻世界", "metadata": {"category": 5, "description": "探索宇宙奥秘，沉浸科幻世界", "name": "摄影艺术学会", "requirements": "", "tags": "['摄影', '艺术', '创作']"}}
