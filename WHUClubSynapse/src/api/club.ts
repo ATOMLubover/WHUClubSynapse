@@ -1407,3 +1407,27 @@ async function updatePinnedPostContent(
     await pinPost(newPost.data.post_id)
   }
 }
+
+// 获取社团置顶帖子
+export async function getPinnedPost(clubId: number) {
+  return request.get<{
+    post_id: number;
+    club_id: number;
+    author_id: number;
+    title: string;
+    is_pinned: boolean;
+    comment_count: number;
+    created_at: string;
+  }>(`/api/club/post/pinned/${clubId}`);
+}
+
+// 获取帖子评论
+export async function getPostComments(postId: number) {
+  return request.get<Array<{
+    comment_id: number;
+    post_id: number;
+    user_id: number;
+    content: string;
+    created_at: string;
+  }>>(`/api/club/post/comments/${postId}`);
+}

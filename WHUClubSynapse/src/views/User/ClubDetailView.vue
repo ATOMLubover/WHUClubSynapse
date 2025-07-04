@@ -76,23 +76,43 @@
               </el-card>
 
               <!-- 社团公告 -->
-              <el-card
-                v-if="club.announcements && club.announcements.length > 0"
-                class="content-card"
-              >
+              <el-card class="content-card">
                 <template #header>
                   <h3>
                     <el-icon><Bell /></el-icon> 社团公告
                   </h3>
                 </template>
-                <div class="announcements-list">
-                  <div
-                    v-for="(announcement, index) in club.announcements"
-                    :key="index"
-                    class="announcement-item"
-                  >
-                    <el-icon class="announcement-icon"><InfoFilled /></el-icon>
-                    <span class="announcement-text">{{ announcement }}</span>
+                <div v-loading="activitiesLoading">
+                  <div v-if="announcements.length > 0" class="announcements-list">
+                    <div
+                      v-for="announcement in announcements"
+                      :key="announcement.comment_id"
+                      class="announcement-item"
+                    >
+                      <el-icon class="announcement-icon"><InfoFilled /></el-icon>
+                      <div class="announcement-content">
+                        <div class="announcement-text">{{ announcement.parsed_data?.content }}</div>
+                        <div v-if="announcement.parsed_data?.metadata?.tags" class="announcement-tags">
+                          <el-tag
+                            v-for="tag in announcement.parsed_data.metadata.tags"
+                            :key="tag"
+                            size="small"
+                            :type="tag === '重要' ? 'danger' : ''"
+                          >
+                            {{ tag }}
+                          </el-tag>
+                        </div>
+                        <div class="announcement-meta">
+                          <span class="time">{{ formatDate(announcement.created_at) }}</span>
+                          <span v-if="announcement.parsed_data?.metadata?.valid_until" class="valid-until">
+                            有效期至: {{ announcement.parsed_data.metadata.valid_until }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="empty-announcements">
+                    <el-empty description="暂无公告" :image-size="80" />
                   </div>
                 </div>
               </el-card>
@@ -104,24 +124,30 @@
                     <el-icon><Calendar /></el-icon> 最新动态
                   </h3>
                 </template>
-                <div v-if="club.activities && club.activities.length > 0">
-                  <el-timeline>
+                <div v-loading="activitiesLoading">
+                  <el-timeline v-if="activities.length > 0">
                     <el-timeline-item
-                      v-for="activity in club.activities"
-                      :key="activity.id"
-                      :timestamp="activity.time"
+                      v-for="activity in activities"
+                      :key="activity.comment_id"
+                      :timestamp="formatDate(activity.created_at)"
+                      :type="activity.parsed_data?.metadata?.activity_type === 'meeting' ? 'primary' : 'success'"
                     >
-                      <h4>{{ activity.title }}</h4>
-                      <p>{{ activity.description }}</p>
+                      <h4>{{ activity.parsed_data?.content }}</h4>
+                      <div v-if="activity.parsed_data?.metadata" class="activity-meta">
+                        <span v-if="activity.parsed_data.metadata.location">
+                          <el-icon><Location /></el-icon>
+                          {{ activity.parsed_data.metadata.location }}
+                        </span>
+                        <span v-if="activity.parsed_data.metadata.participants">
+                          <el-icon><User /></el-icon>
+                          {{ activity.parsed_data.metadata.participants }}人参与
+                        </span>
+                      </div>
                     </el-timeline-item>
                   </el-timeline>
-                </div>
-                <div v-else class="empty-activities">
-                  <el-empty description="暂无动态" :image-size="80">
-                    <el-button v-if="isUserManaged" type="primary" @click="goToEdit"
-                      >添加动态</el-button
-                    >
-                  </el-empty>
+                  <div v-else class="empty-activities">
+                    <el-empty description="暂无动态" :image-size="80" />
+                  </div>
                 </div>
               </el-card>
             </el-col>
@@ -288,6 +314,7 @@ import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
 import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
 import { applyToClub } from '@/api/club'
+import { getPinnedPost, getPostComments } from '@/api/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -301,6 +328,90 @@ const isFavorited = computed(() => club.value?.isFavorite || false)
 const showApplyDialog = ref(false)
 const createLoading = ref(false)
 const hasApplied = ref(false) // 添加一个标记是否已申请的状态
+
+interface CommentData {
+  type: 'activity' | 'announcement';
+  content: string;
+  metadata?: {
+    activity_type?: string;
+    location?: string;
+    participants?: number;
+    priority?: string;
+    valid_until?: string;
+    tags?: string[];
+  };
+}
+
+interface Activity {
+  comment_id: number;
+  content: string;
+  created_at: string;
+  parsed_data?: CommentData;
+}
+
+interface Announcement {
+  comment_id: number;
+  content: string;
+  created_at: string;
+  parsed_data?: CommentData;
+}
+
+const activities = ref<Activity[]>([])
+const announcements = ref<Announcement[]>([])
+const activitiesLoading = ref(false)
+
+// 解析评论内容
+const parseComment = (comment: any): CommentData | null => {
+  try {
+    return JSON.parse(comment.content)
+  } catch (e) {
+    console.warn('评论解析失败:', e)
+    return null
+  }
+}
+
+// 加载社团动态和公告
+const loadActivitiesAndAnnouncements = async () => {
+  activitiesLoading.value = true
+  try {
+    const { data: pinnedPost } = await getPinnedPost(Number(clubId))
+    const { data: comments } = await getPostComments(pinnedPost.post_id)
+    
+    // 分类处理评论
+    const sortedComments = comments.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+
+    activities.value = []
+    announcements.value = []
+
+    sortedComments.forEach(comment => {
+      const parsedData = parseComment(comment)
+      if (parsedData) {
+        const enrichedComment = {
+          ...comment,
+          parsed_data: parsedData
+        }
+        
+        if (parsedData.type === 'activity') {
+          activities.value.push(enrichedComment)
+        } else if (parsedData.type === 'announcement') {
+          announcements.value.push(enrichedComment)
+        }
+      }
+    })
+  } catch (e: any) {
+    if (e.response?.status === 400) {
+      activities.value = []
+      announcements.value = []
+    } else {
+      ElMessage.error('加载动态和公告失败')
+      console.error('加载失败:', e)
+    }
+  } finally {
+    activitiesLoading.value = false
+  }
+}
 
 // 生成社团交流内容用于AI分析
 const communicationContent = computed(() => {
@@ -391,7 +502,8 @@ const getCategoryType = (category: number) => {
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('zh-CN')
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 const handleApply = () => {
@@ -569,6 +681,9 @@ onMounted(async () => {
       query: { ...route.query, isApply: undefined },
     })
   }
+
+  // 在组件挂载时加载数据
+  loadActivitiesAndAnnouncements()
 })
 </script>
 
@@ -733,10 +848,47 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.announcement-text {
+.announcement-content {
   flex: 1;
-  line-height: 1.6;
-  color: #606266;
+}
+
+.announcement-text {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.announcement-tags {
+  margin-bottom: 8px;
+}
+
+.announcement-tags .el-tag {
+  margin-right: 8px;
+}
+
+.announcement-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.announcement-meta .time {
+  margin-right: 16px;
+}
+
+.activity-meta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.activity-meta span {
+  margin-right: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.activity-meta .el-icon {
+  margin-right: 4px;
 }
 
 .empty-activities {
@@ -891,5 +1043,9 @@ onMounted(async () => {
 .el-button:hover .custom-heart-icon::before,
 .el-button:hover .custom-heart-icon::after {
   background: #f56c6c;
+}
+
+.main-content > * {
+  margin-bottom: 20px;
 }
 </style>
