@@ -59,7 +59,7 @@ func (h *ClubPubHandler) PostApplyForUpdateClubInfo(ctx iris.Context, id int) {
 	var jsonbData datatypes.JSON
 
 	if len(reqBody.Tags) > 0 {
-		jsonbData, err := json.Marshal(reqBody.Tags)
+		data, err := json.Marshal(reqBody.Tags)
 		if err != nil {
 			h.Logger.Error("序列化标签失败", "error", err)
 
@@ -67,7 +67,7 @@ func (h *ClubPubHandler) PostApplyForUpdateClubInfo(ctx iris.Context, id int) {
 			ctx.Text("无法序列化标签")
 			return
 		}
-		jsonbData = datatypes.JSON(jsonbData)
+		jsonbData = datatypes.JSON(data)
 	}
 
 	err = h.ClubService.ApplyForUpdateClub(

@@ -213,15 +213,17 @@ func (h *ClubHandler) GetClubInfo(ctx iris.Context, id int) {
 			CreatedAt:    post.CreatedAt.Format(time.DateTime),
 		})
 	}
-	resClubPosts = append(resClubPosts, &dto.ClubPostBasic{
-		PostId:       int(pinnedPost.PostId),
-		ClubId:       int(pinnedPost.ClubId),
-		Title:        pinnedPost.Title,
-		IsPinned:     pinnedPost.IsPinned,
-		AuthorId:     int(pinnedPost.UserId),
-		CommentCount: int(pinnedPost.CommentCount),
-		CreatedAt:    pinnedPost.CreatedAt.Format(time.DateTime),
-	})
+	if pinnedPost != nil {
+		resClubPosts = append(resClubPosts, &dto.ClubPostBasic{
+			PostId:       int(pinnedPost.PostId),
+			ClubId:       int(pinnedPost.ClubId),
+			Title:        pinnedPost.Title,
+			IsPinned:     pinnedPost.IsPinned,
+			AuthorId:     int(pinnedPost.UserId),
+			CommentCount: int(pinnedPost.CommentCount),
+			CreatedAt:    pinnedPost.CreatedAt.Format(time.DateTime),
+		})
+	}
 
 	var tags []string
 	err = h.sTagsToArray(club.Tags, &tags)
