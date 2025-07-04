@@ -10,7 +10,7 @@ import (
 
 type PostCommentRepo interface {
 	CreatePostComment(newComment dbstruct.ClubPostComment) error
-	GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error)
+	GetPostComments(postId int) ([]*dbstruct.ClubPostComment, error)
 }
 
 type sPostCommentRepo struct {
@@ -32,10 +32,10 @@ func (r *sPostCommentRepo) CreatePostComment(newComment dbstruct.ClubPostComment
 	return r.database.Create(&newComment).Error
 }
 
-func (r *sPostCommentRepo) GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error) {
+func (r *sPostCommentRepo) GetPostComments(postId int) ([]*dbstruct.ClubPostComment, error) {
 	var comments []*dbstruct.ClubPostComment
 	err := r.database.
-		Where("post_id = ? AND visibility <= ?", postId, visibility).
+		Where("post_id = ?", postId).
 		Find(&comments).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

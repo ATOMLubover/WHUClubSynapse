@@ -91,7 +91,7 @@ func (r *sUpdateClubInfoAppliRepo) GetUpdateList(offset, num int) ([]*dbstruct.U
 func (r *sUpdateClubInfoAppliRepo) GetApplisByUserId(userId int) ([]*dbstruct.UpdateClubInfoAppli, error) {
 	var applis []*dbstruct.UpdateClubInfoAppli
 	err := r.database.
-		Where("user_id = ?", userId).
+		Where("applicant_id = ?", userId).
 		Find(&applis).Error
 	return applis, err
 }

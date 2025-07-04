@@ -105,17 +105,7 @@ func (h *PostHandler) GetPostComments(ctx iris.Context, id int) {
 		return
 	}
 
-	visibility := 0
-	switch userRole {
-	case dbstruct.ROLE_USER:
-		visibility = 0
-	case dbstruct.ROLE_PUBLISHER:
-		visibility = 1
-	case dbstruct.ROLE_ADMIN:
-		visibility = 2
-	}
-
-	comments, err := h.PostService.GetPostComments(id, visibility)
+	comments, err := h.PostService.GetPostComments(id)
 	if err != nil {
 		h.Logger.Error("获取帖子评论失败", "error", err)
 

@@ -26,7 +26,7 @@ type PostService interface {
 		sender func(writer *io.PipeWriter) error) error
 
 	CreatePostComment(newComment dbstruct.ClubPostComment) error
-	GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error)
+	GetPostComments(postId int) ([]*dbstruct.ClubPostComment, error)
 
 	BanPost(role string, postId int) error
 	PinPost(postId int) error
@@ -127,8 +127,8 @@ func (s *sPostService) CreatePostComment(newComment dbstruct.ClubPostComment) er
 	return s.postCommentRepo.CreatePostComment(newComment)
 }
 
-func (s *sPostService) GetPostComments(postId, visibility int) ([]*dbstruct.ClubPostComment, error) {
-	return s.postCommentRepo.GetPostComments(postId, visibility)
+func (s *sPostService) GetPostComments(postId int) ([]*dbstruct.ClubPostComment, error) {
+	return s.postCommentRepo.GetPostComments(postId)
 }
 
 func (s *sPostService) BanPost(role string, postId int) error {
