@@ -8,7 +8,7 @@ from typing import List, Dict, Any
 from app.utils.auth import get_api_key
 from app.schemas import ChatMessage, ChatQuery, ChatResponse
 from app.configs.config import settings
-from app.rag.rag_service import retrieve, format_context
+from app.rag.mcp_rag_service import retrieve, format_context
 from app.utils.singleton import logger
 
 router = APIRouter(

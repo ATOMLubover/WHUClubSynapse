@@ -6,7 +6,7 @@ from fastapi.concurrency import run_in_threadpool
 from starlette.responses import StreamingResponse
 from app.utils.auth import get_api_key
 from app.configs.config import settings
-from app.rag.rag_service import retrieve, format_context
+from app.rag.mcp_rag_service import retrieve, format_context
 from app.schemas import SearchQuery, SearchResponse
 from app.utils.singleton import logger
 

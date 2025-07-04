@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from app.configs.config import settings
-from app.rag.rag_service import retrieve
+from app.rag.mcp_rag_service import retrieve
 
 # 配置与准备
 load_dotenv()

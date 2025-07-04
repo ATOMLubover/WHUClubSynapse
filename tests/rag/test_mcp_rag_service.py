@@ -6,7 +6,7 @@ import pytest
 import chromadb
 import uuid
 
-from app.rag.rag_service import retrieve, format_context
+from app.rag.mcp_rag_service import retrieve, format_context
 from app.configs.config import settings
 
 # ---- 测试数据 ----
@@ -40,7 +40,7 @@ def test_chroma_collection():
     collection = client.get_or_create_collection(name=collection_name)
 
     # 3. 导入 rag_service 中的 get_embeddings 函数，并用它来填充测试数据
-    from app.rag.rag_service import get_embeddings
+    from app.rag.mcp_rag_service import get_embeddings
     embeddings = get_embeddings([doc["content"] for doc in TEST_DOCS])
     
     collection.add(
@@ -64,8 +64,8 @@ def test_retrieve_normal_query(test_chroma_collection):
     测试 retrieve 函数能否根据查询检索到相关的文档。
     """
     # 替换 rag_service 中的 collection 为我们的测试集合
-    from app.rag import rag_service
-    rag_service.collection = test_chroma_collection
+    from app.rag import mcp_rag_service
+    mcp_rag_service.collection = test_chroma_collection
 
     # 执行检索
     query = "什么是AI？"
@@ -84,8 +84,8 @@ def test_retrieve_no_relevant_docs(test_chroma_collection):
     测试当查询一个完全不相关的主题时，是否返回空列表或很少的结果。
     这取决于 similarity_threshold 的设置。
     """
-    from app.rag import rag_service
-    rag_service.collection = test_chroma_collection
+    from app.rag import mcp_rag_service
+    mcp_rag_service.collection = test_chroma_collection
 
     query = "法国红酒的历史"
     results = retrieve(query, n_results=5)

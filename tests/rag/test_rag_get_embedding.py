@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import torch
 
-from app.rag.rag_service import get_embeddings
+from app.rag.mcp_rag_service import get_embeddings
 
 
 class TestGetEmbeddings(unittest.TestCase):

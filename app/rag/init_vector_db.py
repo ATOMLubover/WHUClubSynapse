@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyMuPDFLoader
 
 from app.configs.config import settings
-from app.rag.rag_service import get_embeddings
+from app.rag.mcp_rag_service import get_embeddings
 from app.utils.singleton import chroma_collection
 from app.utils.singleton import logger
 
