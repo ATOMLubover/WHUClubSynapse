@@ -170,7 +170,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         *   `max_tokens` (Optional[int], default: `config.default_max_tokens`): 生成的最大 token 数量。
         *   `temperature` (Optional[float], default: `config.default_temperature`): 采样温度，用于控制输出的随机性。
         *   `top_p` (Optional[float], default: `config.default_top_p`): top_p 参数。
-        *   `stream` (Optional[bool], default: `False`): 是否流式输出。
+        *   `stream` (Optional[bool], default: `True`): 是否流式输出。
         *   `system_prompt` (Optional[str], default: `"You are a helpful assistant."`): 系统提示。
     *   **响应体 (JSON)**: `ChatResponse`
         *   `response` (str): 模型生成的回复文本。
@@ -216,8 +216,11 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         *   `max_tokens` (Optional[int], default: `1024`): 最大生成 token 数。
         *   `presence_penalty` (Optional[float], default: `0.0`): 存在惩罚。
         *   `top_p` (Optional[float], default: `1.0`): top_p 参数。
-    *   **响应体 (JSON)**:
-        *   `summary` (str): 总结后的文本。
+    *   **响应体 (SSE Event Stream)**:
+        *   每个事件都包含一个JSON字符串。
+        *   成功响应事件示例: `data: {"summary": "总结内容"}`
+        *   错误响应事件示例: `data: {"error": "错误信息"}`
+        *   结束标记: `data: [DONE]`
     *   **`curl` 示例**:
         ```bash
         curl -X POST http://localhost:8080/summarize_tongyi \
@@ -229,7 +232,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
 
 ### 6. AI内容生成接口
 
-*   **POST** `/generate/content`
+*   **POST** `/content`
     *   **描述**: 根据关键词和内容类型，使用AI生成活动宣传或新闻稿。
     *   **请求体 (JSON)**: `ContentGenerationRequest`
         *   `content` (Optional[str]): 原始文案草稿。
@@ -239,7 +242,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         *   `generated_text` (str): 生成的文本。
     *   **`curl` 示例**:
         ```bash
-        curl -X POST http://localhost:8080/generate/content \
+        curl -X POST http://localhost:8080/content \
           -H "Content-Type: application/json" \
           -d '{
             "content": "本周五晚7点，A栋101教室，举办Python入门讲座，面向全校师生",
@@ -250,7 +253,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
 
 ### 7. AI社团介绍生成接口
 
-*   **POST** `/generate/introduction`
+*   **POST** `/introduction`
     *   **描述**: 根据关键词和内容类型，使用AI生成社团介绍。
     *   **请求体 (JSON)**: `ContentGenerationRequest`
         *   `content` (Optional[str]): 原始文案草稿。
@@ -260,7 +263,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         *   `generated_text` (str): 生成的社团介绍文本。
     *   **`curl` 示例**:
         ```bash
-        curl -X POST http://localhost:8080/generate/introduction \
+        curl -X POST http://localhost:8080/introduction \
           -H "Content-Type: application/json" \
           -d '{
             "content": "这是一个关于我们社团的草稿：我们是一个热爱编程的社团，经常组织编程比赛和技术分享。",
@@ -271,7 +274,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
 
 ### 8. AI社团口号生成接口
 
-*   **POST** `/generate/Slogan`
+*   **POST** `/Slogan`
     *   **描述**: 根据关键词和内容类型，使用AI生成社团口号。
     *   **请求体 (JSON)**: `SloganGenerationRequest`
         *   `theme` (str): 口号主题。
@@ -279,7 +282,7 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
         *   `generated_text` (str): 生成的文本。
     *   **`curl` 示例**:
         ```bash
-        curl -X POST http://localhost:8080/generate/Slogan \
+        curl -X POST http://localhost:8080/Slogan \
           -H "Content-Type: application/json" \
           -d '{
             "theme": "环保社团的招新口号"
@@ -549,7 +552,8 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
 {
     "content": "活动总结内容（包含活动名称、时间地点、参与人数、活动过程、活动亮点、反馈等）",
     "style": "期望的文风",
-    "expection": "期望达到的效果"
+    "expection": "期望达到的效果",
+    "target_people": "目标受众（例如：新生、全体社员等）"
 }
 ```
 
@@ -566,7 +570,8 @@ vLLM API地址: http://localhost:8000/v1/chat/completions
 {
     "content": "吉他社"弦音之夜"音乐分享会\n时间：2024年3月15日晚7点-9点\n地点：学生活动中心音乐厅\n参与人数：约80人\n活动过程：\n1. 开场由社长带来一首《海阔天空》\n2. 6组同学进行了原创音乐展示\n3. 举办了即兴吉他弹唱互动环节\n4. 进行了乐器保养知识分享\n\n活动亮点：\n- 原创歌曲《校园晚风》获得热烈反响\n- 多名新成员首次登台表演\n- 现场观众积极参与互动环节\n\n参与者反馈：\n- "第一次在台上表演，很紧张但很快乐"\n- "学到了很多吉他保养知识"\n- "期待下次活动"\n\n后续计划：\n每月举办一次主题音乐分享会",
     "style": "温暖真诚",
-    "expection": "展现活动温暖氛围，吸引更多音乐爱好者加入"
+    "expection": "展现活动温暖氛围，吸引更多音乐爱好者加入",
+    "target_people": "新生、全体社员等"
 }
 
 // 响应
@@ -820,3 +825,72 @@ python vllm_proxy_server.py
 
 4. **请求超时**
    - 增加`request.timeout`
+
+### 19. 手动更新社团信息接口
+
+*   **POST** `/update_club_data`
+    *   **描述**: 手动触发服务器从外部API获取最新的社团列表和详细信息，并更新本地存储的社团数据（`Club_information.json`）。这对于保持社团推荐等功能的数据新鲜度非常有用。
+    *   **请求体**: 无
+    *   **响应示例**:
+        ```json
+        {
+          "message": "成功更新了 X 个社团的信息",
+          "status": "success"
+        }
+        ```
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/update_club_data
+        ```
+
+### 20. 训练数据生成接口
+
+*   **POST** `/generate_training_data`
+    *   **描述**: 根据预设的角色视角和场景，使用AI生成用于模型微调的高质量训练数据。支持生成通用对话、知识查询和FAQ三类数据。
+    *   **请求体 (JSON)**: `TrainingDataGenerationRequest`
+        *   `batch_size` (Optional[int], default: `10`): 每次AI调用生成的条目数量。
+        *   `total_count` (Optional[int], default: `100`): 计划生成的总条目数量。
+        *   `save_file` (Optional[str], default: `"training_data.jsonl"`): 数据保存的文件名（会自动在 `generated_data` 目录下创建）。
+        *   `data_type` (Optional[str], default: `"general"`): 生成数据类型。可选值: `"general"` (通用对话), `"knowledge"` (知识查询), `"faq"` (常见问题解答)。
+    *   **响应体 (JSON)**: `TrainingDataGenerationResponse`
+        *   `generated_count` (int): 实际生成的总条目数量。
+        *   `message` (str): 生成结果的消息。
+        *   `sample_data` (List[Dict[str, str]]): 生成数据的前3条示例。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate_training_data \
+          -H "Content-Type: application/json" \
+          -d '{
+            "batch_size": 5,
+            "total_count": 10,
+            "save_file": "my_custom_training_data.jsonl",
+            "data_type": "knowledge"
+          }'
+        ```
+
+### 21. 机器学习数据生成接口
+
+*   **POST** `/generate_ml_data`
+    *   **描述**: 根据机器学习需求，使用AI生成模拟的社团、用户和互动数据。生成过程分为三个阶段：社团信息、个人偏好、以及基于前两者的互动信息。数据将保存到一个JSON文件中。
+    *   **请求体 (JSON)**: `MLDataGenerationRequest`
+        *   `num_communities` (Optional[int], default: `5`): 计划生成的社团数量。
+        *   `num_users` (Optional[int], default: `5`): 计划生成的用户数量。
+        *   `num_interactions` (Optional[int], default: `8`): 计划生成的互动数据数量。
+        *   `save_file` (Optional[str], default: `"ml_data.json"`): 数据保存的文件名（会自动在 `generated_data` 目录下创建，并附加时间戳）。
+    *   **响应体 (JSON)**: `MLDataGenerationResponse`
+        *   `communities` (List[CommunityItem]): 生成的社团数据列表。
+        *   `users` (List[UserItem]): 生成的用户数据列表。
+        *   `interactions` (List[InteractionItem]): 生成的互动数据列表。
+        *   `message` (str): 生成结果的消息。
+        *   `file_path` (Optional[str]): 保存数据的完整文件路径（如果成功保存）。
+    *   **`curl` 示例**:
+        ```bash
+        curl -X POST http://localhost:8080/generate_ml_data \
+          -H "Content-Type: application/json" \
+          -d '{
+            "num_communities": 3,
+            "num_users": 2,
+            "num_interactions": 5,
+            "save_file": "my_ml_dataset.json"
+          }'
+        ```

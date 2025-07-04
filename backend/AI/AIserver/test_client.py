@@ -992,6 +992,88 @@ def test_generate_activity_post():
         print(f"\n请求失败: {str(e)} ✗")
         return False
 
+def test_club_recommend():
+    """测试社团推荐接口"""
+    print("\n=== 测试社团推荐接口 ===")
+    try:
+        # 测试用例1：普通学生
+        payload = {
+            "User_name": "张三",
+            "User_description": "我是一名大一新生，喜欢编程和摄影，希望能在课余时间提升自己的技能，结交志同道合的朋友。",
+            "User_tags": ["编程", "摄影", "技术", "交友"],
+            "User_major": "计算机科学与技术"
+        }
+        
+        print("发送推荐请求...")
+        print(f"用户名: {payload['User_name']}")
+        print(f"用户描述: {payload['User_description']}")
+        print(f"用户标签: {payload['User_tags']}")
+        print(f"专业: {payload['User_major']}")
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/club_recommend",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            print("\n推荐结果:")
+            print(f"总结文本: {result['Summary_text']}")
+            print("\n推荐社团列表:")
+            for club in result['Recommend_club_list']:
+                print(f"\n社团名称: {club['club_name']}")
+                print(f"描述: {club['description']}")
+                print(f"标签: {club['tags']}")
+                print(f"推荐理由: {club['recommend_reason']}")
+            test1_success = True
+        else:
+            print(f"错误响应: {response.text}")
+            test1_success = False
+            
+        time.sleep(1)  # 避免请求过快
+        
+        # 测试用例2：特殊兴趣学生
+        payload = {
+            "User_name": "李四",
+            "User_description": "我对人工智能和机器学习非常感兴趣，同时也喜欢参加志愿者活动。希望能找到既能提升专业能力，又能服务社会的社团。",
+            "User_tags": ["AI", "机器学习", "志愿服务", "社会实践"],
+            "User_major": "人工智能"
+        }
+        
+        print("\n发送第二个推荐请求...")
+        print(f"用户名: {payload['User_name']}")
+        print(f"用户描述: {payload['User_description']}")
+        print(f"用户标签: {payload['User_tags']}")
+        print(f"专业: {payload['User_major']}")
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/club_recommend",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            print("\n推荐结果:")
+            print(f"总结文本: {result['Summary_text']}")
+            print("\n推荐社团列表:")
+            for club in result['Recommend_club_list']:
+                print(f"\n社团名称: {club['club_name']}")
+                print(f"描述: {club['description']}")
+                print(f"标签: {club['tags']}")
+                print(f"推荐理由: {club['recommend_reason']}")
+            test2_success = True
+        else:
+            print(f"错误响应: {response.text}")
+            test2_success = False
+            
+        return test1_success and test2_success
+        
+    except Exception as e:
+        print(f"社团推荐测试错误: {e}")
+        return False
+
 def main():
     """
     运行所有测试
@@ -1020,7 +1102,8 @@ def main():
         # ("智能财务助理 - 修改预算", test_update_budget),
         # ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
         # ("智能财务助理 - 预算超支预警", test_budget_warning),
-        ("社团动态生成", test_generate_activity_post)
+        # ("社团动态生成", test_generate_activity_post),
+        ("社团推荐", test_club_recommend)
     ]
     
     results = []

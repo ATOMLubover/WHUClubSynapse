@@ -1,13 +1,4 @@
-{"id": "dynamic::post_id::10", "document": "初步测试生产者5", "metadata": {"source": "post_id::10"}}
-{"id": "dynamic::post_id::11", "document": "新生产者消息1", "metadata": {"source": "post_id::11"}}
-{"id": "dynamic::post_id::12", "document": "新生产者消息2", "metadata": {"source": "post_id::12"}}
-{"id": "dynamic::post_id::13", "document": "新生产者消息3", "metadata": {"source": "post_id::13"}}
-{"id": "dynamic::club_id::123", "document": "some description", "metadata": {"source": "club_id::123"}}
-{"id": "dynamic::club_id::123", "document": "some description", "metadata": {"source": "club_id::123"}}
-{"id": "dynamic::club_id::123", "document": "some description", "metadata": {"source": "club_id::123"}}
-{"id": "dynamic::club_id::123", "document": "some description", "metadata": {"source": "club_id::123"}}
-{"id": "dynamic::club_id::123", "document": "篮球招新社", "metadata": {"source": "club_id::123"}}
-{"id": "dynamic::club_id::124", "document": "哈哈哈", "metadata": {"source": "club_id::124"}}
-{"id": "dynamic::post_id::14", "document": "新生产者消息3", "metadata": {"source": "post_id::14"}}
-{"id": "dynamic::post_id::15", "document": "新生产者消息3", "metadata": {"author_id": 1, "is_pinned": false, "club_id":"5", "title": "测试redis streams读取"}}
-{"id": "dynamic::club_id::5", "document": "can you lead us to 4.0?", "metadata": {"category": 1, "description": "can you lead us to 4.0?", "name": "test club", "requirements": "", "tags": "[\"游戏\",\"测试\"]"}}
+{"id": "dynamic::club_id::1", "document": "can you lead us to 4.0?", "metadata": {"category": 1, "description": "can you lead us to 4.0?", "name": "编程社", "requirements": "", "tags": "[\"游戏\",\"测试\"]"}}
+{"id": "dynamic::post_id::16", "document": "让我也试一试", "metadata": {"author_id": 1, "club_id": 1, "is_pinned": false, "title": "让我也试一试"}}
+{"id": "dynamic::post_id::17", "document": "欢迎来到编程社", "metadata": {"author_id": 21, "club_id": 1, "is_pinned": true, "title": "欢迎来到编程社"}}
+{"id": "dynamic::post_id::18", "document": "c++怎么用", "metadata": {"author_id": 15, "club_id": 1, "is_pinned": false, "title": "c++怎么用"}}
