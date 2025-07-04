@@ -197,10 +197,58 @@ export interface ClubPost {
   comment_count?: number
   author_id?: number
   content_url?: string
+  is_pinned?: boolean // 是否置顶
 
   content?: string
   authorName?: string
   authorAvatar?: string
+}
+
+// 社团公告类型
+export interface ClubAnnouncement {
+  id: string
+  title: string
+  content: string
+  author_id: number
+  authorName?: string
+  authorAvatar?: string
+  created_at: string
+  type: 'announcement' // 标识为公告
+  priority?: 'high' | 'normal' | 'low' // 优先级
+}
+
+// 社团动态类型
+export interface ClubActivity {
+  id: string
+  title: string
+  content: string
+  author_id: number
+  authorName?: string
+  authorAvatar?: string
+  created_at: string
+  type: 'activity' // 标识为动态
+  images?: string[] // 动态图片
+  location?: string // 活动地点
+  activity_time?: string // 活动时间
+}
+
+// 置顶帖子内容类型
+export interface PinnedPostContent {
+  announcements: ClubAnnouncement[]
+  activities: ClubActivity[]
+}
+
+// 置顶帖子响应类型
+export interface PinnedPostResponse {
+  post_id: number
+  club_id: number
+  author_id: number
+  title: string
+  is_pinned: boolean
+  comment_count: number
+  created_at: string
+  content_url?: string
+  content?: string // 实际内容，包含公告和动态的JSON数据
 }
 
 // 帖子回复类型

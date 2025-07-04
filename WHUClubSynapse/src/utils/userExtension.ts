@@ -108,11 +108,14 @@ export function prepareUserForBackend(user: User): any {
   const extensionString = stringifyUserExtension(extension)
   console.log('序列化的extension:', extensionString)
   
-  // 移除扩展字段，只保留基础字段和extension
-  const { realName, studentId, major, bio, tags, phone, preferences, stats, hasCompletedPreferences, ...baseUser } = user
-  
+  // 只保留必要的基础字段，明确排除密码和其他敏感字段
   const result = {
-    ...baseUser,
+    user_id: user.user_id,
+    username: user.username,
+    email: user.email,
+    avatar_url: user.avatar_url,
+    role: user.role,
+    password: "", // 🔧 修复：密码字段传空字符串，让后端知道不修改密码
     extension: extensionString
   }
   
