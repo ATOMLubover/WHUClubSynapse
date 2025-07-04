@@ -87,7 +87,7 @@ export interface Club {
   tags: string[]
   isHot?: boolean
   isFavorite?: boolean
-  status?: 'pending' | 'joined' |  'not_applied'
+  status?:string
   status_for_create?: 'pending' | 'approved' | 'rejected'
   updatedAt?: string
   activities?: Activity[]
@@ -421,4 +421,34 @@ export interface ClubInfo {
 export interface ClubRecommendResponse {
   Summary_text: string
   Recommend_club_list: ClubInfo[]
+}
+
+// 社团信息更新申请类型
+export interface ClubUpdateApplication {
+  name: string
+  club_id: number
+  logo_url: string
+  leader_id: number
+  created_at: string
+  updated_at: string
+  category_id: number
+  description: string
+  member_count: number
+  requirements: string
+  type?: string[] // 社团标签数组，可能为null或空数组
+}
+
+export interface AdminCreateApplication {
+  name: string
+  club_id: number
+  logo_url: string
+  leader_id: number
+  created_at: string
+  updated_at: string
+  category_id: number
+  description: string
+  member_count: number
+  requirements: string
+  type?: string[] // 社团标签数组，可能为null或空数组
+  status?: string
 }

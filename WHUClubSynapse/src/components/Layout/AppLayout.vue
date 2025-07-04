@@ -31,8 +31,6 @@ import AppFooter from '@/components/Layout/AppFooter.vue'
 import ApiModeSwitch from '@/components/Layout/ApiModeSwitch.vue'
 import AISideChat from '@/components/Chat/AISideChat.vue'
 
-const authStore = useAuthStore()
-
 const clearsearch = ref(false)
 const clearSearch = () => {
   console.log('clearSearch')
@@ -42,11 +40,6 @@ const clearSearch = () => {
 const update = (value: boolean) => {
   clearsearch.value = value
 }
-
-// 初始化应用
-onMounted(async () => {
-  await authStore.initialize()
-})
 </script>
 
 <style scoped>

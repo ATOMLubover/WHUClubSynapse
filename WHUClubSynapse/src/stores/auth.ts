@@ -78,7 +78,6 @@ export const useAuthStore = defineStore('auth', () => {
          userInfo.avatar_url=`${config.apiBaseUrl}/`+userInfo.avatar_url
       }
 
-      console.log('userInfo.avatar_url', userInfo.avatar_url)
       user.value = userInfo
       return userInfo
     } catch (error) {

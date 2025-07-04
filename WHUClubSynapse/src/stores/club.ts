@@ -2,7 +2,7 @@ import { ref, computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
-import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost, ClubApplication } from '@/types'
+import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost, ClubApplication, ClubCreatedApplication } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 
 export const useClubStore = defineStore('club', () => {
@@ -215,7 +215,9 @@ export const useClubStore = defineStore('club', () => {
   //获取收藏列表
   const fetchFavoriteClubs=async()=>{
     try{
-      await fetchClubs()
+      if(clubs.value.length==0){
+        await fetchClubs()
+      }
       const response=await clubApi.getFavoriteClubs();
 
       favoriteClubs.value = response.list
@@ -316,12 +318,12 @@ export const useClubStore = defineStore('club', () => {
     status?: 'pending' | 'approved' | 'rejected'
   }) => {
     try {
-      const response = await clubApi.getPendingClubApplications(params)
+      const response = await clubApi.getCreateListAdmin(params?.page||1,params?.pageSize||10,params?.status||'') 
       return {
-        list: response.data.data?.list || [],
-        total: response.data.data?.total || 0,
-        page: params?.page || 1,
-        pageSize: params?.pageSize || 10,
+        list:response.list,
+        total:response.total,
+        page:params?.page||1,
+        pageSize:params?.pageSize||10,
       }
     } catch (error) {
       console.error('获取待审核社团创建申请失败:', error)
@@ -331,13 +333,10 @@ export const useClubStore = defineStore('club', () => {
   }
 
   // 审核社团创建申请（管理员功能）
-  const reviewClubApplication = async (applicationId: string, data: {
-    status: 'approved' | 'rejected'
-    rejectReason?: string
-  }) => {
+  const reviewClubApplication = async (create_club_appli_id:number, result: string, reason?: string) => {
     try {
-      const response = await clubApi.reviewClubApplication(applicationId, data)
-      ElMessage.success(data.status === 'approved' ? '申请审核通过' : '申请已拒绝')
+      const response = await clubApi.reviewClubApplication(create_club_appli_id, result, reason)
+      ElMessage.success(result == 'approve' ? '申请审核通过' : '申请已拒绝')
       return response.data
     } catch (error) {
       console.error('审核申请失败:', error)
@@ -402,11 +401,9 @@ export const useClubStore = defineStore('club', () => {
   const quitClub = async (clubId: string) => {
     try {
       const response = await clubApi.quitClub(clubId)
-      ElMessage.success('退出社团成功')
       return response.data.data
     } catch (error) {
       console.error('退出社团失败:', error)
-      ElMessage.error('退出社团失败')
       throw error
     }
   }

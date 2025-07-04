@@ -542,7 +542,11 @@ onMounted(async () => {
   console.log('clubStore.applications:', clubStore.applications)
   console.log('clubStore.favoriteClubs:', clubStore.favoriteClubs)
 
-  if (clubStore.applications.find((application) => application.club_id == clubId)) {
+  if (
+    clubStore.applications.find(
+      (application) => application.club_id == clubId && application.status == 'pending',
+    )
+  ) {
     club.value!.status = 'pending'
   }
   if (clubStore.joinedClubs.find((club) => club.club_id == clubId)) {

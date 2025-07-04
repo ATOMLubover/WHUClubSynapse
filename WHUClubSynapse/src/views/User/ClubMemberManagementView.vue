@@ -479,12 +479,7 @@
           <div class="info-section">
             <h4>特质标签</h4>
             <div class="tags-container">
-              <el-tag
-                v-for="tag in currentMember.tags"
-                :key="tag"
-                type="success"
-                class="tag-item"
-              >
+              <el-tag v-for="tag in currentMember.tags" :key="tag" type="success" class="tag-item">
                 {{ tag }}
               </el-tag>
               <span v-if="!currentMember.tags?.length" class="no-data">未设置</span>
@@ -674,7 +669,6 @@ import {
   getClubMembers,
   getClubApplications,
   getClubJoinApplications,
-  reviewApplication,
   reviewJoinApplication,
   removeMember as removeMemberFromClub,
   changeMemberRole,
@@ -957,15 +951,11 @@ const confirmReject = async () => {
 
 const promoteToAdmin = async (member: ClubMember) => {
   try {
-    await ElMessageBox.confirm(
-      `确定将 ${member.username} 设为管理员吗？`,
-      '确认操作',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      },
-    )
+    await ElMessageBox.confirm(`确定将 ${member.username} 设为管理员吗？`, '确认操作', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
     const response = await changeMemberRole(club.value!.club_id, member.member_id, 'admin')
     if (response.data.code === 200) {
@@ -983,15 +973,11 @@ const promoteToAdmin = async (member: ClubMember) => {
 
 const demoteToMember = async (member: ClubMember) => {
   try {
-    await ElMessageBox.confirm(
-      `确定取消 ${member.username} 的管理员权限吗？`,
-      '确认操作',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      },
-    )
+    await ElMessageBox.confirm(`确定取消 ${member.username} 的管理员权限吗？`, '确认操作', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
     const response = await changeMemberRole(club.value!.club_id, member.member_id, 'member')
     if (response.data.code === 200) {
@@ -1081,7 +1067,7 @@ const showMemberDetail = (member: ClubMember) => {
     phone: member.phone,
     tags: member.tags,
     interestedCategories: member.interestedCategories,
-    fullMember: member
+    fullMember: member,
   })
   showMemberDetailDialog.value = true
 }
@@ -1092,7 +1078,7 @@ const showApplicationDetail = (application: ClubApplication) => {
     phone: application.phone,
     tags: application.tags,
     interestedCategories: application.interestedCategories,
-    fullApplication: application
+    fullApplication: application,
   })
   showApplicationDetailDialog.value = true
 }

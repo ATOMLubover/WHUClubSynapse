@@ -15,19 +15,18 @@
           </div>
         </div>
       </template>
-      
+
       <div v-loading="loading">
         <el-table :data="applications" style="width: 100%">
-          <el-table-column prop="clubName" label="社团名称" min-width="120" />
-          <el-table-column prop="username" label="申请人" width="100" />
-          <el-table-column prop="category" label="类型" width="100">
+          <el-table-column prop="name" label="社团名称" width="200" />
+          <el-table-column prop="leader_id" label="申请人" width="100" />
+          <el-table-column prop="category_id" label="类型" width="100">
             <template #default="{ row }">
               <el-tag :type="getCategoryType(row.category)">
                 {{ getCategoryName(row.category) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="maxMembers" label="最大人数" width="80" />
           <el-table-column prop="applyTime" label="申请时间" width="160">
             <template #default="{ row }">
               {{ formatDate(row.applyTime) }}
@@ -40,35 +39,39 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="100" fixed="right">
             <template #default="{ row }">
-              <el-button 
+              <el-button
                 v-if="row.status === 'pending'"
-                type="success" 
-                size="small" 
+                type="success"
+                size="small"
                 @click="approveApplication(row)"
               >
                 通过
               </el-button>
-              <el-button 
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button
                 v-if="row.status === 'pending'"
-                type="danger" 
-                size="small" 
+                type="danger"
+                size="small"
                 @click="rejectApplication(row)"
               >
                 拒绝
               </el-button>
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="viewApplication(row)"
-              >
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" size="small" @click="viewApplication(row)">
                 查看详情
               </el-button>
             </template>
           </el-table-column>
         </el-table>
-        
+
         <div v-if="total > 0" class="pagination-section">
           <el-pagination
             v-model:current-page="currentPage"
@@ -87,73 +90,101 @@
     <el-dialog v-model="detailDialogVisible" title="申请详情" width="800px">
       <div v-if="selectedApplication" class="application-detail">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="社团名称">{{ selectedApplication.clubName }}</el-descriptions-item>
-          <el-descriptions-item label="申请人">{{ selectedApplication.username }}</el-descriptions-item>
-          <el-descriptions-item label="学号">{{ selectedApplication.studentId }}</el-descriptions-item>
+          <el-descriptions-item label="社团名称">{{
+            selectedApplication.name
+          }}</el-descriptions-item>
+          <el-descriptions-item label="申请人">{{
+            selectedApplication.leader_id
+          }}</el-descriptions-item>
+          <el-descriptions-item label="学号">{{
+            selectedApplication.studentId
+          }}</el-descriptions-item>
           <el-descriptions-item label="专业">{{ selectedApplication.major }}</el-descriptions-item>
-          <el-descriptions-item label="联系电话">{{ selectedApplication.phone }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{
+            selectedApplication.phone
+          }}</el-descriptions-item>
           <el-descriptions-item label="邮箱">{{ selectedApplication.email }}</el-descriptions-item>
           <el-descriptions-item label="社团类型">
-            <el-tag :type="getCategoryType(selectedApplication.category)">
-              {{ getCategoryName(selectedApplication.category) }}
+            <el-tag :type="getCategoryType(selectedApplication.category_id)">
+              {{ getCategoryName(selectedApplication.category_id) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="最大人数">{{ selectedApplication.maxMembers }}人</el-descriptions-item>
-          <el-descriptions-item label="申请时间">{{ formatDate(selectedApplication.applyTime) }}</el-descriptions-item>
+
+          <el-descriptions-item label="申请时间">{{
+            formatDate(selectedApplication.created_at)
+          }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(selectedApplication.status)">
-              {{ getStatusText(selectedApplication.status) }}
+            <el-tag :type="getStatusType(selectedApplication.status || 'pending')">
+              {{ getStatusText(selectedApplication.status || 'pending') }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
-        
+
         <div class="detail-section">
           <h4>社团简介</h4>
           <p>{{ selectedApplication.description }}</p>
         </div>
-        
+
         <div class="detail-section">
           <h4>详细介绍</h4>
           <p>{{ selectedApplication.introduction || '暂无' }}</p>
         </div>
-        
+
         <div class="detail-section">
           <h4>加入要求</h4>
           <p>{{ selectedApplication.requirements }}</p>
         </div>
-        
+
         <div class="detail-section">
           <h4>社团标签</h4>
           <div class="tags-container">
-            <el-tag v-for="tag in selectedApplication.tags" :key="tag" size="small" style="margin-right: 8px;">
+            <el-tag
+              v-for="tag in selectedApplication.type"
+              :key="tag"
+              size="small"
+              style="margin-right: 8px"
+            >
               {{ tag }}
             </el-tag>
           </div>
         </div>
-        
+
         <div class="detail-section">
           <h4>联系方式</h4>
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="QQ">{{ selectedApplication.contactInfo?.qq || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="微信">{{ selectedApplication.contactInfo?.wechat || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{ selectedApplication.contactInfo?.email || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="电话">{{ selectedApplication.contactInfo?.phone || '暂无' }}</el-descriptions-item>
-            <el-descriptions-item label="地址" :span="2">{{ selectedApplication.contactInfo?.address || '暂无' }}</el-descriptions-item>
+            <el-descriptions-item label="QQ">{{
+              selectedApplication.contactInfo?.qq || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="微信">{{
+              selectedApplication.contactInfo?.wechat || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{
+              selectedApplication.contactInfo?.email || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="电话">{{
+              selectedApplication.contactInfo?.phone || '暂无'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="地址" :span="2">{{
+              selectedApplication.contactInfo?.address || '暂无'
+            }}</el-descriptions-item>
           </el-descriptions>
         </div>
-        
+
         <div class="detail-section">
           <h4>例会信息</h4>
           <p>时间：{{ selectedApplication.meetingTime || '暂无' }}</p>
           <p>地点：{{ selectedApplication.meetingLocation || '暂无' }}</p>
         </div>
-        
+
         <div v-if="selectedApplication.coverImage" class="detail-section">
           <h4>封面图片</h4>
           <img :src="selectedApplication.coverImage" alt="封面图片" class="cover-image" />
         </div>
-        
-        <div v-if="selectedApplication.status === 'rejected' && selectedApplication.rejectReason" class="detail-section">
+
+        <div
+          v-if="selectedApplication.status === 'rejected' && selectedApplication.rejectReason"
+          class="detail-section"
+        >
           <h4>拒绝原因</h4>
           <p class="reject-reason">{{ selectedApplication.rejectReason }}</p>
         </div>
@@ -188,10 +219,10 @@
 import { ref, onMounted } from 'vue'
 import { useClubStore } from '@/stores/club'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { ClubCreationApplication } from '@/types'
+import type { ClubCreatedApplication, AdminCreateApplication } from '@/types'
 
 const clubStore = useClubStore()
-const applications = ref<ClubCreationApplication[]>([])
+const applications = ref<AdminCreateApplication[]>([])
 const loading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
@@ -199,17 +230,15 @@ const pageSize = ref(10)
 const filterStatus = ref('')
 const detailDialogVisible = ref(false)
 const rejectDialogVisible = ref(false)
-const selectedApplication = ref<ClubCreationApplication | null>(null)
+const selectedApplication = ref<AdminCreateApplication | null>(null)
 const rejectLoading = ref(false)
 
 const rejectForm = ref({
-  rejectReason: ''
+  rejectReason: '',
 })
 
 const rejectRules = {
-  rejectReason: [
-    { required: true, message: '请输入拒绝原因', trigger: 'blur' }
-  ]
+  rejectReason: [{ required: true, message: '请输入拒绝原因', trigger: 'blur' }],
 }
 
 const rejectFormRef = ref()
@@ -217,11 +246,11 @@ const rejectFormRef = ref()
 // 获取分类类型
 const getCategoryType = (category: number) => {
   const typeMap: Record<number, string> = {
-    0: 'primary',   // 学术科技
-    1: 'success',   // 文艺体育
-    2: 'warning',   // 志愿服务
-    3: 'danger',    // 创新创业
-    4: 'info'       // 其他
+    0: 'primary', // 学术科技
+    1: 'success', // 文艺体育
+    2: 'warning', // 志愿服务
+    3: 'danger', // 创新创业
+    4: 'info', // 其他
   }
   return typeMap[category] || 'info'
 }
@@ -233,7 +262,7 @@ const getCategoryName = (category: number) => {
     1: '文艺体育',
     2: '志愿服务',
     3: '创新创业',
-    4: '其他'
+    4: '其他',
   }
   return nameMap[category] || '未知'
 }
@@ -243,7 +272,7 @@ const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
     pending: 'warning',
     approved: 'success',
-    rejected: 'danger'
+    rejected: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -253,7 +282,7 @@ const getStatusText = (status: string) => {
   const textMap: Record<string, string> = {
     pending: '待审核',
     approved: '已通过',
-    rejected: '已拒绝'
+    rejected: '已拒绝',
   }
   return textMap[status] || '未知'
 }
@@ -270,17 +299,41 @@ const loadApplications = async () => {
     const data = await clubStore.fetchPendingClubCreationApplications({
       page: currentPage.value,
       pageSize: pageSize.value,
-      status: filterStatus.value as 'pending' | 'approved' | 'rejected' || undefined
+      status: (filterStatus.value as 'pending' | 'approved' | 'rejected') || undefined,
     })
-    applications.value = data.list
+
+    const list = data.list
+    list.forEach((item) => {
+      const proposal = parseProposal(item.Proposal)
+      applications.value.push({
+        ...proposal,
+        status: item.Status,
+      })
+    })
     total.value = data.total
+    console.log('applications.value', applications.value)
   } catch (error) {
     console.error('加载申请列表失败:', error)
   } finally {
     loading.value = false
   }
 }
-
+const parseProposal = (item: string) => {
+  let cleanItem = item.replace(/\\"/g, '"').replace(/^"|"$/g, '')
+  cleanItem = cleanItem.replace(/"type:jsonb"/g, '"type"')
+  const parsed = JSON.parse(cleanItem)
+  if (parsed.type && typeof parsed.type === 'string') {
+    try {
+      parsed.type = JSON.parse(parsed.type)
+    } catch (typeParseError) {
+      parsed.type = [parsed.type]
+    }
+  }
+  if (!parsed.type || !Array.isArray(parsed.type)) {
+    parsed.type = []
+  }
+  return parsed as AdminCreateApplication
+}
 // 分页处理
 const handleSizeChange = (size: number) => {
   pageSize.value = size
@@ -294,29 +347,23 @@ const handleCurrentChange = (page: number) => {
 }
 
 // 查看申请详情
-const viewApplication = (application: ClubCreationApplication) => {
+const viewApplication = (application: AdminCreateApplication) => {
   selectedApplication.value = application
   detailDialogVisible.value = true
 }
 
 // 通过申请
-const approveApplication = async (application: ClubCreationApplication) => {
+const approveApplication = async (application: AdminCreateApplication) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要通过"${application.clubName}"的创建申请吗？`,
-      '确认通过',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    await clubStore.reviewClubApplication(application.id, {
-      status: 'approved'
+    await ElMessageBox.confirm(`确定要通过"${application.name}"的创建申请吗？`, '确认通过', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     })
-    
-    loadApplications()
+
+    await clubStore.reviewClubApplication(application.create_club_appli_id, 'approve')
+
+    // loadApplications()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('审核失败:', error)
@@ -325,7 +372,7 @@ const approveApplication = async (application: ClubCreationApplication) => {
 }
 
 // 拒绝申请
-const rejectApplication = (application: ClubCreationApplication) => {
+const rejectApplication = (application: AdminCreateApplication) => {
   selectedApplication.value = application
   rejectForm.value.rejectReason = ''
   rejectDialogVisible.value = true
@@ -334,16 +381,17 @@ const rejectApplication = (application: ClubCreationApplication) => {
 // 确认拒绝
 const confirmReject = async () => {
   if (!selectedApplication.value) return
-  
+
   try {
     await rejectFormRef.value?.validate()
     rejectLoading.value = true
-    
-    await clubStore.reviewClubApplication(selectedApplication.value.id, {
-      status: 'rejected',
-      rejectReason: rejectForm.value.rejectReason
-    })
-    
+
+    await clubStore.reviewClubApplication(
+      selectedApplication.value.create_club_appli_id,
+      'reject',
+      rejectForm.value.rejectReason,
+    )
+
     rejectDialogVisible.value = false
     loadApplications()
   } catch (error) {

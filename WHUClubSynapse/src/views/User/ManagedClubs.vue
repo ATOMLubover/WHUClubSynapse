@@ -53,177 +53,212 @@
       </el-card>
     </div>
 
-    <!-- 创建申请列表 -->
-    <div class="created-applications-section">
+    <!-- 申请管理区域 -->
+    <div class="applications-management-section">
       <el-card>
         <template #header>
           <div class="card-header">
-            <span>我的创建申请 ({{ userCreatedApplications.length }})</span>
-            <el-button @click="loadUserCreatedApplications" :loading="applicationsLoading">
+            <el-tabs v-model="activeTab" type="card">
+              <el-tab-pane label="创建申请" name="create">
+                <template #label>
+                  <span class="tab-label">
+                    创建申请
+                    <el-badge
+                      v-if="userCreatedApplications.length > 0"
+                      :value="userCreatedApplications.length"
+                      class="tab-badge"
+                    />
+                  </span>
+                </template>
+              </el-tab-pane>
+              <el-tab-pane label="更新申请" name="update">
+                <template #label>
+                  <span class="tab-label">
+                    更新申请
+                    <el-badge
+                      v-if="userUpdateApplications.length > 0"
+                      :value="userUpdateApplications.length"
+                      class="tab-badge"
+                    />
+                  </span>
+                </template>
+              </el-tab-pane>
+            </el-tabs>
+            <el-button @click="refreshCurrentTab" :loading="applicationsLoading">
               <el-icon><Refresh /></el-icon>
-              刷新申请
+              刷新
             </el-button>
           </div>
         </template>
 
         <div v-loading="applicationsLoading">
-          <!-- 空状态 -->
-          <div v-if="!userCreatedApplications.length && !applicationsLoading" class="empty-state">
-            <el-empty description="您还没有提交创建社团申请">
-              <el-button type="primary" @click="showCreateDialog = true"> 申请创建社团 </el-button>
-            </el-empty>
+          <!-- 创建申请内容 -->
+          <div v-if="activeTab === 'create'">
+            <!-- 空状态 -->
+            <div v-if="!userCreatedApplications.length && !applicationsLoading" class="empty-state">
+              <el-empty description="您还没有提交创建社团申请">
+                <el-button type="primary" @click="showCreateDialog = true">
+                  申请创建社团
+                </el-button>
+              </el-empty>
+            </div>
+
+            <!-- 创建申请列表 -->
+            <div v-else class="applications-list">
+              <el-table
+                :data="userCreatedApplications"
+                style="width: 100%"
+                class="applications-table"
+              >
+                <el-table-column prop="appli_id" label="申请ID" width="100" />
+                <el-table-column label="状态" width="120">
+                  <template #default="{ row }">
+                    <el-tag :type="getApplicationStatusType(row.status)" size="small" effect="dark">
+                      {{ getApplicationStatusText(row.status) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="社团信息" min-width="300">
+                  <template #default="{ row }">
+                    <div v-if="row.proposal && parseProposal(row.proposal)" class="club-info-cell">
+                      <div class="club-name-row">
+                        <strong>{{ parseProposal(row.proposal).name || '未命名社团' }}</strong>
+                      </div>
+                      <div class="club-desc-row">
+                        {{ parseProposal(row.proposal).description || '暂无简介' }}
+                      </div>
+                      <div class="club-meta-row">
+                        <el-tag
+                          v-if="parseProposal(row.proposal).category_id"
+                          size="small"
+                          type="primary"
+                        >
+                          {{ getCategoryName(parseProposal(row.proposal).category_id) }}
+                        </el-tag>
+                        <div v-if="parseProposal(row.proposal).tags?.length" class="tags-display">
+                          <el-tag
+                            v-for="tag in parseProposal(row.proposal).tags.slice(0, 3)"
+                            :key="tag"
+                            size="small"
+                            effect="plain"
+                            class="tag-item"
+                          >
+                            {{ tag }}
+                          </el-tag>
+                          <span
+                            v-if="parseProposal(row.proposal).tags.length > 3"
+                            class="more-tags"
+                          >
+                            +{{ parseProposal(row.proposal).tags.length - 3 }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="proposal-error">
+                      <el-icon><Warning /></el-icon>
+                      <span>方案数据异常</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="申请时间" width="150">
+                  <template #default="{ row }">
+                    {{ formatDate(row.applied_at) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="审核时间" width="150">
+                  <template #default="{ row }">
+                    {{ row.reviewed_at ? formatDate(row.reviewed_at) : '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="拒绝原因" min-width="200">
+                  <template #default="{ row }">
+                    <div v-if="row.reject_reason" class="reject-reason">
+                      <el-icon><CircleClose /></el-icon>
+                      <span>{{ row.reject_reason }}</span>
+                    </div>
+                    <span v-else>-</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
 
-          <!-- 申请列表 -->
-          <div v-else class="applications-list">
-            <el-row :gutter="24">
-              <el-col
-                v-for="application in userCreatedApplications"
-                :key="application.appli_id"
-                :xs="24"
-                :sm="12"
-                :md="8"
-                :lg="6"
-                class="application-card-col"
+          <!-- 更新申请内容 -->
+          <div v-if="activeTab === 'update'">
+            <!-- 空状态 -->
+            <div v-if="!userUpdateApplications.length && !applicationsLoading" class="empty-state">
+              <el-empty description="您还没有提交社团信息更新申请"> </el-empty>
+            </div>
+
+            <!-- 更新申请列表 -->
+            <div v-else class="applications-list">
+              <el-table
+                :data="userUpdateApplications"
+                style="width: 100%"
+                class="applications-table"
               >
-                <div class="application-card" :class="`status-${application.status}`">
-                  <!-- 卡片头部 -->
-                  <div class="card-header">
-                    <div class="status-indicator">
-                      <div class="status-dot" :class="`status-${application.status}`"></div>
-                      <el-tag
-                        :type="getApplicationStatusType(application.status)"
-                        size="small"
-                        effect="dark"
-                        class="status-tag"
-                      >
-                        {{ getApplicationStatusText(application.status) }}
-                      </el-tag>
-                    </div>
-                  </div>
-
-                  <!-- 申请方案预览 -->
-                  <div v-if="application.proposal" class="proposal-preview-card">
-                    <span class="proposal-label">申请方案</span>
-
-                    <template v-if="parseProposal(application.proposal)">
-                      <div class="proposal-main-info">
-                        <h3 class="club-name">
-                          社团名:{{ parseProposal(application.proposal).name || '未命名社团' }}
-                        </h3>
-                        <p class="club-description">
-                          简介:{{ parseProposal(application.proposal).description || '暂无简介' }}
-                        </p>
-                      </div>
-
-                      <div class="proposal-meta">
-                        <div
-                          v-if="parseProposal(application.proposal).category_id"
-                          class="meta-item"
-                        >
-                          <el-icon><Collection /></el-icon>
-                          <el-tag size="small" type="primary" class="category-tag">
-                            {{ getCategoryName(parseProposal(application.proposal).category_id) }}
+                <el-table-column prop="club_id" label="社团ID" width="100" />
+                <el-table-column label="状态" width="120">
+                  <template #default>
+                    <el-tag type="warning" size="small" effect="dark"> 更新申请 </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="社团信息" width="150">
+                  <template #default="{ row }">
+                    <div class="club-info-cell">
+                      <div class="club-name-row">
+                        <strong>{{ row.name }}</strong>
+                        <el-tag size="small" type="primary">
+                          {{ getCategoryName(row.category_id) }}
+                        </el-tag>
+                        <div v-if="row.type?.length" class="tags-display">
+                          <el-tag
+                            v-for="tag in row.type.slice(0, 3)"
+                            :key="tag"
+                            size="small"
+                            effect="plain"
+                            class="tag-item"
+                          >
+                            {{ tag }}
                           </el-tag>
-                        </div>
-
-                        <div
-                          v-if="parseProposal(application.proposal).tags?.length"
-                          class="meta-item tags-section"
-                        >
-                          <el-icon><PriceTag /></el-icon>
-                          <div class="tags-container">
-                            <el-tag
-                              v-for="tag in parseProposal(application.proposal).tags.slice(0, 3)"
-                              :key="tag"
-                              size="small"
-                              class="tag-item"
-                              effect="plain"
-                            >
-                              {{ tag }}
-                            </el-tag>
-                            <span
-                              v-if="parseProposal(application.proposal).tags.length > 3"
-                              class="more-tags"
-                            >
-                              +{{ parseProposal(application.proposal).tags.length - 3 }}
-                            </span>
-                          </div>
+                          <span v-if="row.type.length > 3" class="more-tags">
+                            +{{ row.type.length - 3 }}
+                          </span>
                         </div>
                       </div>
-                    </template>
-                    <template v-else>
-                      <div class="proposal-error">
-                        <el-icon><Warning /></el-icon>
-                        <span>方案数据异常</span>
-                      </div>
-                    </template>
-                  </div>
 
-                  <!-- 时间信息 -->
-                  <div class="time-info">
-                    <div class="time-item">
-                      <el-icon class="time-icon"><Clock /></el-icon>
-                      <div class="time-content">
-                        <span class="time-label">申请时间</span>
-                        <span class="time-value">{{ formatDate(application.applied_at) }}</span>
+                      <div class="club-meta-row">
+                        <span class="leader-info">社长ID: {{ row.leader_id }}</span>
+                      </div>
+                      <div v-if="row.requirements" class="requirements-display">
+                        <el-icon><Document /></el-icon>
+                        <span>{{ row.requirements }}</span>
                       </div>
                     </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="社团简介" min-width="300">
+                  <template #default="{ row }">
+                    <div class="club-desc-row">
+                      {{ row.description }}
+                    </div></template
+                  >
+                </el-table-column>
 
-                    <div v-if="application.reviewed_at" class="time-item">
-                      <el-icon class="time-icon"><CircleCheck /></el-icon>
-                      <div v-if="application.reviewed_at != ''" class="time-content">
-                        <span class="time-label">审核时间</span>
-                        <span class="time-value">{{ formatDate(application.reviewed_at) }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 拒绝原因 -->
-                  <div v-if="application.reject_reason" class="reject-reason-card">
-                    <div class="reject-header">
-                      <el-icon class="reject-icon"><CircleClose /></el-icon>
-                      <span class="reject-title">拒绝原因</span>
-                    </div>
-                    <p class="reject-content">{{ application.reject_reason }}</p>
-                  </div>
-
-                  <!-- 操作按钮 -->
-                  <div class="card-actions">
-                    <el-button
-                      v-if="application.status === 'approved'"
-                      type="success"
-                      size="default"
-                      disabled="true"
-                      class="action-button success-button"
-                    >
-                      <el-icon><View /></el-icon>
-                      已经创建
-                    </el-button>
-                    <el-button
-                      v-else-if="application.status === 'pending'"
-                      type="primary"
-                      size="default"
-                      disabled
-                      class="action-button pending-button"
-                    >
+                <el-table-column label="操作" width="250" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="primary" size="small" disabled>
                       <el-icon><Loading /></el-icon>
                       等待审核
                     </el-button>
-                    <el-button
-                      v-else
-                      type="primary"
-                      size="default"
-                      @click="showCreateDialog = true"
-                      class="action-button retry-button"
-                    >
-                      <el-icon><Refresh /></el-icon>
-                      重新申请
+                    <el-button type="info" size="small" @click="viewClubDetail(row.club_id)">
+                      <el-icon><View /></el-icon>
+                      查看社团
                     </el-button>
-                  </div>
-                </div>
-              </el-col>
-            </el-row>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
       </el-card>
@@ -471,7 +506,8 @@ import {
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
-import type { Club, ClubCategory, ClubCreatedApplication } from '@/types'
+import type { Club, ClubCategory, ClubCreatedApplication, ClubUpdateApplication } from '@/types'
+import { getClubUpdateApplications } from '@/api/club'
 
 const router = useRouter()
 const clubStore = useClubStore()
@@ -497,6 +533,8 @@ const categoriesList = ref<ClubCategory[]>([])
 // 用户创建申请相关数据
 const userCreatedApplications = ref<ClubCreatedApplication[]>([])
 const applicationsLoading = ref(false)
+const userUpdateApplications = ref<ClubUpdateApplication[]>([])
+const activeTab = ref('create')
 // 创建表单
 const createForm = ref({
   name: '',
@@ -544,7 +582,16 @@ const getStatusText = (status: string) => {
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('zh-CN')
+  if (!dateStr || dateStr === '0001-01-01T00:00:00Z') {
+    return '未设置'
+  }
+
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN')
+  } catch {
+    return '日期格式错误'
+  }
 }
 
 // 获取申请状态类型
@@ -654,6 +701,11 @@ const goToClubDetail = (clubId: string) => {
   router.push(`/club/${clubId}`)
 }
 
+// 查看社团详情
+const viewClubDetail = (clubId: number) => {
+  router.push(`/club/${clubId}`)
+}
+
 // 编辑社团
 const editClub = (club: Club) => {
   router.push(`/user/edit-club/${club.club_id}`)
@@ -756,6 +808,7 @@ const confirmDelete = async () => {
   try {
     deleteLoading.value = true
     // TODO: 实现删除社团功能
+    await clubStore.dismissClub(deleteClub.value.club_id)
     ElMessage.info('删除社团功能暂未实现')
     showDeleteDialog.value = false
     deleteClub.value = null
@@ -769,11 +822,35 @@ const confirmDelete = async () => {
   }
 }
 
+const loadUserUpdateApplications = async () => {
+  applicationsLoading.value = true
+
+  try {
+    const data = await getClubUpdateApplications()
+    userUpdateApplications.value = data
+    console.log('userUpdateApplications.value', userUpdateApplications.value[0].type)
+  } catch (err: any) {
+    console.error('加载社团更新申请失败:', err)
+  } finally {
+    applicationsLoading.value = false
+  }
+}
+
+// 刷新当前tab的数据
+const refreshCurrentTab = async () => {
+  if (activeTab.value === 'create') {
+    await loadUserCreatedApplications()
+  } else if (activeTab.value === 'update') {
+    await loadUserUpdateApplications()
+  }
+}
+
 // 页面加载时获取数据
 onMounted(() => {
   getCategoriesList()
   loadManagedClubs()
   loadUserCreatedApplications()
+  loadUserUpdateApplications()
   const isOpen = route.query.isOpen
   if (isOpen == 'true') {
     showCreateDialog.value = true
@@ -815,6 +892,7 @@ onMounted(() => {
 }
 
 .card-header {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1265,9 +1343,18 @@ onMounted(() => {
 
 /* 申请卡片样式 */
 .applications-list {
-  min-height: 150px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  transition: all 0.3s;
 }
 
+.applications-list:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
+}
 .application-card-col {
   margin-bottom: 24px;
 }
@@ -1618,154 +1705,478 @@ onMounted(() => {
   box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
 }
 
-/* 小屏手机端优化 */
-@media (max-width: 480px) {
-  .my-favorites {
+/* 社团信息更新申请样式 */
+.update-applications-section {
+  margin-bottom: 24px;
+}
+
+.update-application-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+  border: 1px solid #e1e8ff;
+  position: relative;
+  overflow: hidden;
+}
+
+.update-application-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #409eff, #66b1ff, #409eff);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.club-preview-card {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid #e8f4ff;
+}
+
+.club-logo-section {
+  flex-shrink: 0;
+}
+
+.club-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid #e1e8ff;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+}
+
+.no-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 2px solid #e1e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e1e8ff 100%);
+  color: #409eff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.club-main-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.club-name {
+  margin: 0;
+  color: #1d2129;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.club-description {
+  margin: 0;
+  color: #4e5969;
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.club-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.club-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border: 1px solid #f0f4ff;
+}
+
+.club-meta .meta-item .el-icon {
+  color: #409eff;
+  font-size: 16px;
+}
+
+.member-count {
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.leader-id {
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.requirements-section {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border: 1px solid #e8f4ff;
+}
+
+.requirements-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.requirements-header .el-icon {
+  color: #409eff;
+  font-size: 14px;
+}
+
+.requirements-label {
+  font-weight: 600;
+  color: #1d2129;
+  font-size: 12px;
+}
+
+.requirements-content {
+  margin: 0;
+  color: #4e5969;
+  font-size: 12px;
+  line-height: 1.4;
+  padding-left: 20px;
+}
+
+.view-button {
+  background: linear-gradient(135deg, #909399 0%, #a6a9ad 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(144, 147, 153, 0.3);
+}
+
+.view-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(144, 147, 153, 0.4);
+}
+
+/* 更新申请卡片响应式优化 */
+@media (max-width: 768px) {
+  .club-preview-card {
+    flex-direction: column;
+    gap: 12px;
     padding: 12px;
   }
 
-  .page-header h1 {
-    font-size: 22px;
-  }
-
-  .page-header p {
-    font-size: 13px;
-  }
-
-  .toolbar .el-col {
-    width: 100% !important;
-    margin-bottom: 8px;
-  }
-
-  /* 申请卡片小屏优化 */
-  .application-card {
-    padding: 12px 10px;
-    border-radius: 10px;
-  }
-
-  .proposal-preview-card {
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-
-  .proposal-label {
-    font-size: 11px;
-    margin-bottom: 8px;
-    padding-left: 6px;
+  .club-logo-section {
+    align-self: center;
   }
 
   .club-name {
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 16px;
+    text-align: center;
   }
 
   .club-description {
-    font-size: 11px;
-  }
-
-  .proposal-meta {
-    gap: 6px;
-    margin-top: 8px;
-  }
-
-  .meta-item {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .time-info {
-    margin: 10px 0;
-    gap: 6px;
-  }
-
-  .time-item {
-    padding: 6px 8px;
-    gap: 6px;
-  }
-
-  .time-label {
-    font-size: 10px;
-  }
-
-  .time-value {
-    font-size: 12px;
-  }
-
-  .reject-reason-card {
-    padding: 8px;
-    margin: 10px 0;
-  }
-
-  .reject-content {
-    font-size: 11px;
-    padding-left: 16px;
-  }
-
-  .card-actions {
-    margin-top: 10px;
-  }
-
-  .tags-container {
-    gap: 3px;
-  }
-
-  .tag-item {
-    font-size: 10px;
-    padding: 1px 4px;
-  }
-
-  .more-tags {
-    font-size: 10px;
-    padding: 1px 3px;
-  }
-
-  .action-button {
-    height: 34px;
-    font-size: 11px;
-    gap: 4px;
-  }
-
-  /* 社团卡片小屏优化 */
-  .club-cover {
-    height: 120px;
-  }
-
-  .club-info {
-    padding: 12px;
+    text-align: center;
   }
 
   .club-meta {
     gap: 6px;
   }
 
-  .meta-item {
+  .club-meta .meta-item {
     padding: 4px 8px;
-    font-size: 11px;
-    border-radius: 6px;
-  }
-
-  .meta-icon {
-    font-size: 13px;
-  }
-
-  .club-actions {
-    padding: 0 12px 12px;
-    gap: 6px;
-  }
-
-  .action-btn {
-    height: 36px;
-    font-size: 11px;
-    gap: 4px;
-    border-radius: 8px;
-  }
-
-  .view-icon {
-    font-size: 20px;
-  }
-
-  .overlay-content span {
     font-size: 12px;
+  }
+
+  .requirements-section {
+    padding: 8px;
+  }
+
+  .requirements-content {
+    font-size: 11px;
+    padding-left: 16px;
+  }
+}
+
+/* 申请管理区域样式 */
+.applications-management-section {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.applications-management-section .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+.applications-management-section .el-tabs {
+  flex: 1;
+}
+
+.applications-management-section .el-tabs__header {
+  margin: 0;
+  border-bottom: none;
+}
+
+.applications-management-section .el-tabs__nav-wrap {
+  padding: 0;
+}
+
+.applications-management-section .el-tabs__item {
+  height: 40px;
+  line-height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+  border: 1px solid #e4e7ed;
+  border-bottom: none;
+  background: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.applications-management-section .el-tabs__item:hover {
+  color: #409eff;
+  background: #f0f9ff;
+}
+
+.applications-management-section .el-tabs__item.is-active {
+  color: #409eff;
+  background: #fff;
+  border-color: #409eff;
+  border-bottom-color: #fff;
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-badge {
+  margin-left: 4px;
+}
+
+.tab-badge .el-badge__content {
+  background: #409eff;
+  border: none;
+  font-size: 10px;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 4px;
+  min-width: 16px;
+}
+
+/* 申请列表表格样式 */
+.applications-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.applications-table .el-table__header {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+}
+
+.applications-table .el-table__header th {
+  background: transparent;
+  color: #1d2129;
+  font-weight: 600;
+  border-bottom: 2px solid #e1e8ff;
+}
+
+.applications-table .el-table__row {
+  transition: all 0.3s ease;
+}
+
+.applications-table .el-table__row:hover {
+  background: #f8f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.club-info-cell {
+  padding: 8px 0;
+}
+
+.club-logo-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.club-logo-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e1e8ff;
+}
+
+.no-logo-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e1e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 10px;
+}
+
+.club-name-row {
+  font-size: 16px;
+  color: #1d2129;
+  margin-bottom: 4px;
+}
+
+.club-desc-row {
+  font-size: 13px;
+  color: #4e5969;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.club-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.leader-info {
+  font-size: 12px;
+  color: #606266;
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.tags-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-item {
+  margin: 0;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.more-tags {
+  font-size: 11px;
+  color: #86909c;
+  background: #f2f3f5;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.requirements-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #606266;
+  background: #f8f9ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e1e8ff;
+}
+
+.requirements-display .el-icon {
+  color: #409eff;
+  font-size: 14px;
+}
+
+.reject-reason {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+.reject-reason .el-icon {
+  font-size: 14px;
+}
+
+.proposal-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f56c6c;
+  font-size: 12px;
+  padding: 8px;
+  background: #fef0f0;
+  border-radius: 4px;
+  border: 1px solid #fbc4c4;
+}
+
+@media (max-width: 480px) {
+  .club-preview-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .club-logo,
+  .no-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .club-name {
+    font-size: 14px;
+  }
+
+  .club-description {
+    font-size: 12px;
+  }
+
+  .club-meta .meta-item {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .club-meta .meta-item .el-icon {
+    font-size: 14px;
+  }
+
+  .requirements-section {
+    padding: 6px;
+  }
+
+  .requirements-content {
+    font-size: 10px;
+    padding-left: 14px;
   }
 }
 </style>
