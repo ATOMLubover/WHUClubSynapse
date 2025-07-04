@@ -100,7 +100,7 @@ const clubStore = useClubStore()
 const loading = computed(() => clubStore.postsLoading)
 const total = ref(0)
 const page = ref(1)
-const pageSize = 5
+const pageSize = 500
 
 const showCreate = ref(false)
 const createForm = ref({ title: '', content: '' })

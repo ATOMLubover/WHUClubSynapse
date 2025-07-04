@@ -699,11 +699,8 @@ export const mockDeleteClub = async (id: string): Promise<{ data: ApiResponse<nu
   }
 }
 
-export const mockGetClubPosts = async (
-  clubId: string,
-  page = 1,
-  pageSize = 5
-): Promise<PaginatedData<ClubPost>> => {
+// 模拟获取社团帖子列表
+export const mockGetClubPosts = async (clubId: string, page: number = 1, pageSize = 500) => {
   await delay(300)
   
   console.log('mockGetClubPosts 被调用，clubId:', clubId)
