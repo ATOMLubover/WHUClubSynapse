@@ -21,6 +21,7 @@ import (
 	"whuclubsynapse-server/internal/shared/logger"
 
 	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/middleware/recover"
 	"github.com/kataras/iris/v12/mvc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -54,8 +55,9 @@ func main() {
 		Timeout: 30 * time.Second, // 确保有超时设置
 	}
 
-	app := iris.Default()
+	app := iris.New()
 	app.Logger().SetLevel("debug")
+	app.Use(recover.New())
 
 	app.Use(crs, routeLogger)
 
