@@ -14,7 +14,7 @@
             </div>
           </div>
           <div class="user-info">
-            <h2 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h2>
+            <h2 class="user-name">{{ userInfo?.username }}</h2>
             <div class="user-meta">
               <el-tag
                 :type="userInfo?.role === 'admin' ? 'danger' : 'primary'"
@@ -27,7 +27,7 @@
             </div>
             <p class="user-join-time">
               <el-icon><Calendar /></el-icon>
-              加入时间：{{ formatDate(userInfo?.created_at) }}
+              加入时间：{{ formatDate(userInfo?.createdAt) }}
             </p>
           </div>
         </div>
@@ -1136,14 +1136,14 @@ const handleStatClick = (index: number) => {
 // AI推荐相关方法
 const canGetRecommendations = computed(() => {
   const hasUserInfo = !!userInfo.value
-  const hasRealName = !!userInfo.value?.realName
+  const hasUsername = !!userInfo.value?.username
   const hasBio = !!userInfo.value?.bio
   const hasTags = !!(preferences.tags && preferences.tags.length > 0)
   const hasMajor = !!userInfo.value?.major
 
   console.log('AI推荐条件检查:', {
     hasUserInfo,
-    hasRealName,
+    hasUsername,
     hasBio,
     hasTags,
     hasMajor,
@@ -1152,12 +1152,12 @@ const canGetRecommendations = computed(() => {
   })
 
   // 放宽条件：只要有基本信息就可以
-  return hasUserInfo && (hasRealName || hasBio || hasTags || hasMajor)
+  return hasUserInfo && hasUsername && (hasBio || hasTags || hasMajor)
 })
 
 const getAIRecommendations = async () => {
   if (!canGetRecommendations.value) {
-    ElMessage.warning('请完善一些基本信息（姓名、简介、专业或兴趣标签）后再获取推荐')
+    ElMessage.warning('请完善一些基本信息（简介、专业或兴趣标签）后再获取推荐')
     return
   }
 
@@ -1178,7 +1178,7 @@ const getAIRecommendations = async () => {
 
     // 构建请求数据，确保所有必填字段都有值
     const request = {
-      User_name: userInfo.value?.realName || userInfo.value?.username || '用户',
+      User_name: userInfo.value?.username || '用户',
       User_description: userInfo.value?.bio || '暂无个人描述',
       User_tags: preferences.tags && preferences.tags.length > 0 ? preferences.tags : ['通用'],
       User_major: userInfo.value?.major || '未指定专业',

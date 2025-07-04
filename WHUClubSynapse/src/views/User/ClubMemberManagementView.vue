@@ -99,7 +99,7 @@
                   </div>
 
                   <div class="member-card-body">
-                    <h4 class="member-name">{{ member.realName || member.username }}</h4>
+                    <h4 class="member-name">{{ member.username }}</h4>
                     <p class="member-username">@{{ member.username }}</p>
 
                     <div class="member-info-list">
@@ -241,7 +241,7 @@
                   <div class="application-card-body">
                     <div class="applicant-header">
                       <h4 class="applicant-name">
-                        {{ application.realName || application.username || '申请人' }}
+                        {{ application.username || '申请人' }}
                       </h4>
                       <p class="application-id">
                         #{{ application.appli_id }} · {{ formatDate(application.applied_at) }}
@@ -362,7 +362,7 @@
         <el-icon class="warning-icon" color="#F56C6C"><Warning /></el-icon>
         <p>
           确定要移除成员
-          <strong>{{ removeMemberData?.realName || removeMemberData?.username }}</strong> 吗？
+          <strong>{{ removeMemberData?.username }}</strong> 吗？
         </p>
         <el-form ref="removeFormRef" :model="removeForm" :rules="removeRules" label-width="100px">
           <el-form-item label="移除原因" prop="reason">
@@ -392,7 +392,7 @@
         <div class="member-header">
           <el-avatar :src="currentMember.avatar_url" :size="80" />
           <div class="member-basic-info">
-            <h3 class="member-name">{{ currentMember.realName || currentMember.username }}</h3>
+            <h3 class="member-name">{{ currentMember.username }}</h3>
             <p class="member-username">@{{ currentMember.username }}</p>
             <el-tag
               :type="
@@ -420,6 +420,10 @@
           <div class="info-section">
             <h4>基本信息</h4>
             <div class="info-grid">
+              <div class="info-item">
+                <span class="label">真实姓名:</span>
+                <span class="value">{{ currentMember.realName || '未填写' }}</span>
+              </div>
               <div class="info-item">
                 <span class="label">学号:</span>
                 <span class="value">{{ currentMember.studentId || '未填写' }}</span>
@@ -454,6 +458,36 @@
                 <span class="label">邮箱:</span>
                 <span class="value">{{ currentMember.email || '未填写' }}</span>
               </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h4>偏好社团类型</h4>
+            <div class="tags-container">
+              <el-tag
+                v-for="category in currentMember.interestedCategories"
+                :key="category"
+                type="primary"
+                class="tag-item"
+              >
+                {{ category }}
+              </el-tag>
+              <span v-if="!currentMember.interestedCategories?.length" class="no-data">未设置</span>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h4>特质标签</h4>
+            <div class="tags-container">
+              <el-tag
+                v-for="tag in currentMember.tags"
+                :key="tag"
+                type="success"
+                class="tag-item"
+              >
+                {{ tag }}
+              </el-tag>
+              <span v-if="!currentMember.tags?.length" class="no-data">未设置</span>
             </div>
           </div>
         </div>
@@ -500,7 +534,7 @@
             <el-avatar :src="currentApplication.avatar_url" :size="80" />
             <div class="member-basic-info">
               <h3 class="member-name">
-                {{ currentApplication.realName || currentApplication.username }}
+                {{ currentApplication.username }}
               </h3>
               <p class="member-username">@{{ currentApplication.username }}</p>
             </div>
@@ -510,6 +544,10 @@
             <div class="info-section">
               <h4>基本信息</h4>
               <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">真实姓名:</span>
+                  <span class="value">{{ currentApplication.realName || '未填写' }}</span>
+                </div>
                 <div class="info-item">
                   <span class="label">学号:</span
                   ><span class="value">{{ currentApplication.studentId || '未填写' }}</span>
@@ -920,7 +958,7 @@ const confirmReject = async () => {
 const promoteToAdmin = async (member: ClubMember) => {
   try {
     await ElMessageBox.confirm(
-      `确定将 ${member.realName || member.username} 设为管理员吗？`,
+      `确定将 ${member.username} 设为管理员吗？`,
       '确认操作',
       {
         confirmButtonText: '确定',
@@ -946,7 +984,7 @@ const promoteToAdmin = async (member: ClubMember) => {
 const demoteToMember = async (member: ClubMember) => {
   try {
     await ElMessageBox.confirm(
-      `确定取消 ${member.realName || member.username} 的管理员权限吗？`,
+      `确定取消 ${member.username} 的管理员权限吗？`,
       '确认操作',
       {
         confirmButtonText: '确定',
@@ -1039,11 +1077,23 @@ const goBack = () => {
 
 const showMemberDetail = (member: ClubMember) => {
   currentMember.value = member
+  console.log('👤 成员详情数据:', {
+    phone: member.phone,
+    tags: member.tags,
+    interestedCategories: member.interestedCategories,
+    fullMember: member
+  })
   showMemberDetailDialog.value = true
 }
 
 const showApplicationDetail = (application: ClubApplication) => {
   currentApplication.value = application
+  console.log('📋 申请详情数据:', {
+    phone: application.phone,
+    tags: application.tags,
+    interestedCategories: application.interestedCategories,
+    fullApplication: application
+  })
   showApplicationDetailDialog.value = true
 }
 
@@ -1713,6 +1763,27 @@ onMounted(async () => {
   color: #495057;
   line-height: 1.6;
   font-size: 14px;
+}
+
+/* 标签容器样式 */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag-item {
+  margin: 0;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.no-data {
+  color: #909399;
+  font-size: 14px;
+  font-style: italic;
 }
 
 /* 响应式设计 */

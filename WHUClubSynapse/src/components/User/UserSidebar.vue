@@ -6,7 +6,7 @@
         <el-avatar :size="64" :src="userInfo?.avatar_url" class="user-avatar">
           <el-icon><User /></el-icon>
         </el-avatar>
-        <h3 class="user-name">{{ userInfo?.realName || userInfo?.username }}</h3>
+        <h3 class="user-name">{{ userInfo?.username }}</h3>
         <p class="user-role">
           <el-tag :type="userInfo?.role === 'admin' ? 'danger' : 'primary'" size="small">
             {{ getUserRoleText(userInfo?.role) }}

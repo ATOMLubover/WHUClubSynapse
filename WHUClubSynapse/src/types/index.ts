@@ -231,6 +231,8 @@ export interface ClubMember {
   major?: string
   phone?: string
   email?: string
+  tags?: string[]
+  interestedCategories?: string[]
 }
 
 // 社团申请类型

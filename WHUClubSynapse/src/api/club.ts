@@ -656,6 +656,14 @@ export const getClubMembers = async (
           major: user.major,
           phone: user.phone,
           email: user.email,
+          // 添加扩展信息
+          tags: user.tags || [],
+          interestedCategories: user.preferences?.interestedCategories?.map(category => {
+            if (typeof category === 'object' && category.name) {
+              return category.name
+            }
+            return String(category)
+          }) || []
         }
       })
       
@@ -797,12 +805,35 @@ export const getClubJoinApplications = async (
         application.major = userInfo.major || ''
         application.phone = userInfo.phone || ''
         application.email = userInfo.email
+        
+        // 添加扩展信息
+        application.tags = userInfo.tags || []
+        if (userInfo.preferences && userInfo.preferences.interestedCategories) {
+          // 转换ClubCategory数组为字符串数组
+          application.interestedCategories = userInfo.preferences.interestedCategories.map(category => {
+            if (typeof category === 'object' && category.name) {
+              return category.name
+            }
+            return String(category)
+          })
+        } else {
+          application.interestedCategories = []
+        }
+        
+        console.log(`📋 申请者 ${application.applicant_id} 信息:`, {
+          username: userInfo.username,
+          phone: userInfo.phone,
+          tags: userInfo.tags,
+          preferences: userInfo.preferences
+        })
       } catch (error) {
         console.warn(`获取申请者 ${application.applicant_id} 信息失败:`, error)
         // 设置默认值
         application.username = `用户${application.applicant_id}`
         application.realName = '未知用户'
         application.avatar_url = ''
+        application.tags = []
+        application.interestedCategories = []
       }
     }
   }
@@ -815,7 +846,16 @@ export const getClubJoinApplications = async (
       return {
         ...item,
         username: user.username,
-        avatar_url:`${config.apiBaseUrl}/${user.avatar_url}`
+        avatar_url:`${config.apiBaseUrl}/${user.avatar_url}`,
+        // 确保扩展信息也被包含
+        phone: user.phone || '',
+        tags: user.tags || [],
+        interestedCategories: user.preferences?.interestedCategories?.map(category => {
+          if (typeof category === 'object' && category.name) {
+            return category.name
+          }
+          return String(category)
+        }) || []
       }
     })
   )

@@ -163,7 +163,7 @@ const startScreening = async () => {
 
     // 构建申请者数据
     const applicantData = {
-      name: props.applicationData.realName || props.applicationData.username,
+      name: props.applicationData.username || '未知用户',
       major: props.applicationData.major || '未填写',
       skills: [
         ...(props.applicationData.interestedCategories || []),

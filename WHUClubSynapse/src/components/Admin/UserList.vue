@@ -296,14 +296,14 @@ const editUser = (user: any) => {
 
 // 查看用户详情
 const showUserDetail = (user: any) => {
-  ElMessage.info(`查看用户详情: ${user.realName}`)
+  ElMessage.info(`查看用户详情: ${user.username}`)
 }
 
 // 删除用户
 const deleteUser = async (user: any) => {
   const action = '删除'
   try {
-    await ElMessageBox.confirm(`确定要${action}用户 "${user.realName}" 吗？`, '确认操作', {
+    await ElMessageBox.confirm(`确定要${action}用户 "${user.username}" 吗？`, '确认操作', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
