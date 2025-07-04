@@ -7,3 +7,11 @@ type UpdateClubInfoRequest struct {
 	CatogoryId   int      `json:"category_id"`
 	Tags         []string `json:"tags"`
 }
+
+type UpdateClubInfoResponse struct {
+	Name         string   `json:"name"`
+	Desc         string   `json:"desc"`
+	Requirements string   `json:"requirements"`
+	CatogoryId   int      `json:"category_id"`
+	Tags         []string `json:"tags"`
+}

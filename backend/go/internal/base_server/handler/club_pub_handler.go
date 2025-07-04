@@ -28,6 +28,7 @@ type ClubPubHandler struct {
 
 func (h *ClubPubHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/join_applis/{id:int}", "GetJoinApplisForClub")
+	b.Handle("GET", "/my_update_applis", "GetMyUpdateApplis")
 
 	b.Handle("POST", "/update/{id:int}", "PostApplyForUpdateClubInfo")
 	b.Handle("POST", "/update_logo/{id:int}", "PostUploadLogo")
@@ -230,7 +231,7 @@ func (h *ClubPubHandler) PostAssembleClub(ctx iris.Context, id int) {
 	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" ||
 		userRole != dbstruct.ROLE_ADMIN &&
-		userRole != dbstruct.ROLE_CLUB_LEADER {
+			userRole != dbstruct.ROLE_CLUB_LEADER {
 		h.Logger.Error("用户权限错误", "role", userRole)
 
 		ctx.StatusCode(iris.StatusForbidden)
@@ -246,4 +247,31 @@ func (h *ClubPubHandler) PostAssembleClub(ctx iris.Context, id int) {
 	}
 
 	ctx.Text("社团解散成功")
+}
+
+func (h *ClubPubHandler) GetMyUpdateApplis(ctx iris.Context) {
+	userId, err := ctx.Values().GetInt("user_claims_user_id")
+	if err != nil {
+		h.Logger.Error("获取用户ID失败", "error", err)
+
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("用户ID无效")
+		return
+	}
+
+	applis, err := h.ClubService.GetUpdateApplisForUser(userId)
+	if err != nil {
+		h.Logger.Error("获取社团更新申请列表失败", "error", err)
+
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("无法获取社团更新申请列表")
+		return
+	}
+
+	var resApplis []string
+	for _, appli := range applis {
+		resApplis = append(resApplis, string(appli.Proposal))
+	}
+
+	ctx.JSON(resApplis)
 }

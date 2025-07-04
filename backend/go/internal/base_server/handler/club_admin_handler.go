@@ -24,6 +24,8 @@ type ClubAdminHandler struct {
 func (h *ClubAdminHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("PUT", "/proc_create", "PutProcAppliForCreateClub")
 	b.Handle("PUT", "/proc_update", "PutProcAppliForUpdateClub")
+
+	b.Handle("GET", "/update_list", "GetUpdateList")
 }
 
 func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
@@ -131,4 +133,37 @@ func (h *ClubAdminHandler) PutProcAppliForUpdateClub(ctx iris.Context) {
 	}
 
 	ctx.Text("通过社团更新申请成功")
+}
+
+func (h *ClubAdminHandler) GetUpdateList(ctx iris.Context) {
+	offset, err := ctx.URLParamInt("offset")
+	if err != nil {
+		h.Logger.Error("获取offset参数失败", "error", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("获取offset参数失败")
+		return
+	}
+
+	num, err := ctx.URLParamInt("num")
+	if err != nil {
+		h.Logger.Error("获取num参数失败", "error", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Text("获取num参数失败")
+		return
+	}
+
+	applis, err := h.ClubService.GetUpdateList(offset, num)
+	if err != nil {
+		h.Logger.Error("获取社团更新申请列表失败", "error", err)
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("获取社团更新申请列表失败")
+		return
+	}
+
+	var resApplis []string
+	for _, appli := range applis {
+		resApplis = append(resApplis, string(appli.Proposal))
+	}
+
+	ctx.JSON(resApplis)
 }

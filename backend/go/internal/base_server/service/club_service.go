@@ -50,6 +50,9 @@ type ClubService interface {
 
 	QuitClub(clubId, userId int) error
 	DissambleClub(clubId int) error
+
+	GetUpdateApplisForUser(userId int) ([]*dbstruct.UpdateClubInfoAppli, error)
+	GetUpdateList(offset, num int) ([]*dbstruct.UpdateClubInfoAppli, error)
 }
 
 type sClubService struct {
@@ -338,4 +341,12 @@ func (s *sClubService) DissambleClub(clubId int) error {
 
 		return nil
 	})
+}
+
+func (s *sClubService) GetUpdateApplisForUser(userId int) ([]*dbstruct.UpdateClubInfoAppli, error) {
+	return s.updateClubInfoAppliRepo.GetApplisByUserId(userId)
+}
+
+func (s *sClubService) GetUpdateList(offset, num int) ([]*dbstruct.UpdateClubInfoAppli, error) {
+	return s.updateClubInfoAppliRepo.GetUpdateList(offset, num)
 }
