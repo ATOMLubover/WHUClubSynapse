@@ -247,7 +247,7 @@ func InitClubPubHandler(
 			return
 		}
 
-		if userRole != dbstruct.ROLE_USER &&
+		if userRole != dbstruct.ROLE_PUBLISHER &&
 			userRole != dbstruct.ROLE_ADMIN {
 			ctx.StopWithStatus(iris.StatusForbidden)
 			return
