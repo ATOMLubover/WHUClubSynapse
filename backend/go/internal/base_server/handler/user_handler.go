@@ -241,24 +241,29 @@ func (h *UserHandler) PutUpdateUserInfo(ctx iris.Context) {
 		return
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword(
-		[]byte(reqBody.Password),
-		bcrypt.DefaultCost,
-	)
-	if err != nil {
-		h.Logger.Info("bcrypt加密密码失败",
-			"error", err, "encrypted_password", reqBody.Password,
+	hashedPwd := ""
+	if reqBody.Password != "" {
+		hashedBytes, err := bcrypt.GenerateFromPassword(
+			[]byte(reqBody.Password),
+			bcrypt.DefaultCost,
 		)
+		if err != nil {
+			h.Logger.Info("bcrypt加密密码失败",
+				"error", err, "encrypted_password", reqBody.Password,
+			)
 
-		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.Text("密码无效")
-		return
+			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.Text("密码无效")
+			return
+		}
+
+		hashedPwd = string(hashedBytes)
 	}
 
 	if err := h.UserService.UpdateUser(&dbstruct.User{
 		UserId:       uint(userId),
 		Username:     reqBody.Username,
-		PasswordHash: string(hashedBytes),
+		PasswordHash: hashedPwd,
 		Email:        reqBody.Email,
 		Extension:    reqBody.Extension,
 	}); err != nil {

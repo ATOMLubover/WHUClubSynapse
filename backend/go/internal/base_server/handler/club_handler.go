@@ -755,7 +755,8 @@ func (h *ClubHandler) PostQuitClub(ctx iris.Context, id int) {
 
 	inClub := false
 	for _, club := range clubs {
-		if club.LeaderId == uint(userId) {
+		if club.LeaderId == uint(userId) &&
+			club.ClubId == uint(id) {
 			h.Logger.Error("用户是社团的负责人，无法退出",
 				"user_id", userId, "club_id", id,
 			)
