@@ -21,7 +21,6 @@ import (
 	"whuclubsynapse-server/internal/shared/logger"
 
 	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/middleware/recover"
 	"github.com/kataras/iris/v12/mvc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -39,6 +38,12 @@ var crs MiddlewareFunc = func(ctx iris.Context) {
 		return
 	}
 	ctx.Next()
+
+	// 在处理完请求后，强制重新设置 CORS 头部
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
 }
 
 var routeLogger MiddlewareFunc = func(ctx iris.Context) {
@@ -55,9 +60,9 @@ func main() {
 		Timeout: 30 * time.Second, // 确保有超时设置
 	}
 
-	app := iris.New()
+	app := iris.Default()
 	app.Logger().SetLevel("debug")
-	app.Use(recover.New())
+	//app.Use(recover.New())
 
 	app.Use(crs, routeLogger)
 
