@@ -264,11 +264,13 @@
                     </div>
 
                     <div class="application-reason" v-if="application.reason">
-                      <div class="reason-label">
-                        <el-icon><Message /></el-icon>
-                        申请理由
+                      <div class="info-item reason-info-item">
+                        <el-icon class="info-icon"><Message /></el-icon>
+                        <div class="reason-content">
+                          <span class="reason-label">申请理由:</span>
+                          <span class="reason-text">{{ application.reason }}</span>
+                        </div>
                       </div>
-                      <p class="reason-text">{{ application.reason }}</p>
                     </div>
 
                     <div v-if="application.reject_reason" class="reject-reason">
@@ -1557,29 +1559,42 @@ onMounted(async () => {
 
 .application-reason {
   margin-bottom: 12px;
-  padding: 10px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 8px;
-  border-left: 3px solid #667eea;
+}
+
+.reason-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.reason-info-item:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.reason-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .reason-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #495057;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 12px;
+  color: #7f8c8d;
+  font-weight: 500;
 }
 
 .reason-text {
-  margin: 0;
   color: #495057;
-  line-height: 1.6;
   font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .application-info-list {

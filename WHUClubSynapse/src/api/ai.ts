@@ -58,11 +58,13 @@ export const chatWithAI = async (requestData: ChatRequest): Promise<ChatResponse
     console.log('AI聊天请求URL:', getChatApiUrl())
     console.log('AI聊天请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(getChatApiUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         messages: requestData.messages,
@@ -97,13 +99,15 @@ export const chatWithAI = async (requestData: ChatRequest): Promise<ChatResponse
 // 检查AI服务状态
 export const checkAIStatus = async (): Promise<boolean> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}`
+    const url = getStatusApiUrl()
     console.log('检查AI服务状态，URL:', url)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': '*/*',
+        'Authorization': `Bearer ${token}`
       },
       signal: AbortSignal.timeout(10000) // 10秒超时
     })
@@ -132,42 +136,15 @@ export const screenApplication = async (requestData: ApplicationScreeningRequest
     console.log('AI审核助手请求URL:', url)
     console.log('AI审核助手请求数据:', requestData)
     
-    // 尝试两种格式：下划线命名和驼峰命名
-    const validatedDataSnake = {
-      applicant_data: {
-        name: requestData.applicant_data.name || '',
-        major: requestData.applicant_data.major || '',
-        skills: requestData.applicant_data.skills || [],
-        experience: requestData.applicant_data.experience || ''
-      },
-      application_reason: requestData.application_reason || '',
-      required_conditions: requestData.required_conditions || [],
-      club_name: requestData.club_name || ''
-    }
-    
-    const validatedDataCamel = {
-      applicantData: {
-        name: requestData.applicant_data.name || '',
-        major: requestData.applicant_data.major || '',
-        skills: requestData.applicant_data.skills || [],
-        experience: requestData.applicant_data.experience || ''
-      },
-      applicationReason: requestData.application_reason || '',
-      requiredConditions: requestData.required_conditions || [],
-      clubName: requestData.club_name || ''
-    }
-    
-    console.log('下划线格式请求数据:', validatedDataSnake)
-    console.log('驼峰格式请求数据:', validatedDataCamel)
-    
-    // 先尝试下划线格式
-    let response = await fetch(url, {
+    const token = localStorage.getItem('token')
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(validatedDataSnake),
+      body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
     })
 
@@ -175,26 +152,8 @@ export const screenApplication = async (requestData: ApplicationScreeningRequest
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('下划线格式失败，尝试驼峰格式:', errorText)
-      
-      // 如果下划线格式失败，尝试驼峰格式
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(validatedDataCamel),
-        signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
-      })
-      
-      console.log('驼峰格式响应状态:', response.status)
-      
-      if (!response.ok) {
-        const errorText2 = await response.text()
-        console.error('驼峰格式也失败:', errorText2)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText2}`)
-      }
+      console.error('AI审核助手请求失败:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
     }
 
     const data = await response.json()
@@ -219,15 +178,17 @@ export interface ClubAtmosphereResponse {
 // AI氛围透视镜API
 export const analyzeClubAtmosphere = async (requestData: ClubAtmosphereRequest): Promise<ClubAtmosphereResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/club_atmosphere`
+    const url = `${AI_CONFIG.BASE_URL}/analyze_atmosphere`
     console.log('AI氛围透视镜请求URL:', url)
     console.log('AI氛围透视镜请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
@@ -277,11 +238,13 @@ export const financialBookkeeping = async (requestData: FinancialBookkeepingRequ
     console.log('财务记账请求URL:', url)
     console.log('财务记账请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
@@ -322,11 +285,13 @@ export const generateFinancialReport = async (requestData: FinancialReportReques
     console.log('生成财务报表请求URL:', url)
     console.log('生成财务报表请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
@@ -378,11 +343,13 @@ export const generateClubIntroduction = async (requestData: ContentGenerationReq
     console.log('AI社团介绍生成请求URL:', url)
     console.log('AI社团介绍生成请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
@@ -412,11 +379,13 @@ export const generateAnnouncementContent = async (requestData: AnnouncementGener
     console.log('AI公告内容生成请求URL:', url)
     console.log('AI公告内容生成请求数据:', requestData)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(requestData),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
@@ -442,34 +411,36 @@ export const generateAnnouncementContent = async (requestData: AnnouncementGener
 // AI智能推荐社团
 export const getClubRecommendations = async (request: ClubRecommendRequest): Promise<ClubRecommendResponse> => {
   try {
-    const url = getAIApiUrl('/club_recommend')
-    console.log('AI推荐社团请求URL:', url)
-    console.log('AI推荐社团请求数据:', request)
+    const url = `${AI_CONFIG.BASE_URL}/recommend_clubs`
+    console.log('AI智能推荐社团请求URL:', url)
+    console.log('AI智能推荐社团请求数据:', request)
     
+    const token = localStorage.getItem('token')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
     })
 
-    console.log('AI推荐社团响应状态:', response.status)
-    console.log('AI推荐社团响应头:', Object.fromEntries(response.headers.entries()))
+    console.log('AI智能推荐社团响应状态:', response.status)
+    console.log('AI智能推荐社团响应头:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI推荐社团HTTP错误:', response.status, errorText)
+      console.error('AI智能推荐社团HTTP错误:', response.status, errorText)
       throw new Error(`HTTP ${response.status}: ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('AI推荐社团响应数据:', data)
+    console.log('AI智能推荐社团响应数据:', data)
     return data
   } catch (error) {
-    console.error('AI推荐社团请求失败:', error)
+    console.error('AI智能推荐社团请求失败:', error)
     throw error
   }
 } 

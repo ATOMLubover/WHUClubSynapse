@@ -1,7 +1,7 @@
 // AI智能搜索配置
 export const aiSearchConfig = {
   // AI智能搜索API基础URL
-  baseURL: 'http://55cf4417.cpolar.io', // 根据实际部署情况修改
+  baseURL: '/api/trans/rag/', // 根据实际部署情况修改
   
   // API端点
   endpoints: {

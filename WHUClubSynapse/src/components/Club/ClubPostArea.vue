@@ -17,7 +17,7 @@
     <div v-if="loading" style="text-align: center; padding: 20px; color: #666">正在加载帖子...</div>
 
     <div
-      v-else-if="!clubStore.currentClubPosts.length"
+      v-else-if="!filteredPosts.length"
       style="text-align: center; padding: 20px; color: #666"
     >
       暂无帖子 (总数: {{ total }})
@@ -25,7 +25,7 @@
 
     <div v-else class="post-list">
       <div
-        v-for="post in clubStore.currentClubPosts"
+        v-for="post in filteredPosts"
         :key="post.post_id"
         class="post-card"
         @click="goToPost(post)"
@@ -100,7 +100,7 @@ const clubStore = useClubStore()
 const loading = computed(() => clubStore.postsLoading)
 const total = ref(0)
 const page = ref(1)
-const pageSize = 5
+const pageSize = 500
 
 const showCreate = ref(false)
 const createForm = ref({ title: '', content: '' })
@@ -201,6 +201,11 @@ const stripMarkdown = (text: string) => {
       .trim()
   )
 }
+
+// 添加计算属性来过滤掉置顶帖子
+const filteredPosts = computed(() => {
+  return clubStore.currentClubPosts.filter(post => !post.is_pinned)
+})
 
 onMounted(async () => {
   await fetchPosts()
