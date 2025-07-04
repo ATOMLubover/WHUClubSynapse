@@ -268,9 +268,12 @@ func (h *ClubPubHandler) GetMyUpdateApplis(ctx iris.Context) {
 		return
 	}
 
-	var resApplis []string
+	var resApplis []*dto.UpdateClubInfoResponse
 	for _, appli := range applis {
-		resApplis = append(resApplis, string(appli.Proposal))
+		resApplis = append(resApplis, &dto.UpdateClubInfoResponse{
+			Proposal: string(appli.Proposal),
+			Status:   appli.Status,
+		})
 	}
 
 	ctx.JSON(resApplis)
