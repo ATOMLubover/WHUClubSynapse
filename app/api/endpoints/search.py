@@ -83,11 +83,16 @@ async def smart_search(search_query: SearchQuery):
             ],
             "enable_thinking": True,
             "max_tokens": 1024,
-            "stream": True 
+            "stream": True,
+            "lora_request": {
+                "lora_name": settings.VLLM_LORA_NAME,
+                "lora_int_id": settings.VLLM_LORA_ID,
+                "lora_local_path": settings.VLLM_LORA_DIR
+            }
         }
 
         headers = {
-            "Authorization": f"Bearer sk-this-can-be-anything"
+            "Authorization": f"Bearer {settings.VLLM_API_KEY}"
         }
         logger.info(f"正在调用 vLLM 模型服务: {settings.VLLM_API_URL}")
         try: 

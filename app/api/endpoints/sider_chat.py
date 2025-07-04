@@ -102,7 +102,12 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
             "messages": messages_for_llm,
             "max_tokens": 1024,
             "stream": True,
-            "enable_thinking": enable_thinking
+            "enable_thinking": enable_thinking,
+            "lora_request": {
+                "lora_name": settings.VLLM_LORA_NAME,
+                "lora_int_id": settings.VLLM_LORA_ID,
+                "lora_local_path": settings.VLLM_LORA_DIR
+            }
         }
         headers = {"Authorization": "Bearer sk-this-can-be-anything"}
 
