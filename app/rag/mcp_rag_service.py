@@ -164,7 +164,7 @@ async def handle_call_tool(name: str, args: Dict[str, Any]) -> CallToolResult:
         n_results = args.get('n_results', 5) 
         if not query:
             raise ValueError("query 参数不能为空")
-          retrieved_docs = retriever.retrieve(query, n_results)
+        retrieved_docs = retriever.retrieve(query, n_results)
         results = retriever.format_context(retrieved_docs)
         
         response = {
