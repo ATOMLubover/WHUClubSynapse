@@ -337,7 +337,7 @@ func (s *sClubService) DissambleClub(clubId int) error {
 			return err
 		}
 
-		if err := s.clubRepo.DeleteClub(clubId); err != nil {
+		if err := s.clubRepo.DeleteClub(tx, clubId); err != nil {
 			return err
 		}
 

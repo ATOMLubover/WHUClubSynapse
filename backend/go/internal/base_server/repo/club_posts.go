@@ -67,10 +67,11 @@ func (r *sClubPostRepo) ChangePostVisibility(postId, visibility int) error {
 func (r *sClubPostRepo) GetPinnedPost(clubId int) (*dbstruct.ClubPost, error) {
 	var post dbstruct.ClubPost
 	err := r.database.
+		Model(&dbstruct.ClubPost{}).
 		Where("club_id = ? AND is_pinned = ?", clubId, true).
 		First(&post).Error
 
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 

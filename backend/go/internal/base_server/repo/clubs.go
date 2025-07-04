@@ -19,7 +19,7 @@ type ClubRepo interface {
 	UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error
 	UpdateClubLogo(clubId int, logoUrl string) error
 
-	DeleteClub(clubId int) error
+	DeleteClub(tx *gorm.DB, clubId int) error
 }
 
 type sClubRepo struct {
@@ -113,8 +113,8 @@ func (r *sClubRepo) UpdateClubLogo(clubId int, logoUrl string) error {
 		Update("logo_url", logoUrl).Error
 }
 
-func (r *sClubRepo) DeleteClub(clubId int) error {
-	if err := r.database.
+func (r *sClubRepo) DeleteClub(tx *gorm.DB, clubId int) error {
+	if err := tx.
 		Model(&dbstruct.Club{}).
 		Where("club_id = ?", clubId).
 		Delete(&dbstruct.Club{}).Error; err != nil {

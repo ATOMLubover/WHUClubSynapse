@@ -231,7 +231,7 @@ func (h *ClubPubHandler) PostAssembleClub(ctx iris.Context, id int) {
 	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" ||
 		userRole != dbstruct.ROLE_ADMIN &&
-			userRole != dbstruct.ROLE_CLUB_LEADER {
+			userRole != dbstruct.ROLE_PUBLISHER {
 		h.Logger.Error("用户权限错误", "role", userRole)
 
 		ctx.StatusCode(iris.StatusForbidden)
