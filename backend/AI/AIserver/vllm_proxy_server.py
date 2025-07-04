@@ -16,6 +16,7 @@ import re
 import signal
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -274,6 +275,35 @@ class Club_Recommend_Request(BaseModel):
 class Club_Recommend_Response(BaseModel):
     Summary_text: str
     Recommend_club_list: List[ClubInfo]
+
+# New Pydantic Models for ML data generation
+class CommunityItem(BaseModel):
+    community_id: int
+    community_name: str
+    tags: str # Pipe-separated string like 'photography|camera|artistic'
+
+class UserItem(BaseModel):
+    user_id: int
+    user_tags: str # Pipe-separated string like '喜欢拍照|艺术创作|风景'
+
+class InteractionItem(BaseModel):
+    user_id: int
+    community_id: int
+    interaction: int # Assuming 1 for interaction
+    timestamp: str # ISO format string for datetime
+
+class MLDataGenerationRequest(BaseModel):
+    num_communities: int = 5
+    num_users: int = 5
+    num_interactions: int = 8
+    save_file: Optional[str] = "ml_data.json" # 新增保存文件名
+
+class MLDataGenerationResponse(BaseModel):
+    communities: List[CommunityItem]
+    users: List[UserItem]
+    interactions: List[InteractionItem]
+    message: str # 新增消息字段
+    file_path: Optional[str] = None # 新增保存文件路径字段
 
 # tongyi_chat 函数
 api_key_tongyi="sk-354859a6d3ae438fb8ab9b98194f5266"
@@ -773,11 +803,24 @@ async def generate_content(request: ContentGenerationRequest):
         logger.info(f"生成的AI内容Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         generated_text = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                generated_text += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一位文案创作大师，擅长运用多种文体风格进行改写。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed for content length
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        generated_text = chat_response.response
 
         if not generated_text.strip():
             raise ValueError("AI未返回有效的生成内容。")
@@ -2120,11 +2163,24 @@ async def generate_activity_post(request: ContentGenerationRequest):
         logger.info(f"生成社团动态总结Prompt: {full_prompt[:200]}...") # 增加日志长度
 
         generated_text = ""
-        for chunk in tongyi_chat_embedded(messages=full_prompt):
-            if chunk.get("type") == "content":
-                generated_text += chunk.get("content", "")
-            elif chunk.get("type") == "error":
-                raise Exception(chunk.get("content", "AI生成服务错误"))
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一位专业的社团活动总结撰写专家，擅长将活动的实际开展情况转化为引人入胜的社交媒体动态。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed for post length
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        generated_text = chat_response.response
 
         if not generated_text.strip():
             raise ValueError("AI未返回有效的生成内容。")
@@ -2134,6 +2190,457 @@ async def generate_activity_post(request: ContentGenerationRequest):
     except Exception as e:
         logger.error(f"AI社团动态总结生成失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI社团动态总结生成失败: {e}")
+
+@app.post("/generate_ml_data", response_model=MLDataGenerationResponse)
+async def generate_ml_data(request: MLDataGenerationRequest):
+    """
+    根据机器学习需求，使用AI生成模拟的社团、用户和互动数据。
+    生成过程分为三个阶段：社团信息、个人偏好、以及基于前两者的互动信息。
+    
+    Args:
+        request: 包含生成数量（社团、用户、互动）的请求体。
+        
+    Returns:
+        MLDataGenerationResponse: 包含生成的社团、用户和互动数据。
+    """
+    try:
+        # 固定每个批次LLM调用生成数量（为了多样性）
+        LLM_BATCH_SIZE = 10 # 统一批次大小，LLM返回的实际数量会是这个值减2
+
+        all_communities = []
+        all_users = []
+        all_interactions = []
+
+        # 定义三个独立的Prompt模板
+        community_prompt_template = """
+你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟社团数据。
+你的任务是根据以下数据模型和要求，一次性生成指定数量的模拟社团数据，并以JSON格式返回。
+
+**重要：你必须生成与已提供数据不重复的全新数据。生成的 community_id 必须是未出现过的新ID。**
+
+**数据模型:**
+1.  **社团数据 (communities):**
+    -   `community_id`: 整型，社团的唯一ID。
+    -   `community_name`: 字符串，社团的名称。
+    -   `tags`: 字符串，社团的标签，使用 '|' 分隔。可以是中文，数量不定，也可以没有（空字符串）。例如: '摄影|艺术|风景' 或 ''。
+
+**生成数量要求:**
+-   `num_communities`: {num_communities}
+
+**已有社团数据 (请在此基础上生成新的、不重复的社团):**
+{existing_data_str}
+
+**输出格式要求:**
+请**直接**按照以下JSON格式返回结果，**不要包含任何Markdown代码块或其他文本**：
+{{
+  "communities": [
+    {{"community_id": 1, "community_name": "摄影社", "tags": "摄影|艺术|风景"}},
+    {{"community_id": 2, "community_name": "篮球社", "tags": "篮球|运动|团队"}},
+    // ... 其他社团数据 ...
+  ]
+}}
+
+请开始生成数据。
+"""
+
+        user_prompt_template = """
+你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟用户数据。
+你的任务是根据以下数据模型和要求，一次性生成指定数量的模拟用户数据，并以JSON格式返回。
+
+**重要：你必须生成与已提供数据不重复的全新数据。生成的 user_id 必须是未出现过的新ID。**
+
+**数据模型:**
+1.  **用户数据 (users):**
+    -   `user_id`: 整型，用户的唯一ID。
+    -   `user_tags`: 字符串，用户的兴趣标签，使用 '|' 分隔（可以是自定义的中文标签）。例如: '喜欢拍照|艺术创作|风景'。
+
+**生成数量要求:**
+-   `num_users`: {num_users}
+
+**已有用户数据 (请在此基础上生成新的、不重复的用户):**
+{existing_data_str}
+
+**输出格式要求:**
+请**直接**按照以下JSON格式返回结果，**不要包含任何Markdown代码块或其他文本**：
+{{
+  "users": [
+    {{"user_id": 1, "user_tags": "喜欢拍照|艺术创作|风景"}},
+    {{"user_id": 2, "user_tags": "运动健身|编程开发|团队协作"}},
+    // ... 其他用户数据 ...
+  ]
+}}
+
+请开始生成数据。
+"""
+
+        interaction_prompt_template = """
+你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟用户-社团互动数据。
+你的任务是根据以下数据模型和要求，一次性生成指定数量的模拟互动数据，并以JSON格式返回。
+
+**重要：你必须生成与已提供数据不重复的全新数据。互动关系必须基于已提供的社团和用户ID来创建。**
+
+**数据模型:**
+1.  **用户-社团互动数据 (interactions):**
+    -   `user_id`: 整型，参与互动的用户ID，**必须是已提供的 `users` 中的ID**。
+    -   `community_id`: 整型，发生互动的社团ID，**必须是已提供的 `communities` 中的ID**。
+    -   `interaction`: 整型，表示互动强度或类型，统一使用 `1`。
+    -   `timestamp`: 字符串，互动发生的时间戳，使用 ISO 8601 格式 (例如: '2024-01-01T10:30:00Z')。
+
+**生成数量要求:**
+-   `num_interactions`: {num_interactions}
+
+**已有社团信息 (可用于互动):**
+{existing_communities_str}
+
+**已有用户信息 (可用于互动):**
+{existing_users_str}
+
+**已有互动数据 (请在此基础上生成新的、不重复的互动):**
+{existing_interactions_str}
+
+**输出格式要求:**
+请**直接**按照以下JSON格式返回结果，**不要包含任何Markdown代码块或其他文本**：
+{{
+  "interactions": [
+    {{"user_id": 1, "community_id": 1, "interaction": 1, "timestamp": "2024-01-01T10:00:00Z"}},
+    {{"user_id": 1, "community_id": 3, "interaction": 1, "timestamp": "2024-01-01T11:00:00Z"}},
+    // ... 其他互动数据 ...
+  ]
+}}
+
+请开始生成数据。
+"""
+
+        max_iterations = 100  # Adjust as needed, safety break
+
+        # --- Stage 1: Generate Communities ---
+        current_iteration = 0
+        while len(all_communities) < request.num_communities and current_iteration < max_iterations:
+            current_iteration += 1
+            communities_to_request = min(LLM_BATCH_SIZE, request.num_communities - len(all_communities))
+
+            if communities_to_request <= 0:
+                break
+
+            existing_communities_str = "\n".join([f"- ID: {c.community_id}, Name: {c.community_name}, Tags: {c.tags}" for c in all_communities]) if all_communities else "无"
+
+            current_prompt_formatted = community_prompt_template.format(
+                num_communities=communities_to_request + 2, # +2 for example discarding
+                existing_data_str=existing_communities_str
+            )
+            
+            logger.info(f"AI机器学习数据生成Prompt (Communities Iteration {current_iteration}): {current_prompt_formatted[:200]}...")
+
+            messages = [
+                Message(role="system", content="你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟社团数据。请严格按照要求的JSON格式返回数据。请确保生成的数据是全新的，并且ID不与提供的已有数据重复。"),
+                Message(role="user", content=current_prompt_formatted)
+            ]
+            
+            chat_request = ChatRequest(
+                messages=messages,
+                model=config.default_model,
+                max_tokens=8000,
+                temperature=0.7,
+                top_p=0.95,
+                stream=False
+            )
+
+            llm_response_content = ""
+            try:
+                chat_response = await chat(chat_request)
+                llm_response_content = chat_response.response
+            except HTTPException as e:
+                logger.warning(f"LLM调用失败 (Communities Iteration {current_iteration}): {e.detail}")
+                continue
+            except Exception as e:
+                logger.warning(f"LLM调用发生未知错误 (Communities Iteration {current_iteration}): {e}")
+                continue
+
+            if not llm_response_content.strip():
+                logger.warning(f"AI未返回有效的响应内容 (Communities Iteration {current_iteration})。")
+                continue
+
+            json_string = llm_response_content.strip()
+            if json_string.startswith("```json") and json_string.endswith("```"):
+                json_string = json_string[len("```json"): -len("```")].strip()
+            
+            match = re.search(r'"communities":\s*\[.*?\]', json_string, re.DOTALL) # More specific regex for communities list
+            if not match:
+                logger.warning(f"AI响应中未找到有效的communities JSON结构 (Communities Iteration {current_iteration}): {llm_response_content[:200]}...")
+                continue
+            
+            try:
+                # Extract only the communities array for parsing
+                communities_array_str = "{\"communities\": " + match.group(0).split(':', 1)[1] + "}"
+                parsed_response = json.loads(communities_array_str)
+                communities_data = parsed_response.get("communities", [])
+
+                existing_community_ids = {c.community_id for c in all_communities}
+                new_communities_batch = []
+                for item in communities_data[2:]:
+                    try:
+                        community = CommunityItem(**item)
+                        if community.community_id not in existing_community_ids:
+                            new_communities_batch.append(community)
+                            existing_community_ids.add(community.community_id)
+                        else:
+                            logger.warning(f"Skipping duplicate community ID: {community.community_id} (Communities Iteration {current_iteration})")
+                    except Exception as e:
+                        logger.warning(f"解析单个社团条目时出错: {item}, 错误: {e} (Communities Iteration {current_iteration})")
+
+                all_communities.extend(new_communities_batch)
+                logger.info(f"Communities Iteration {current_iteration}: Added {len(new_communities_batch)} new communities. Total so far: {len(all_communities)}")
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"AI响应不是有效的JSON (Communities Iteration {current_iteration}): {e}, 响应内容: {json_string[:200]}...")
+                continue
+            except Exception as e:
+                logger.warning(f"处理本批次社团数据时出错 (Communities Iteration {current_iteration}): {e}")
+                continue
+        
+        if not all_communities and request.num_communities > 0:
+            raise ValueError("未能生成任何社团数据")
+        
+        # --- Stage 2: Generate Users ---
+        current_iteration = 0
+        while len(all_users) < request.num_users and current_iteration < max_iterations:
+            current_iteration += 1
+            users_to_request = min(LLM_BATCH_SIZE, request.num_users - len(all_users))
+
+            if users_to_request <= 0:
+                break
+
+            existing_users_str = "\n".join([f"- ID: {u.user_id}, Tags: {u.user_tags}" for u in all_users]) if all_users else "无"
+
+            current_prompt_formatted = user_prompt_template.format(
+                num_users=users_to_request + 2, # +2 for example discarding
+                existing_data_str=existing_users_str
+            )
+            
+            logger.info(f"AI机器学习数据生成Prompt (Users Iteration {current_iteration}): {current_prompt_formatted[:200]}...")
+
+            messages = [
+                Message(role="system", content="你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟用户数据。请严格按照要求的JSON格式返回数据。请确保生成的数据是全新的，并且ID不与提供的已有数据重复。"),
+                Message(role="user", content=current_prompt_formatted)
+            ]
+            
+            chat_request = ChatRequest(
+                messages=messages,
+                model=config.default_model,
+                max_tokens=8000,
+                temperature=0.7,
+                top_p=0.95,
+                stream=False
+            )
+
+            llm_response_content = ""
+            try:
+                chat_response = await chat(chat_request)
+                llm_response_content = chat_response.response
+            except HTTPException as e:
+                logger.warning(f"LLM调用失败 (Users Iteration {current_iteration}): {e.detail}")
+                continue
+            except Exception as e:
+                logger.warning(f"LLM调用发生未知错误 (Users Iteration {current_iteration}): {e}")
+                continue
+
+            if not llm_response_content.strip():
+                logger.warning(f"AI未返回有效的响应内容 (Users Iteration {current_iteration})。")
+                continue
+
+            json_string = llm_response_content.strip()
+            if json_string.startswith("```json") and json_string.endswith("```"):
+                json_string = json_string[len("```json"): -len("```")].strip()
+            
+            match = re.search(r'"users":\s*\[.*?\]', json_string, re.DOTALL) # More specific regex for users list
+            if not match:
+                logger.warning(f"AI响应中未找到有效的users JSON结构 (Users Iteration {current_iteration}): {llm_response_content[:200]}...")
+                continue
+            
+            try:
+                # Extract only the users array for parsing
+                users_array_str = "{\"users\": " + match.group(0).split(':', 1)[1] + "}"
+                parsed_response = json.loads(users_array_str)
+                users_data = parsed_response.get("users", [])
+
+                existing_user_ids = {u.user_id for u in all_users}
+                new_users_batch = []
+                for item in users_data[2:]:
+                    try:
+                        user = UserItem(**item)
+                        if user.user_id not in existing_user_ids:
+                            new_users_batch.append(user)
+                            existing_user_ids.add(user.user_id)
+                        else:
+                            logger.warning(f"Skipping duplicate user ID: {user.user_id} (Users Iteration {current_iteration})")
+                    except Exception as e:
+                        logger.warning(f"解析单个用户条目时出错: {item}, 错误: {e} (Users Iteration {current_iteration})")
+
+                all_users.extend(new_users_batch)
+                logger.info(f"Users Iteration {current_iteration}: Added {len(new_users_batch)} new users. Total so far: {len(all_users)}")
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"AI响应不是有效的JSON (Users Iteration {current_iteration}): {e}, 响应内容: {json_string[:200]}...")
+                continue
+            except Exception as e:
+                logger.warning(f"处理本批次用户数据时出错 (Users Iteration {current_iteration}): {e}")
+                continue
+        
+        if not all_users and request.num_users > 0:
+            raise ValueError("未能生成任何用户数据")
+
+        # --- Stage 3: Generate Interactions ---
+        current_iteration = 0
+        # Collect all existing community and user IDs for the LLM to use
+        available_community_ids = [c.community_id for c in all_communities]
+        available_user_ids = [u.user_id for u in all_users]
+
+        if not available_community_ids or not available_user_ids:
+            logger.warning("没有足够的社团或用户数据来生成互动，跳过互动生成阶段。")
+            # If interactions are requested but no communities/users, we should still return what we have.
+            # raise ValueError("没有足够的社团或用户数据来生成互动") # Removed to allow partial generation
+
+        while len(all_interactions) < request.num_interactions and current_iteration < max_iterations and available_community_ids and available_user_ids:
+            current_iteration += 1
+            interactions_to_request = min(LLM_BATCH_SIZE, request.num_interactions - len(all_interactions))
+
+            if interactions_to_request <= 0:
+                break
+
+            existing_interactions_str = "\n".join([f"- UserID: {i.user_id}, CommunityID: {i.community_id}, Timestamp: {i.timestamp}" for i in all_interactions]) if all_interactions else "无"
+            existing_communities_str_for_interactions = "\n".join([f"- ID: {c}" for c in available_community_ids])
+            existing_users_str_for_interactions = "\n".join([f"- ID: {u}" for u in available_user_ids])
+
+            current_prompt_formatted = interaction_prompt_template.format(
+                num_interactions=interactions_to_request + 2, # +2 for example discarding
+                existing_communities_str=existing_communities_str_for_interactions,
+                existing_users_str=existing_users_str_for_interactions,
+                existing_interactions_str=existing_interactions_str
+            )
+            
+            logger.info(f"AI机器学习数据生成Prompt (Interactions Iteration {current_iteration}): {current_prompt_formatted[:200]}...")
+
+            messages = [
+                Message(role="system", content="你是一个顶尖的数据生成AI，专注于为机器学习任务生成高质量、结构化的模拟用户-社团互动数据。请严格按照要求的JSON格式返回数据。请确保生成的数据是全新的，并且互动关系必须基于提供的社团和用户ID来创建。"),
+                Message(role="user", content=current_prompt_formatted)
+            ]
+            
+            chat_request = ChatRequest(
+                messages=messages,
+                model=config.default_model,
+                max_tokens=8000,
+                temperature=0.7,
+                top_p=0.95,
+                stream=False
+            )
+
+            llm_response_content = ""
+            try:
+                chat_response = await chat(chat_request)
+                llm_response_content = chat_response.response
+            except HTTPException as e:
+                logger.warning(f"LLM调用失败 (Interactions Iteration {current_iteration}): {e.detail}")
+                continue
+            except Exception as e:
+                logger.warning(f"LLM调用发生未知错误 (Interactions Iteration {current_iteration}): {e}")
+                continue
+
+            if not llm_response_content.strip():
+                logger.warning(f"AI未返回有效的响应内容 (Interactions Iteration {current_iteration})。")
+                continue
+
+            json_string = llm_response_content.strip()
+            if json_string.startswith("```json") and json_string.endswith("```"):
+                json_string = json_string[len("```json"): -len("```")].strip()
+            
+            match = re.search(r'"interactions":\s*\[.*?\]', json_string, re.DOTALL) # More specific regex for interactions list
+            if not match:
+                logger.warning(f"AI响应中未找到有效的interactions JSON结构 (Interactions Iteration {current_iteration}): {llm_response_content[:200]}...")
+                continue
+            
+            try:
+                # Extract only the interactions array for parsing
+                interactions_array_str = "{\"interactions\": " + match.group(0).split(':', 1)[1] + "}"
+                parsed_response = json.loads(interactions_array_str)
+                interactions_data = parsed_response.get("interactions", [])
+
+                # For interactions, we need a way to check if an identical interaction (user_id, community_id, timestamp) already exists
+                existing_interaction_tuples = {(i.user_id, i.community_id, i.timestamp) for i in all_interactions}
+                
+                new_interactions_batch = []
+                for item in interactions_data[2:]:
+                    try:
+                        interaction = InteractionItem(**item)
+                        interaction_tuple = (interaction.user_id, interaction.community_id, interaction.timestamp)
+
+                        # Validate if the user_id and community_id exist in our *already generated and available* lists
+                        if interaction.user_id in available_user_ids and \
+                           interaction.community_id in available_community_ids and \
+                           interaction_tuple not in existing_interaction_tuples:
+                            new_interactions_batch.append(interaction)
+                            existing_interaction_tuples.add(interaction_tuple)
+                        else:
+                            # Log why an interaction was skipped (e.g., invalid ID or duplicate)
+                            if interaction_tuple in existing_interaction_tuples:
+                                logger.warning(f"Skipping duplicate interaction: {interaction_tuple} (Interactions Iteration {current_iteration})")
+                            else:
+                                logger.warning(f"Skipping interaction with invalid user_id ({interaction.user_id}) or community_id ({interaction.community_id}) not found in available IDs. (Interactions Iteration {current_iteration})")
+                    except Exception as e:
+                        logger.warning(f"解析单个互动条目时出错: {item}, 错误: {e} (Interactions Iteration {current_iteration})")
+                        continue
+                
+                all_interactions.extend(new_interactions_batch)
+                logger.info(f"Interactions Iteration {current_iteration}: Added {len(new_interactions_batch)} new interactions. Total so far: {len(all_interactions)}")
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"AI响应不是有效的JSON (Interactions Iteration {current_iteration}): {e}, 响应内容: {json_string[:200]}...")
+                continue
+            except Exception as e:
+                logger.warning(f"处理本批次互动数据时出错 (Interactions Iteration {current_iteration}): {e}")
+                continue
+
+        # Final truncation to exact requested quantities
+        final_communities = all_communities[:request.num_communities]
+        final_users = all_users[:request.num_users]
+        final_interactions = all_interactions[:request.num_interactions]
+
+        if not final_communities and not final_users and not final_interactions:
+            raise ValueError("未能生成任何有效数据")
+
+        # Save to file
+        save_path = None
+        if request.save_file:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_name, ext = os.path.splitext(request.save_file)
+            file_name = f"{base_name}_{timestamp}{ext}" if ext else f"{base_name}_{timestamp}"
+            save_path = os.path.join(current_dir, "generated_data", file_name)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+            try:
+                # Combine all data into a single structure for saving
+                combined_data = {
+                    "communities": [c.dict() for c in final_communities],
+                    "users": [u.dict() for u in final_users],
+                    "interactions": [i.dict() for i in final_interactions]
+                }
+                with open(save_path, 'w', encoding='utf-8') as f:
+                    json.dump(combined_data, f, indent=2, ensure_ascii=False)
+                logger.info(f"ML数据已成功保存到: {save_path}")
+            except Exception as e:
+                logger.error(f"保存ML数据到文件失败: {e}")
+                save_path = None
+
+        return MLDataGenerationResponse(
+            communities=final_communities,
+            users=final_users,
+            interactions=final_interactions,
+            message=f"成功生成 {len(final_communities)} 条社团数据, {len(final_users)} 条用户数据, {len(final_interactions)} 条互动数据",
+            file_path=save_path
+        )
+            
+    except Exception as e:
+        logger.error(f"AI机器学习数据生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"AI机器学习数据生成失败: {e}")
 
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
@@ -2159,6 +2666,7 @@ if __name__ == "__main__":
     print(f"社团推荐接口: http://{config.server_host}:{config.server_port}/club_recommend")
     print(f"更新社团信息接口: http://{config.server_host}:{config.server_port}/update_club_data")
     print(f"训练数据生成接口: http://{config.server_host}:{config.server_port}/generate_training_data")
+    print(f"机器学习数据生成接口: http://{config.server_host}:{config.server_port}/generate_ml_data")
     
     # 使用自定义的uvicorn配置类来支持优雅停机
     class UvicornServer(uvicorn.Server):
