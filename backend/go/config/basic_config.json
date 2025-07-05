@@ -17,5 +17,5 @@
   "jwt_expiration_time": 24,
   "jwt_secret_key": "priestess",
   "llm_addr": "https://6a52-125-220-159-5.ngrok-free.app",
-  "rag_addr": "http://2c7f510f.r36.cpolar.top"
+  "rag_addr": "http://localhost:8085"
 }

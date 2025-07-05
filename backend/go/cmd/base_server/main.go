@@ -51,7 +51,6 @@ func main() {
 		Transport: &http.Transport{
 			ForceAttemptHTTP2: false,
 		},
-		Timeout: 30 * time.Second, // 确保有超时设置
 	}
 
 	app := iris.Default()

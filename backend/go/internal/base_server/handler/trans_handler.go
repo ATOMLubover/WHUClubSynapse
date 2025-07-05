@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"log/slog"
@@ -143,27 +144,54 @@ func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 
 	ctx.StatusCode(res.StatusCode)
 
-	for {
-		_, err := io.Copy(ctx.ResponseWriter(), res.Body)
-		if err != nil {
-			if err != io.EOF {
-				h.Logger.Error("SSE转发中错误", "error", err)
-			}
-			break
+	if !strings.Contains(strings.ToLower(res.Header.Get("Content-Type")), "text/event-stream") {
+		h.Logger.Warn("上游响应Content-Type不是text/event-stream，进行普通拷贝", "content-type", res.Header.Get("Content-Type"))
+		_, copyErr := io.Copy(ctx.ResponseWriter(), res.Body)
+		if copyErr != nil {
+			h.Logger.Error("普通转发中错误", "error", copyErr)
 		}
 		ctx.ResponseWriter().Flush()
+		h.Logger.Debug("普通转发结束")
+		return
 	}
 
+	// 尝试获取 Flusher 接口
+	flusher, ok := ctx.ResponseWriter().(http.Flusher)
+	if !ok {
+		h.Logger.Error("ResponseWriter不支持Flush，无法进行SSE转发")
+		http.Error(ctx.ResponseWriter(), "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		// 将读取到的行直接写入到下游客户端，并添加换行符以保持SSE格式
+		if _, writeErr := ctx.ResponseWriter().Write(append(line, '\n')); writeErr != nil {
+			h.Logger.Error("SSE转发写入下游客户端错误", "error", writeErr)
+			// 如果写入下游客户端失败，通常表示客户端断开，此时应退出循环
+			break
+		}
+		flusher.Flush() // 每次写入一行后立即刷新，确保数据实时发送
+	}
+
+	// 检查Scanner是否在读取过程中遇到了错误（除了io.EOF）
+	if err := scanner.Err(); err != nil {
+		h.Logger.Error("从上游SSE读取数据时发生错误", "error", err)
+	} else {
+		// 如果没有错误，且循环结束，意味着上游SSE流已优雅关闭或数据已传输完毕
+		h.Logger.Debug("上游SSE流已优雅结束或数据传输完毕")
+	}
 	h.Logger.Debug("SSE 转发结束")
 }
 
 func (h *TransHandler) GetTransRag(ctx iris.Context, route string) {
 	req := ctx.Request().Clone(ctx.Request().Context())
 
-	req.URL, _ = url.Parse(h.LlmAddr + "/" + route)
+	req.URL, _ = url.Parse(h.RagAddr + "/" + route)
 	req.RequestURI = ""
 
-	req.Host = strings.TrimPrefix(h.LlmAddr, "http://")
+	req.Host = strings.TrimPrefix(h.RagAddr, "http://")
 	req.Header.Set("Host", req.Host)
 	req.Header.Set("Authorization", "super_plus_api_key")
 
@@ -262,15 +290,43 @@ func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
 
 	ctx.StatusCode(res.StatusCode)
 
-	for {
-		_, err := io.Copy(ctx.ResponseWriter(), res.Body)
-		if err != nil {
-			if err != io.EOF {
-				h.Logger.Error("SSE转发中错误", "error", err)
-			}
-			break
+	if !strings.Contains(strings.ToLower(res.Header.Get("Content-Type")), "text/event-stream") {
+		h.Logger.Warn("上游响应Content-Type不是text/event-stream，进行普通拷贝", "content-type", res.Header.Get("Content-Type"))
+		_, copyErr := io.Copy(ctx.ResponseWriter(), res.Body)
+		if copyErr != nil {
+			h.Logger.Error("普通转发中错误", "error", copyErr)
 		}
 		ctx.ResponseWriter().Flush()
+		h.Logger.Debug("普通转发结束")
+		return
+	}
+
+	// 尝试获取 Flusher 接口
+	flusher, ok := ctx.ResponseWriter().(http.Flusher)
+	if !ok {
+		h.Logger.Error("ResponseWriter不支持Flush，无法进行SSE转发")
+		http.Error(ctx.ResponseWriter(), "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		// 将读取到的行直接写入到下游客户端，并添加换行符以保持SSE格式
+		if _, writeErr := ctx.ResponseWriter().Write(append(line, '\n')); writeErr != nil {
+			h.Logger.Error("SSE转发写入下游客户端错误", "error", writeErr)
+			// 如果写入下游客户端失败，通常表示客户端断开，此时应退出循环
+			break
+		}
+		flusher.Flush() // 每次写入一行后立即刷新，确保数据实时发送
+	}
+
+	// 检查Scanner是否在读取过程中遇到了错误（除了io.EOF）
+	if err := scanner.Err(); err != nil {
+		h.Logger.Error("从上游SSE读取数据时发生错误", "error", err)
+	} else {
+		// 如果没有错误，且循环结束，意味着上游SSE流已优雅关闭或数据已传输完毕
+		h.Logger.Debug("上游SSE流已优雅结束或数据传输完毕")
 	}
 
 	h.Logger.Debug("SSE 转发结束")

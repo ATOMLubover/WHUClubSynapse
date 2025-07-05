@@ -213,7 +213,7 @@ func (s *sClubService) ApproveAppliForCreateClub(appliId int) (uint, error) {
 		}
 
 		if err := s.userRepo.UpdateUserRole(
-			tx, int(appli.UserId), dbstruct.ROLE_CLUB_LEADER); err != nil {
+			tx, int(appli.UserId), dbstruct.ROLE_PUBLISHER); err != nil {
 			return err
 		}
 
