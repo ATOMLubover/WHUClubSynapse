@@ -104,7 +104,7 @@ func (r *sCreateClubAppliRepo) RejectAppli(appliId int, reason string) error {
 	return r.database.
 		Model(&dbstruct.CreateClubAppli{}).
 		Where("create_appli_id = ?", appliId).
-		Select("status", "reject_reason").
+		Select("status", "rejected_reason").
 		Updates(dbstruct.CreateClubAppli{
 			Status:         "rejected",
 			RejectedReason: reason,

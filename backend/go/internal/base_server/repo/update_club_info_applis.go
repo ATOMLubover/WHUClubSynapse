@@ -72,7 +72,7 @@ func (r *sUpdateClubInfoAppliRepo) RejectAppli(appliId int, reason string) error
 	return r.database.
 		Model(&dbstruct.UpdateClubInfoAppli{}).
 		Where("update_appli_id = ?", appliId).
-		Select("status", "reason").
+		Select("status", "rejected_reason").
 		Updates(dbstruct.UpdateClubInfoAppli{
 			Status:         "rejected",
 			RejectedReason: reason,
