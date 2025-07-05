@@ -24,6 +24,7 @@ CMD_CHROMA="conda run -n base --no-capture-output bash ${SCRIPT_DIR}/scripts/chr
 CMD_VLLM="conda run -n base --no-capture-output bash ${SCRIPT_DIR}/scripts/vllm_service_startup.sh; exec bash"
 CMD_FASTAPI="conda run -n base --no-capture-output bash ${SCRIPT_DIR}/scripts/fastapi_backend_startup.sh; exec bash"
 CMD_CPOLAR="conda run -n base --no-capture-output bash ${SCRIPT_DIR}/scripts/cpolar_startup.sh; exec bash"
+CMD_RAG="conda run -n base --no-capture-output bash ${SCRIPT_DIR}/scripts/rag_server_startup.sh; exec bash"
 
 # Create a new detached session and the first window
 tmux new-session -d -s $SESSION_NAME -n 'chromadb' "$CMD_CHROMA"
@@ -32,6 +33,7 @@ tmux new-session -d -s $SESSION_NAME -n 'chromadb' "$CMD_CHROMA"
 tmux new-window -t $SESSION_NAME -n 'vllm' "$CMD_VLLM"
 tmux new-window -t $SESSION_NAME -n 'fastapi' "$CMD_FASTAPI"
 tmux new-window -t $SESSION_NAME -n 'cpolar' "$CMD_CPOLAR"
+tmux new-window -t $SESSION_NAME -n 'rag' "$CMD_RAG"
 
 # Send the command to the last window and exit
 tmux send-keys -t $SESSION_NAME:cpolar "$CMD_CPOLAR" C-m

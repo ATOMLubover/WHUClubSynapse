@@ -5,9 +5,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyMuPDFLoader
 
 from app.configs.config import settings
-from app.utils.singleton import retriever
 from app.utils.singleton import chroma_collection
 from app.utils.singleton import logger
+from app.rag.mcp_rag_service import retriever
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=settings.CHUNK_SIZE,

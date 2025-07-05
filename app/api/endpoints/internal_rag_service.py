@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from mcp.types import Content, TextContent
-from app.utils.singleton import retriever
+from app.rag.mcp_rag_service import retriever
 import uvicorn
 
 # 创建FastAPI应用
@@ -53,7 +53,7 @@ async def retrieve_documents(request: RetrieveRequest):
         raise HTTPException(status_code=500, detail=f"检索失败: {str(e)}")
 
 @app.post("/format", response_model=FormatResponse)
-async def format_documents(retrieved_docs: FormatRequest):
+async def format_documents(request: FormatRequest):
     '''
     格式化检索结果为 LLM 输入
     参数:
@@ -62,7 +62,7 @@ async def format_documents(retrieved_docs: FormatRequest):
     context_str = "\n\n".join(
         f"""
         文档 {i + 1}:\n{doc['content']}\nMetadata: {doc['metadata']}
-        """ for i, doc in enumerate(retrieved_docs)
+        """ for i, doc in enumerate(request.retrieved_docs)
     )
     # 直接返回 Pydantic 模型
     return FormatResponse(response=[TextContent(type="text", text=context_str)])
@@ -75,8 +75,8 @@ async def health_check():
 
 if __name__ == "__main__":
     uvicorn.run(
-        "http_rag_server:app",
+        "app.api.endpoints.internal_rag_service:app",
         host="0.0.0.0",
-        port=8001,
+        port=8020,
         reload=True
     )

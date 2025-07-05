@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Security, HTTPException, status, Depends
-from app.api.endpoints import search, sider_chat
+from app.api.endpoints import search, sider_chat, health
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 
@@ -27,3 +27,4 @@ def read_root():
 
 app.include_router(search.router, tags=["Search"])
 app.include_router(sider_chat.router, tags=["SiderChat"])
+app.include_router(health.router, tags=["Health"])

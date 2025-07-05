@@ -6,13 +6,25 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from app.configs.config import settings
-from app.rag.mcp_rag_service import retrieve
+from app.rag.mcp_rag_service import retriever
+from datasets import Dataset
+from ragas import evaluate
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_recall,
+    context_precision,
+    answer_correctness,
+)
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
 
 # 配置与准备
 load_dotenv()
 
 llm = ChatOpenAI(
-    openai_api_base="https://api.deepseek.com/v1",
+    openai_api_base=settings.DEEPSEEK_API_URL,
     api_key=settings.DEEPSEEK_API_KEY,
     model="deepseek-chat",
     temperature=0.1, # 在评估时使用低 temperature 以获得确定性回答
@@ -85,7 +97,8 @@ async def generate_evaluation_data_remote():
     for question in questions:
         print(f"正在处理问题: {question}")
         
-        retrieved_docs = retrieve(question)
+        # Use the correct retrieval function
+        retrieved_docs = retriever.retrieve(question)
         contexts = [doc['content'] for doc in retrieved_docs]
         ground_truth = ground_truths.get(question, "")
         
@@ -115,20 +128,124 @@ async def generate_evaluation_data_remote():
 # --- 5. 运行脚本 ---
 async def main():
     print("开始生成评估数据集...")
-    evaluation_data = await generate_evaluation_data_remote()
-    
-    # 将结果保存到 JSON 文件
     output_filename = "rag_evaluation_dataset.json"
-    with open(output_filename, 'w', encoding='utf-8') as f:
-        json.dump(evaluation_data, f, ensure_ascii=False, indent=2)
+    
+    # 检查数据集是否已存在，如果不存在则生成
+    if not os.path.exists(output_filename):
+        evaluation_data = await generate_evaluation_data_remote()
+        # 将结果保存到 JSON 文件
+        with open(output_filename, 'w', encoding='utf-8') as f:
+            json.dump(evaluation_data, f, ensure_ascii=False, indent=2)
+        print(f"\n数据集生成完毕，已保存至 {output_filename}")
+        # 打印一个样本以供检查
+        print("\n样本数据点:")
+        print(json.dumps({k: v[0] for k, v in evaluation_data.items()}, ensure_ascii=False, indent=2))
+    else:
+        print(f"发现已存在的数据集: {output_filename}，将直接使用该数据集进行评估。")
+
+    # 运行 Ragas 评估
+    evaluate_ragas_dataset(output_filename)
+
+
+def evaluate_ragas_dataset(dataset_path: str):
+    """
+    使用 Ragas 评估生成的数据集。
+    """
+    print("\n--- 开始 RAG 评估 ---")
+    
+    # 1. 从 JSON 文件加载数据
+    try:
+        with open(dataset_path, 'r', encoding='utf-8') as f:
+            evaluation_data = json.load(f)
+    except FileNotFoundError:
+        print(f"错误: 评估数据集 '{dataset_path}' 未找到。请先运行脚本生成数据集。")
+        return
+    except json.JSONDecodeError:
+        print(f"错误: 无法解析数据集文件 '{dataset_path}'。文件可能已损坏或格式不正确。")
+        return
+
+    # 2. 将字典转换为 Hugging Face Datasets 对象
+    dataset = Dataset.from_dict(evaluation_data)
+    print(f"成功加载 {len(dataset)} 条数据进行评估。")
+
+    # 3. 定义评估指标
+    # 注意：answer_correctness 需要 ground_truth
+    # faithfulness 和 answer_relevancy 依赖于 OpenAI API 进行评估
+    metrics = [
+        faithfulness,          # 忠实度：答案是否忠于上下文
+        answer_relevancy,      # 相关性：答案与问题的相关程度
+        context_recall,        # 上下文召回率：检索到的上下文是否包含了 ground_truth 的所有信息
+        context_precision,     # 上下文精确率：信噪比，衡量上下文中有多少是相关的
+        answer_correctness,    # 答案正确性：将生成的答案与 ground_truth 进行比较
+    ]
+
+    # 4. 运行评估
+    print("正在计算评估指标... (这可能需要一些时间，并且会消耗 LLM API 配额)")
+    try:
+        result = evaluate(
+            dataset=dataset,
+            metrics=metrics,
+            llm=llm, # 指定用于评估的 LLM
+            raise_exceptions=False,# 在评估失败时不要抛出异常，而是记录错误
+            embeddings=retriever.st_model
+        )
         
-    print(f"\n数据集生成完毕，已保存至 {output_filename}")
-    # 打印一个样本以供检查
-    print("\n样本数据点:")
-    print(json.dumps({k: v[0] for k, v in evaluation_data.items()}, ensure_ascii=False, indent=2))
+        # 5. 打印并可视化结果
+        print("\n--- RAG 评估结果 ---")
+        print(result)
+
+        # --- 开始绘图 ---
+        # 将结果转换为 Pandas DataFrame
+        result_df = result.to_pandas()
+        # 计算每个指标的平均分
+        scores = {
+            'faithfulness': result_df['faithfulness'].mean(),
+            'answer_relevancy': result_df['answer_relevancy'].mean(),
+            'context_recall': result_df['context_recall'].mean(),
+            'context_precision': result_df['context_precision'].mean(),
+            'answer_correctness': result_df['answer_correctness'].mean(),
+        }
+        
+        # 将 NaN 值替换为 0，避免绘图错误
+        scores = {k: (v if pd.notna(v) else 0) for k, v in scores.items()}
+
+        metric_names = list(scores.keys())
+        metric_scores = list(scores.values())
+
+        # 使用英文，避免中文字体缺失问题
+        # matplotlib.rcParams['font.sans-serif'] = ['SimHei']
+        # matplotlib.rcParams['axes.unicode_minus'] = False
+
+        # 创建图表
+        plt.figure(figsize=(12, 7))
+        bars = plt.bar(metric_names, metric_scores, color=['#4A90E2', '#50E3C2', '#F5A623', '#F8E71C', '#B8E986'])
+
+        # 在柱状图上显示具体数值
+        for bar in bars:
+            yval = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2.0, yval, f'{yval:.3f}', va='bottom', ha='center', fontsize=10)
+
+        plt.ylim(0, 1.1)
+        plt.title('RAG Model Performance Evaluation', fontsize=16)
+        plt.xlabel('Evaluation Metrics', fontsize=12)
+        plt.ylabel('Average Score', fontsize=12)
+        plt.xticks(rotation=15, ha="right")
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout()
+
+        # 保存图表
+        chart_filename = "ragas_evaluation_results.png"
+        plt.savefig(chart_filename)
+        print(f"\n评估结果图表已保存至: {chart_filename}")
+        # --- 绘图结束 ---
+
+        print("--- 评估完成 ---")
+
+    except Exception as e:
+        print(f"\nRagas 评估过程中发生严重错误: {e}")
+        print("请检查您的 API 密钥、网络连接以及输入数据的格式。")
 
 
 if __name__ == "__main__":
-    # 确保你已经创建了 .env 文件并填入了 API_KEY
-    # 例如: OPENAI_API_KEY="sk-..."
+    # 确保你已经创建了 .env 文件并填入了 DEEPSEEK_API_KEY
     asyncio.run(main())
