@@ -77,6 +77,7 @@ def extract_club_data():
                 desc,
                 club_info['posts']
             ])
+    print(f"社团数据已提取并保存到 {output_file}")
 
 if __name__ == '__main__':
     extract_club_data() 

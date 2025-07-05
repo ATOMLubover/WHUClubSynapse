@@ -10,6 +10,7 @@ import threading
 import redis
 import base64
 from datetime import datetime
+from extract_club_data import extract_club_data
 
 # 配置
 # Redis 连接配置
@@ -284,7 +285,7 @@ def sync_redis_data(output_file='local_synced_data.jsonl'):
             # 保存到文件
             save_to_jsonl(data, output_file)
             seen_ids.add(data['id']) # 将新的 ID 添加到已同步集合
-            
+
         except Exception as e:
             logger.error(f"处理键 {key} 时出错: {str(e)}")
             continue
@@ -483,6 +484,8 @@ def run_sync_worker():
             # 确认消息处理完成
             if successfully_processed_ids:
                 r.xack(REDIS_STREAM_NAME, REDIS_CONSUMER_GROUP_NAME, *successfully_processed_ids)
+            extract_club_data()
+            print(f"社团数据已提取并保存")
 
         except exceptions.ConnectionError as e:
             logger.error(f"Redis 连接错误: {e}. 5秒后重试...", extra={'msg_id': 'N/A'})

@@ -741,7 +741,7 @@ async def summarize_with_tongyi(req: TongyiSummaryRequest):
     
     return StreamingResponse(generate_summary_stream(), media_type="text/event-stream")
 
-@app.post("/generate/content", response_model=ContentGenerationResponse)
+@app.post("/content", response_model=ContentGenerationResponse)
 async def generate_content(request: ContentGenerationRequest):
     """
     根据关键词和内容类型，使用AI生成活动宣传或新闻稿。
@@ -792,7 +792,7 @@ async def generate_content(request: ContentGenerationRequest):
     except Exception as e:
         logger.error(f"AI内容生成失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
-@app.post("/generate/introduction", response_model=ContentGenerationResponse)
+@app.post("/introduction", response_model=ContentGenerationResponse)
 async def generate_content(request: ContentGenerationRequest):
     """
     根据关键词和内容类型，使用AI生成社团介绍。
@@ -844,7 +844,7 @@ async def generate_content(request: ContentGenerationRequest):
         logger.error(f"AI内容生成失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI内容生成失败: {e}")
 
-@app.post("/generate/Slogan", response_model=ContentGenerationResponse)
+@app.post("/Slogan", response_model=ContentGenerationResponse)
 async def generate_content(request: SloganGenerationRequest):
     """
     根据关键词和内容类型，使用AI生成社团口号。
@@ -2813,9 +2813,9 @@ if __name__ == "__main__":
     print(f"聊天接口: http://{config.server_host}:{config.server_port}/chat")
     print(f"简化接口: http://{config.server_host}:{config.server_port}/simple_chat")
     print(f"通义总结接口: http://{config.server_host}:{config.server_port}/summarize_tongyi")
-    print(f"生成内容接口: http://{config.server_host}:{config.server_port}/generate/content")
-    print(f"社团介绍接口: http://{config.server_host}:{config.server_port}/generate/introduction")
-    print(f"社团口号接口: http://{config.server_host}:{config.server_port}/generate/Slogan")
+    print(f"生成内容接口: http://{config.server_host}:{config.server_port}/content")
+    print(f"社团介绍接口: http://{config.server_host}:{config.server_port}/introduction")
+    print(f"社团口号接口: http://{config.server_host}:{config.server_port}/Slogan")
     print(f"配置重载接口: http://{config.server_host}:{config.server_port}/reload_config")
     print(f"智能申请筛选接口: http://{config.server_host}:{config.server_port}/screen_application")
     print(f"社团氛围透视接口: http://{config.server_host}:{config.server_port}/club_atmosphere")
