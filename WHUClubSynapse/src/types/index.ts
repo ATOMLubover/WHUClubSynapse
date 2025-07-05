@@ -452,3 +452,16 @@ export interface AdminCreateApplication {
   type?: string[] // 社团标签数组，可能为null或空数组
   status?: string
 }
+
+export interface CommentData {
+  type: 'activity' | 'announcement';
+  content: string;
+  metadata?: {
+    activity_type?: string;
+    location?: string;
+    participants?: number;
+    priority?: string;
+    valid_until?: string;
+    tags?: string[];
+  };
+}

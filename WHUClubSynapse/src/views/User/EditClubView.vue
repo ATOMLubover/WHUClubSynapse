@@ -453,8 +453,6 @@ const loadClubInfo = async () => {
     // 填充动态
     activities.value = club?.activities || []
   } catch (error) {
-    console.error('加载社团信息失败:', error)
-    ElMessage.error('加载社团信息失败')
   } finally {
     loading.value = false
   }
