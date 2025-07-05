@@ -629,11 +629,12 @@ func (h *ClubHandler) PostApplyForCreateClub(ctx iris.Context) {
 	}
 
 	err = h.ClubService.ApplyForCreateClub(dbstruct.Club{
-		Name:        reqBody.Name,
-		Description: reqBody.Desc,
-		LeaderId:    uint(userId),
-		CategoryId:  uint(reqBody.CategoryId),
-		Tags:        tags,
+		Name:         reqBody.Name,
+		Description:  reqBody.Desc,
+		LeaderId:     uint(userId),
+		CategoryId:   uint(reqBody.CategoryId),
+		Requirements: reqBody.Requirements,
+		Tags:         tags,
 	})
 	if err != nil {
 		h.Logger.Error("申请创建社团失败",
