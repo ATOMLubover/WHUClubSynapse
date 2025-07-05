@@ -296,7 +296,7 @@ func InitPostPubHandler(parent *mvc.Application) {
 	pubApp := parent.Party("/pub")
 
 	pubApp.Router.Use(func(ctx iris.Context) {
-		userRole := ctx.Values().GetString("userRole")
+		userRole := ctx.Values().GetString("user_claims_user_role")
 		if userRole == "" {
 			ctx.StopWithStatus(iris.StatusBadRequest)
 			return
@@ -306,6 +306,8 @@ func InitPostPubHandler(parent *mvc.Application) {
 			userRole != dbstruct.ROLE_ADMIN {
 			ctx.StopWithStatus(iris.StatusForbidden)
 		}
+
+		ctx.Next()
 	})
 
 	pubApp.Handle(new(handler.PostPubHandler))
