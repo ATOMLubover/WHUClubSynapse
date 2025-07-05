@@ -55,12 +55,91 @@
           </el-radio-group>
         </el-form-item>
 
+        <!-- AI公告生成器 -->
+        <div class="ai-announcement-section">
+          <div class="ai-header">
+            <el-icon><Bell /></el-icon>
+            <span>AI {{ isActivity ? '动态' : '公告' }}生成器</span>
+            <el-tag type="success" size="small" class="status-tag">在线</el-tag>
+            <el-button
+              type="primary"
+              text
+              class="check-status"
+              @click="checkAIStatus"
+            >
+              <el-icon><RefreshRight /></el-icon>
+              检查状态
+            </el-button>
+            <el-button
+              type="primary"
+              text
+              class="clear-results"
+              @click="clearResults"
+            >
+              清空结果
+            </el-button>
+          </div>
+
+          <el-form-item :label="isActivity ? '动态草稿' : '公告草稿'">
+            <el-input
+              v-model="aiDraft"
+              type="textarea"
+              :rows="4"
+              :placeholder="isActivity ? '请输入动态的草稿内容（可选）' : '请输入公告的草稿内容（可选）'"
+            />
+          </el-form-item>
+
+          <el-form-item label="文体风格">
+            <el-select v-model="aiStyle" placeholder="请选择文体风格">
+              <el-option label="正式严谨" value="formal" />
+              <el-option label="活泼生动" value="lively" />
+              <el-option label="简洁明了" value="concise" />
+              <el-option label="温和友好" value="friendly" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="预期效果">
+            <el-input
+              v-model="aiExpectation"
+              :placeholder="isActivity ? '例如：展示活动亮点、吸引更多参与者、营造良好氛围等' : '例如：吸引更多人参与活动、激发读者热情、提高关注度等'"
+            />
+            <div class="char-count">{{ aiExpectation.length }} / 100</div>
+          </el-form-item>
+
+          <div class="generate-button">
+            <el-button
+              type="primary"
+              :loading="generating"
+              @click="generateAnnouncement"
+            >
+              生成AI{{ isActivity ? '动态' : '公告' }}内容
+            </el-button>
+          </div>
+
+          <div v-if="aiResult" class="ai-result">
+            <div class="result-header">
+              <span>生成结果</span>
+              <el-button
+                type="primary"
+                text
+                size="small"
+                @click="useAIResult"
+              >
+                使用此结果
+              </el-button>
+            </div>
+            <div class="result-content">{{ aiResult }}</div>
+          </div>
+        </div>
+
+        <el-divider>手动编辑区域</el-divider>
+
         <el-form-item label="详细内容" required>
           <el-input
             v-model="form.content"
             type="textarea"
             :rows="4"
-            placeholder="请输入详细内容"
+            :placeholder="isActivity ? '请输入动态详细内容' : '请输入公告详细内容'"
           />
         </el-form-item>
 
@@ -122,27 +201,33 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Bell, RefreshRight, Location, User, Plus } from '@element-plus/icons-vue'
 import type { CommentData } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import request from '@/utils/request'
 
 interface PinnedPost {
-  post_id: number;
-  club_id: number;
-  author_id: number;
-  title: string;
-  is_pinned: boolean;
-  comment_count: number;
-  created_at: string;
+  post_id: number
+  club_id: number
+  author_id: number
+  title: string
+  is_pinned: boolean
+  comment_count: number
+  created_at: string
 }
 
-interface Comment {
-  id: number;
-  post_id: number;
-  author_id: number;
-  content: string;
-  type: 'activity' | 'announcement';
-  created_at: string;
+interface Announcement {
+  id: number
+  title: string
+  content: string
+  type: 'announcement' | 'activity'
+  created_at: string
+  metadata: {
+    activity_type?: string
+    location?: string
+    participants?: number
+    tags: string[]
+  }
 }
 
 const props = defineProps<{
@@ -156,7 +241,7 @@ const isClubLeader = computed(() => {
   return user && props.leaderId === user.user_id
 })
 
-const announcements = ref<Comment[]>([])
+const announcements = ref<Announcement[]>([])
 const dialogVisible = ref(false)
 const tagInputVisible = ref(false)
 const tagInputValue = ref('')
@@ -172,19 +257,32 @@ const form = ref({
   }
 })
 
-// 获取置顶帖子的评论列表（作为公告和动态显示）
+// AI公告生成相关的状态
+const aiDraft = ref('')
+const aiStyle = ref('formal')
+const aiExpectation = ref('')
+const aiResult = ref('')
+const generating = ref(false)
+
+// 获取公告列表
 const fetchAnnouncements = async () => {
   try {
-    // 先获取置顶帖子
-    const { data: pinnedPost } = await request.get<PinnedPost>(`/api/club/post/pinned/${props.clubId}`)
-    if (pinnedPost && pinnedPost.post_id) {
-      // 获取置顶帖子的评论
-      const { data: comments } = await request.get<Comment[]>(`/api/club/post/${pinnedPost.post_id}/comments`)
-      announcements.value = comments
+    const response = await request.get(`/api/club/posts/${props.clubId}`)
+    if (response.data) {
+      announcements.value = response.data.map((item: any) => {
+        const content = JSON.parse(item.content)
+        return {
+          id: item.id,
+          title: content.title,
+          content: content.content,
+          type: content.type,
+          created_at: item.created_at,
+          metadata: content.metadata || { tags: [] }
+        }
+      })
     }
   } catch (error) {
-    console.error('获取公告/动态失败:', error)
-    ElMessage.error('获取公告/动态失败')
+    ElMessage.error('获取公告列表失败')
   }
 }
 
@@ -280,6 +378,55 @@ const handleSubmit = async () => {
   }
 }
 
+// 检查AI服务状态
+const checkAIStatus = async () => {
+  try {
+    const { data } = await request.get('/api/ai/health')
+    if (data.status === 'ok') {
+      ElMessage.success('AI服务正常运行中')
+    } else {
+      ElMessage.warning('AI服务暂时不可用')
+    }
+  } catch (error) {
+    ElMessage.error('AI服务检查失败')
+  }
+}
+
+// 生成AI内容
+const generateAnnouncement = async () => {
+  if (!aiExpectation.value) {
+    ElMessage.warning('请输入预期效果')
+    return
+  }
+
+  generating.value = true
+  try {
+    const { data } = await request.post('/api/ai/generate/announcement', {
+      draft: aiDraft.value,
+      style: aiStyle.value,
+      expectation: aiExpectation.value,
+      type: isActivity.value ? 'activity' : 'announcement' // 添加类型参数
+    })
+    aiResult.value = data.content
+  } catch (error) {
+    ElMessage.error('生成失败，请稍后重试')
+  } finally {
+    generating.value = false
+  }
+}
+
+// 使用AI生成的结果
+const useAIResult = () => {
+  if (aiResult.value) {
+    form.value.content = aiResult.value
+  }
+}
+
+// 清空AI生成结果
+const clearResults = () => {
+  aiResult.value = ''
+}
+
 onMounted(() => {
   fetchAnnouncements()
 })
@@ -311,7 +458,53 @@ onMounted(() => {
   color: #666;
 }
 
-.dialog-footer {
+.ai-announcement-section {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.status-tag {
+  margin-left: auto;
+}
+
+.char-count {
+  text-align: right;
+  color: #909399;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.generate-button {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.ai-result {
   margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.result-content {
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 </style> 
