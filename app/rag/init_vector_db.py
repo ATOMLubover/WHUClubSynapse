@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyMuPDFLoader
 
 from app.configs.config import settings
-from app.rag.mcp_rag_service import get_embeddings
+from app.utils.singleton import retriever
 from app.utils.singleton import chroma_collection
 from app.utils.singleton import logger
 
@@ -53,7 +53,7 @@ def init_vector_db(pdf_dir: str):
 
                 # c. 批量生成向量
                 logger.info(f"Generating embeddings for batch {i // batch_size + 1} of file {filename}...")
-                batch_embeddings = get_embeddings(batch_texts)
+                batch_embeddings = retriever.get_embeddings(batch_texts)
 
                 # d. 通过HTTP客户端批量上传数据
                 chroma_collection.upsert(
@@ -76,7 +76,7 @@ def check_collection_data(collection):
     """
     # 查询集合中的所有数据
     results = collection.query(
-        query_embeddings=[random.random() for _ in range(len(get_embeddings([""])[0]))],
+        query_embeddings=[random.random() for _ in range(len(retriever.get_embeddings([""])[0]))],
         n_results=10  # 返回前10条数据
     )
     # 输出文档

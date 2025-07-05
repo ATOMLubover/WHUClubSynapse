@@ -3,9 +3,10 @@ import json
 from typing import List, Dict, Any, Optional
 
 from mcp.server import Server
-from mcp.server.models import InitializationOptions
-from mcp.types import TextContent, Tool, CallToolRequest, CallToolResult
+from mcp.server.lowlevel import Server, NotificationOptions
+from mcp.types import TextContent, Tool, CallToolRequest, CallToolResult, Content
 import mcp.server.stdio
+from mcp.server.models import InitializationOptions
 
 import chromadb
 from sentence_transformers import SentenceTransformer
@@ -54,12 +55,15 @@ class KnowledgeRetrieverMCP:
         n_results: 决定取前几个最相关的文档
         '''
         try:
+            logger.warning(f"query: {query}")
+            logger.warning(f"n_results: {n_results}")
             query_embedding = self.get_embeddings(query if isinstance(query, List) else [query])
             retrieved_docs = self.collection.query(
                 query_embeddings=query_embedding,
                 n_results=n_results,
                 include=["metadatas", "documents", "distances"]
             )
+            logger.warning(f"retrieved_docs: {retrieved_docs}")
 
             docs = []
             if not retrieved_docs['ids'] or not retrieved_docs['ids'][0]:
@@ -152,7 +156,7 @@ async def handle_list_tools() -> List[Tool]:
 
 # 处理工具调用，其实相当于调用函数
 @server.call_tool()
-async def handle_call_tool(name: str, args: Dict[str, Any]) -> CallToolResult:
+async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[Content]:
     """
     处理工具调用请求
     """
@@ -160,44 +164,21 @@ async def handle_call_tool(name: str, args: Dict[str, Any]) -> CallToolResult:
         raise ValueError(f"未知工具: {name}")
     
     try:
-        query = args.get('query')
-        n_results = args.get('n_results', 5) 
+        query = arguments.get('query')
+        n_results = arguments.get('n_results', 5) 
         if not query:
             raise ValueError("query 参数不能为空")
         retrieved_docs = retriever.retrieve(query, n_results)
         results = retriever.format_context(retrieved_docs)
+        response_text = json.dumps(results, ensure_ascii=False, indent=2)
         
-        response = {
-            "status": "success",
-            "query": query,
-            "results": results,
-            "total": len(retrieved_docs)
-        }
+        return [TextContent(type="text", text=response_text)]
 
-        return CallToolResult(
-            content=[
-                TextContent(
-                    type="text",
-                    text=json.dumps(response, ensure_ascii=False, indent=2)
-                )
-            ]
-        )
     except Exception as e:
         logger.error(f"工具调用失败: {str(e)}")
-        error_response = {
-            "status": "error",
-            "message": str(e),
-            "results": ""
-        }
 
-        return CallToolResult(
-            content=[
-                TextContent(
-                    type="text", 
-                    text=json.dumps(error_response, ensure_ascii=False)
-                )
-            ]
-        )
+        error_text = json.dumps({"error": f"Failed to execute tool '{name}': {str(e)}"})
+        return [TextContent(type="text", text=error_text)]
 
      
 
@@ -205,18 +186,21 @@ async def handle_call_tool(name: str, args: Dict[str, Any]) -> CallToolResult:
 async def main():
     # 运行 MCP 服务器
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream=read_stream,
-            write_stream=write_stream,
-            InitializationOptions=InitializationOptions(
-                server_name="knowledge-retriever",
-                server_version="1.0.1",
-                capabilities=server.get_capabilities(
-                    notification_options=None,
-                    experimental_capabilities=None,
-                ) 
+        init_options = InitializationOptions(
+            server_name="knowledge-retriever",
+            server_version="1.0.1",
+            capabilities=server.get_capabilities(
+                notification_options=NotificationOptions(),
+                experimental_capabilities={},
             ),
         )
+
+        await server.run(
+            read_stream,
+            write_stream,
+            init_options
+        )
+        logger.info("MCP Stdio Server: Run loop finished or client disconnected.")
 
 if __name__ == "__main__":
     asyncio.run(main())

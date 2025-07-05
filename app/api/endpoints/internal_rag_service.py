@@ -1,6 +1,8 @@
+import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+from mcp.types import Content, TextContent
 import uvicorn
 
 from app.rag.mcp_rag_service import KnowledgeRetrieverMCP
@@ -20,10 +22,7 @@ class RetrieveRequest(BaseModel):
     n_results: Optional[int] = 5
 
 class RetrieveResponse(BaseModel):
-    status: str
-    query: str
-    results: str
-    total: int
+    response: List[Content] 
 
 @app.post("/retrieve", response_model=RetrieveResponse)
 async def retrieve_documents(request: RetrieveRequest):
@@ -39,13 +38,9 @@ async def retrieve_documents(request: RetrieveRequest):
         
         # 执行检索
         results = retriever.retrieve(request.query, request.n_results)
+        response_text = json.dumps(results, ensure_ascii=False, indent=2)
         
-        return RetrieveResponse(
-            status="success",
-            query=request.query,
-            results=results,
-            total=len(results)
-        )
+        return RetrieveResponse(response=[TextContent(type="text", text=response_text)])
         
     except HTTPException:
         raise

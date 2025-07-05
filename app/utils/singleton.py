@@ -1,9 +1,10 @@
 import logging
 import chromadb
 from redis import ConnectionPool
-
+from app.rag.mcp_rag_service import KnowledgeRetrieverMCP
 from app.configs.config import settings
 
+retriever = KnowledgeRetrieverMCP()
 
 logging.basicConfig(level=settings.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
