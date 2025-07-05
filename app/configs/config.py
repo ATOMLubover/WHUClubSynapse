@@ -46,6 +46,8 @@ class Settings(BaseSettings):
 
     # FastAPI port
     FASTAPI_PORT: int = 8000
+    INTERNAL_RAG_PORT: int = 8010
+    INTERNAL_RAG_API_URL: int = "http://127.0.0.1:8010"
 
     # 日志配置
     LOG_LEVEL: str = "DEBUG"

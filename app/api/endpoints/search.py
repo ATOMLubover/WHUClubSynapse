@@ -1,12 +1,11 @@
 import httpx
-import re
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from starlette.responses import StreamingResponse
 from app.utils.auth import get_api_key
 from app.configs.config import settings
-from app.rag.mcp_rag_service import retrieve, format_context
+# from app.rag.mcp_rag_service import retrieve, format_context
 from app.schemas import SearchQuery, SearchResponse
 from app.utils.singleton import logger
 
@@ -29,15 +28,46 @@ async def smart_search(search_query: SearchQuery):
     if not user_query:
         raise HTTPException(status_code=400, detail="没有收到查询内容")
     logger.info(f"收到新的智能搜索请求, 查询: '{user_query}'")
-    # 1. 先同步执行 RAG 检索，因为溯源信息需要先于回答返回
+
+    # 1. 通过 HTTP 调用 RAG 微服务进行文档检索和格式化
+    retrieved_docs = []
+    context_str = ""
     try:
-        # 1. 调用 RAG 服务，进行文档检索
-        retrieved_docs = await run_in_threadpool(retrieve, query=user_query, n_results=settings.RAG_N_RESULT)
-        logger.info(f"检索到 {len(retrieved_docs)} 篇相关文档")
-        context_str = format_context(retrieved_docs=retrieved_docs)
+        # 使用同一个 httpx.AsyncClient 实例来处理两个连续的请求
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # --- 第一步：检索文档 ---
+            retrieve_response = await client.post(
+                settings.INTERNAL_RAG_API_URL + "/retrieve",
+                json={"query": user_query, "n_results": settings.RAG_N_RESULT},
+            )
+            retrieve_response.raise_for_status()
+            
+            # httpx 的 .json() 方法已经将响应体解析为 Python 字典
+            # 服务器修正后，response 的值直接就是文档列表
+            retrieved_docs = retrieve_response.json()["response"]
+            
+            if not retrieved_docs:
+                logger.warning("RAG 服务未检索到任何文档。")
+            
+            # --- 第二步：格式化上下文 ---
+            format_response = await client.post(
+                settings.INTERNAL_RAG_API_URL + "/format",
+                # 直接发送上一步获取的 Python 列表
+                json={"retrieved_docs": retrieved_docs},
+            )
+            format_response.raise_for_status()
+            
+            # 服务器修正后，这里的 text 字段直接就是格式化好的字符串
+            response_data = format_response.json()
+            if response_data["response"]:
+                context_str = response_data["response"][0]["text"]
+
+    except httpx.RequestError as e:
+        logger.error(f"调用RAG服务失败: {e}", exc_info=True)
+        raise HTTPException(status_code=503, detail=f"无法连接到内部检索服务: {str(e)}")
     except Exception as e:
         logger.error(f"RAG 检索或格式化失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"检索相关文档时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"处理检索文档时出错: {str(e)}")
 
     # 2. 构建增强提示
     final_prompt = f"""
@@ -59,7 +89,7 @@ async def smart_search(search_query: SearchQuery):
         *   **关键信息/步骤**：然后，分点列出关键的细节、操作步骤或相关概念。
         *   **实用技巧/补充**：最后，提供一些相关的实用技巧、注意事项或补充信息。
     4. **回答中不要给出具体参考哪个文档**：在回答中不要给出具体参考哪个文档来源的提示，这部分已经由RAG系统给出。
-    5. **保持可读性**：保持总结对人类用户的可读性，避免过度分点和缩句。
+    5. **保持可读性**：保持总结对人类用户的可读性，少分点和缩句。
 
     请使用 Markdown 格式化你的回答，确保内容友好、易于理解。
     """
@@ -69,7 +99,7 @@ async def smart_search(search_query: SearchQuery):
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
         # logger.debug(f"retrieved_docs: {type(retrieved_docs[0])}")
-        yield f"event: source\ndata: {json.dumps(retrieved_docs)}\n\n"
+        yield f"event: source\ndata: {json.dumps(retrieved_docs, ensure_ascii=False)}\n\n"
         logger.info("已将溯源文档事件发送到前端")
 
         # b. 准备并开始流式调用 vLLM
@@ -121,7 +151,7 @@ async def smart_search(search_query: SearchQuery):
             logger.info("vLLM 流式传输完成")
         except Exception as e:
             logger.error(f"调用LLM流式接口时出错: {e}", exc_info=True)
-            error_message = json.dumps({"error": "处理请求时发生内部错误"})
+            error_message = json.dumps({"error": "处理请求时发生内部错误"}, ensure_ascii=False)
             yield f"event: error\ndata: {error_message}\n\n"
         yield "event: end\ndata: {}\n\n"
     return StreamingResponse(stream_generator(), media_type="text/event-stream")

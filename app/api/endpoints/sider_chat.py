@@ -1,5 +1,4 @@
 import httpx
-import re
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
@@ -8,7 +7,7 @@ from typing import List, Dict, Any
 from app.utils.auth import get_api_key
 from app.schemas import ChatMessage, ChatQuery, ChatResponse
 from app.configs.config import settings
-from app.rag.mcp_rag_service import retrieve, format_context
+# from app.rag.mcp_rag_service import retrieve, format_context
 from app.utils.singleton import logger
 
 router = APIRouter(
@@ -72,31 +71,52 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
     logger.info(f"本次请求包含 {len(chat_query.history)} 条历史记录")
 
     try:
-        # 1. Retrieve relevant documents (I/O)
-        retrieved_docs = await run_in_threadpool(retrieve, query=user_query, n_results=settings.RAG_N_RESULT)
-        logger.info(f"为最新问题检索到 {len(retrieved_docs)} 篇相关文档")
+        # 1. 通过 HTTP 调用 RAG 微服务进行文档检索和格式化
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # --- 第一步：检索文档 ---
+            retrieve_response = await client.post(
+                settings.INTERNAL_RAG_API_URL + "/retrieve",
+                json={"query": user_query, "n_results": settings.RAG_N_RESULT},
+            )
+            retrieve_response.raise_for_status()
+            retrieved_docs = retrieve_response.json()["response"]
+            
+            if not retrieved_docs:
+                logger.warning("RAG 服务未检索到任何文档。")
 
-        # 2. Format inputs (Pure computation)
-        context_str = format_context(retrieved_docs=retrieved_docs)
+            # --- 第二步：格式化上下文 ---
+            format_response = await client.post(
+                settings.INTERNAL_RAG_API_URL + "/format",
+                json={"retrieved_docs": retrieved_docs},
+            )
+            format_response.raise_for_status()
+            response_data = format_response.json()
+            if response_data.get("response"):
+                context_str = response_data["response"][0]["text"]
+
+        # 2. 格式化历史记录
         history_str = _format_history(chat_query.history)
 
-        # 3. Build the prompt (Pure computation)
+        # 3. 构建最终提示
         final_prompt = build_final_prompt(user_query, history_str, context_str)
         logger.debug(f"构建的最终提示 (前100字符): {final_prompt[:100]}...")
 
         history_messages = [msg.model_dump() for msg in chat_query.history]
         messages_for_llm = history_messages + [{"role": "user", "content": final_prompt}]
 
+    except httpx.RequestError as e:
+        logger.error(f"调用RAG服务失败: {e}", exc_info=True)
+        raise HTTPException(status_code=503, detail=f"无法连接到内部检索服务: {str(e)}")
     except Exception as e:
         logger.error(f"RAG 检索或格式化失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"检索相关文档时出错: {str(e)}")
 
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
+        # 修正：发送 retrieved_docs 列表，而不是一个字符串
         yield f"event: source\ndata: {json.dumps(retrieved_docs, ensure_ascii=False)}\n\n"
         logger.info("已将溯源文档事件发送到前端")
 
-        # b. 准备并开始流式调用 vLLM
         payload = {
             "model": settings.VLLM_MODEL_NAME,
             "messages": messages_for_llm,
