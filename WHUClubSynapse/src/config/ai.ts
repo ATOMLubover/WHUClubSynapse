@@ -21,7 +21,7 @@ export const getAIApiUrl = (endpoint: string = '') => {
 
 // 获取聊天接口地址
 export const getChatApiUrl = () => {
-  return getAIApiUrl('/chat')
+  return getAIApiUrl('chat')
 }
 
 // 获取状态检查接口地址

@@ -294,6 +294,11 @@
     </div>
     <div class="club-detail-bottom">
       <ClubPostArea :club-id="clubId" :club="club" />
+      <ClubAnnouncementManager
+        v-if="club"
+        :club-id="Number(clubId)"
+        :leader-id="Number(club.leader_id)"
+      />
     </div>
   </div>
 </template>
@@ -323,6 +328,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory } from '@/types'
 import ClubPostArea from '@/components/Club/ClubPostArea.vue'
 import AIClubAtmosphere from '@/components/Chat/AIClubAtmosphere.vue'
+import ClubAnnouncementManager from '@/components/Club/ClubAnnouncementManager.vue'
 import { applyToClub } from '@/api/club'
 import { getPinnedPost, getPostComments } from '@/api/club'
 

@@ -454,3 +454,16 @@ export interface AdminCreateApplication {
   status?: string
   leader?:User
 }
+
+export interface CommentData {
+  type: 'activity' | 'announcement';
+  content: string;
+  metadata?: {
+    activity_type?: string;
+    location?: string;
+    participants?: number;
+    priority?: string;
+    valid_until?: string;
+    tags?: string[];
+  };
+}
