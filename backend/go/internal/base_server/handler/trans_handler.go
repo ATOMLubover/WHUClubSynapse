@@ -47,6 +47,8 @@ func (h *TransHandler) GetTransLlm(ctx iris.Context, route string) {
 	req.Host = strings.TrimPrefix(h.LlmAddr, "https://")
 	req.Header.Set("Host", req.Host)
 
+	h.Logger.Info("LLM请求", "url", req.URL.String())
+
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		h.Logger.Error("LLM服务器请求失败", "error", err)
@@ -62,6 +64,11 @@ func (h *TransHandler) GetTransLlm(ctx iris.Context, route string) {
 			ctx.ResponseWriter().Header().Add(key, value)
 		}
 	}
+	// 在处理完请求后，强制重新设置 CORS 头部
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
 
 	ctx.StatusCode(res.StatusCode)
 	io.Copy(ctx.ResponseWriter(), res.Body)
@@ -127,6 +134,11 @@ func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 			ctx.ResponseWriter().Header().Add(key, value)
 		}
 	}
+	// 在处理完请求后，强制重新设置 CORS 头部
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
 
 	ctx.StatusCode(res.StatusCode)
 
@@ -177,6 +189,7 @@ func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
 
 	req.Host = strings.TrimPrefix(h.RagAddr, "http://")
 	req.Header.Set("Host", req.Host)
+	req.Header.Set("Authorization", "super_plus_api_key")
 
 	for key, values := range ctx.Request().Header {
 		if strings.EqualFold(key, "Host") || strings.EqualFold(key, "Connection") || strings.EqualFold(key, "Content-Length") {

@@ -38,12 +38,6 @@ var crs MiddlewareFunc = func(ctx iris.Context) {
 		return
 	}
 	ctx.Next()
-
-	// 在处理完请求后，强制重新设置 CORS 头部
-	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
-	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
-	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
 }
 
 var routeLogger MiddlewareFunc = func(ctx iris.Context) {
@@ -62,7 +56,6 @@ func main() {
 
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
-	//app.Use(recover.New())
 
 	app.Use(crs, routeLogger)
 
