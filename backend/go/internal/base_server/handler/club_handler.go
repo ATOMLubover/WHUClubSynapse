@@ -130,14 +130,15 @@ func (h *ClubHandler) GetClubBasicInfo(ctx iris.Context, id int) {
 	}
 
 	ctx.JSON(dto.ClubBasic{
-		ClubId:    int(club.ClubId),
-		ClubName:  club.Name,
-		LeaderId:  int(club.LeaderId),
-		Desc:      club.Description,
-		LogoUrl:   club.LogoUrl,
-		Category:  int(club.CategoryId),
-		Tags:      nil,
-		CreatedAt: club.CreatedAt.Format("2006-01-02 15:04:05"),
+		ClubId:       int(club.ClubId),
+		ClubName:     club.Name,
+		LeaderId:     int(club.LeaderId),
+		Desc:         club.Description,
+		Requirements: club.Requirements,
+		LogoUrl:      club.LogoUrl,
+		Category:     int(club.CategoryId),
+		Tags:         nil,
+		CreatedAt:    club.CreatedAt.Format("2006-01-02 15:04:05"),
 	})
 }
 
