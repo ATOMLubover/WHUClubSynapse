@@ -132,8 +132,8 @@ export const checkAIStatus = async (): Promise<boolean> => {
 // AI审核助手API
 export const screenApplication = async (requestData: ApplicationScreeningRequest): Promise<ApplicationScreeningResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/screen_application`
-    console.log('AI审核助手请求URL:', url)
+    const url = `${AI_CONFIG.BASE_URL}screen_application`
+    console.log('申请筛选请求URL:', url)
     console.log('AI审核助手请求数据:', requestData)
     
     const token = localStorage.getItem('token')
@@ -178,7 +178,7 @@ export interface ClubAtmosphereResponse {
 // AI氛围透视镜API
 export const analyzeClubAtmosphere = async (requestData: ClubAtmosphereRequest): Promise<ClubAtmosphereResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/analyze_atmosphere`
+    const url = `${AI_CONFIG.BASE_URL}club_atmosphere`
     console.log('AI氛围透视镜请求URL:', url)
     console.log('AI氛围透视镜请求数据:', requestData)
     
@@ -234,7 +234,7 @@ export interface FinancialBookkeepingResponse {
 // 财务记账API
 export const financialBookkeeping = async (requestData: FinancialBookkeepingRequest): Promise<FinancialBookkeepingResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/financial_bookkeeping`
+    const url = `${AI_CONFIG.BASE_URL}financial_bookkeeping`
     console.log('财务记账请求URL:', url)
     console.log('财务记账请求数据:', requestData)
     
@@ -281,7 +281,7 @@ export interface FinancialReportResponse {
 // 生成财务报表API
 export const generateFinancialReport = async (requestData: FinancialReportRequest): Promise<FinancialReportResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/generate_financial_report`
+    const url = `${AI_CONFIG.BASE_URL}generate_financial_report`
     console.log('生成财务报表请求URL:', url)
     console.log('生成财务报表请求数据:', requestData)
     
@@ -339,7 +339,7 @@ export interface AnnouncementGenerationResponse {
 // AI社团介绍生成API
 export const generateClubIntroduction = async (requestData: ContentGenerationRequest): Promise<ContentGenerationResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/generate/introduction`
+    const url = `${AI_CONFIG.BASE_URL}introduction`
     console.log('AI社团介绍生成请求URL:', url)
     console.log('AI社团介绍生成请求数据:', requestData)
     
@@ -375,7 +375,7 @@ export const generateClubIntroduction = async (requestData: ContentGenerationReq
 // AI公告内容生成API
 export const generateAnnouncementContent = async (requestData: AnnouncementGenerationRequest): Promise<AnnouncementGenerationResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/generate/content`
+    const url = `${AI_CONFIG.BASE_URL}content`
     console.log('AI公告内容生成请求URL:', url)
     console.log('AI公告内容生成请求数据:', requestData)
     
@@ -411,7 +411,7 @@ export const generateAnnouncementContent = async (requestData: AnnouncementGener
 // AI智能推荐社团
 export const getClubRecommendations = async (request: ClubRecommendRequest): Promise<ClubRecommendResponse> => {
   try {
-    const url = `${AI_CONFIG.BASE_URL}/recommend_clubs`
+    const url = `${AI_CONFIG.BASE_URL}club_recommend`
     console.log('AI智能推荐社团请求URL:', url)
     console.log('AI智能推荐社团请求数据:', request)
     
