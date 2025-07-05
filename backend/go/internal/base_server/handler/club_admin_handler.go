@@ -64,6 +64,11 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 			return
 		}
 
+		ctx.JSON(iris.Map{
+			"new_club_id": newClub.ClubId,
+			"status":      "创建成功",
+		})
+
 		if err := h.RedisService.UploadClubInfo(newClub); err != nil {
 			h.Logger.Info("转发新创建的社团信息失败",
 				"error", err, "appli_id", reqBody.CreateClubAppliId,
@@ -73,6 +78,10 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 			ctx.Text("转发新创建的社团信息失败")
 			return
 		}
+
+		ctx.JSON(iris.Map{
+			"status": "拒绝成功",
+		})
 
 	case "reject":
 		if err := h.ClubService.RejectAppliForCreateClub(reqBody.CreateClubAppliId, reqBody.Reason); err != nil {
@@ -90,8 +99,6 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 		ctx.Text("result参数错误")
 		return
 	}
-
-	ctx.Text("处理申请成功")
 }
 
 func (h *ClubAdminHandler) PutProcAppliForUpdateClub(ctx iris.Context) {

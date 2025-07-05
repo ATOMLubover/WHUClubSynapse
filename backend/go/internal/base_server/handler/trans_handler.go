@@ -33,6 +33,7 @@ type TransHandler struct {
 
 func (h *TransHandler) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/llm/{route:string}", "GetTransLlm")
+	b.Handle("GET", "/rag/{route:string}", "GetTransRag")
 
 	b.Handle("POST", "/llm/{route:string}", "PostTransLlm")
 	b.Handle("POST", "/rag/{route:string}", "PostTransRag")
@@ -154,6 +155,43 @@ func (h *TransHandler) PostTransLlm(ctx iris.Context, route string) {
 	}
 
 	h.Logger.Debug("SSE 转发结束")
+}
+
+func (h *TransHandler) GetTransRag(ctx iris.Context, route string) {
+	req := ctx.Request().Clone(ctx.Request().Context())
+
+	req.URL, _ = url.Parse(h.LlmAddr + "/" + route)
+	req.RequestURI = ""
+
+	req.Host = strings.TrimPrefix(h.LlmAddr, "http://")
+	req.Header.Set("Host", req.Host)
+	req.Header.Set("Authorization", "super_plus_api_key")
+
+	h.Logger.Info("RAG请求", "url", req.URL.String())
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		h.Logger.Error("RAG服务器请求失败", "error", err)
+
+		ctx.StatusCode(iris.StatusServiceUnavailable)
+		ctx.Text("RAG服务器暂不可用")
+		return
+	}
+	defer res.Body.Close()
+
+	for key, values := range res.Header {
+		for _, value := range values {
+			ctx.ResponseWriter().Header().Add(key, value)
+		}
+	}
+	// 在处理完请求后，强制重新设置 CORS 头部
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
+
+	ctx.StatusCode(res.StatusCode)
+	io.Copy(ctx.ResponseWriter(), res.Body)
 }
 
 func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
