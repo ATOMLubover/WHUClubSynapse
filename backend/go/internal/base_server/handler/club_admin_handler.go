@@ -79,10 +79,6 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 			return
 		}
 
-		ctx.JSON(iris.Map{
-			"status": "拒绝成功",
-		})
-
 	case "reject":
 		if err := h.ClubService.RejectAppliForCreateClub(reqBody.CreateClubAppliId, reqBody.Reason); err != nil {
 			h.Logger.Info("拒绝社团创建申请失败",
@@ -93,6 +89,10 @@ func (h *ClubAdminHandler) PutProcAppliForCreateClub(ctx iris.Context) {
 			ctx.Text("拒绝社团创建申请失败")
 			return
 		}
+
+		ctx.JSON(iris.Map{
+			"status": "拒绝成功",
+		})
 
 	default:
 		ctx.StatusCode(iris.StatusBadRequest)

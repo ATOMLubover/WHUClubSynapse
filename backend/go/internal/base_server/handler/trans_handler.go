@@ -255,6 +255,10 @@ func (h *TransHandler) PostTransRag(ctx iris.Context, route string) {
 			ctx.ResponseWriter().Header().Add(key, value)
 		}
 	}
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	ctx.ResponseWriter().Header().Set("Access-Control-Allow-Headers", "*")
+	ctx.ResponseWriter().Header().Set("Access-Control-Max-Age", "86400")
 
 	ctx.StatusCode(res.StatusCode)
 
