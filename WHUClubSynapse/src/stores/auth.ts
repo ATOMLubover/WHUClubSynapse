@@ -103,6 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 退出登录
   const logout = async () => {
     try {
+      login({username:'guest',password:'123456a'})
      isGuest.value=true
     } catch (error) {
       console.error('退出登录失败:', error)

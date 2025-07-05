@@ -230,55 +230,7 @@ export const applyToCreateClub = async (data: {
   }
 }
 
-// TODO:获取待审核的社团创建申请列表（管理员功能）
-export const getPendingClubApplications = async (params?: {
-  page?: number
-  pageSize?: number
-  status?: 'pending' | 'approved' | 'rejected'
-}): Promise<{ data: ApiResponse<{ list: ClubCreationApplication[], total: number }> }> => {
-  if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetPendingClubApplications(params)
-  }
-
-  const response = await request.get('/api/admin/club-applications', { params })
-
-  // 如果有数据，获取每个申请者的详细用户信息
-  if (response.data && response.data.list) {
-    const { getUserById } = await import('@/api/auth')
-
-    for (const application of response.data.list) {
-      if (application.userId) {
-        try {
-          const userInfo = await getUserById(parseInt(application.userId))
-          // 补充用户信息
-          application.username = userInfo.username
-          application.realName = userInfo.realName || ''
-          application.avatar_url = userInfo.avatar_url
-          application.studentId = userInfo.studentId || ''
-          application.major = userInfo.major || ''
-          application.phone = userInfo.phone || ''
-          application.email = userInfo.email
-        } catch (error) {
-          console.warn(`获取申请者 ${application.userId} 信息失败:`, error)
-          // 设置默认值
-          application.username = application.username || `用户${application.userId}`
-          application.realName = application.realName || '未知用户'
-          application.avatar_url = application.avatar_url || ''
-        }
-      }
-    }
-  }
-
-  return {
-    data: {
-      code: response.status,
-      message: response.data?.message || 'success',
-      data: response.data,
-    },
-  }
-}
-
-// TODO:审核社团创建申请（管理员功能）
+// 审核社团创建申请（管理员功能）
 export const reviewClubApplication = async (create_club_appli_id:number, result: string, reason?: string): Promise<{ data: ApiResponse<null> }> => {
   if (getIsUsingMockAPI()) {
     // return await mockClub.mockReviewClubApplication(create_club_appli_id, result, reason)
@@ -293,7 +245,7 @@ export const reviewClubApplication = async (create_club_appli_id:number, result:
   }
 }
 
-// TODO:更新社团信息（社团管理员功能）
+// 更新社团信息
 export const updateClub = async (
   id: string,
   data: {
@@ -309,7 +261,7 @@ export const updateClub = async (
     : await request.post(`/api/club/pub/update/${id}`, data)
 }
 
-// TODO:删除社团（管理员功能）
+// 删除社团
 export const deleteClub = async (id: string): Promise<{ data: ApiResponse<null> }> => {
   return getIsUsingMockAPI()
     ? await mockClub.mockDeleteClub(id)
@@ -370,7 +322,7 @@ export const getManagedClubs = async (
   return await request.get(url)
 }
 
-// TODO:退出社团
+// 退出社团
 export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   if (getIsUsingMockAPI()) {
     return await mockClub.mockQuitClub(clubId)
@@ -385,7 +337,7 @@ export const quitClub = async (clubId: string): Promise<{ data: ApiResponse<null
   }
 }
 
-// TODO:解散社团（社团管理员功能）
+// 解散社团
 export const dismissClub = async (clubId: string): Promise<{ data: ApiResponse<null> }> => {
   if (getIsUsingMockAPI()) {
     // return await mockClub.mockDismissClub(clubId)
@@ -459,7 +411,7 @@ export const getClubPostDetail = async (postId: string, contentUrl: string) => {
   return res.data
 }
 
-// TODO:获取社团帖子回复列表
+// 获取社团帖子回复列表
 export const getClubPostComments = async (postId: string, page: number, pageSize: number): Promise<PaginatedData<ClubPostComment>> => {
   if (getIsUsingMockAPI()) {
     return await mockClub.mockGetClubPostReplies(postId, page, pageSize)
@@ -523,7 +475,7 @@ export const createClubPost = async (data: {
   }
 }
 
-// TODO:回复社团帖子
+// 回复社团帖子
 export const replyClubPost = async (data: {
   post_id: number
   user_id: number
@@ -542,7 +494,7 @@ export const replyClubPost = async (data: {
   }
 }
 
-// TODO:获取社团成员列表
+// 获取社团成员列表
 export const getClubMembers = async (
   clubId: string,
   params: {
@@ -904,7 +856,7 @@ export const getClubJoinApplications = async (
   }
 }
 
-// 审核社团加入申请
+// 审核社团加入申请（Admin）
 export const reviewJoinApplication = async (
   applicationId: string,
   data: {
@@ -924,28 +876,15 @@ export const reviewJoinApplication = async (
   }
 
   try {
-    // 使用正确的API路径审核社团加入申请
     const requestBody: any = {
       join_appli_id: parseInt(applicationId),
       result: data.result
     }
 
-    // 只有在拒绝时才添加reason字段
     if (data.result === 'reject' && data.reason) {
       requestBody.reason = data.reason
     }
-
-    console.log('🔍 审核申请请求详情:')
-    console.log('- 申请ID:', applicationId)
-    console.log('- 解析后的申请ID:', parseInt(applicationId))
-    console.log('- 审核结果:', data.result)
-    console.log('- 拒绝原因:', data.reason)
-    console.log('- 完整请求体:', requestBody)
-
     const response = await request.put('/api/club/pub/proc_join', requestBody)
-
-    console.log('✅ 审核申请响应成功:', response)
-
     return {
       data: {
         code: response.status,
@@ -954,13 +893,6 @@ export const reviewJoinApplication = async (
       },
     }
   } catch (error: any) {
-    console.error('❌ 审核申请失败详情:')
-    console.error('- 错误状态码:', error.response?.status)
-    console.error('- 错误消息:', error.response?.data)
-    console.error('- 错误详情:', error.response)
-    console.error('- 完整错误:', error)
-
-    // 重新抛出错误，让上层处理
     throw error
   }
 }
@@ -989,7 +921,7 @@ export const removeMember = async (
   })
 }
 
-// TODO:更改成员角色
+// TODO:更改成员角色(也许不需要)
 export const changeMemberRole = async (
   clubId: string,
   memberId: string,
@@ -1009,7 +941,7 @@ export const changeMemberRole = async (
   return await request.put(`/clubs/${clubId}/members/${memberId}/role`, { role })
 }
 
-//获取用户创建的社团申请列表
+//获取用户创建的社团申请列表(User)
 export const getUserCreatedApplications = async (): Promise<ClubCreatedApplication[]> => {
   if (getIsUsingMockAPI()) {
     // 模拟数据 - 按照API文档格式
@@ -1078,7 +1010,7 @@ export const getUserCreatedApplications = async (): Promise<ClubCreatedApplicati
 }
 
 
-// 上传社团logo
+// 上传社团logo(USer)
 export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data: ApiResponse<string> }> => {
   if (getIsUsingMockAPI()) {
     // 模拟上传成功，返回一个假的logoURL
@@ -1110,7 +1042,7 @@ export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data
   }
 }
 
-// 获取用户社团信息更新申请列表
+// 获取用户社团信息更新申请列表(User)
 export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication[]> => {
   if (getIsUsingMockAPI()) {
     // 模拟数据
@@ -1211,12 +1143,9 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
   }
 }
 
-// /api/club/pub/update_logo
-// 社团公告和动态相关API
 
-/**
- * 获取社团置顶帖子
- */
+
+// 获取社团置顶帖子
 export async function getClubPinnedPost(clubId: string): Promise<PinnedPostResponse | null> {
   try {
     const response = await request.get<PinnedPostResponse>(`/api/club/post/pinned/${clubId}`)
@@ -1230,16 +1159,12 @@ export async function getClubPinnedPost(clubId: string): Promise<PinnedPostRespo
   }
 }
 
-/**
- * 设置帖子为置顶
- */
+// 设置帖子为置顶
 export async function pinPost(postId: string): Promise<void> {
   await request.put(`/api/club/post/pub/pin/${postId}`)
 }
 
-/**
- * 获取社团公告列表
- */
+// 获取社团公告列表
 export async function getClubAnnouncements(clubId: string): Promise<ClubAnnouncement[]> {
   try {
     const pinnedPost = await getClubPinnedPost(clubId)
@@ -1268,9 +1193,7 @@ export async function getClubAnnouncements(clubId: string): Promise<ClubAnnounce
   }
 }
 
-/**
- * 获取社团动态列表
- */
+// 获取社团动态列表
 export async function getClubActivities(clubId: string): Promise<ClubActivity[]> {
   try {
     const pinnedPost = await getClubPinnedPost(clubId)
@@ -1299,9 +1222,7 @@ export async function getClubActivities(clubId: string): Promise<ClubActivity[]>
   }
 }
 
-/**
- * 添加社团公告
- */
+// 添加社团公告
 export async function addClubAnnouncement(
   clubId: string,
   announcement: Omit<ClubAnnouncement, 'id' | 'created_at'>
@@ -1345,9 +1266,7 @@ export async function addClubAnnouncement(
   }
 }
 
-/**
- * 添加社团动态
- */
+// 添加社团动态
 export async function addClubActivity(
   clubId: string,
   activity: Omit<ClubActivity, 'id' | 'created_at'>
@@ -1391,9 +1310,7 @@ export async function addClubActivity(
   }
 }
 
-/**
- * 删除社团公告
- */
+// 删除社团公告
 export async function deleteClubAnnouncement(clubId: string, announcementId: string): Promise<void> {
   try {
     const pinnedPost = await getClubPinnedPost(clubId)
@@ -1423,9 +1340,7 @@ export async function deleteClubAnnouncement(clubId: string, announcementId: str
   }
 }
 
-/**
- * 删除社团动态
- */
+// 删除社团动态
 export async function deleteClubActivity(clubId: string, activityId: string): Promise<void> {
   try {
     const pinnedPost = await getClubPinnedPost(clubId)
@@ -1455,9 +1370,7 @@ export async function deleteClubActivity(clubId: string, activityId: string): Pr
   }
 }
 
-/**
- * 更新置顶帖子内容的辅助函数
- */
+// 更新置顶帖子内容的辅助函数
 async function updatePinnedPostContent(
   clubId: string,
   content: PinnedPostContent,
@@ -1511,7 +1424,7 @@ export async function getPostComments(postId: number) {
   }>>(`/api/club/post/comments/${postId}`);
 }
 
-//获取创建社团申请列表
+//获取创建社团申请列表(Admin)
 export const getCreateListAdmin = async (
   page: number,
   pageSize: number,
@@ -1537,6 +1450,36 @@ export const getCreateListAdmin = async (
     }
   } catch (error) {
     console.error('获取创建社团申请列表失败:', error)
+    throw error
+  }
+}
+
+// 审核社团更新申请(Admin)
+export const getUpdateListAdmin = async (
+  page: number,
+  pageSize: number,
+  status: string,
+) => {
+  try {
+
+    const response = await request.get(`/api/club/admin/update_list?offset=${(page - 1) * pageSize}&num=${pageSize}`)
+    const res = response.data 
+    if (res == null) {
+      return {
+        list: [],
+        total: 0,
+        page: page,
+        pageSize: pageSize,
+      }
+    }
+    return {
+      list:res,
+      total: res.length,
+      page: page,
+      pageSize: pageSize,
+    }
+  } catch (error) {
+    console.error('获取更新社团申请列表失败:', error)
     throw error
   }
 }

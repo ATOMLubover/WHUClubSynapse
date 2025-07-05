@@ -45,17 +45,23 @@ const update = (value: boolean) => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #8ec5fc 0%, #e0c3fc 100%);
+  /* background: linear-gradient(135deg, #6e8efb 0%, #a777e3 30%, #9f7aea 70%, #5e60ce 100%); */
+  background-attachment: fixed;
 }
 
 .app-header {
   margin-bottom: 0;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   position: sticky;
   top: 0;
   width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 5px 5px;
 }
 
 .app-main {
@@ -64,10 +70,13 @@ const update = (value: boolean) => {
 }
 
 .app-footer {
-  background-color: #fff;
-  border-top: 1px solid #e4e7ed;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
   text-align: center;
   line-height: 40px;
   color: #606266;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
 }
 </style>

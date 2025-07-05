@@ -141,6 +141,121 @@
       </div>
     </el-card>
 
+    <el-dialog
+      v-model="showUserDetailDialog"
+      title="用户详情"
+      width="700px"
+      class="user-detail-dialog"
+    >
+      <div class="user-detail-container">
+        <!-- 用户基本信息卡片 -->
+        <div class="user-basic-info">
+          <div class="user-avatar-section">
+            <el-avatar :src="userDetail?.avatar_url" :size="80" class="user-avatar">
+              {{ userDetail?.username?.charAt(0).toUpperCase() }}
+            </el-avatar>
+            <div class="user-status">
+              <el-tag :type="userDetail?.status === 'active' ? 'success' : 'danger'" size="small">
+                {{ userDetail?.status === 'active' ? '正常' : '禁用' }}
+              </el-tag>
+            </div>
+          </div>
+
+          <div class="user-main-info">
+            <h3 class="user-name">{{ userDetail?.realName || userDetail?.username }}</h3>
+            <p class="user-username">@{{ userDetail?.username }}</p>
+            <div class="user-role">
+              <el-tag :type="userDetail?.role === 'admin' ? 'danger' : 'primary'" size="small">
+                {{ userDetail?.role === 'admin' ? '管理员' : '普通用户' }}
+              </el-tag>
+            </div>
+          </div>
+        </div>
+
+        <!-- 详细信息 -->
+        <div class="user-detail-sections">
+          <!-- 基本信息 -->
+          <div class="detail-section">
+            <h4 class="section-title">
+              <el-icon><User /></el-icon>
+              基本信息
+            </h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">用户ID</span>
+                <span class="info-value">{{ userDetail?.user_id }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">真实姓名</span>
+                <span class="info-value">{{ userDetail?.realName || '未设置' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">学号</span>
+                <span class="info-value">{{ userDetail?.studentId || '未设置' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">邮箱</span>
+                <span class="info-value">{{ userDetail?.email || '未设置' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">手机号</span>
+                <span class="info-value">{{ userDetail?.phone || '未设置' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 时间信息 -->
+          <div class="detail-section">
+            <h4 class="section-title">
+              <el-icon><Clock /></el-icon>
+              时间信息
+            </h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">注册时间</span>
+                <span class="info-value">{{ formatDate(userDetail?.createdAt!) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">最后登录</span>
+                <span class="info-value">{{ formatDate(userDetail?.last_active!) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 个人资料 -->
+          <div class="detail-section">
+            <h4 class="section-title">
+              <el-icon><Document /></el-icon>
+              个人资料
+            </h4>
+            <div class="info-content">
+              <div class="info-item full-width">
+                <span class="info-label">个性签名</span>
+                <span class="info-value">{{ userDetail?.bio || '这个人很懒，什么都没写~' }}</span>
+              </div>
+
+              <div class="info-item full-width">
+                <span class="info-label">个人标签</span>
+                <div class="tags-container">
+                  <el-tag v-for="tag in userDetail?.tags" :key="tag" size="small" class="user-tag">
+                    {{ tag }}
+                  </el-tag>
+                  <span v-if="!userDetail?.tags || userDetail.tags.length === 0" class="no-tags">
+                    暂无标签
+                  </span>
+                </div>
+              </div>
+
+              <div class="info-item full-width">
+                <span class="info-label">个人偏好</span>
+                <span class="info-value">{{ userDetail?.preferences || '未设置偏好' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
     <!-- 添加/编辑用户对话框 -->
     <el-dialog
       v-model="editDialogVisible"
@@ -200,6 +315,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, RefreshLeft, Plus, Download } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types'
+import { getUserById } from '@/api/auth'
 
 const authStore = useAuthStore()
 
@@ -227,6 +343,8 @@ const editDialogVisible = ref(false)
 const editDialogTitle = ref('编辑用户')
 const submitLoading = ref(false)
 const editFormRef = ref()
+const showUserDetailDialog = ref(false)
+const userDetail = ref<User | null>(null)
 
 // 用户表单
 const editUserForm = ref<Partial<User>>({})
@@ -272,6 +390,7 @@ const loadUsers = async () => {
     })
     users.value = usersData
     // 模拟总数，实际应该从API返回
+
     pageData.total = 100
   } catch (error) {
     console.error('加载用户列表失败:', error)
@@ -295,7 +414,8 @@ const editUser = (user: any) => {
 
 // 查看用户详情
 const showUserDetail = (user: any) => {
-  ElMessage.info(`查看用户详情: ${user.username}`)
+  showUserDetailDialog.value = true
+  userDetail.value = user
 }
 
 // 提交表单
@@ -435,5 +555,138 @@ onMounted(() => {
   .search-right .el-button {
     flex: 1;
   }
+}
+
+.user-detail-dialog .el-dialog__body {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 32px 24px 24px 24px;
+}
+
+.user-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.user-basic-info {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 12px;
+}
+
+.user-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+  border: 2px solid #fff;
+}
+
+.user-status {
+  margin-top: 4px;
+}
+
+.user-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.user-username {
+  color: #909399;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.user-role {
+  margin-top: 4px;
+}
+
+.user-detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-section {
+  background: rgba(246, 248, 255, 0.7);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.info-label {
+  color: #909399;
+  font-size: 14px;
+  min-width: 70px;
+}
+
+.info-value {
+  color: #303133;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.user-tag {
+  background: linear-gradient(90deg, #6e8efb 0%, #a777e3 100%);
+  color: #fff;
+  border: none;
+}
+
+.no-tags {
+  color: #bbb;
+  font-size: 13px;
+  margin-left: 8px;
 }
 </style>

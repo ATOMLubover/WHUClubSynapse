@@ -441,6 +441,7 @@ export interface ClubUpdateApplication {
 export interface AdminCreateApplication {
   name: string
   club_id: number
+  create_club_appli_id:number
   logo_url: string
   leader_id: number
   created_at: string
@@ -451,4 +452,5 @@ export interface AdminCreateApplication {
   requirements: string
   type?: string[] // 社团标签数组，可能为null或空数组
   status?: string
+  leader?:User
 }

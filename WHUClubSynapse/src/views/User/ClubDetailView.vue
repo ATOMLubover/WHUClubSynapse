@@ -92,7 +92,10 @@
                       <el-icon class="announcement-icon"><InfoFilled /></el-icon>
                       <div class="announcement-content">
                         <div class="announcement-text">{{ announcement.parsed_data?.content }}</div>
-                        <div v-if="announcement.parsed_data?.metadata?.tags" class="announcement-tags">
+                        <div
+                          v-if="announcement.parsed_data?.metadata?.tags"
+                          class="announcement-tags"
+                        >
                           <el-tag
                             v-for="tag in announcement.parsed_data.metadata.tags"
                             :key="tag"
@@ -104,7 +107,10 @@
                         </div>
                         <div class="announcement-meta">
                           <span class="time">{{ formatDate(announcement.created_at) }}</span>
-                          <span v-if="announcement.parsed_data?.metadata?.valid_until" class="valid-until">
+                          <span
+                            v-if="announcement.parsed_data?.metadata?.valid_until"
+                            class="valid-until"
+                          >
                             有效期至: {{ announcement.parsed_data.metadata.valid_until }}
                           </span>
                         </div>
@@ -130,7 +136,11 @@
                       v-for="activity in activities"
                       :key="activity.comment_id"
                       :timestamp="formatDate(activity.created_at)"
-                      :type="activity.parsed_data?.metadata?.activity_type === 'meeting' ? 'primary' : 'success'"
+                      :type="
+                        activity.parsed_data?.metadata?.activity_type === 'meeting'
+                          ? 'primary'
+                          : 'success'
+                      "
                     >
                       <h4>{{ activity.parsed_data?.content }}</h4>
                       <div v-if="activity.parsed_data?.metadata" class="activity-meta">
@@ -330,30 +340,30 @@ const createLoading = ref(false)
 const hasApplied = ref(false) // 添加一个标记是否已申请的状态
 
 interface CommentData {
-  type: 'activity' | 'announcement';
-  content: string;
+  type: 'activity' | 'announcement'
+  content: string
   metadata?: {
-    activity_type?: string;
-    location?: string;
-    participants?: number;
-    priority?: string;
-    valid_until?: string;
-    tags?: string[];
-  };
+    activity_type?: string
+    location?: string
+    participants?: number
+    priority?: string
+    valid_until?: string
+    tags?: string[]
+  }
 }
 
 interface Activity {
-  comment_id: number;
-  content: string;
-  created_at: string;
-  parsed_data?: CommentData;
+  comment_id: number
+  content: string
+  created_at: string
+  parsed_data?: CommentData
 }
 
 interface Announcement {
-  comment_id: number;
-  content: string;
-  created_at: string;
-  parsed_data?: CommentData;
+  comment_id: number
+  content: string
+  created_at: string
+  parsed_data?: CommentData
 }
 
 const activities = ref<Activity[]>([])
@@ -376,23 +386,23 @@ const loadActivitiesAndAnnouncements = async () => {
   try {
     const { data: pinnedPost } = await getPinnedPost(Number(clubId))
     const { data: comments } = await getPostComments(pinnedPost.post_id)
-    
+
     // 分类处理评论
-    const sortedComments = comments.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    const sortedComments = comments.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )
 
     activities.value = []
     announcements.value = []
 
-    sortedComments.forEach(comment => {
+    sortedComments.forEach((comment) => {
       const parsedData = parseComment(comment)
       if (parsedData) {
         const enrichedComment = {
           ...comment,
-          parsed_data: parsedData
+          parsed_data: parsedData,
         }
-        
+
         if (parsedData.type === 'activity') {
           activities.value.push(enrichedComment)
         } else if (parsedData.type === 'announcement') {
@@ -702,7 +712,7 @@ onMounted(async () => {
   display: flex;
   gap: 24px;
   margin-bottom: 32px;
-  background: white;
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -779,6 +789,7 @@ onMounted(async () => {
 
 .content-card {
   margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .content-card :deep(.el-card__header) {

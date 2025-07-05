@@ -867,41 +867,6 @@ export const mockApplyToCreateClub = async (data: {
   }
 }
 
-// 模拟获取待审核的社团创建申请列表
-export const mockGetPendingClubApplications = async (params?: {
-  page?: number
-  pageSize?: number
-  status?: 'pending' | 'approved' | 'rejected'
-}): Promise<{ data: ApiResponse<{ list: ClubCreationApplication[], total: number }> }> => {
-  await delay(600)
-
-  const page = params?.page || 1
-  const pageSize = params?.pageSize || 10
-  const status = params?.status || 'pending'
-
-  // 过滤申请
-  let filteredApplications = mockClubApplications
-  if (status) {
-    filteredApplications = mockClubApplications.filter(app => app.status === status)
-  }
-
-  // 分页
-  const start = (page - 1) * pageSize
-  const end = start + pageSize
-  const list = filteredApplications.slice(start, end)
-
-  return {
-    data: {
-      code: 200,
-      message: '获取成功',
-      data: {
-        list,
-        total: filteredApplications.length
-      },
-    },
-  }
-}
-
 // 模拟审核社团创建申请
 export const mockReviewClubApplication = async (applicationId: string, data: {
   status: 'approved' | 'rejected'

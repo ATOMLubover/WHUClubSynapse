@@ -39,11 +39,6 @@
 
       <!-- 已登录状态 -->
       <template v-else>
-        <!-- 通知 -->
-        <el-badge :value="notificationCount" class="notification-badge">
-          <el-button :icon="Bell" circle @click="handleNotification" />
-        </el-badge>
-
         <!-- 用户菜单 -->
         <el-dropdown
           @command="handleUserMenuCommand"
@@ -88,14 +83,6 @@
       </template>
     </div>
   </div>
-
-  <el-drawer v-model="notificationDialogVisible" title="通知" class="notification-drawer">
-    <div v-for="item in notificationList" :key="item.id" class="notification-item">
-      <span>{{ item.title }}</span>
-      <span>{{ item.content }}</span>
-      <span>{{ item.time }}</span>
-    </div>
-  </el-drawer>
 </template>
 
 <script setup lang="ts">
@@ -115,13 +102,6 @@ import {
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
-
-interface Notification {
-  id: number | string
-  title: string
-  content: string
-  time: string
-}
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -156,9 +136,6 @@ const clearSearch = () => {
 // 通知数量（模拟）
 // TODO: 获取通知数量
 const notificationCount = ref(0)
-const notificationDialogVisible = ref(false)
-//TODO: 获取通知列表,美化UI
-const notificationList = ref<Notification[]>([])
 
 // 搜索处理
 const handleSearch = () => {
@@ -220,10 +197,6 @@ const handleAdmin = async () => {
   router.push('/admin')
 }
 
-const handleNotification = () => {
-  notificationDialogVisible.value = true
-}
-
 onMounted(() => {
   console.log(authStore.isGuest)
 })
@@ -236,7 +209,7 @@ onMounted(() => {
   justify-content: space-between;
   padding: 0 20px;
   height: 60px;
-  background-color: #fff;
+  background-color: transparent;
 }
 
 .header-left {

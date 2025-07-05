@@ -6,7 +6,7 @@
       <!-- 侧边栏 -->
       <div class="user-sidebar"></div>
       <!-- 主内容区 -->
-      <router-view />
+      <router-view class="user-view" />
     </div>
   </div>
 </template>
@@ -19,7 +19,7 @@ import UserSidebar from '@/components/User/UserSidebar.vue'
 .user-center {
   width: 100%;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
 }
 
 .user-layout {
@@ -31,5 +31,11 @@ import UserSidebar from '@/components/User/UserSidebar.vue'
 .user-sidebar {
   width: 300px;
   min-height: calc(100vh - 60px);
+}
+
+.user-view {
+  background: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  border-radius: 16px;
 }
 </style>

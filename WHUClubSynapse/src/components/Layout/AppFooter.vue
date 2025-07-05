@@ -20,7 +20,7 @@ const aboutUs = () => {
 
 <style scoped>
 .footer-container {
-  background-color: #fff;
+  background-color: transparent;
   border-top: 1px solid #e4e7ed;
   padding: 0 20px;
 }

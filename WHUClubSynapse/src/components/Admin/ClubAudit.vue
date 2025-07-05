@@ -17,57 +17,51 @@
       </template>
 
       <div v-loading="loading">
-        <el-table :data="applications" style="width: 100%">
-          <el-table-column prop="name" label="社团名称" width="200" />
-          <el-table-column prop="leader_id" label="申请人" width="100" />
-          <el-table-column prop="category_id" label="类型" width="100">
+        <el-table :data="applications" style="width: 100%" border stripe>
+          <el-table-column prop="name" label="社团名称" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="leader_id" label="申请人" min-width="100" show-overflow-tooltip />
+          <el-table-column prop="category_id" label="类型" min-width="100">
             <template #default="{ row }">
               <el-tag :type="getCategoryType(row.category)">
                 {{ getCategoryName(row.category) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="applyTime" label="申请时间" width="160">
+          <el-table-column prop="applyTime" label="申请时间" min-width="160" show-overflow-tooltip>
             <template #default="{ row }">
               {{ formatDate(row.applyTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" label="状态" min-width="100">
             <template #default="{ row }">
               <el-tag :type="getStatusType(row.status)">
                 {{ getStatusText(row.status) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
-              <el-button
-                v-if="row.status === 'pending'"
-                type="success"
-                size="small"
-                @click="approveApplication(row)"
-              >
-                通过
-              </el-button>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="100" fixed="right">
-            <template #default="{ row }">
-              <el-button
-                v-if="row.status === 'pending'"
-                type="danger"
-                size="small"
-                @click="rejectApplication(row)"
-              >
-                拒绝
-              </el-button>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="100" fixed="right">
-            <template #default="{ row }">
-              <el-button type="primary" size="small" @click="viewApplication(row)">
-                查看详情
-              </el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-if="row.status === 'pending'"
+                  type="success"
+                  size="small"
+                  @click="approveApplication(row)"
+                >
+                  通过
+                </el-button>
+                <el-button
+                  v-if="row.status === 'pending'"
+                  type="danger"
+                  size="small"
+                  @click="rejectApplication(row)"
+                >
+                  拒绝
+                </el-button>
+                <el-button type="primary" size="small" @click="viewApplication(row)">
+                  详情
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -94,16 +88,20 @@
             selectedApplication.name
           }}</el-descriptions-item>
           <el-descriptions-item label="申请人">{{
-            selectedApplication.leader_id
+            selectedApplication.leader?.username
           }}</el-descriptions-item>
           <el-descriptions-item label="学号">{{
-            selectedApplication.studentId
+            selectedApplication.leader?.studentId
           }}</el-descriptions-item>
-          <el-descriptions-item label="专业">{{ selectedApplication.major }}</el-descriptions-item>
+          <el-descriptions-item label="专业">{{
+            selectedApplication.leader?.major
+          }}</el-descriptions-item>
           <el-descriptions-item label="联系电话">{{
-            selectedApplication.phone
+            selectedApplication.leader?.phone
           }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ selectedApplication.email }}</el-descriptions-item>
+          <el-descriptions-item label="邮箱">{{
+            selectedApplication.leader?.email
+          }}</el-descriptions-item>
           <el-descriptions-item label="社团类型">
             <el-tag :type="getCategoryType(selectedApplication.category_id)">
               {{ getCategoryName(selectedApplication.category_id) }}
@@ -126,11 +124,6 @@
         </div>
 
         <div class="detail-section">
-          <h4>详细介绍</h4>
-          <p>{{ selectedApplication.introduction || '暂无' }}</p>
-        </div>
-
-        <div class="detail-section">
           <h4>加入要求</h4>
           <p>{{ selectedApplication.requirements }}</p>
         </div>
@@ -149,44 +142,14 @@
           </div>
         </div>
 
-        <div class="detail-section">
-          <h4>联系方式</h4>
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="QQ">{{
-              selectedApplication.contactInfo?.qq || '暂无'
-            }}</el-descriptions-item>
-            <el-descriptions-item label="微信">{{
-              selectedApplication.contactInfo?.wechat || '暂无'
-            }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{
-              selectedApplication.contactInfo?.email || '暂无'
-            }}</el-descriptions-item>
-            <el-descriptions-item label="电话">{{
-              selectedApplication.contactInfo?.phone || '暂无'
-            }}</el-descriptions-item>
-            <el-descriptions-item label="地址" :span="2">{{
-              selectedApplication.contactInfo?.address || '暂无'
-            }}</el-descriptions-item>
-          </el-descriptions>
-        </div>
-
-        <div class="detail-section">
-          <h4>例会信息</h4>
-          <p>时间：{{ selectedApplication.meetingTime || '暂无' }}</p>
-          <p>地点：{{ selectedApplication.meetingLocation || '暂无' }}</p>
-        </div>
-
-        <div v-if="selectedApplication.coverImage" class="detail-section">
+        <div v-if="selectedApplication.logo_url" class="detail-section">
           <h4>封面图片</h4>
-          <img :src="selectedApplication.coverImage" alt="封面图片" class="cover-image" />
+          <img :src="selectedApplication.logo_url" alt="封面图片" class="cover-image" />
         </div>
 
-        <div
-          v-if="selectedApplication.status === 'rejected' && selectedApplication.rejectReason"
-          class="detail-section"
-        >
+        <div v-if="selectedApplication.status === 'rejected'" class="detail-section">
           <h4>拒绝原因</h4>
-          <p class="reject-reason">{{ selectedApplication.rejectReason }}</p>
+          <!-- <p class="reject-reason">{{ selectedApplication.reject_reason }}</p> -->
         </div>
       </div>
     </el-dialog>
@@ -220,6 +183,7 @@ import { ref, onMounted } from 'vue'
 import { useClubStore } from '@/stores/club'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { ClubCreatedApplication, AdminCreateApplication } from '@/types'
+import { getUserById } from '@/api/auth'
 
 const clubStore = useClubStore()
 const applications = ref<AdminCreateApplication[]>([])
@@ -292,6 +256,11 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString('zh-CN')
 }
 
+interface temp {
+  Proposal: string
+  Status: string
+}
+
 // 加载申请列表
 const loadApplications = async () => {
   try {
@@ -302,12 +271,16 @@ const loadApplications = async () => {
       status: (filterStatus.value as 'pending' | 'approved' | 'rejected') || undefined,
     })
 
-    const list = data.list
-    list.forEach((item) => {
-      const proposal = parseProposal(item.Proposal)
+    const list = data.list as temp[]
+    console.log('list', list)
+    applications.value = []
+    list.forEach(async (item) => {
+      const proposal = parseProposal(item.Proposal as string)
+      const leader = await getUserById(proposal.leader_id)
       applications.value.push({
         ...proposal,
         status: item.Status,
+        leader: leader,
       })
     })
     total.value = data.total
@@ -425,6 +398,14 @@ onMounted(() => {
   align-items: center;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 .pagination-section {
   margin-top: 20px;
   display: flex;
@@ -471,5 +452,130 @@ onMounted(() => {
   padding: 10px;
   border-radius: 4px;
   border-left: 4px solid #f56c6c;
+}
+
+.user-detail-dialog .el-dialog__body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  border-radius: 18px;
+  padding: 32px 18px 18px 18px;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+}
+
+.user-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.user-detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar-shadow {
+  box-shadow:
+    0 4px 24px 0 rgba(99, 102, 241, 0.18),
+    0 0 0 4px #fff;
+  border: 2px solid #fff;
+  background: #fff;
+}
+
+.user-header-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.user-main-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #3730a3;
+}
+
+.user-realname {
+  font-size: 20px;
+  font-weight: 700;
+  color: #3730a3;
+}
+
+.user-role-tag {
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.user-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.user-username {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.user-status-tag {
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.user-detail-section {
+  margin-top: 8px;
+}
+
+.user-bio,
+.user-tags,
+.user-prefs {
+  margin: 8px 0;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.user-bio-label {
+  color: #6366f1;
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.user-bio-value {
+  color: #334155;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.user-tag {
+  background: linear-gradient(90deg, #6e8efb 0%, #a777e3 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 0 10px;
+  margin-right: 4px;
+}
+
+.el-descriptions {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+  margin-bottom: 0;
+}
+
+.el-divider {
+  margin: 18px 0;
+  background: linear-gradient(90deg, #a777e3 0%, #6e8efb 100%);
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0.18;
 }
 </style>
