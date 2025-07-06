@@ -48,6 +48,22 @@
         "payer": "小明",
         "date": "今天",
         "remark": "集资采购"
+      },
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      },
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
       }
     ],
     "budget": {

@@ -18,7 +18,7 @@ except ImportError as e:
     sys.exit(1)
 
 # 代理服务器的ngrok公网地址
-PROXY_SERVER_URL = "https://13a8-125-220-159-5.ngrok-free.app"
+PROXY_SERVER_URL = "https://6a52-125-220-159-5.ngrok-free.app"
 
 def test_health_check():
     """测试健康检查接口"""
@@ -211,27 +211,61 @@ def test_conversation():
         # 第一轮对话
         payload1 = {
             "messages": [
-                {"role": "user", "content": "你好，我的名字是张三"}
+                {"role": "user", "content": "你好，请用一句话介绍一下地球。"}
             ],
             "model": config.default_model,
-            "max_tokens": 500
+            "max_tokens": 500,
+            "stream": True # 流式传输
         }
         
-        print("第一轮对话...")
+        print("第一轮对话 (流式传输)...")
+        start_time1 = time.time()
         response1 = requests.post(
             f"{PROXY_SERVER_URL}/chat",
             headers={"Content-Type": "application/json"},
-            json=payload1
+            json=payload1,
+            stream=True
         )
         
-        if response1.status_code != 200:
-            print(f"第一轮对话失败: {response1.text}")
+        response1.raise_for_status() # 检查HTTP错误
+
+        full_response_content1 = ""
+        print("助手回复 (第一轮):")
+        for chunk in response1.iter_lines(): # 使用iter_lines处理SSE
+            if chunk:
+                decoded_chunk = chunk.decode('utf-8')
+                if decoded_chunk.startswith("data:"):
+                    data_content = decoded_chunk[5:].strip()
+                    if data_content == "[DONE]": # 明确处理DONE标记
+                        break
+                    if not data_content:
+                        continue # Skip empty data lines
+                    try:
+                        json_data = json.loads(data_content)
+                        if json_data.get("choices") and len(json_data["choices"]) > 0:
+                            delta = json_data["choices"][0].get("delta")
+                            if delta and delta.get("content"):
+                                content = delta["content"]
+                                print(content, end='')
+                                full_response_content1 += content
+                        elif "error" in json_data:
+                            print(f"错误: {json_data['error']}")
+                            return False
+                    except json.JSONDecodeError:
+                        # 这里不再需要打印Warning，因为[DONE]已经被前面的if捕获
+                        print(f"Could not decode JSON from chunk: {decoded_chunk}")
+                        print(decoded_chunk) # 打印原始数据，以防万一
+                # elif decoded_chunk == "data: [DONE]": # 结束标记，此行不再需要
+                #     break
+
+        end_time1 = time.time()
+        print(f"\n第一轮流式响应完成，响应时间: {end_time1 - start_time1:.2f}秒")
+        assistant_response = full_response_content1.strip()
+        
+        if not assistant_response:
+            print("第一轮对话流式响应为空，测试失败。")
             return False
-        
-        result1 = response1.json()
-        assistant_response = result1.get('response')
-        print(f"助手回复: {assistant_response}")
-        
+
         # 第二轮对话
         payload2 = {
             "messages": [
@@ -240,62 +274,57 @@ def test_conversation():
                 {"role": "user", "content": "你还记得我的名字吗？"}
             ],
             "model": config.default_model,
-            "max_tokens": 500
+            "max_tokens": 500,
+            "stream": True # 流式传输
         }
         
-        print("第二轮对话...")
+        print("\n第二轮对话 (流式传输)...")
+        start_time2 = time.time()
         response2 = requests.post(
             f"{PROXY_SERVER_URL}/chat",
             headers={"Content-Type": "application/json"},
-            json=payload2
+            json=payload2,
+            stream=True
         )
-        
-        if response2.status_code == 200:
-            result2 = response2.json()
-            print(f"助手回复: {result2.get('response')}")
-            return True
-        else:
-            print(f"第二轮对话失败: {response2.text}")
-            return False
-            
-    except Exception as e:
-        print(f"错误: {e}")
-        return False
 
-def test_generate_content():
-    """测试AI内容生成接口"""
-    print("\n=== 测试AI内容生成接口 ===")
-    try:
-        payload = {
-            "content": "本周五晚7点，A栋101教室，举办Python入门讲座，面向全校师生",
-            "style": "enthusiastic",
-            "expection": "吸引更多人参与活动，激发读者热情"
-        }
-        
-        print(f"发送生成内容请求，内容: {payload['content']}")
-        start_time = time.time()
-        
-        response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/content",
-            headers={"Content-Type": "application/json"},
-            json=payload
-        )
-        
-        end_time = time.time()
-        print(f"状态码: {response.status_code}")
-        print(f"响应时间: {end_time - start_time:.2f}秒")
-        
-        if response.status_code == 200:
-            result = response.json()
-            generated_text = result.get('generated_text')
-            print(f"生成的文本:\n{generated_text}")
-            return generated_text is not None and len(generated_text.strip()) > 0
-        else:
-            print(f"错误响应: {response.text}")
-            return False
+        response2.raise_for_status() # 检查HTTP错误
+
+        full_response_content2 = ""
+        print("助手回复 (第二轮):")
+        for chunk in response2.iter_lines(): # 使用iter_lines处理SSE
+            if chunk:
+                decoded_chunk = chunk.decode('utf-8')
+                if decoded_chunk.startswith("data:"):
+                    data_content = decoded_chunk[5:].strip()
+                    if data_content == "[DONE]": # 明确处理DONE标记
+                        break
+                    if not data_content:
+                        continue # Skip empty data lines
+                    try:
+                        json_data = json.loads(data_content)
+                        if json_data.get("choices") and len(json_data["choices"]) > 0:
+                            delta = json_data["choices"][0].get("delta")
+                            if delta and delta.get("content"):
+                                content = delta["content"]
+                                print(content, end='')
+                                full_response_content2 += content
+                        elif "error" in json_data:
+                            print(f"错误: {json_data['error']}")
+                            return False
+                    except json.JSONDecodeError:
+                        # 这里不再需要打印Warning，因为[DONE]已经被前面的if捕获
+                        print(f"Could not decode JSON from chunk: {decoded_chunk}")
+                        print(decoded_chunk) # 打印原始数据，以防万一
+                # elif decoded_chunk == "data: [DONE]": # 结束标记，此行不再需要
+                #     break
+
+        end_time2 = time.time()
+        print(f"\n第二轮流式响应完成，响应时间: {end_time2 - start_time2:.2f}秒")
+
+        return True
             
     except Exception as e:
-        print(f"AI内容生成测试错误: {e}")
+        print(f"流式多轮对话错误: {e}")
         return False
 
 def test_summarize_tongyi_streaming():
@@ -394,7 +423,7 @@ def test_generate_introduction():
         start_time = time.time()
         
         response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/introduction",
+            f"{PROXY_SERVER_URL}/introduction",
             headers={"Content-Type": "application/json"},
             json=payload
         )
@@ -428,7 +457,7 @@ def test_generate_slogan():
         start_time = time.time()
         
         response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/Slogan",
+            f"{PROXY_SERVER_URL}/Slogan",
             headers={"Content-Type": "application/json"},
             json=payload
         )
@@ -830,6 +859,167 @@ def test_budget_warning():
         print(f"智能财务助理 - 预算超支预警测试错误: {e}")
         return False
 
+def test_generate_ml_data():
+    """测试机器学习数据生成接口"""
+    print("\n=== 测试机器学习数据生成 ===")
+    try:
+        # 测试用例1: 生成少量数据
+        payload1 = {
+            "num_communities": 3,
+            "num_users": 3,
+            "num_interactions": 5,
+            "save_file": "ml_data_test_small.json"
+        }
+        
+        print(f"发送请求 (少量数据): {payload1}")
+        start_time1 = time.time()
+        response1 = requests.post(
+            f"{PROXY_SERVER_URL}/generate_ml_data",
+            headers={"Content-Type": "application/json"},
+            json=payload1
+        )
+        end_time1 = time.time()
+        print(f"状态码: {response1.status_code}")
+        print(f"响应时间: {end_time1 - start_time1:.2f}秒")
+        
+        if response1.status_code == 200:
+            result1 = response1.json()
+            print(f"生成消息: {result1.get('message')}")
+            print(f"保存路径: {result1.get('file_path')}")
+            print(f"社团数量: {len(result1.get('communities', []))}")
+            print(f"用户数量: {len(result1.get('users', []))}")
+            print(f"互动数量: {len(result1.get('interactions', []))}")
+            test1_success = (len(result1.get('communities', [])) >= payload1["num_communities"] and
+                             len(result1.get('users', [])) >= payload1["num_users"] and
+                             len(result1.get('interactions', [])) >= payload1["num_interactions"])
+        else:
+            print(f"错误响应: {response1.text}")
+            test1_success = False
+
+        time.sleep(1) # 暂停避免请求过快
+
+        # 测试用例2: 生成更多数据 (不保存文件)
+        payload2 = {
+            "num_communities": 5,
+            "num_users": 5,
+            "num_interactions": 10,
+            "save_file": None
+        }
+        
+        print(f"\n发送请求 (更多数据，不保存): {payload2}")
+        start_time2 = time.time()
+        response2 = requests.post(
+            f"{PROXY_SERVER_URL}/generate_ml_data",
+            headers={"Content-Type": "application/json"},
+            json=payload2
+        )
+        end_time2 = time.time()
+        print(f"状态码: {response2.status_code}")
+        print(f"响应时间: {end_time2 - start_time2:.2f}秒")
+        
+        if response2.status_code == 200:
+            result2 = response2.json()
+            print(f"生成消息: {result2.get('message')}")
+            print(f"保存路径: {result2.get('file_path')}")
+            print(f"社团数量: {len(result2.get('communities', []))}")
+            print(f"用户数量: {len(result2.get('users', []))}")
+            print(f"互动数量: {len(result2.get('interactions', []))}")
+            test2_success = (len(result2.get('communities', [])) >= payload2["num_communities"] and
+                             len(result2.get('users', [])) >= payload2["num_users"] and
+                             len(result2.get('interactions', [])) >= payload2["num_interactions"] and
+                             result2.get('file_path') is None)
+        else:
+            print(f"错误响应: {response2.text}")
+            test2_success = False
+
+        return test1_success and test2_success
+
+    except Exception as e:
+        print(f"机器学习数据生成测试错误: {e}")
+        return False
+
+def test_club_recommend():
+    """测试社团推荐接口"""
+    print("\n=== 测试社团推荐接口 ===")
+    try:
+        # 测试用例1：普通学生
+        payload = {
+            "User_name": "张三",
+            "User_description": "我是一名大一新生，喜欢编程和摄影，希望能在课余时间提升自己的技能，结交志同道合的朋友。",
+            "User_tags": ["编程", "摄影", "技术", "交友"],
+            "User_major": "计算机科学与技术"
+        }
+        
+        print("发送推荐请求...")
+        print(f"用户名: {payload['User_name']}")
+        print(f"用户描述: {payload['User_description']}")
+        print(f"用户标签: {payload['User_tags']}")
+        print(f"专业: {payload['User_major']}")
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/club_recommend",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            print("\n推荐结果:")
+            print(f"总结文本: {result['Summary_text']}")
+            print("\n推荐社团列表:")
+            for club in result['Recommend_club_list']:
+                print(f"\n社团名称: {club['club_name']}")
+                print(f"描述: {club['description']}")
+                print(f"标签: {club['tags']}")
+                print(f"推荐理由: {club['recommend_reason']}")
+            test1_success = True
+        else:
+            print(f"错误响应: {response.text}")
+            test1_success = False
+            
+        time.sleep(1)  # 避免请求过快
+        
+        # 测试用例2：特殊兴趣学生
+        payload = {
+            "User_name": "李四",
+            "User_description": "我对人工智能和机器学习非常感兴趣，同时也喜欢参加志愿者活动。希望能找到既能提升专业能力，又能服务社会的社团。",
+            "User_tags": ["AI", "机器学习", "志愿服务", "社会实践"],
+            "User_major": "人工智能"
+        }
+        
+        print("\n发送第二个推荐请求...")
+        print(f"用户名: {payload['User_name']}")
+        print(f"用户描述: {payload['User_description']}")
+        print(f"用户标签: {payload['User_tags']}")
+        print(f"专业: {payload['User_major']}")
+        
+        response = requests.post(
+            f"{PROXY_SERVER_URL}/club_recommend",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            print("\n推荐结果:")
+            print(f"总结文本: {result['Summary_text']}")
+            print("\n推荐社团列表:")
+            for club in result['Recommend_club_list']:
+                print(f"\n社团名称: {club['club_name']}")
+                print(f"描述: {club['description']}")
+                print(f"标签: {club['tags']}")
+                print(f"推荐理由: {club['recommend_reason']}")
+            test2_success = True
+        else:
+            print(f"错误响应: {response.text}")
+            test2_success = False
+            
+        return test1_success and test2_success
+        
+    except Exception as e:
+        print(f"社团推荐测试错误: {e}")
+        return False
+
 def main():
     """
     运行所有测试
@@ -840,24 +1030,25 @@ def main():
     print("=" * 50)
     
     tests = [
-        ("健康检查", test_health_check),
-        ("简化聊天", test_simple_chat),
-        ("完整聊天", test_chat_completion),
-        ("模型列表", test_models_list),
-        ("配置信息", test_config_endpoint),
+        # ("健康检查", test_health_check),
+        # ("简化聊天", test_simple_chat),
+        # ("完整聊天", test_chat_completion),
+        # ("模型列表", test_models_list),
+        # ("配置信息", test_config_endpoint),
         ("多轮对话", test_conversation),
-        ("AI内容生成", test_generate_content),
-        ("通义千问流式总结", test_summarize_tongyi_streaming),
-        ("AI社团介绍生成", test_generate_introduction),
-        ("AI社团口号生成", test_generate_slogan),
-        ("配置重载", test_reload_config),
-        ("智能申请筛选", test_screen_application),
-        ("社团氛围透视", test_club_atmosphere),
-        ("智能活动策划", test_plan_event),
-        ("智能财务助理 - 对话式记账", test_financial_bookkeeping),
-        ("智能财务助理 - 修改预算", test_update_budget),
-        ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
-        ("智能财务助理 - 预算超支预警", test_budget_warning)
+        # ("通义千问流式总结", test_summarize_tongyi_streaming),
+        # ("AI社团介绍生成", test_generate_introduction),
+        # ("AI社团口号生成", test_generate_slogan),
+        # ("配置重载", test_reload_config),
+        # ("智能申请筛选", test_screen_application),
+        # ("社团氛围透视", test_club_atmosphere),
+        # ("智能活动策划", test_plan_event),
+        # ("智能财务助理 - 对话式记账", test_financial_bookkeeping),
+        # ("智能财务助理 - 修改预算", test_update_budget),
+        # ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
+        # ("智能财务助理 - 预算超支预警", test_budget_warning),
+        # ("社团推荐", test_club_recommend),
+        # ("机器学习数据生成", test_generate_ml_data)
     ]
     
     results = []
@@ -874,7 +1065,7 @@ def main():
         time.sleep(1)  # 避免请求过于频繁
     
     # 总结测试结果
-    print("\n=== 测试总结 ===")
+    print("\n=== 测试总结 ===\n")
     passed = sum(1 for _, success in results if success)
     total = len(results)
     

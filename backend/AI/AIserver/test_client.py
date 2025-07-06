@@ -217,7 +217,7 @@ def test_generate_content():
         start_time = time.time()
         
         response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/content",
+            f"{PROXY_SERVER_URL}/content",
             headers={"Content-Type": "application/json"},
             json=payload
         )
@@ -450,7 +450,7 @@ def test_generate_introduction():
         start_time = time.time()
         
         response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/introduction",
+            f"{PROXY_SERVER_URL}/introduction",
             headers={"Content-Type": "application/json"},
             json=payload
         )
@@ -484,7 +484,7 @@ def test_generate_slogan():
         start_time = time.time()
         
         response = requests.post(
-            f"{PROXY_SERVER_URL}/generate/Slogan",
+            f"{PROXY_SERVER_URL}/Slogan",
             headers={"Content-Type": "application/json"},
             json=payload
         )
@@ -531,7 +531,7 @@ def test_screen_application():
             },
             "application_reason": "我对贵社团的编程氛围和技术挑战非常感兴趣，希望能在社团中提升自己的编程能力并结识志同道合的朋友。我熟悉Python语言，并有Web开发经验。",
             "required_conditions": ["有编程基础", "对算法有兴趣", "积极参与团队项目"],
-            "club_name": ["编程社"]
+            "club_name": "编程社"
         }
         
         print(f"发送申请筛选请求，申请人: {payload['applicant_data']['name']}")
@@ -992,6 +992,85 @@ def test_generate_activity_post():
         print(f"\n请求失败: {str(e)} ✗")
         return False
 
+def test_generate_ml_data():
+    """测试机器学习数据生成接口"""
+    print("\n=== 测试机器学习数据生成 ===")
+    try:
+        # 测试用例1: 生成少量数据
+        payload1 = {
+            "num_communities": 3,
+            "num_users": 3,
+            "num_interactions": 5,
+            "save_file": "ml_data_test_small.json"
+        }
+        
+        print(f"发送请求 (少量数据): {payload1}")
+        start_time1 = time.time()
+        response1 = requests.post(
+            f"{PROXY_SERVER_URL}/generate_ml_data",
+            headers={"Content-Type": "application/json"},
+            json=payload1
+        )
+        end_time1 = time.time()
+        print(f"状态码: {response1.status_code}")
+        print(f"响应时间: {end_time1 - start_time1:.2f}秒")
+        
+        if response1.status_code == 200:
+            result1 = response1.json()
+            print(f"生成消息: {result1.get('message')}")
+            print(f"保存路径: {result1.get('file_path')}")
+            print(f"社团数量: {len(result1.get('communities', []))}")
+            print(f"用户数量: {len(result1.get('users', []))}")
+            print(f"互动数量: {len(result1.get('interactions', []))}")
+            test1_success = (len(result1.get('communities', [])) >= payload1["num_communities"] and
+                             len(result1.get('users', [])) >= payload1["num_users"] and
+                             len(result1.get('interactions', [])) >= payload1["num_interactions"])
+        else:
+            print(f"错误响应: {response1.text}")
+            test1_success = False
+
+        time.sleep(1) # 暂停避免请求过快
+
+        # 测试用例2: 生成更多数据 (不保存文件)
+        payload2 = {
+            "num_communities": 5,
+            "num_users": 5,
+            "num_interactions": 10,
+            "save_file": None
+        }
+        
+        print(f"\n发送请求 (更多数据，不保存): {payload2}")
+        start_time2 = time.time()
+        response2 = requests.post(
+            f"{PROXY_SERVER_URL}/generate_ml_data",
+            headers={"Content-Type": "application/json"},
+            json=payload2
+        )
+        end_time2 = time.time()
+        print(f"状态码: {response2.status_code}")
+        print(f"响应时间: {end_time2 - start_time2:.2f}秒")
+        
+        if response2.status_code == 200:
+            result2 = response2.json()
+            print(f"生成消息: {result2.get('message')}")
+            print(f"保存路径: {result2.get('file_path')}")
+            print(f"社团数量: {len(result2.get('communities', []))}")
+            print(f"用户数量: {len(result2.get('users', []))}")
+            print(f"互动数量: {len(result2.get('interactions', []))}")
+            test2_success = (len(result2.get('communities', [])) >= payload2["num_communities"] and
+                             len(result2.get('users', [])) >= payload2["num_users"] and
+                             len(result2.get('interactions', [])) >= payload2["num_interactions"] and
+                             result2.get('file_path') is None)
+        else:
+            print(f"错误响应: {response2.text}")
+            test2_success = False
+
+        return test1_success and test2_success
+
+    except Exception as e:
+        print(f"机器学习数据生成测试错误: {e}")
+        return False
+
 def test_club_recommend():
     """测试社团推荐接口"""
     print("\n=== 测试社团推荐接口 ===")
@@ -1084,8 +1163,8 @@ def main():
     print("=" * 50)
     
     tests = [
-        # ("健康检查", test_health_check),
-        # ("简化聊天", test_simple_chat),
+        ("健康检查", test_health_check),
+        ("简化聊天", test_simple_chat),
         # ("完整聊天", test_chat_completion),
         # ("模型列表", test_models_list),
         # ("配置信息", test_config_endpoint),
@@ -1103,7 +1182,8 @@ def main():
         # ("智能财务助理 - 一键生成财务报表", test_generate_financial_report),
         # ("智能财务助理 - 预算超支预警", test_budget_warning),
         # ("社团动态生成", test_generate_activity_post),
-        ("社团推荐", test_club_recommend)
+        # ("社团推荐", test_club_recommend),
+        # ("机器学习数据生成", test_generate_ml_data)
     ]
     
     results = []

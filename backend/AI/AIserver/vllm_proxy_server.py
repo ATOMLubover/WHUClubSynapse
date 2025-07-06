@@ -700,7 +700,8 @@ async def simple_chat(prompt: str, model: str = config.default_model, max_tokens
     request = ChatRequest(
         messages=messages,
         model=model,
-        max_tokens=max_tokens
+        max_tokens=max_tokens,
+        stream=False
     )
     
     # 调用主聊天接口

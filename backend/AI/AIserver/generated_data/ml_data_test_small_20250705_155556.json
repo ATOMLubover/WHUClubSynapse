@@ -1,0 +1,65 @@
+{
+  "communities": [
+    {
+      "community_id": 5,
+      "community_name": "编程社",
+      "tags": "编程|科技|开发"
+    },
+    {
+      "community_id": 6,
+      "community_name": "读书会",
+      "tags": "阅读|文学|知识"
+    },
+    {
+      "community_id": 7,
+      "community_name": "环保社",
+      "tags": "环保|公益|可持续"
+    }
+  ],
+  "users": [
+    {
+      "user_id": 3,
+      "user_tags": "音乐欣赏|美食烹饪|旅行探索"
+    },
+    {
+      "user_id": 4,
+      "user_tags": "科技产品|阅读书籍|游戏娱乐"
+    },
+    {
+      "user_id": 5,
+      "user_tags": "时尚穿搭|摄影技巧|社交活动"
+    }
+  ],
+  "interactions": [
+    {
+      "user_id": 3,
+      "community_id": 7,
+      "interaction": 1,
+      "timestamp": "2024-01-01T10:30:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 5,
+      "interaction": 1,
+      "timestamp": "2024-01-01T10:45:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 6,
+      "interaction": 1,
+      "timestamp": "2024-01-01T11:00:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 7,
+      "interaction": 1,
+      "timestamp": "2024-01-01T11:15:00Z"
+    },
+    {
+      "user_id": 5,
+      "community_id": 5,
+      "interaction": 1,
+      "timestamp": "2024-01-01T11:30:00Z"
+    }
+  ]
+}
