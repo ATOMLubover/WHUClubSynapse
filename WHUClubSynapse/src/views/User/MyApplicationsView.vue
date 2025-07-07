@@ -139,9 +139,7 @@
         </div>
 
         <el-empty v-else-if="!loading" description="暂无申请记录" :image-size="120">
-          <el-button type="primary" @click="$router.push('/user/managed-clubs?isOpen=true')">
-            申请创建社团
-          </el-button>
+          <el-button type="primary" @click="$router.push('/')"> 去申请加入社团 </el-button>
         </el-empty>
       </div>
     </el-card>

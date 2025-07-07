@@ -36,25 +36,10 @@
           <el-menu-item index="club-audit">社团审核</el-menu-item>
         </el-sub-menu>
 
-        <el-menu-item index="applications">
-          <el-icon><DocumentAdd /></el-icon>
-          <template #title>申请审核</template>
+        <el-menu-item index="settings">
+          <el-icon><Setting /></el-icon>
+          <template #title>系统设置</template>
         </el-menu-item>
-
-        <el-menu-item index="content">
-          <el-icon><Document /></el-icon>
-          <template #title>内容管理</template>
-        </el-menu-item>
-
-        <el-sub-menu index="system">
-          <template #title>
-            <el-icon><Tools /></el-icon>
-            <span>系统管理</span>
-          </template>
-          <el-menu-item index="system-settings">系统设置</el-menu-item>
-          <el-menu-item index="system-logs">操作日志</el-menu-item>
-          <el-menu-item index="system-backup">数据备份</el-menu-item>
-        </el-sub-menu>
       </el-menu>
 
       <!-- 侧边栏折叠按钮 -->
@@ -101,13 +86,8 @@
         <!-- 申请审核 -->
         <ApplicationReview v-if="activeMenu === 'applications'" />
 
-        <!-- 内容管理 -->
-        <ContentManagement v-if="activeMenu === 'content'" />
-
         <!-- 系统管理 -->
-        <SystemSettings v-if="activeMenu === 'system-settings'" />
-        <SystemLogs v-if="activeMenu === 'system-logs'" />
-        <SystemBackup v-if="activeMenu === 'system-backup'" />
+        <SystemSettings v-if="activeMenu === 'settings'" />
       </div>
     </main>
   </div>
@@ -136,10 +116,7 @@ import ClubList from '../../components/Admin/ClubList.vue'
 import ClubCategories from '../../components/Admin/ClubCategories.vue'
 import ClubAudit from '../../components/Admin/ClubAudit.vue'
 import ApplicationReview from '../../components/Admin/ApplicationReview.vue'
-import ContentManagement from '../../components/Admin/ContentManagement.vue'
 import SystemSettings from '../../components/Admin/SystemSettings.vue'
-import SystemLogs from '../../components/Admin/SystemLogs.vue'
-import SystemBackup from '../../components/Admin/SystemBackup.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 
@@ -156,11 +133,7 @@ const pageTitles: Record<string, string> = {
   'club-list': '社团列表',
   'club-categories': '分类管理',
   'club-audit': '社团审核',
-  applications: '申请审核',
-  content: '内容管理',
-  'system-settings': '系统设置',
-  'system-logs': '操作日志',
-  'system-backup': '数据备份',
+  settings: '系统设置',
 }
 
 // 获取当前页面标题
@@ -183,6 +156,10 @@ onMounted(() => {
   if (!useAuthStore().isLoggedIn) {
     ElMessage.warning('您还未登录，部分功能可能无法正常使用')
     router.push('/login')
+    return
+  } else if (useAuthStore().user?.role != 'admin') {
+    ElMessage.warning('您没有权限访问此页面')
+    router.push('/')
     return
   }
   activeMenu.value = 'dashboard'

@@ -3,80 +3,187 @@
     <el-card>
       <template #header>
         <div class="header-content">
-          <span>社团创建申请审核</span>
-          <div class="header-actions">
-            <el-select v-model="filterStatus" placeholder="筛选状态" @change="loadApplications">
-              <el-option label="全部" value="" />
-              <el-option label="待审核" value="pending" />
-              <el-option label="已通过" value="approved" />
-              <el-option label="已拒绝" value="rejected" />
-            </el-select>
-            <el-button type="primary" @click="loadApplications">刷新</el-button>
-          </div>
+          <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+            <el-tab-pane label="创建申请审核" name="create" />
+            <el-tab-pane label="更新申请审核" name="update" />
+          </el-tabs>
         </div>
       </template>
-
-      <div v-loading="loading">
-        <el-table :data="applications" style="width: 100%" border stripe>
-          <el-table-column prop="name" label="社团名称" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="leader_id" label="申请人" min-width="100" show-overflow-tooltip />
-          <el-table-column prop="category_id" label="类型" min-width="100">
-            <template #default="{ row }">
-              <el-tag :type="getCategoryType(row.category)">
-                {{ getCategoryName(row.category) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="applyTime" label="申请时间" min-width="160" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ formatDate(row.applyTime) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" min-width="100">
-            <template #default="{ row }">
-              <el-tag :type="getStatusType(row.status)">
-                {{ getStatusText(row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right">
-            <template #default="{ row }">
-              <div class="action-buttons">
-                <el-button
-                  v-if="row.status === 'pending'"
-                  type="success"
-                  size="small"
-                  @click="approveApplication(row)"
-                >
-                  通过
-                </el-button>
-                <el-button
-                  v-if="row.status === 'pending'"
-                  type="danger"
-                  size="small"
-                  @click="rejectApplication(row)"
-                >
-                  拒绝
-                </el-button>
-                <el-button type="primary" size="small" @click="viewApplication(row)">
-                  详情
-                </el-button>
+      <div v-if="activeTab === 'create'" v-loading="loading">
+        <el-card>
+          <template #header>
+            <div class="header-content">
+              <span>社团创建申请审核</span>
+              <div class="header-actions">
+                <el-select v-model="filterStatus" placeholder="筛选状态" @change="loadApplications">
+                  <el-option label="全部" value="" />
+                  <el-option label="待审核" value="pending" />
+                  <el-option label="已通过" value="approved" />
+                  <el-option label="已拒绝" value="rejected" />
+                </el-select>
+                <el-button type="primary" @click="loadApplications">刷新</el-button>
               </div>
-            </template>
-          </el-table-column>
-        </el-table>
+            </div>
+          </template>
 
-        <div v-if="total > 0" class="pagination-section">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :total="total"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
+          <div v-loading="loading">
+            <el-table :data="applications" style="width: 100%" border stripe>
+              <el-table-column prop="name" label="社团名称" min-width="180" show-overflow-tooltip />
+              <el-table-column
+                prop="leader.username"
+                label="申请人"
+                min-width="100"
+                show-overflow-tooltip
+              />
+              <el-table-column prop="category_id" label="类型" min-width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getCategoryType(row.category_id)">
+                    {{ getCategoryName(row.category_id) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="applyTime"
+                label="申请时间"
+                min-width="160"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  {{ formatDate(row.applyTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" min-width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getStatusType(row.status)">
+                    {{ getStatusText(row.status) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="220" fixed="right">
+                <template #default="{ row }">
+                  <div class="action-buttons">
+                    <el-button
+                      v-if="row.status === 'pending'"
+                      type="success"
+                      size="small"
+                      @click="approveApplication(row)"
+                    >
+                      通过
+                    </el-button>
+                    <el-button
+                      v-if="row.status === 'pending'"
+                      type="danger"
+                      size="small"
+                      @click="rejectApplication(row)"
+                    >
+                      拒绝
+                    </el-button>
+                    <el-button type="primary" size="small" @click="viewApplication(row)">
+                      详情
+                    </el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div v-if="total > 0" class="pagination-section">
+              <el-pagination
+                v-model:current-page="currentPage"
+                v-model:page-size="pageSize"
+                :total="total"
+                :page-sizes="[10, 20, 50]"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+              />
+            </div>
+          </div>
+        </el-card>
+      </div>
+      <div v-else v-loading="loading">
+        <el-card>
+          <template #header>
+            <div class="header-content">
+              <span>社团更新申请审核</span>
+              <div class="header-actions">
+                <el-button type="primary" @click="loadUpdateApplications">刷新</el-button>
+              </div>
+            </div>
+          </template>
+
+          <div v-loading="loading">
+            <el-table :data="updateApplications" style="width: 100%" border stripe>
+              <el-table-column prop="name" label="社团名称" min-width="180" show-overflow-tooltip />
+              <el-table-column
+                prop="leader_id"
+                label="负责人ID"
+                min-width="100"
+                show-overflow-tooltip
+              />
+              <el-table-column prop="category_id" label="类型" min-width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getCategoryType(row.category_id)">
+                    {{ getCategoryName(row.category_id) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="updated_at"
+                label="申请时间"
+                min-width="160"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  {{ formatDate(row.updated_at) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" min-width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getStatusType(row.status)">
+                    {{ getStatusText(row.status) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="220" fixed="right">
+                <template #default="{ row }">
+                  <div class="action-buttons">
+                    <el-button
+                      v-if="row.status === 'pending'"
+                      type="success"
+                      size="small"
+                      @click="approveUpdateApplication(row)"
+                    >
+                      通过
+                    </el-button>
+                    <el-button
+                      v-if="row.status === 'pending'"
+                      type="danger"
+                      size="small"
+                      @click="rejectUpdateApplication(row)"
+                    >
+                      拒绝
+                    </el-button>
+                    <el-button type="primary" size="small" @click="viewUpdateApplication(row)">
+                      详情
+                    </el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div v-if="updateTotal > 0" class="pagination-section">
+              <el-pagination
+                v-model:current-page="updateCurrentPage"
+                v-model:page-size="updatePageSize"
+                :total="updateTotal"
+                :page-sizes="[10, 20, 50]"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleUpdateSizeChange"
+                @current-change="handleUpdateCurrentChange"
+              />
+            </div>
+          </div>
+        </el-card>
       </div>
     </el-card>
 
@@ -184,6 +291,8 @@ import { useClubStore } from '@/stores/club'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { ClubCreatedApplication, AdminCreateApplication } from '@/types'
 import { getUserById } from '@/api/auth'
+import { getClubPosts, getUpdateListAdmin, pinPost, reviewClubUpdateApplication } from '@/api/club'
+import { createClubPost } from '@/api/club'
 
 const clubStore = useClubStore()
 const applications = ref<AdminCreateApplication[]>([])
@@ -196,6 +305,11 @@ const detailDialogVisible = ref(false)
 const rejectDialogVisible = ref(false)
 const selectedApplication = ref<AdminCreateApplication | null>(null)
 const rejectLoading = ref(false)
+const activeTab = ref('create')
+const updateApplications = ref<any[]>([])
+const updateTotal = ref(0)
+const updateCurrentPage = ref(1)
+const updatePageSize = ref(10)
 
 const rejectForm = ref({
   rejectReason: '',
@@ -209,26 +323,25 @@ const rejectFormRef = ref()
 
 // 获取分类类型
 const getCategoryType = (category: number) => {
-  const typeMap: Record<number, string> = {
-    0: 'primary', // 学术科技
-    1: 'success', // 文艺体育
-    2: 'warning', // 志愿服务
-    3: 'danger', // 创新创业
-    4: 'info', // 其他
+  switch (category) {
+    case 0:
+      return 'primary'
+    case 1:
+      return 'success'
+    case 2:
+      return 'warning'
+    case 3:
+      return 'danger'
+    case 4:
+      return 'info'
+    default:
+      return 'info'
   }
-  return typeMap[category] || 'info'
 }
 
 // 获取分类名称
 const getCategoryName = (category: number) => {
-  const nameMap: Record<number, string> = {
-    0: '学术科技',
-    1: '文艺体育',
-    2: '志愿服务',
-    3: '创新创业',
-    4: '其他',
-  }
-  return nameMap[category] || '未知'
+  return clubStore.categoriesList.find((item) => item.category_id === category)?.name || '未知'
 }
 
 // 获取状态类型
@@ -256,11 +369,6 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString('zh-CN')
 }
 
-interface temp {
-  Proposal: string
-  Status: string
-}
-
 // 加载申请列表
 const loadApplications = async () => {
   try {
@@ -271,15 +379,16 @@ const loadApplications = async () => {
       status: (filterStatus.value as 'pending' | 'approved' | 'rejected') || undefined,
     })
 
-    const list = data.list as temp[]
+    const list = data.list
     console.log('list', list)
     applications.value = []
-    list.forEach(async (item) => {
-      const proposal = parseProposal(item.Proposal as string)
+    list.forEach(async (item: any) => {
+      const proposal = parseProposal(item.proposal as string)
       const leader = await getUserById(proposal.leader_id)
       applications.value.push({
         ...proposal,
-        status: item.Status,
+        status: item.status,
+        appli_id: item.appli_id,
         leader: leader,
       })
     })
@@ -334,13 +443,23 @@ const approveApplication = async (application: AdminCreateApplication) => {
       type: 'warning',
     })
 
-    await clubStore.reviewClubApplication(application.create_club_appli_id, 'approve')
+    const id = (await clubStore.reviewClubApplication(application.appli_id, 'approve')).new_club_id
 
-    // loadApplications()
+    console.log('id', id)
+    const res = await createClubPost({
+      title: application.name + '社团公告',
+      club_id: id,
+      content: application.name + '社团公告',
+    })
+    const post = (await getClubPosts(id, 1, 10)).list[0].post_id
+    console.log('post', post)
+    await pinPost(post!.toString())
   } catch (error) {
     if (error !== 'cancel') {
       console.error('审核失败:', error)
     }
+  } finally {
+    loadApplications()
   }
 }
 
@@ -358,13 +477,19 @@ const confirmReject = async () => {
   try {
     await rejectFormRef.value?.validate()
     rejectLoading.value = true
-
-    await clubStore.reviewClubApplication(
-      selectedApplication.value.create_club_appli_id,
-      'reject',
-      rejectForm.value.rejectReason,
-    )
-
+    if (activeTab.value === 'create') {
+      await clubStore.reviewClubApplication(
+        selectedApplication.value.appli_id,
+        'reject',
+        rejectForm.value.rejectReason,
+      )
+    } else {
+      await reviewClubUpdateApplication(
+        selectedApplication.value.appli_id,
+        'reject',
+        rejectForm.value.rejectReason,
+      )
+    }
     rejectDialogVisible.value = false
     loadApplications()
   } catch (error) {
@@ -373,11 +498,72 @@ const confirmReject = async () => {
     }
   } finally {
     rejectLoading.value = false
+    loadApplications()
   }
 }
 
-onMounted(() => {
-  loadApplications()
+const handleTabChange = async () => {
+  if (activeTab.value === 'create') {
+    loadApplications()
+  } else {
+    await loadUpdateApplications()
+  }
+}
+
+const loadUpdateApplications = async () => {
+  try {
+    loading.value = true
+    const data = await getUpdateListAdmin(updateCurrentPage.value, updatePageSize.value, '')
+    const list = data.list
+    updateApplications.value = []
+    list.forEach(async (item: any) => {
+      const proposal = parseProposal(item.proposal as string)
+      const leader = await getUserById(proposal.leader_id)
+      updateApplications.value.push({
+        ...proposal,
+        status: item.status,
+        appli_id: item.appli_id,
+        leader: leader,
+      })
+    })
+    updateTotal.value = data.total
+  } catch (error) {
+    console.error('加载更新申请列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleUpdateSizeChange = (size: number) => {
+  updatePageSize.value = size
+  updateCurrentPage.value = 1
+  loadUpdateApplications()
+}
+const handleUpdateCurrentChange = (page: number) => {
+  updateCurrentPage.value = page
+  loadUpdateApplications()
+}
+
+const approveUpdateApplication = async (row: any) => {
+  // TODO: 调用审核通过API，待后端实现
+  // await clubStore.reviewClubUpdateApplication(row.appli_id, 'approve')
+  // loadUpdateApplications()
+  await reviewClubUpdateApplication(row.appli_id, 'approve')
+  console.log('审核通过（待实现）', row)
+}
+const rejectUpdateApplication = async (row: any) => {
+  selectedApplication.value = row
+  rejectForm.value.rejectReason = ''
+  rejectDialogVisible.value = true
+}
+const viewUpdateApplication = (row: any) => {
+  // TODO: 展示详情弹窗，可复用selectedApplication等逻辑
+  console.log('查看详情（待实现）', row)
+}
+
+onMounted(async () => {
+  if (clubStore.categoriesList.length == 0) await clubStore.fetchCategoriesList()
+  await loadApplications()
 })
 </script>
 

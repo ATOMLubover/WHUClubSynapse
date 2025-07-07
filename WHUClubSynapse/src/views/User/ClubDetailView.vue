@@ -176,16 +176,22 @@
                     <div class="stat-label">当前成员</div>
                   </div>
                   <div class="stat-item">
-                    <div class="stat-number">{{ Math.floor(Math.random() * 50) + 10 }}</div>
+                    <div class="stat-number">{{ activities.length }}</div>
                     <div class="stat-label">累计活动</div>
                   </div>
                   <div class="stat-item">
-                    <div class="stat-number">{{ Math.floor(Math.random() * 20) + 5 }}</div>
-                    <div class="stat-label">获得荣誉</div>
+                    <div class="stat-number">{{ announcements.length }}</div>
+                    <div class="stat-label">公告数量</div>
                   </div>
                   <div class="stat-item">
-                    <div class="stat-number">{{ Math.floor(Math.random() * 100) + 50 }}</div>
-                    <div class="stat-label">影响人次</div>
+                    <div class="stat-number">
+                      {{
+                        clubStore.currentClubPosts.length - 1 >= 0
+                          ? clubStore.currentClubPosts.length - 1
+                          : 0
+                      }}
+                    </div>
+                    <div class="stat-label">发布帖子</div>
                   </div>
                 </div>
               </el-card>
@@ -392,6 +398,10 @@ const loadActivitiesAndAnnouncements = async () => {
   try {
     const { data: pinnedPost } = await getPinnedPost(Number(clubId))
     const { data: comments } = await getPostComments(pinnedPost.post_id)
+
+    if (comments == null) {
+      return
+    }
 
     // 分类处理评论
     const sortedComments = comments.sort(

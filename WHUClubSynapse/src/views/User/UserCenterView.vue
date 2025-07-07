@@ -314,11 +314,12 @@
                 感兴趣的社团类型
               </h4>
               <el-checkbox-group v-model="preferences.interestedCategories" class="checkbox-grid">
-                <el-checkbox label="学术科技" class="checkbox-item">学术科技</el-checkbox>
-                <el-checkbox label="文艺体育" class="checkbox-item">文艺体育</el-checkbox>
-                <el-checkbox label="志愿服务" class="checkbox-item">志愿服务</el-checkbox>
-                <el-checkbox label="创新创业" class="checkbox-item">创新创业</el-checkbox>
-                <el-checkbox label="其他" class="checkbox-item">其他</el-checkbox>
+                <el-checkbox
+                  v-for="category in clubStore.categoriesList"
+                  :key="category.category_id"
+                  :label="category.name"
+                  :value="category.category_id"
+                />
               </el-checkbox-group>
             </div>
 
@@ -778,7 +779,7 @@ const passwordRules = {
   ],
 }
 
-// 方法
+//TODOf 方法
 const getUserRoleText = (role?: string) => {
   const roleMap: Record<string, string> = {
     admin: '管理员',
@@ -800,13 +801,13 @@ const handleEditToggle = async () => {
 
     try {
       await userFormRef.value.validate()
-      
+
       // 调用更新用户信息API（包含当前的tags）
       await authStore.updateUserInfo({
         ...editableUserInfo,
-        tags: preferences.tags // 确保不丢失当前的标签
+        tags: preferences.tags, // 确保不丢失当前的标签
       })
-      
+
       ElMessage.success('保存成功')
       editMode.value = false
 
@@ -907,16 +908,16 @@ const confirmAvatarUpload = async () => {
 const savePreferences = async () => {
   try {
     preferencesLoading.value = true
-    
+
     console.log('UserCenterView保存偏好设置:', preferences)
     console.log('包含的标签:', preferences.tags)
-    
+
     // 使用新的updateUserInfo方法保存偏好设置到extension字段
     await authStore.updateUserInfo({
       preferences: preferences,
-      tags: preferences.tags
+      tags: preferences.tags,
     })
-    
+
     ElMessage.success('偏好设置保存成功')
     // 重新拉取用户信息，刷新页面显示
     await loadUserData()
@@ -1049,7 +1050,7 @@ const loadUserData = async () => {
       Object.assign(preferences, userInfo.value.preferences)
       console.log(preferences)
     }
-    
+
     // 加载用户标签（如果存在）
     if (userInfo.value.tags) {
       preferences.tags = [...userInfo.value.tags]
@@ -1242,6 +1243,9 @@ onMounted(() => {
   loadUserData()
   // 检查AI服务可用性
   checkAIService()
+  if (clubStore.categoriesList.length == 0) {
+    clubStore.fetchCategoriesList()
+  }
 })
 </script>
 

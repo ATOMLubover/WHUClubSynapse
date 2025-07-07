@@ -93,29 +93,6 @@
               建议尺寸：400x300px，支持 JPG、PNG 格式，文件大小不超过 2MB
             </div>
           </el-form-item> -->
-        </el-form>
-      </div>
-
-      <!-- 详细介绍 -->
-      <div class="form-section">
-        <h2 class="section-title">
-          <el-icon><Document /></el-icon>
-          详细介绍
-        </h2>
-        <el-form ref="detailFormRef" :model="detailForm" label-width="120px">
-          <el-form-item label="社团介绍" prop="introduction">
-            <el-input
-              v-model="detailForm.introduction"
-              type="textarea"
-              :rows="6"
-              placeholder="请详细介绍社团的历史、特色、活动等内容"
-              maxlength="2000"
-              show-word-limit
-            />
-          </el-form-item>
-          
-          <!-- AI社团介绍生成器 -->
-          <AIIntroductionGenerator v-model="detailForm.introduction" />
 
           <el-form-item label="加入要求" prop="requirements">
             <el-input
@@ -130,200 +107,10 @@
         </el-form>
       </div>
 
-      <!-- 联系方式 -->
+      <!-- 详细介绍 -->
       <div class="form-section">
-        <h2 class="section-title">
-          <el-icon><Phone /></el-icon>
-          联系方式
-        </h2>
-        <el-form ref="contactFormRef" :model="contactForm" label-width="120px">
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="QQ群" prop="qq">
-                <el-input v-model="contactForm.qq" placeholder="请输入QQ群号" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="微信号" prop="wechat">
-                <el-input v-model="contactForm.wechat" placeholder="请输入微信号" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="邮箱" prop="email">
-                <el-input v-model="contactForm.email" placeholder="请输入邮箱地址" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="联系电话" prop="phone">
-                <el-input v-model="contactForm.phone" placeholder="请输入联系电话" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-form-item label="地址" prop="address">
-            <el-input v-model="contactForm.address" placeholder="请输入社团活动地址" />
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!-- 例会信息 -->
-      <div class="form-section">
-        <h2 class="section-title">
-          <el-icon><Calendar /></el-icon>
-          例会信息
-        </h2>
-        <el-form ref="meetingFormRef" :model="meetingForm" label-width="120px">
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="例会时间" prop="meetingTime">
-                <el-input v-model="meetingForm.meetingTime" placeholder="例如：每周三晚上7点" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="例会地点" prop="meetingLocation">
-                <el-input v-model="meetingForm.meetingLocation" placeholder="请输入例会地点" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-form>
-      </div>
-
-      <!-- 社团公告 -->
-      <div class="form-section">
-        <h2 class="section-title">
-          <el-icon><Bell /></el-icon>
-          社团公告
-        </h2>
-        <div class="announcements-container">
-          <div v-if="announcements.length === 0" class="empty-announcements">
-            <el-empty description="暂无公告">
-              <el-button type="primary" @click="addAnnouncement">添加公告</el-button>
-            </el-empty>
-            
-            <!-- 空状态下的AI公告生成器 -->
-            <div class="empty-ai-generator">
-              <h3>或者使用AI生成公告</h3>
-              <AIAnnouncementGenerator 
-                v-model="tempAnnouncementText"
-                @update:modelValue="onTempAnnouncementGenerated"
-              />
-            </div>
-          </div>
-
-          <div v-else class="announcements-list">
-            <div
-              v-for="(announcement, index) in announcements"
-              :key="index"
-              class="announcement-item"
-            >
-              <div class="announcement-content">
-                <div class="announcement-header">
-                  <span class="announcement-title">公告 {{ index + 1 }}</span>
-                  <el-button
-                    type="danger"
-                    size="small"
-                    @click="removeAnnouncement(index)"
-                    class="remove-btn"
-                  >
-                    <el-icon><Delete /></el-icon>
-                    删除
-                  </el-button>
-                </div>
-                
-                <el-input
-                  v-model="announcements[index]"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="请输入公告内容"
-                  maxlength="500"
-                  show-word-limit
-                  class="announcement-input"
-                />
-                
-                <!-- AI公告生成器 -->
-                <AIAnnouncementGenerator 
-                  v-model="announcements[index]"
-                  :key="`announcement-ai-${index}`"
-                />
-              </div>
-            </div>
-
-            <el-button type="primary" @click="addAnnouncement" class="add-announcement-btn">
-              <el-icon><Plus /></el-icon>
-              添加公告
-            </el-button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 社团动态 -->
-      <div class="form-section">
-        <h2 class="section-title">
-          <el-icon><Calendar /></el-icon>
-          社团动态
-        </h2>
-        <div class="activities-container">
-          <div v-if="activities.length === 0" class="empty-activities">
-            <el-empty description="暂无动态">
-              <el-button type="primary" @click="addActivity">添加动态</el-button>
-            </el-empty>
-          </div>
-
-          <div v-else class="activities-list">
-            <div v-for="(activity, index) in activities" :key="activity.id" class="activity-item">
-              <el-card>
-                <template #header>
-                  <div class="activity-header">
-                    <span>动态 {{ index + 1 }}</span>
-                    <el-button type="danger" size="small" @click="removeActivity(index)">
-                      <el-icon><Delete /></el-icon>
-                      删除
-                    </el-button>
-                  </div>
-                </template>
-
-                <el-form-item label="动态标题" :prop="`activities.${index}.title`">
-                  <el-input
-                    v-model="activity.title"
-                    placeholder="请输入动态标题"
-                    maxlength="100"
-                    show-word-limit
-                  />
-                </el-form-item>
-
-                <el-form-item label="动态描述" :prop="`activities.${index}.description`">
-                  <el-input
-                    v-model="activity.description"
-                    type="textarea"
-                    :rows="3"
-                    placeholder="请输入动态描述"
-                    maxlength="500"
-                    show-word-limit
-                  />
-                </el-form-item>
-
-                <el-form-item label="动态时间" :prop="`activities.${index}.time`">
-                  <el-date-picker
-                    v-model="activity.time"
-                    type="datetime"
-                    placeholder="选择动态时间"
-                    style="width: 100%"
-                    format="YYYY-MM-DD HH:mm"
-                    value-format="YYYY-MM-DD HH:mm:ss"
-                  />
-                </el-form-item>
-              </el-card>
-            </div>
-
-            <el-button type="primary" @click="addActivity" class="add-activity-btn">
-              <el-icon><Plus /></el-icon>
-              添加动态
-            </el-button>
-          </div>
-        </div>
+        <!-- AI社团介绍生成器 -->
+        <AIIntroductionGenerator v-model="detailForm.introduction" />
       </div>
     </div>
   </div>
@@ -613,9 +400,8 @@ onMounted(async () => {
 }
 
 .form-section {
-  margin-bottom: 40px;
-  padding: 30px;
   border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 20px;
 }
 
 .form-section:last-child {

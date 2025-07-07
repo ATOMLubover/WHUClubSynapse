@@ -1,9 +1,7 @@
 <template>
   <div class="announcement-manager">
     <div v-if="isClubLeader" class="add-announcement">
-      <el-button type="primary" @click="showAddDialog">
-        新增公告/动态
-      </el-button>
+      <el-button type="primary" @click="showAddDialog"> 新增公告/动态 </el-button>
     </div>
 
     <!-- 显示现有的公告和动态列表 -->
@@ -20,11 +18,22 @@
             <div class="content">{{ JSON.parse(item.content).content }}</div>
             <div v-if="item.content" class="metadata">
               <template v-if="JSON.parse(item.content).type === 'activity'">
-                <p v-if="JSON.parse(item.content).metadata.activity_type">活动类型: {{ JSON.parse(item.content).metadata.activity_type }}</p>
-                <p v-if="JSON.parse(item.content).metadata.location">地点: {{ JSON.parse(item.content).metadata.location }}</p>
-                <p v-if="JSON.parse(item.content).metadata.participants">参与人数: {{ JSON.parse(item.content).metadata.participants }}</p>
+                <p v-if="JSON.parse(item.content).metadata.activity_type">
+                  活动类型: {{ JSON.parse(item.content).metadata.activity_type }}
+                </p>
+                <p v-if="JSON.parse(item.content).metadata.location">
+                  地点: {{ JSON.parse(item.content).metadata.location }}
+                </p>
+                <p v-if="JSON.parse(item.content).metadata.participants">
+                  参与人数: {{ JSON.parse(item.content).metadata.participants }}
+                </p>
               </template>
-              <div v-if="JSON.parse(item.content).metadata.tags && JSON.parse(item.content).metadata.tags.length">
+              <div
+                v-if="
+                  JSON.parse(item.content).metadata.tags &&
+                  JSON.parse(item.content).metadata.tags.length
+                "
+              >
                 标签:
                 <el-tag
                   v-for="tag in JSON.parse(item.content).metadata.tags"
@@ -42,11 +51,7 @@
     </div>
 
     <!-- 添加公告/动态的对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="'新增' + (isActivity ? '动态' : '公告')"
-      width="50%"
-    >
+    <el-dialog v-model="dialogVisible" :title="'新增' + (isActivity ? '动态' : '公告')" width="50%">
       <el-form :model="form" label-width="120px">
         <el-form-item label="类型">
           <el-radio-group v-model="isActivity">
@@ -61,21 +66,11 @@
             <el-icon><Bell /></el-icon>
             <span>AI {{ isActivity ? '动态' : '公告' }}生成器</span>
             <el-tag type="success" size="small" class="status-tag">在线</el-tag>
-            <el-button
-              type="primary"
-              text
-              class="check-status"
-              @click="checkAIStatus"
-            >
+            <el-button type="primary" text class="check-status" @click="checkAIStatus">
               <el-icon><RefreshRight /></el-icon>
               检查状态
             </el-button>
-            <el-button
-              type="primary"
-              text
-              class="clear-results"
-              @click="clearResults"
-            >
+            <el-button type="primary" text class="clear-results" @click="clearResults">
               清空结果
             </el-button>
           </div>
@@ -85,7 +80,9 @@
               v-model="aiDraft"
               type="textarea"
               :rows="4"
-              :placeholder="isActivity ? '请输入动态的草稿内容（可选）' : '请输入公告的草稿内容（可选）'"
+              :placeholder="
+                isActivity ? '请输入动态的草稿内容（可选）' : '请输入公告的草稿内容（可选）'
+              "
             />
           </el-form-item>
 
@@ -101,17 +98,17 @@
           <el-form-item label="预期效果">
             <el-input
               v-model="aiExpectation"
-              :placeholder="isActivity ? '例如：展示活动亮点、吸引更多参与者、营造良好氛围等' : '例如：吸引更多人参与活动、激发读者热情、提高关注度等'"
+              :placeholder="
+                isActivity
+                  ? '例如：展示活动亮点、吸引更多参与者、营造良好氛围等'
+                  : '例如：吸引更多人参与活动、激发读者热情、提高关注度等'
+              "
             />
             <div class="char-count">{{ aiExpectation.length }} / 100</div>
           </el-form-item>
 
           <div class="generate-button">
-            <el-button
-              type="primary"
-              :loading="generating"
-              @click="generateAnnouncement"
-            >
+            <el-button type="primary" :loading="generating" @click="generateAnnouncement">
               生成AI{{ isActivity ? '动态' : '公告' }}内容
             </el-button>
           </div>
@@ -119,12 +116,7 @@
           <div v-if="aiResult" class="ai-result">
             <div class="result-header">
               <span>生成结果</span>
-              <el-button
-                type="primary"
-                text
-                size="small"
-                @click="useAIResult"
-              >
+              <el-button type="primary" text size="small" @click="useAIResult">
                 使用此结果
               </el-button>
             </div>
@@ -181,17 +173,13 @@
             @blur="handleTagConfirm"
             style="width: 100px"
           />
-          <el-button v-else size="small" @click="showTagInput">
-            + 新标签
-          </el-button>
+          <el-button v-else size="small" @click="showTagInput"> + 新标签 </el-button>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">
-            确定
-          </el-button>
+          <el-button type="primary" @click="handleSubmit"> 确定 </el-button>
         </span>
       </template>
     </el-dialog>
@@ -253,8 +241,8 @@ const form = ref({
     activity_type: '',
     location: '',
     participants: 0,
-    tags: [] as string[]
-  }
+    tags: [] as string[],
+  },
 })
 
 // AI公告生成相关的状态
@@ -267,7 +255,10 @@ const generating = ref(false)
 // 获取公告列表
 const fetchAnnouncements = async () => {
   try {
-    const response = await request.get(`/api/club/posts/${props.clubId}`)
+    const response = await request.get(`/api/club/post/posts/${props.clubId}`)
+    if (response.data == null) {
+      return
+    }
     if (response.data) {
       announcements.value = response.data.map((item: any) => {
         const content = JSON.parse(item.content)
@@ -277,12 +268,13 @@ const fetchAnnouncements = async () => {
           content: content.content,
           type: content.type,
           created_at: item.created_at,
-          metadata: content.metadata || { tags: [] }
+          metadata: content.metadata || { tags: [] },
         }
       })
     }
   } catch (error) {
-    ElMessage.error('获取公告列表失败')
+    console.error('获取公告列表失败:', error)
+    // ElMessage.error('获取公告列表失败')
   }
 }
 
@@ -293,15 +285,15 @@ const showAddDialog = () => {
       activity_type: '',
       location: '',
       participants: 0,
-      tags: []
-    }
+      tags: [],
+    },
   }
   isActivity.value = false
   dialogVisible.value = true
 }
 
 const handleTagClose = (tag: string) => {
-  form.value.metadata.tags = form.value.metadata.tags.filter(t => t !== tag)
+  form.value.metadata.tags = form.value.metadata.tags.filter((t) => t !== tag)
 }
 
 const showTagInput = () => {
@@ -330,7 +322,9 @@ const handleSubmit = async () => {
     }
 
     // 获取置顶帖子
-    const { data: pinnedPost } = await request.get<PinnedPost>(`/api/club/post/pinned/${props.clubId}`)
+    const { data: pinnedPost } = await request.get<PinnedPost>(
+      `/api/club/post/pinned/${props.clubId}`,
+    )
     if (!pinnedPost || !pinnedPost.post_id) {
       ElMessage.error('未找到置顶帖子')
       return
@@ -340,23 +334,25 @@ const handleSubmit = async () => {
     const commentContent = {
       type: isActivity.value ? 'activity' : 'announcement',
       content: form.value.content,
-      metadata: isActivity.value ? {
-        activity_type: form.value.metadata.activity_type,
-        location: form.value.metadata.location,
-        participants: form.value.metadata.participants,
-        tags: form.value.metadata.tags
-      } : {
-        tags: form.value.metadata.tags
-      }
+      metadata: isActivity.value
+        ? {
+            activity_type: form.value.metadata.activity_type,
+            location: form.value.metadata.location,
+            participants: form.value.metadata.participants,
+            tags: form.value.metadata.tags,
+          }
+        : {
+            tags: form.value.metadata.tags,
+          },
     }
 
     // 打印请求数据
     const requestData = {
       post_id: pinnedPost.post_id,
-      author_id: 1,
-      user_id: 1,
+      author_id: authStore.user?.user_id,
+      user_id: authStore.user?.user_id,
       content: JSON.stringify(commentContent),
-      type: isActivity.value ? 'activity' : 'announcement'
+      type: isActivity.value ? 'activity' : 'announcement',
     }
     console.log('发送的请求数据:', JSON.stringify(requestData, null, 2))
 
@@ -405,7 +401,7 @@ const generateAnnouncement = async () => {
       draft: aiDraft.value,
       style: aiStyle.value,
       expectation: aiExpectation.value,
-      type: isActivity.value ? 'activity' : 'announcement' // 添加类型参数
+      type: isActivity.value ? 'activity' : 'announcement', // 添加类型参数
     })
     aiResult.value = data.content
   } catch (error) {
@@ -507,4 +503,4 @@ onMounted(() => {
   white-space: pre-wrap;
   line-height: 1.5;
 }
-</style> 
+</style>

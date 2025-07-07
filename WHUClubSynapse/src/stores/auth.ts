@@ -108,9 +108,6 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('退出登录失败:', error)
     } finally {
-      user.value = null
-      token.value = null
-      localStorage.removeItem('token')
       ElMessage.success('已退出登录')
     }
   }

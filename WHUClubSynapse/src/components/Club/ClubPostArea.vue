@@ -16,11 +16,8 @@
     <!-- 调试信息 -->
     <div v-if="loading" style="text-align: center; padding: 20px; color: #666">正在加载帖子...</div>
 
-    <div
-      v-else-if="!filteredPosts.length"
-      style="text-align: center; padding: 20px; color: #666"
-    >
-      暂无帖子 (总数: {{ total }})
+    <div v-else-if="!filteredPosts.length" style="text-align: center; padding: 20px; color: #666">
+      暂无帖子 (总数: {{ total - 1 }})
     </div>
 
     <div v-else class="post-list">
@@ -204,7 +201,7 @@ const stripMarkdown = (text: string) => {
 
 // 添加计算属性来过滤掉置顶帖子
 const filteredPosts = computed(() => {
-  return clubStore.currentClubPosts.filter(post => !post.is_pinned)
+  return clubStore.currentClubPosts.filter((post) => !post.is_pinned)
 })
 
 onMounted(async () => {

@@ -55,6 +55,15 @@ export const getClubList = async (
       if (club.tags == null) {
         club.tags = []
       }
+
+      const timestamp=new Date().getTime()
+      if(club.logo_url=='')
+      {
+        club.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+      }
+      else{
+        club.logo_url = `${config.apiBaseUrl}/` + club.logo_url+ `?t=${timestamp}`
+      }
       return club
     }),
     total: total,
@@ -88,6 +97,13 @@ export const getClubDetail = async (id: string, post_num: number = 5): Promise<C
   if (response.data.members == null) {
     response.data.members = []
   }
+      const timestamp=new Date().getTime()
+  if(response.data.logo_url == '') {
+    response.data.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+  } 
+   else{
+        response.data.logo_url = `${config.apiBaseUrl}/` + response.data.logo_url+ `?t=${timestamp}`
+      }
   return response.data as Club
 }
 // 获取最新社团
@@ -201,7 +217,17 @@ export const getFavoriteClubs = async (
     }
   }
   return {
-    list: response.data,
+    list: response.data.map((club: Club) => {
+      const timestamp=new Date().getTime()
+
+      if (club.logo_url == '') {
+        club.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+      }
+       else{
+        club.logo_url = `${config.apiBaseUrl}/` + club.logo_url+ `?t=${timestamp}`
+      }
+      return club
+    }),
     total: response.data.length,
     page: params.page || 1,
     pageSize: params.pageSize || 12,
@@ -231,18 +257,22 @@ export const applyToCreateClub = async (data: {
 }
 
 // 审核社团创建申请（管理员功能）
-export const reviewClubApplication = async (create_club_appli_id:number, result: string, reason?: string): Promise<{ data: ApiResponse<null> }> => {
+export const reviewClubApplication = async (create_club_appli_id:number, result: string, reason?: string) => {
   if (getIsUsingMockAPI()) {
     // return await mockClub.mockReviewClubApplication(create_club_appli_id, result, reason)
   }
   const response = await request.put(`/api/club/admin/proc_create`, { create_club_appli_id, result, reason })
+  console.log('response', response)
   return {
-    data: {
-      code: response.status,
-      message: response.data,
-      data: null,
-    },
+    new_club_id: response.data.new_club_id,
+    status: response.data.status,
   }
+}
+
+export const reviewClubUpdateApplication = async (update_appli_id:number, result: string, reason?: string) => {
+  const response = await request.put(`/api/club/admin/proc_update`, { update_appli_id, result, reason })
+  console.log('response', response)
+  return response.data
 }
 
 // 更新社团信息
@@ -289,7 +319,16 @@ export const getJoinedClubs = async (
   }
 
   return {
-    list: response,
+    list: response.map((club: Club) => {
+      if (club.logo_url == '') {  
+      const timestamp=new Date().getTime()
+        club.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+        }
+         else{
+        club.logo_url = `${config.apiBaseUrl}/` + club.logo_url+ `?t=${new Date().getTime()}`
+      }
+        return club
+        }), 
     total: response.length,
     page: params.page || 1,
     pageSize: params.pageSize || 12,
@@ -1057,7 +1096,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
         category_id: 1,
         description: "探索人工智能的奥秘，动手制作智能机器人。参与机器人竞赛，推动科技创新发展。",
         member_count: 0,
-        requirements: ""
+        requirements: "",
+        status: "pending"
       },
       {
         name: "摄影艺术社",
@@ -1069,7 +1109,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
         category_id: 2,
         description: "用镜头记录美好瞬间，分享摄影技巧，提升艺术修养。",
         member_count: 15,
-        requirements: "热爱摄影艺术"
+        requirements: "热爱摄影艺术",
+        status: "pending"
       }
     ]
     return mockApplications
@@ -1079,15 +1120,15 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
     const response = await request.get('/api/club/pub/my_update_applis')
 
     if (!response.data || !Array.isArray(response.data)) {
-      console.warn('API返回数据格式异常:', response.data)
       return []
     }
 
     // 解析字符串数组为对象数组
-    const applications: ClubUpdateApplication[] = response.data.map((item: string) => {
+    const applications: ClubUpdateApplication[] = response.data.map((item: any) => {
       try {
+        const proposal = item.proposal
         // 移除可能的转义字符
-        let cleanItem = item.replace(/\\"/g, '"').replace(/^"|"$/g, '')
+        let cleanItem = proposal.replace(/\\"/g, '"').replace(/^"|"$/g, '')
 
         // 修复字段名问题：将 "type:jsonb" 替换为 "type"
         cleanItem = cleanItem.replace(/"type:jsonb"/g, '"type"')
@@ -1115,7 +1156,10 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           parsed.type = []
         }
 
-        return parsed as ClubUpdateApplication
+        return {
+          ...parsed,
+          status: item.status,
+        } as ClubUpdateApplication
       } catch (parseError) {
         console.error('解析社团更新申请数据失败:', parseError, '原始数据:', item)
         // 返回一个默认对象，避免整个数组解析失败
@@ -1130,7 +1174,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           description: '数据解析失败',
           member_count: 0,
           requirements: '',
-          type: []
+          type: [],
+          status: ''
         }
       }
     })

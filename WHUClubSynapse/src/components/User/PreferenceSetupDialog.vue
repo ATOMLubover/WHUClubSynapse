@@ -134,7 +134,9 @@ import { Setting, InfoFilled } from '@element-plus/icons-vue'
 import type { ClubCategory, UserPreferences } from '@/types'
 import { allUserTags } from '@/utils/mockData'
 import { useCategories } from '@/composables/useCategories'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 // Props
 interface Props {
   modelValue: boolean
@@ -145,7 +147,6 @@ const props = defineProps<Props>()
 // Emits
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [preferences: UserPreferences]
 }>()
 
 // 响应式数据
@@ -223,7 +224,13 @@ const handleSave = async () => {
     loading.value = true
     console.log('PreferenceSetupDialog保存的偏好设置:', preferences)
     console.log('包含的标签:', preferences.tags)
-    emit('save', { ...preferences })
+
+    // 使用新的updateUserInfo方法保存偏好设置
+    await authStore.updateUserInfo({
+      preferences: preferences,
+      tags: preferences.tags,
+    })
+
     visible.value = false
     ElMessage.success('偏好设置保存成功')
   } catch (error) {
