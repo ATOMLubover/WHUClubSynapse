@@ -278,12 +278,16 @@ func (s *sClubService) ApproveAppliForUpdateClub(appliId int) error {
 			return err
 		}
 
+		if err := s.updateClubInfoAppliRepo.ApproveAppli(tx, appliId); err != nil {
+			return err
+		}
+
 		return s.clubRepo.UpdateClubInfo(tx, appli.Club)
 	})
 }
 
 func (s *sClubService) RejectAppliForUpdateClub(appliId int, reason string) error {
-	return s.createClubAppliRepo.RejectAppli(appliId, reason)
+	return s.updateClubInfoAppliRepo.RejectAppli(appliId, reason)
 }
 
 func (s *sClubService) FavouriteClub(userId, clubId int) error {
