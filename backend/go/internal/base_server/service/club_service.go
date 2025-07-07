@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -282,7 +284,14 @@ func (s *sClubService) ApproveAppliForUpdateClub(appliId int) error {
 			return err
 		}
 
-		return s.clubRepo.UpdateClubInfo(tx, appli.Club)
+		reader := bytes.NewReader(appli.Proposal)
+		decoder := json.NewDecoder(reader)
+		var newClub dbstruct.Club
+		if err := decoder.Decode(&newClub); err != nil {
+			return err
+		}
+
+		return s.clubRepo.UpdateClubInfo(tx, newClub)
 	})
 }
 

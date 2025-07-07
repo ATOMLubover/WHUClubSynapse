@@ -63,15 +63,15 @@ func (r *sUpdateClubInfoAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (
 		return nil, fmt.Errorf("获取社团更新申请失败: %w", err)
 	}
 
-	var club dbstruct.Club
-	if err := tx.
-		Model(&dbstruct.Club{}).
-		Where("club_id = ?", appli.ClubId).
-		First(&club).Error; err != nil {
-		return nil, fmt.Errorf("获取社团信息失败: %w", err)
-	}
+	// var club dbstruct.Club
+	// if err := tx.
+	// 	Model(&dbstruct.Club{}).
+	// 	Where("club_id = ?", appli.ClubId).
+	// 	First(&club).Error; err != nil {
+	// 	return nil, fmt.Errorf("获取社团信息失败: %w", err)
+	// }
 
-	appli.Club = club
+	// appli.Club = club
 
 	return &appli, nil
 }
