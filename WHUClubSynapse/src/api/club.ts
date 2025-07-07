@@ -104,6 +104,10 @@ export const getClubDetail = async (id: string, post_num: number = 5): Promise<C
    else{
         response.data.logo_url = `${config.apiBaseUrl}/` + response.data.logo_url+ `?t=${timestamp}`
       }
+      if(response.data.leader_id){
+        const user=await getUserById(response.data.leader_id)
+        response.data.leader=user
+      }
   return response.data as Club
 }
 // 获取最新社团
@@ -1097,7 +1101,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
         description: "探索人工智能的奥秘，动手制作智能机器人。参与机器人竞赛，推动科技创新发展。",
         member_count: 0,
         requirements: "",
-        status: "pending"
+        status: "pending",
+        rejected_reason: ""
       },
       {
         name: "摄影艺术社",
@@ -1110,7 +1115,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
         description: "用镜头记录美好瞬间，分享摄影技巧，提升艺术修养。",
         member_count: 15,
         requirements: "热爱摄影艺术",
-        status: "pending"
+        status: "pending",
+        rejected_reason: ""
       }
     ]
     return mockApplications

@@ -20,13 +20,6 @@
         text-color="#64748b"
         active-text-color="#3b82f6"
       >
-        <el-menu-item index="dashboard" class="menu-item">
-          <el-icon><Monitor /></el-icon>
-          <template #title>
-            <span class="menu-text">数据看板</span>
-          </template>
-        </el-menu-item>
-
         <el-sub-menu index="user" class="submenu">
           <template #title>
             <el-icon><User /></el-icon>
@@ -41,7 +34,6 @@
             <span class="menu-text">社团管理</span>
           </template>
           <el-menu-item index="club-list" class="submenu-item">社团列表</el-menu-item>
-          <el-menu-item index="club-categories" class="submenu-item">分类管理</el-menu-item>
           <el-menu-item index="club-audit" class="submenu-item">社团审核</el-menu-item>
         </el-sub-menu>
 
@@ -131,10 +123,8 @@ import {
 } from '@element-plus/icons-vue'
 
 // 导入子组件
-import Dashboard from '../../components/Admin/Dashboard.vue'
 import UserList from '../../components/Admin/UserList.vue'
 import ClubList from '../../components/Admin/ClubList.vue'
-import ClubCategories from '../../components/Admin/ClubCategories.vue'
 import ClubAudit from '../../components/Admin/ClubAudit.vue'
 import ApplicationReview from '../../components/Admin/ApplicationReview.vue'
 import SystemSettings from '../../components/Admin/SystemSettings.vue'
@@ -150,10 +140,8 @@ const activeMenu = ref('dashboard')
 
 // 页面标题映射
 const pageTitles: Record<string, string> = {
-  dashboard: '数据看板',
   'user-list': '用户列表',
   'club-list': '社团列表',
-  'club-categories': '分类管理',
   'club-audit': '社团审核',
   settings: '系统设置',
 }
@@ -199,7 +187,7 @@ onMounted(() => {
     router.push('/')
     return
   }
-  activeMenu.value = 'dashboard'
+  activeMenu.value = 'user-list'
 })
 </script>
 

@@ -42,16 +42,7 @@
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column
-                prop="applyTime"
-                label="申请时间"
-                min-width="160"
-                show-overflow-tooltip
-              >
-                <template #default="{ row }">
-                  {{ formatDate(row.applyTime) }}
-                </template>
-              </el-table-column>
+
               <el-table-column prop="status" label="状态" min-width="100">
                 <template #default="{ row }">
                   <el-tag :type="getStatusType(row.status)">
@@ -128,14 +119,7 @@
                 </template>
               </el-table-column>
               <el-table-column
-                prop="updated_at"
-                label="申请时间"
-                min-width="160"
-                show-overflow-tooltip
-              >
-                <template #default="{ row }">
-                  {{ formatDate(row.updated_at) }}
-                </template>
+            
               </el-table-column>
               <el-table-column prop="status" label="状态" min-width="100">
                 <template #default="{ row }">
@@ -226,17 +210,17 @@
         </el-descriptions>
 
         <div class="detail-section">
-          <h4>社团简介</h4>
-          <p>{{ selectedApplication.description }}</p>
+          <h4 class="section-title"><el-icon><Notebook /></el-icon>社团简介</h4>
+          <p> {{ selectedApplication.description }}</p>
         </div>
 
         <div class="detail-section">
-          <h4>加入要求</h4>
+          <h4 class="section-title"> <el-icon><User /></el-icon>加入要求</h4>
           <p>{{ selectedApplication.requirements }}</p>
         </div>
 
         <div class="detail-section">
-          <h4>社团标签</h4>
+          <h4 class="section-title"><el-icon><View /></el-icon>社团标签</h4>
           <div class="tags-container">
             <el-tag
               v-for="tag in selectedApplication.type"
@@ -293,6 +277,7 @@ import type { ClubCreatedApplication, AdminCreateApplication } from '@/types'
 import { getUserById } from '@/api/auth'
 import { getClubPosts, getUpdateListAdmin, pinPost, reviewClubUpdateApplication } from '@/api/club'
 import { createClubPost } from '@/api/club'
+import { Notebook, User, View } from '@element-plus/icons-vue'
 
 const clubStore = useClubStore()
 const applications = ref<AdminCreateApplication[]>([])
@@ -558,6 +543,8 @@ const rejectUpdateApplication = async (row: any) => {
 }
 const viewUpdateApplication = (row: any) => {
   // TODO: 展示详情弹窗，可复用selectedApplication等逻辑
+  selectedApplication.value = row
+  detailDialogVisible.value = true
   console.log('查看详情（待实现）', row)
 }
 
@@ -763,5 +750,24 @@ onMounted(async () => {
   height: 2px;
   border-radius: 1px;
   opacity: 0.18;
+}
+
+
+.detail-section {
+  background: rgba(246, 248, 255, 0.7);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 </style>

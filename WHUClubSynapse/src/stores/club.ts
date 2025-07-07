@@ -101,24 +101,41 @@ export const useClubStore = defineStore('club', () => {
   }
 
   // 搜索社团
-  const searchClubs = async (keyword: string, params?: Partial<SearchParams>) => {
+  const searchClubs = async (keyword: string, params?: any) => {
     try {
       loading.value = true
-      const queryParams = {
-        ...params,
-        page: 1,
-        pageSize: globalPageData.pageSize,
+
+
+      // const response = await clubApi.searchClubs(keyword, queryParams)
+      // const data = response
+
+      const list=await clubApi.getClubList({
+        page:1,
+        pageSize:Infinity,
+      })
+
+      console.log("list",list.list)
+      console.log("keyword",keyword)
+      console.log("params",params?.category)
+
+      if(params?.category){
+        list.list=list.list.filter((club:Club)=>{
+          return club.category==params?.category
+        })
       }
 
-      const response = await clubApi.searchClubs(keyword, queryParams)
-      const data = response
+      const result=list.list.filter((club:Club)=>{
+        return club.club_name.includes(keyword)
+      })
 
-      searchResult.value = data.list
-      searchPageData.total = data.total
+      console.log("result",result)
+
+      searchResult.value = result
+      searchPageData.total = result.length
       console.log("searchPageData.total",searchPageData.total)
-      searchPageData.currentPage = data.page
+      searchPageData.currentPage = 1
 
-      return data
+      return result
     } catch (error) {
       console.error('搜索社团失败:', error)
       ElMessage.error('搜索社团失败')

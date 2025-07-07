@@ -17,7 +17,7 @@
             <div class="club-meta">
               <div class="meta-item">
                 <el-icon><User /></el-icon>
-                <span>负责人：{{ club.adminName }}</span>
+                <span>负责人：{{ club.leader?.username }}</span>
               </div>
               <div class="meta-item">
                 <el-icon><UserFilled /></el-icon>
