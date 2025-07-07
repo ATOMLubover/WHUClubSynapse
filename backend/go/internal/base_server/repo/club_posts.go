@@ -82,7 +82,7 @@ func (r *sClubPostRepo) PinPost(postId int) error {
 	return r.database.Transaction(func(ctx *gorm.DB) error {
 		if err := ctx.
 			Model(&dbstruct.ClubPost{}).
-			Where("is_pinned = ?", true).
+			Where("is_pinned = ? AND post_id = ?", true, postId).
 			Update("is_pinned", false).Error; err != nil {
 			return err
 		}

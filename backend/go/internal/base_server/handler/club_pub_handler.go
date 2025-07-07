@@ -164,7 +164,7 @@ func (h *ClubPubHandler) GetJoinApplisForClub(ctx iris.Context, id int) {
 }
 
 func (h *ClubPubHandler) PostUploadLogo(ctx iris.Context, id int) {
-	userRole := ctx.Values().GetString("user_claims_role")
+	userRole := ctx.Values().GetString("user_claims_user_role")
 	if userRole == "" {
 		ctx.StatusCode(iris.StatusForbidden)
 		return
@@ -221,6 +221,12 @@ func (h *ClubPubHandler) PostUploadLogo(ctx iris.Context, id int) {
 	if _, err := io.Copy(dst, file); err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		ctx.Text("文件保存失败")
+		return
+	}
+
+	if err := h.ClubService.UpdateClubLogo(id, filePath); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Text("更新数据库Logo URL失败")
 		return
 	}
 
