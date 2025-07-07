@@ -57,14 +57,14 @@ func (r *sUpdateClubInfoAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (
 	var appli dbstruct.UpdateClubInfoAppli
 	err := tx.
 		//Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("id = ?", appliId).
+		Where("update_appli_id = ?", appliId).
 		First(&appli).Error
 	return &appli, err
 }
 func (r *sUpdateClubInfoAppliRepo) ApproveAppli(tx *gorm.DB, appliId int) error {
 	return tx.
 		Model(&dbstruct.UpdateClubInfoAppli{}).
-		Where("id = ?", appliId).
+		Where("update_appli_id = ?", appliId).
 		Update("status", "approved").Error
 }
 
