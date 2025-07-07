@@ -12,6 +12,14 @@ export const AI_CONFIG = {
   // 请求配置
   REQUEST_TIMEOUT: 30000, // 30秒超时
   RETRY_TIMES: 3, // 重试次数
+  HEALTH_CHECK_TIMEOUT: 10000, // 健康检查超时时间
+  
+  // 测试配置
+  TEST_REQUEST: {
+    content: '测试消息',
+    max_tokens: 10,
+    temperature: 0.7
+  }
 }
 
 // 获取AI接口完整地址
@@ -24,7 +32,7 @@ export const getChatApiUrl = () => {
   return getAIApiUrl('chat')
 }
 
-// 获取状态检查接口地址
-export const getStatusApiUrl = () => {
-  return `${AI_CONFIG.BASE_URL}health`
+// 获取测试配置
+export const getTestConfig = () => {
+  return AI_CONFIG.TEST_REQUEST
 } 

@@ -135,9 +135,17 @@
               </el-avatar>
             </div>
             <div class="message-content">
-              <div class="message-text">
-                <SmartStreamingRenderer :content="message.content" />
-              </div>
+              <template v-if="message.role === 'assistant'">
+                <template v-if="message.isThinking">
+                  <ThinkingRenderer :content="message.content" />
+                </template>
+                <template v-else>
+                  <SmartStreamingRenderer :content="message.content" />
+                </template>
+              </template>
+              <template v-else>
+                {{ message.content }}
+              </template>
               <div class="message-time">{{ formatTime(message.timestamp) }}</div>
             </div>
           </div>
@@ -166,21 +174,29 @@
             v-model="inputMessage"
             placeholder="输入您的问题..."
             type="textarea"
-            :rows="1"
+            :rows="3"
             :autosize="{ minRows: 1, maxRows: 4 }"
-            @keydown="handleKeyDown"
+            @keyup.enter.exact="handleSend"
             resize="none"
             class="message-input"
-            :disabled="!aiAvailable"
+            :disabled="!aiAvailable || isLoading"
           />
           <el-button 
+            v-if="!isLoading"
             type="primary" 
-            @click="sendMessage"
-            :loading="isLoading"
+            @click="handleSend"
             :disabled="!inputMessage.trim() || !aiAvailable"
             class="send-button"
           >
             <el-icon><Position /></el-icon>
+          </el-button>
+          <el-button
+            v-else
+            type="danger"
+            @click="stopResponse"
+            class="stop-button"
+          >
+            <el-icon><CircleClose /></el-icon>
           </el-button>
         </div>
         <div class="input-tips">
@@ -204,6 +220,7 @@ import {
   Loading,
   Position,
   Warning,
+  CircleClose,
 } from '@element-plus/icons-vue'
 import { checkAiServiceHealth } from '@/api/ai-search'
 import { sideChatStream } from '@/api/ai-search'
@@ -211,6 +228,8 @@ import { isSideChatEnabled as checkSideChatEnabled } from '@/config/ai-search'
 import type { ChatMessage, SmartSearchSource } from '@/types'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import SmartStreamingRenderer from '@/components/SmartStreamingRenderer.vue'
+import TypewriterStreamingRenderer from '@/components/TypewriterStreamingRenderer.vue'
+import ThinkingRenderer from '../ThinkingRenderer.vue'
 
 // 响应式数据
 const isChatOpen = ref(false)
@@ -218,6 +237,7 @@ const inputMessage = ref('')
 const isLoading = ref(false)
 const chatContentRef = ref<HTMLElement>()
 const aiAvailable = ref(true) // AI服务可用性状态
+const abortController = ref<AbortController | null>(null)
 
 // 对话历史
 const chatHistory = ref<(ChatMessage & { sources?: SmartSearchSource[] })[]>([])
@@ -265,27 +285,31 @@ const checkAiAvailability = async () => {
   }
 }
 
+const stopResponse = () => {
+  if (abortController.value) {
+    abortController.value.abort()
+    abortController.value = null
+    isLoading.value = false
+    ElMessage.info('已停止AI回复')
+  }
+}
+
 const sendMessage = async (message?: string) => {
-  console.log('sendMessage被调用，参数:', message, '类型:', typeof message)
-  console.log('inputMessage.value:', inputMessage.value, '类型:', typeof inputMessage.value)
-  
   const content = message || inputMessage.value.trim()
-  console.log('处理后的content:', content, '类型:', typeof content)
   
   if (!content || !aiAvailable.value) {
-    console.log('sendMessage提前返回，content:', content, 'aiAvailable:', aiAvailable.value)
     return
   }
 
-  console.log('开始处理消息发送，content:', content)
-  
+  // 创建新的AbortController
+  abortController.value = new AbortController()
+
   // 添加用户消息
   const userMessage: ChatMessage = {
     role: 'user',
     content,
     timestamp: new Date().toISOString()
   }
-  console.log('创建的用户消息:', userMessage)
   
   chatHistory.value.push(userMessage)
   inputMessage.value = ''
@@ -297,68 +321,94 @@ const sendMessage = async (message?: string) => {
   let answer = ''
   let sources: any[] = []
   let aiMsgIndex = -1
+  let isThinking = true // 标记是否在思考模式
+  let thinkContent = '' // 存储思考内容
+  let responseContent = '' // 存储回答内容
   
-  console.log('准备调用sideChatStream，请求参数:', {
-    query: content,
-    history: chatHistory.value.slice(0, -1)
+  // 创建AI消息占位
+  aiMsgIndex = chatHistory.value.length
+  chatHistory.value.push({
+    role: 'assistant',
+    content: '',
+    timestamp: new Date().toISOString(),
+    sources: [],
+    isThinking: true // 添加思考状态标记
   })
-  
-  sideChatStream(
-    {
-      query: content,
-      history: chatHistory.value.slice(0, -1)
-    },
-    {
-      onSource: (src) => {
-        console.log('收到source:', src)
-        sources = src
-      },
-      onToken: (token) => {
-        console.log('收到token:', token, '类型:', typeof token)
-        answer += token
-        // 实时更新最后一条assistant消息
-        if (aiMsgIndex === -1) {
-          chatHistory.value.push({
-            role: 'assistant',
-            content: answer,
-            timestamp: new Date().toISOString(),
-            sources
-          })
-          aiMsgIndex = chatHistory.value.length - 1
-        } else {
-          chatHistory.value[aiMsgIndex].content = answer
+
+  try {
+    await new Promise((resolve, reject) => {
+      sideChatStream(
+        {
+          query: content,
+          history: chatHistory.value.slice(0, -1)
+        },
+        {
+          signal: abortController.value?.signal,
+          onSource: (src) => {
+            sources = src
+            chatHistory.value[aiMsgIndex].sources = sources
+          },
+          onToken: async (token) => {
+            console.log('Token:', token)
+            
+            // 检查是否还在思考模式
+            if (isThinking) {
+              thinkContent += token
+              // 检查是否包含think结束标签
+              if (thinkContent.includes('</think>')) {
+                isThinking = false
+                // 更新消息的思考状态
+                chatHistory.value[aiMsgIndex].isThinking = false
+                // 初始化responseContent为当前的thinkContent
+                responseContent = thinkContent
+              }
+              // 立即更新思考内容
+              chatHistory.value[aiMsgIndex].content = thinkContent
+            } else {
+              // 正常回答模式
+              responseContent += token
+              chatHistory.value[aiMsgIndex].content = responseContent
+            }
+            
+            // 立即更新UI
+            await nextTick()
+            scrollToBottom()
+          },
+          onEnd: async () => {
+            // 确保最后一次更新
+            chatHistory.value[aiMsgIndex].content = isThinking ? thinkContent : responseContent
+            chatHistory.value[aiMsgIndex].sources = sources
+            await nextTick()
+            scrollToBottom()
+            resolve(null)
+          },
+          onError: (err: Error | string | unknown) => {
+            const errorMessage = err instanceof Error ? err.message : 
+                               typeof err === 'string' ? err : 
+                               'Unknown error'
+            console.error('AI回复错误:', errorMessage)
+            resolve(null)
+          }
         }
-        nextTick(scrollToBottom)
-      },
-      onEnd: () => {
-        console.log('AI回复结束')
-        isLoading.value = false
-      },
-      onError: (err) => {
-        console.error('AI回复错误:', err)
-        isLoading.value = false
-        ElMessage.error('AI回复失败，请稍后重试')
-      }
+      )
+    })
+  } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.log('用户停止了AI回复')
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Unknown error'
+      console.error('Stream处理错误:', errorMessage)
     }
-  )
+  } finally {
+    isLoading.value = false
+    abortController.value = null
+  }
 }
 
-const handleKeyDown = (event: KeyboardEvent) => {
-  console.log('handleKeyDown被调用，事件:', event)
-  console.log('按键代码:', event.key, 'Ctrl键状态:', event.ctrlKey)
-  
-  if (event.key === 'Enter') {
-    if (event.ctrlKey) {
-      // Ctrl + Enter 换行，不阻止默认行为
-      console.log('Ctrl+Enter，允许换行')
-      return
-    } else {
-      // Enter 发送，阻止默认行为
-      console.log('Enter键，准备发送消息')
-      event.preventDefault()
-      sendMessage()
-    }
-  }
+const handleSend = async () => {
+  await sendMessage()
 }
 
 const scrollToBottom = () => {
@@ -938,5 +988,38 @@ const testAiConnectivity = async () => {
 }
 .chat-header-sub .clear-btn {
   margin-left: 12px;
+}
+
+.stop-button {
+  margin-left: 8px;
+  padding: 8px;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.el-button.stop-button {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.el-button.stop-button:hover {
+  background-color: #f78989;
+  border-color: #f78989;
+  color: white;
+}
+
+.el-button.stop-button:focus {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.el-button.stop-button .el-icon {
+  font-size: 20px;
+  margin: 0;
 }
 </style> 

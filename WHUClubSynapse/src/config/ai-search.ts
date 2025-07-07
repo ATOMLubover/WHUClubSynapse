@@ -1,13 +1,12 @@
 // AI智能搜索配置
 export const aiSearchConfig = {
   // AI智能搜索API基础URL
-  baseURL: '/api/trans/rag/', // 根据实际部署情况修改
+  baseURL: 'http://localhost:8080/api/trans/rag/', // 根据实际部署情况修改
   
   // API端点
   endpoints: {
-    smartSearch: '/smart-search',
-    sideChat: '/sider-chat',
-    healthCheck: '/', // 新增健康检查端点
+    smartSearch: 'smart-search',
+    sideChat: 'sider-chat',
   },
   
   // API Key配置
@@ -18,6 +17,7 @@ export const aiSearchConfig = {
     timeout: 30000, // 30秒超时
     retryTimes: 3, // 重试次数
     healthCheckTimeout: 5000, // 健康检查超时时间
+    testQuery: "测试查询", // 用于健康检查的测试查询
   },
   
   // 响应配置
@@ -31,7 +31,6 @@ export const aiSearchConfig = {
     enabled: true, // 是否启用AI搜索功能
     showInSearch: true, // 是否在搜索页面显示AI回答
     sideChat: true, // 是否启用侧边栏对话功能
-    healthCheck: true, // 是否启用健康检查
   },
 
   // 侧边栏对话配置
@@ -52,11 +51,6 @@ export const getSideChatURL = () => {
   return `${aiSearchConfig.baseURL}${aiSearchConfig.endpoints.sideChat}`
 }
 
-// 获取健康检查API URL
-export const getHealthCheckURL = () => {
-  return `${aiSearchConfig.baseURL}${aiSearchConfig.endpoints.healthCheck}`
-}
-
 // 获取API Key
 export const getApiKey = () => {
   return aiSearchConfig.apiKey
@@ -72,7 +66,12 @@ export const isSideChatEnabled = () => {
   return aiSearchConfig.features.sideChat
 }
 
-// 检查健康检查是否启用
-export const isHealthCheckEnabled = () => {
-  return aiSearchConfig.features.healthCheck
+// 获取健康检查超时时间
+export const getHealthCheckTimeout = () => {
+  return aiSearchConfig.requestConfig.healthCheckTimeout
+}
+
+// 获取测试查询文本
+export const getTestQuery = () => {
+  return aiSearchConfig.requestConfig.testQuery
 } 

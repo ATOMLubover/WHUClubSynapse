@@ -99,32 +99,92 @@ export const chatWithAI = async (requestData: ChatRequest): Promise<ChatResponse
 // 检查AI服务状态
 export const checkAIStatus = async (): Promise<boolean> => {
   try {
-    const url = getStatusApiUrl()
-    console.log('检查AI服务状态，URL:', url)
-    
+    // 获取token
     const token = localStorage.getItem('token')
-    const response = await fetch(url, {
-      method: 'GET',
+    if (!token) {
+      console.warn('AI状态检查：未找到认证token')
+      return false
+    }
+
+    // 使用实际的聊天接口进行测试
+    const testRequest: ChatRequest = {
+      messages: [
+        {
+          role: 'user',
+          content: '测试消息'
+        }
+      ],
+      max_tokens: 10,
+      temperature: 0.7,
+      stream: false
+    }
+
+    console.log('AI状态检查：发送测试请求')
+    
+    const response = await fetch(getChatApiUrl(), {
+      method: 'POST',
       headers: {
-        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
       },
+      body: JSON.stringify(testRequest),
       signal: AbortSignal.timeout(10000) // 10秒超时
     })
     
     console.log('AI状态检查响应状态:', response.status)
     
-    // 只要有任何响应就认为服务可用
-    if (response.status >= 200 && response.status < 600) {
-      console.log('AI服务可用')
-      return true
+    // 检查认证相关错误
+    if (response.status === 401 || response.status === 403) {
+      console.warn('AI状态检查：认证失败')
+      return false
+    }
+
+    // 检查服务是否存在
+    if (response.status === 404) {
+      console.warn('AI状态检查：服务端点不存在')
+      return false
+    }
+
+    // 检查服务器错误
+    if (response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504) {
+      console.warn('AI状态检查：服务器错误', response.status)
+      return false
+    }
+
+    // 检查响应类型
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('AI状态检查：响应类型不正确', contentType)
+      return false
+    }
+
+    // 尝试解析响应
+    if (response.ok) {
+      try {
+        const data = await response.json()
+        if (data && (data.response || data.generated_text)) {
+          console.log('AI状态检查：服务正常运行')
+          return true
+        } else {
+          console.warn('AI状态检查：响应格式不正确')
+          return false
+        }
+      } catch (error) {
+        console.warn('AI状态检查：响应解析失败', error)
+        return false
+      }
     }
     
-    console.error('AI状态检查失败:', response.status)
+    console.warn('AI状态检查：服务响应异常', response.status)
     return false
     
   } catch (error) {
-    console.error('检查AI服务状态失败:', error)
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.warn('AI状态检查：请求超时')
+    } else {
+      console.error('AI状态检查失败:', error)
+    }
     return false
   }
 }
