@@ -446,6 +446,7 @@ export interface ClubUpdateApplication {
   requirements: string
   type?: string[] // 社团标签数组，可能为null或空数组
   status: string
+  rejected_reason: string
 }
 
 export interface AdminCreateApplication {

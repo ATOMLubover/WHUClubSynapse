@@ -324,21 +324,21 @@
                   </template>
                 </el-table-column>
 
-                <el-table-column label="操作" width="250" fixed="right">
+                <el-table-column label="操作" fixed="right">
                   <template #default="{ row }">
                     <el-button type="info" size="small" @click="viewClubDetail(row.club_id)">
                       <el-icon><View /></el-icon>
                       查看社团
                     </el-button>
-                    <el-button
-                      v-if="row.status === 'rejected'"
-                      type="danger"
-                      size="small"
-                      @click="viewRejectReason(row)"
-                    >
+                  </template>
+                </el-table-column>
+                <el-table-column label="拒绝原因">
+                  <template #default="{ row }">
+                    <div v-if="row.reject_reason" class="reject-reason">
                       <el-icon><CircleClose /></el-icon>
-                      拒绝理由
-                    </el-button>
+                      <span>{{ row.reject_reason }}</span>
+                    </div>
+                    <span v-else>-</span>
                   </template>
                 </el-table-column>
               </el-table>

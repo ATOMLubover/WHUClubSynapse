@@ -7,7 +7,7 @@ import type {
   SideChatResponse,
   ChatMessage
 } from '@/types'
-import { getSmartSearchURL, getSideChatURL, getHealthCheckURL, getApiKey, isAiSearchEnabled, isSideChatEnabled, isHealthCheckEnabled } from '@/config/ai-search'
+import { getSmartSearchURL, getSideChatURL, getApiKey, isAiSearchEnabled, isSideChatEnabled } from '@/config/ai-search'
 import { config } from '@/config'
 
 

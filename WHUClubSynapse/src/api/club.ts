@@ -1159,6 +1159,7 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
         return {
           ...parsed,
           status: item.status,
+          reject_reason: item.rejected_reason
         } as ClubUpdateApplication
       } catch (parseError) {
         console.error('解析社团更新申请数据失败:', parseError, '原始数据:', item)
@@ -1175,7 +1176,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           member_count: 0,
           requirements: '',
           type: [],
-          status: ''
+          status: '',
+          reject_reason: ''
         }
       }
     })

@@ -1,4 +1,4 @@
-import { AI_CONFIG, getChatApiUrl, getStatusApiUrl, getAIApiUrl } from '@/config/ai'
+import { AI_CONFIG, getChatApiUrl } from '@/config/ai'
 import type { ClubRecommendRequest, ClubRecommendResponse } from '@/types'
 
 export interface ChatMessage {
