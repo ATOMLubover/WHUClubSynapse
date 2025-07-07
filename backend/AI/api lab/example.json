@@ -1,0 +1,47 @@
+{
+    "model_type": "chatgpt",
+    "model_class": "gpt-4o-mini",
+    "promote_list": [
+        {
+            "role": "system",
+            "content": "你好，你想让我做什么？"
+        },
+        {
+            "role": "user",
+            "content": "1+1等于几？"
+        }
+    ],
+    "api_key": null,
+    "URL": null,
+    "parameters": {
+      "temperature": 0.7,
+    }
+}
+
+{
+    "model": "gpt-4o",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "What’s in this image?"
+          },
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": f"data:image/jpeg;base64,{base64_image}"
+            }
+          }
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+            },
+          },
+        ],
+      }
+    ],
+    "max_tokens": 300,
+  }

@@ -1,0 +1,65 @@
+{
+  "communities": [
+    {
+      "community_id": 3,
+      "community_name": "编程社",
+      "tags": "编程|科技|学习"
+    },
+    {
+      "community_id": 4,
+      "community_name": "音乐社",
+      "tags": "音乐|表演|艺术"
+    },
+    {
+      "community_id": 5,
+      "community_name": "读书会",
+      "tags": "阅读|文学|交流"
+    }
+  ],
+  "users": [
+    {
+      "user_id": 3,
+      "user_tags": "音乐创作|阅读书籍|文学"
+    },
+    {
+      "user_id": 4,
+      "user_tags": "美食探索|旅行游记|文化体验"
+    },
+    {
+      "user_id": 5,
+      "user_tags": "电子游戏|UI设计|创意灵感"
+    }
+  ],
+  "interactions": [
+    {
+      "user_id": 3,
+      "community_id": 5,
+      "interaction": 1,
+      "timestamp": "2024-01-01T12:00:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 3,
+      "interaction": 1,
+      "timestamp": "2024-01-02T10:00:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 4,
+      "interaction": 1,
+      "timestamp": "2024-01-02T11:00:00Z"
+    },
+    {
+      "user_id": 4,
+      "community_id": 5,
+      "interaction": 1,
+      "timestamp": "2024-01-02T12:00:00Z"
+    },
+    {
+      "user_id": 5,
+      "community_id": 3,
+      "interaction": 1,
+      "timestamp": "2024-01-03T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+source backend/AI/data/venv/bin/activate
