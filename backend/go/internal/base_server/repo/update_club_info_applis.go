@@ -55,11 +55,25 @@ func (r *sUpdateClubInfoAppliRepo) AddUpdateClubInfoAppli(appli *dbstruct.Update
 
 func (r *sUpdateClubInfoAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstruct.UpdateClubInfoAppli, error) {
 	var appli dbstruct.UpdateClubInfoAppli
-	err := tx.
-		Preload("Club").
+	if err := tx.
+		Model(&dbstruct.UpdateClubInfoAppli{}).
 		Where("update_appli_id = ?", appliId).
-		First(&appli).Error
-	return &appli, err
+		First(&appli).
+		Error; err != nil {
+		return nil, fmt.Errorf("获取社团更新申请失败: %w", err)
+	}
+
+	var club dbstruct.Club
+	if err := tx.
+		Model(&dbstruct.Club{}).
+		Where("club_id = ?", appli.ClubId).
+		First(&club).Error; err != nil {
+		return nil, fmt.Errorf("获取社团信息失败: %w", err)
+	}
+
+	appli.Club = club
+
+	return &appli, nil
 }
 func (r *sUpdateClubInfoAppliRepo) ApproveAppli(tx *gorm.DB, appliId int) error {
 	return tx.
