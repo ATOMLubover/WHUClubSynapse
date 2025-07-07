@@ -2,8 +2,8 @@
   <div class="announcement-manager">
     <div v-if="isClubLeader" class="add-announcement">
       <el-button type="primary" @click="showAddDialog"> 新增公告/动态 </el-button>
-    </div>
-
+      </div>
+      
     <!-- 显示现有的公告和动态列表 -->
     <div class="announcements-list">
       <el-timeline>
@@ -119,11 +119,11 @@
               <el-button type="primary" text size="small" @click="useAIResult">
                 使用此结果
               </el-button>
-            </div>
+          </div>
             <div class="result-content">{{ aiResult }}</div>
           </div>
         </div>
-
+        
         <el-divider>手动编辑区域</el-divider>
 
         <el-form-item label="详细内容" required>
@@ -250,7 +250,7 @@ const form = ref({
   content: '',
   metadata: {
     activity_type: '',
-    location: '',
+  location: '',
     participants: 0,
     tags: [] as string[],
   },
@@ -338,8 +338,8 @@ const handleSubmit = async () => {
     )
     if (!pinnedPost || !pinnedPost.post_id) {
       ElMessage.error('未找到置顶帖子')
-      return
-    }
+    return
+  }
 
     // 构造评论内容
     const commentContent = {
@@ -524,4 +524,4 @@ onMounted(() => {
   white-space: pre-wrap;
   line-height: 1.5;
 }
-</style>
+</style> 

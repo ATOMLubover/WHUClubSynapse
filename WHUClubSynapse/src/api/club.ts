@@ -1083,39 +1083,6 @@ export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data
 
 // 获取用户社团信息更新申请列表(User)
 export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication[]> => {
-  if (getIsUsingMockAPI()) {
-    // 模拟数据
-    const mockApplications: ClubUpdateApplication[] = [
-      {
-        name: "机器人研究社",
-        club_id: 9,
-        logo_url: "",
-        leader_id: 4,
-        created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
-        category_id: 1,
-        description: "探索人工智能的奥秘，动手制作智能机器人。参与机器人竞赛，推动科技创新发展。",
-        member_count: 0,
-        requirements: "",
-        status: "pending"
-      },
-      {
-        name: "摄影艺术社",
-        club_id: 10,
-        logo_url: "https://example.com/logo.jpg",
-        leader_id: 5,
-        created_at: "2024-01-02T00:00:00Z",
-        updated_at: "2024-01-02T00:00:00Z",
-        category_id: 2,
-        description: "用镜头记录美好瞬间，分享摄影技巧，提升艺术修养。",
-        member_count: 15,
-        requirements: "热爱摄影艺术",
-        status: "pending"
-      }
-    ]
-    return mockApplications
-  }
-
   try {
     const response = await request.get('/api/club/pub/my_update_applis')
 
@@ -1124,7 +1091,7 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
     }
 
     // 解析字符串数组为对象数组
-    const applications: ClubUpdateApplication[] = response.data.map((item: any) => {
+    const applications = response.data.map((item: any) => {
       try {
         const proposal = item.proposal
         // 移除可能的转义字符
@@ -1156,10 +1123,11 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           parsed.type = []
         }
 
+        // 修正属性名称，使用rejected_reason而不是reject_reason
         return {
           ...parsed,
           status: item.status,
-          reject_reason: item.rejected_reason
+          rejected_reason: item.rejected_reason || item.reject_reason || ''
         } as ClubUpdateApplication
       } catch (parseError) {
         console.error('解析社团更新申请数据失败:', parseError, '原始数据:', item)
@@ -1177,8 +1145,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           requirements: '',
           type: [],
           status: '',
-          reject_reason: ''
-        }
+          rejected_reason: ''
+        } as ClubUpdateApplication
       }
     })
     console.log(applications)
@@ -1541,7 +1509,7 @@ export const getClubsByCategory = async (
   } = {}
 ): Promise<PaginatedData<Club>> => {
   if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetClubList({ ...params, category: categoryId.toString() })
+    return await mockClub.mockGetClubList({ ...params, category: categoryId })
   }
 
   const queryParams = new URLSearchParams()

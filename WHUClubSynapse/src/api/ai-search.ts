@@ -7,15 +7,46 @@ import type {
   SideChatResponse,
   ChatMessage
 } from '@/types'
-import { getSmartSearchURL, getSideChatURL, getApiKey, isAiSearchEnabled, isSideChatEnabled } from '@/config/ai-search'
+import { 
+  getSmartSearchURL, 
+  getSideChatURL, 
+  getApiKey, 
+  isAiSearchEnabled, 
+  isSideChatEnabled,
+  getHealthCheckTimeout,
+  getTestQuery
+} from '@/config/ai-search'
 import { config } from '@/config'
 
+// 如果配置中没有提供，使用默认值
+const DEFAULT_HEALTH_CHECK_TIMEOUT = 5000 // 5秒
+const DEFAULT_TEST_QUERY = "你好"
+
+// 获取健康检查超时时间
+const getHealthCheckTimeoutWithFallback = () => {
+  try {
+    return getHealthCheckTimeout()
+  } catch (error) {
+    console.warn('未找到健康检查超时配置，使用默认值:', DEFAULT_HEALTH_CHECK_TIMEOUT)
+    return DEFAULT_HEALTH_CHECK_TIMEOUT
+  }
+}
+
+// 获取测试查询
+const getTestQueryWithFallback = () => {
+  try {
+    return getTestQuery()
+  } catch (error) {
+    console.warn('未找到测试查询配置，使用默认值:', DEFAULT_TEST_QUERY)
+    return DEFAULT_TEST_QUERY
+  }
+}
 
 // AI服务健康检查
 export const checkAiServiceHealth = async (): Promise<boolean> => {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), getHealthCheckTimeout()) // 使用配置的超时时间
+    const timeoutId = setTimeout(() => controller.abort(), getHealthCheckTimeoutWithFallback())
 
     // 获取JWT token
     const jwtToken = localStorage.getItem('token')
@@ -26,7 +57,7 @@ export const checkAiServiceHealth = async (): Promise<boolean> => {
 
     // 1. 首先尝试一个简单的测试查询
     const testQuery = {
-      query: getTestQuery(),
+      query: getTestQueryWithFallback(),
       enable_thinking: true,
       history: []
     }
