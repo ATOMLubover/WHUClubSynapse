@@ -109,6 +109,7 @@ func (r *sClubRepo) UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error {
 
 func (r *sClubRepo) UpdateClubLogo(clubId int, logoUrl string) error {
 	return r.database.
+		Model(&dbstruct.Club{}).
 		Where("club_id = ?", clubId).
 		Update("logo_url", logoUrl).Error
 }
