@@ -18,24 +18,17 @@ const showPreferenceDialog = ref(false)
 
 // 检查是否需要显示偏好设置弹窗
 const checkPreferenceSetup = () => {
-  if (authStore.isLoggedIn && authStore.user && !authStore.user.hasCompletedPreferences) {
-    showPreferenceDialog.value = true
+  if (authStore.user?.username == 'guest') {
+    console.log('当前用户为游客，跳过偏好设置检查')
+    return
   }
-}
-
-// 处理偏好设置保存
-const handlePreferenceSave = async (preferences: UserPreferences) => {
-  try {
-    // 使用新的updateUserInfo方法保存偏好设置
-    await authStore.updateUserInfo({
-      preferences: preferences,
-      tags: preferences.tags,
-    })
-    showPreferenceDialog.value = false
-    ElMessage.success('偏好设置保存成功')
-  } catch (error) {
-    console.error('保存偏好设置失败:', error)
-    ElMessage.error('保存偏好设置失败')
+  if (
+    authStore.isLoggedIn &&
+    authStore.user &&
+    !authStore.user.hasCompletedPreferences &&
+    authStore.user.username != 'guest'
+  ) {
+    showPreferenceDialog.value = true
   }
 }
 
@@ -54,15 +47,20 @@ watch(
   },
 )
 
-// TODO:监听用户信息变化
-// watch(
-//   () => authStore.user,
-//   (user) => {
-//     if (user && !user.hasCompletedPreferences) {
-//       showPreferenceDialog.value = true
-//     }
-//   },
-// )
+// TODO: 监听用户信息变化
+watch(
+  () => authStore.user,
+  (user, olduser) => {
+    if (
+      user &&
+      !user.hasCompletedPreferences &&
+      user.username != 'guest' &&
+      olduser?.user_id != user.user_id
+    ) {
+      checkPreferenceSetup
+    }
+  },
+)
 
 // 初始化
 onMounted(async () => {
@@ -94,7 +92,7 @@ onMounted(async () => {
       console.error('分类数据初始化失败:', categoriesResult.reason)
     }
 
-    // checkPreferenceSetup()
+    checkPreferenceSetup()
     console.log('App初始化完成')
 
     ElNotification({
@@ -119,7 +117,7 @@ onMounted(async () => {
   <RouterView />
 
   <!-- 偏好设置弹窗 -->
-  <PreferenceSetupDialog v-model="showPreferenceDialog" @save="handlePreferenceSave" />
+  <PreferenceSetupDialog v-model="showPreferenceDialog" />
 </template>
 
 <style>
@@ -137,7 +135,6 @@ body {
     'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
     Arial, sans-serif;
   overflow-x: hidden;
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
   background-attachment: fixed;

@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import * as clubApi from '@/api/club'
 import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost, ClubApplication, ClubCreatedApplication } from '@/types'
 import { useAuthStore } from '@/stores/auth'
+import { config } from '@/config'
 
 export const useClubStore = defineStore('club', () => {
   const MAX_MEMBER_NUM=50
@@ -263,6 +264,10 @@ export const useClubStore = defineStore('club', () => {
       list.forEach(async(application)=>{
         const club=await fetchClubBasic(application.club_id)
         if(club){
+          if(club.logo_url="")
+          {
+            club.logo_url=`${config.apiBaseUrl}/pub/club_logos/default.jpg`
+          }
           application.club=club
         }
       })
@@ -294,7 +299,6 @@ export const useClubStore = defineStore('club', () => {
       return response.data.data
     } catch (error) {
       console.error('申请创建社团失败:', error)
-      ElMessage.error('申请创建社团失败')
       throw error
     }
   }
@@ -336,8 +340,9 @@ export const useClubStore = defineStore('club', () => {
   const reviewClubApplication = async (create_club_appli_id:number, result: string, reason?: string) => {
     try {
       const response = await clubApi.reviewClubApplication(create_club_appli_id, result, reason)
+      console.log('response', response.new_club_id)
       ElMessage.success(result == 'approve' ? '申请审核通过' : '申请已拒绝')
-      return response.data
+      return response
     } catch (error) {
       console.error('审核申请失败:', error)
       ElMessage.error('审核申请失败')

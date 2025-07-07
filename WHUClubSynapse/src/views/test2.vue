@@ -1,10 +1,12 @@
 <template>
   <el-button @click="test">测试更新社团的申请列表连接</el-button>
   <el-button @click="test2">测试获取用户信息连接</el-button>
+  <el-button @click="test3">置顶</el-button>
 </template>
 
 <script setup lang="ts">
 import { getUserById } from '@/api/auth'
+import { pinPost } from '@/api/club'
 import type { ClubCreatedApplication, ClubUpdateApplication } from '@/types'
 import request from '@/utils/request'
 const test = async () => {
@@ -14,6 +16,10 @@ const test = async () => {
 
 const test2 = async () => {
   const response = await getUserById(4)
+  console.log(response)
+}
+const test3 = async () => {
+  const response = await pinPost('27')
   console.log(response)
 }
 </script>

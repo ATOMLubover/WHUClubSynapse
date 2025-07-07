@@ -108,17 +108,17 @@
               <el-table
                 :data="userCreatedApplications"
                 style="width: 100%"
-                class="applications-table"
+                class="applications-table custom-hover-table"
               >
-                <el-table-column prop="appli_id" label="申请ID" width="100" />
-                <el-table-column label="状态" width="120">
+                <el-table-column prop="appli_id" label="申请ID" />
+                <el-table-column label="状态">
                   <template #default="{ row }">
                     <el-tag :type="getApplicationStatusType(row.status)" size="small" effect="dark">
                       {{ getApplicationStatusText(row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="社团信息" min-width="300">
+                <el-table-column label="社团信息">
                   <template #default="{ row }">
                     <div v-if="row.proposal && parseProposal(row.proposal)" class="club-info-cell">
                       <div class="club-name-row">
@@ -128,11 +128,7 @@
                         {{ parseProposal(row.proposal).description || '暂无简介' }}
                       </div>
                       <div class="club-meta-row">
-                        <el-tag
-                          v-if="parseProposal(row.proposal).category_id"
-                          size="small"
-                          type="primary"
-                        >
+                        <el-tag size="small" type="primary">
                           {{ getCategoryName(parseProposal(row.proposal).category_id) }}
                         </el-tag>
                         <div v-if="parseProposal(row.proposal).tags?.length" class="tags-display">
@@ -160,17 +156,13 @@
                     </div>
                   </template>
                 </el-table-column>
-                <el-table-column label="申请时间" width="150">
+                <el-table-column label="申请时间">
                   <template #default="{ row }">
                     {{ formatDate(row.applied_at) }}
                   </template>
                 </el-table-column>
-                <el-table-column label="审核时间" width="150">
-                  <template #default="{ row }">
-                    {{ row.reviewed_at ? formatDate(row.reviewed_at) : '-' }}
-                  </template>
-                </el-table-column>
-                <el-table-column label="拒绝原因" min-width="200">
+
+                <el-table-column label="拒绝原因">
                   <template #default="{ row }">
                     <div v-if="row.reject_reason" class="reject-reason">
                       <el-icon><CircleClose /></el-icon>
@@ -179,9 +171,99 @@
                     <span v-else>-</span>
                   </template>
                 </el-table-column>
+                <el-table-column label="操作">
+                  <template #default="{ row }">
+                    <el-button type="primary" size="small" @click="selectApplication(row)">
+                      <el-icon><View /></el-icon>
+                      查看详情
+                    </el-button>
+                  </template>
+                </el-table-column>
               </el-table>
             </div>
           </div>
+          <el-dialog
+            v-model="showCreateDetailDialog"
+            title="创建信息详情"
+            width="680px"
+            class="club-detail-dialog"
+          >
+            <el-scrollbar max-height="70vh">
+              <el-descriptions border :column="1" size="large" style="width: 100%">
+                <el-descriptions-item label="社团名称" label-class-name="highlight-label">
+                  <el-tag type="info" size="large">
+                    {{ parseProposal(selectedApplication?.proposal || '')?.name || '无' }}
+                  </el-tag>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="社团简介">
+                  <div class="description-text">
+                    {{ parseProposal(selectedApplication?.proposal || '')?.description || '无' }}
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="加入要求">
+                  <div class="description-text">
+                    {{ parseProposal(selectedApplication?.proposal || '')?.requirements || '无' }}
+                  </div>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="社团类型">
+                  <el-tag effect="light" type="primary">
+                    {{
+                      getCategoryName(
+                        parseProposal(selectedApplication?.proposal || '')?.category_id,
+                      ) || '无'
+                    }}
+                  </el-tag>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="社团标签">
+                  <div class="tag-group">
+                    <el-tag
+                      v-for="(tag, index) in parseProposal(selectedApplication?.proposal || '')
+                        ?.tags"
+                      :key="index"
+                      class="mx-1"
+                      effect="plain"
+                    >
+                      {{ tag }}
+                    </el-tag>
+                    <span v-if="!parseProposal(selectedApplication?.proposal || '')?.tags?.length"
+                      >无</span
+                    >
+                  </div>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="申请时间">
+                  <el-icon><clock /></el-icon>
+                  <span class="time-text">
+                    {{ formatDate(selectedApplication?.applied_at || '') || '无' }}
+                  </span>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="审核时间">
+                  <el-icon><timer /></el-icon>
+                  <span class="time-text">
+                    {{ formatDate(selectedApplication?.reviewed_at || '') || '无' }}
+                  </span>
+                </el-descriptions-item>
+
+                <el-descriptions-item label="拒绝原因" v-if="selectedApplication?.reject_reason">
+                  <div class="reject-reason">
+                    <el-alert
+                      :title="selectedApplication?.reject_reason"
+                      type="error"
+                      :closable="false"
+                    />
+                  </div>
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-scrollbar>
+
+            <template #footer>
+              <el-button type="primary" @click="showCreateDetailDialog = false">关闭</el-button>
+            </template>
+          </el-dialog>
 
           <!-- 更新申请内容 -->
           <div v-if="activeTab === 'update'">
@@ -199,8 +281,10 @@
               >
                 <el-table-column prop="club_id" label="社团ID" width="100" />
                 <el-table-column label="状态" width="120">
-                  <template #default>
-                    <el-tag type="warning" size="small" effect="dark"> 更新申请 </el-tag>
+                  <template #default="{ row }">
+                    <el-tag :type="getApplicationStatusType(row.status)" size="small">
+                      {{ getApplicationStatusText(row.status) }}
+                    </el-tag>
                   </template>
                 </el-table-column>
                 <el-table-column label="社团信息" width="150">
@@ -226,14 +310,6 @@
                           </span>
                         </div>
                       </div>
-
-                      <div class="club-meta-row">
-                        <span class="leader-info">社长ID: {{ row.leader_id }}</span>
-                      </div>
-                      <div v-if="row.requirements" class="requirements-display">
-                        <el-icon><Document /></el-icon>
-                        <span>{{ row.requirements }}</span>
-                      </div>
                     </div>
                   </template>
                 </el-table-column>
@@ -241,19 +317,27 @@
                   <template #default="{ row }">
                     <div class="club-desc-row">
                       {{ row.description }}
-                    </div></template
-                  >
+                    </div>
+                    <div v-if="row.requirements" class="club-desc-row">
+                      <span>加入要求：{{ row.requirements }}</span>
+                    </div>
+                  </template>
                 </el-table-column>
 
                 <el-table-column label="操作" width="250" fixed="right">
                   <template #default="{ row }">
-                    <el-button type="primary" size="small" disabled>
-                      <el-icon><Loading /></el-icon>
-                      等待审核
-                    </el-button>
                     <el-button type="info" size="small" @click="viewClubDetail(row.club_id)">
                       <el-icon><View /></el-icon>
                       查看社团
+                    </el-button>
+                    <el-button
+                      v-if="row.status === 'rejected'"
+                      type="danger"
+                      size="small"
+                      @click="viewRejectReason(row)"
+                    >
+                      <el-icon><CircleClose /></el-icon>
+                      拒绝理由
                     </el-button>
                   </template>
                 </el-table-column>
@@ -351,6 +435,10 @@
                       <el-icon><Edit /></el-icon>
                       编辑信息
                     </el-button>
+                    <el-button size="small" @click="uploadLogo(club)" class="action-btn">
+                      <el-icon><Picture /></el-icon>
+                      更换封面
+                    </el-button>
                     <el-button size="small" @click="manageMembers(club)" class="action-btn">
                       <el-icon><User /></el-icon>
                       成员管理
@@ -375,6 +463,60 @@
             </el-row>
           </div>
         </div>
+
+        <el-dialog
+          v-model="showUploadLogoDialog"
+          title="更换封面"
+          width="400px"
+          :close-on-click-modal="false"
+        >
+          <div class="avatar-upload-container">
+            <el-upload
+              class="avatar-uploader"
+              :show-file-list="false"
+              :before-upload="beforeAvatarUpload"
+              :http-request="uploadAvatar"
+              :disabled="avatarUploading"
+            >
+              <div class="upload-area">
+                <img v-if="uploadedAvatar" :src="uploadedAvatar" class="avatar-preview" />
+                <div v-else class="upload-placeholder">
+                  <el-icon class="avatar-uploader-icon" :class="{ 'is-loading': avatarUploading }">
+                    <Loading v-if="avatarUploading" />
+                    <Plus v-else />
+                  </el-icon>
+                  <p class="upload-text">
+                    {{ avatarUploading ? '正在上传...' : '点击选择封面' }}
+                  </p>
+                </div>
+                <div v-if="avatarUploading" class="upload-progress">
+                  <el-progress
+                    :percentage="100"
+                    :show-text="false"
+                    status="success"
+                    :indeterminate="true"
+                  />
+                </div>
+              </div>
+            </el-upload>
+            <div class="upload-tips">
+              <el-icon><InfoFilled /></el-icon>
+              <span>支持 JPG、PNG 格式，文件大小不超过 2MB</span>
+            </div>
+          </div>
+
+          <template #footer>
+            <el-button @click="cancelAvatarUpload" :disabled="avatarUploading">取消</el-button>
+            <el-button
+              type="primary"
+              @click="confirmAvatarUpload"
+              :disabled="!uploadedAvatar || avatarUploading"
+              :loading="avatarUploading"
+            >
+              {{ avatarUploading ? '上传中...' : '确认上传' }}
+            </el-button>
+          </template>
+        </el-dialog>
 
         <!-- 分页 -->
         <div v-if="total > 0" class="pagination-section">
@@ -417,8 +559,13 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="最大成员数" prop="maxMembers">
-          <el-input-number v-model="createForm.maxMembers" :min="1" :max="1000" />
+        <el-form-item label="加入要求" prop="requirements">
+          <el-input
+            v-model="createForm.requirements"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入加入要求"
+          />
         </el-form-item>
         <el-form-item label="社团标签" prop="tags">
           <el-select
@@ -438,17 +585,6 @@
             <el-option label="志愿服务" value="志愿服务" />
             <el-option label="创业" value="创业" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="封面图片">
-          <el-upload
-            class="cover-uploader"
-            action="#"
-            :show-file-list="false"
-            :before-upload="beforeCoverUpload"
-          >
-            <img v-if="createForm.coverImage" :src="createForm.coverImage" class="cover-preview" />
-            <el-icon v-else class="cover-uploader-icon"><Plus /></el-icon>
-          </el-upload>
         </el-form-item>
       </el-form>
 
@@ -482,7 +618,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, type UploadRawFile } from 'element-plus'
 import {
   Refresh,
   Plus,
@@ -503,11 +639,13 @@ import {
   Edit,
   Money,
   Delete,
+  Picture,
 } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/club'
 import { useAuthStore } from '@/stores/auth'
 import type { Club, ClubCategory, ClubCreatedApplication, ClubUpdateApplication } from '@/types'
 import { getClubUpdateApplications } from '@/api/club'
+import { uploadClubLogo } from '@/api/club'
 
 const router = useRouter()
 const clubStore = useClubStore()
@@ -527,6 +665,8 @@ const filterStatus = ref('')
 const sortBy = ref('createdAt_desc')
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showUploadLogoDialog = ref(false)
+const showCreateDetailDialog = ref(false)
 const deleteClub = ref<Club | null>(null)
 const categoriesList = ref<ClubCategory[]>([])
 
@@ -559,7 +699,6 @@ const getCategoriesList = async () => {
   await clubStore.fetchCategoriesList()
   categoriesList.value = clubStore.categoriesList
 }
-
 // 获取状态类型
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
@@ -583,7 +722,7 @@ const getStatusText = (status: string) => {
 // 格式化日期
 const formatDate = (dateStr: string) => {
   if (!dateStr || dateStr === '0001-01-01T00:00:00Z') {
-    return '未设置'
+    return '未审核'
   }
 
   try {
@@ -672,6 +811,13 @@ const loadUserCreatedApplications = async () => {
   }
 }
 
+const selectedApplication = ref<ClubCreatedApplication | null>(null)
+// 选择申请
+const selectApplication = (row: ClubCreatedApplication) => {
+  showCreateDetailDialog.value = true
+  selectedApplication.value = row
+}
+
 // 筛选处理
 const handleFilter = () => {
   currentPage.value = 1
@@ -704,6 +850,13 @@ const goToClubDetail = (clubId: string) => {
 // 查看社团详情
 const viewClubDetail = (clubId: number) => {
   router.push(`/club/${clubId}`)
+}
+
+const selectedClub = ref<Club | null>(null)
+// 上传封面
+const uploadLogo = (club: Club) => {
+  showUploadLogoDialog.value = true
+  selectedClub.value = club
 }
 
 // 编辑社团
@@ -747,27 +900,67 @@ const handleAction = (command: { action: string; club: Club }) => {
 }
 
 // 封面图片上传前处理
-const beforeCoverUpload = (file: File) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
 
-  if (!isImage) {
-    ElMessage.error('只能上传图片文件!')
+const beforeAvatarUpload = (rawFile: UploadRawFile) => {
+  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    ElMessage.error('头像图片只能是 JPG/PNG 格式!')
     return false
   }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB!')
+  if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('头像图片大小不能超过 2MB!')
     return false
   }
+  return true
+}
+const avatarUploading = ref(false)
+const uploadedAvatar = ref('')
+const uploadedFile = ref<File | null>(null)
 
-  // 模拟上传，实际项目中应该上传到服务器
+const uploadAvatar = (params: any) => {
+  const file = params.file
+
+  // 只创建预览URL，不立即上传
   const reader = new FileReader()
   reader.onload = (e) => {
-    createForm.value.coverImage = e.target?.result as string
+    uploadedAvatar.value = e.target?.result as string
   }
   reader.readAsDataURL(file)
 
-  return false // 阻止自动上传
+  // 保存文件对象供后续上传使用
+  uploadedFile.value = file
+}
+
+const cancelAvatarUpload = () => {
+  uploadedAvatar.value = ''
+  uploadedFile.value = null
+  showUploadLogoDialog.value = false
+}
+
+const confirmAvatarUpload = async () => {
+  if (!uploadedFile.value) {
+    ElMessage.warning('请先选择头像文件')
+    return
+  }
+
+  try {
+    avatarUploading.value = true
+
+    // 实际上传到服务器
+    const result = await uploadClubLogo(selectedClub.value?.club_id || '0', uploadedFile.value)
+
+    // 更新用户信息
+    ElMessage.success('请刷新后查看更新后的封面')
+
+    // 关闭对话框并清除状态
+    showUploadLogoDialog.value = false
+    uploadedAvatar.value = ''
+    uploadedFile.value = null
+  } catch (error: any) {
+    console.error('上传封面失败:', error)
+    ElMessage.error(error.message || '上传封面失败，请重试')
+  } finally {
+    avatarUploading.value = false
+  }
 }
 
 // 确认创建社团
@@ -823,6 +1016,9 @@ const confirmDelete = async () => {
 }
 
 const loadUserUpdateApplications = async () => {
+  if (authStore.user?.role == 'user') {
+    return
+  }
   applicationsLoading.value = true
 
   try {
@@ -843,6 +1039,10 @@ const refreshCurrentTab = async () => {
   } else if (activeTab.value === 'update') {
     await loadUserUpdateApplications()
   }
+}
+
+const viewRejectReason = (row: ClubUpdateApplication) => {
+  console.log('row', row)
 }
 
 // 页面加载时获取数据
@@ -1161,6 +1361,100 @@ onMounted(() => {
   padding: 60px 20px;
 }
 
+/* 头像上传样式 */
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.avatar-uploader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.upload-area {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.upload-area:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-uploader-icon {
+  font-size: 32px;
+  color: #8c939d;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.avatar-uploader-icon.is-loading {
+  animation: rotate 2s linear infinite;
+  color: #667eea;
+}
+
+.upload-text {
+  margin: 0;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.4;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.upload-progress {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.upload-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #909399;
+  text-align: center;
+  padding: 8px 16px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.upload-tips .el-icon {
+  color: #409eff;
+}
+
 /* 平板响应式 */
 @media (max-width: 992px) {
   .application-card-col,
@@ -1349,10 +1643,10 @@ onMounted(() => {
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   transition: all 0.3s;
+  width: 100%;
 }
 
 .applications-list:hover {
-  border-color: #409eff;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
 }
 .application-card-col {
@@ -1992,6 +2286,7 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .applications-table .el-table__header {
@@ -2178,5 +2473,19 @@ onMounted(() => {
     font-size: 10px;
     padding-left: 14px;
   }
+}
+
+/* 自定义hover效果 */
+.custom-hover-table :deep(.el-table__body tr:hover > td) {
+  background-color: #e6f7ff !important;
+  transition: all 0.3s ease;
+  transform: translateX(7px);
+  transform: translateY(-7px);
+}
+
+/* 确保其他行不受影响 */
+.custom-hover-table :deep(.el-table__body tr:not(:hover) > td) {
+  background-color: transparent;
+  transition: all 0.3s ease;
 }
 </style>

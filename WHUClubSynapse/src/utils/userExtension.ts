@@ -73,6 +73,19 @@ export function mergeUserExtension(user: User, extension: UserExtension): User {
     // 临时处理：保持简化格式，由组件层面处理转换
     mergedPreferences = extension.preferences as any
   }
+  console.log("tags", extension.tags)
+  console.log("interestedCategories", mergedPreferences?.interestedCategories)
+
+  if(extension.tags&& mergedPreferences?.interestedCategories)
+    {
+      user.hasCompletedPreferences = true
+      console.log('发现用户同时有tags和interestedCategories，优先使用interestedCategories')
+    }
+    else{
+      user.hasCompletedPreferences = false
+      console.log('用户未完成偏好设置')
+    }
+
 
   return {
     ...user,

@@ -44,11 +44,6 @@
           <el-menu-item index="joined-clubs">已加入社团</el-menu-item>
           <el-menu-item index="managed-clubs">管理的社团</el-menu-item>
         </el-sub-menu>
-
-        <el-menu-item index="user-settings">
-          <el-icon><Setting /></el-icon>
-          <span>账户设置</span>
-        </el-menu-item>
       </el-menu>
     </el-card>
   </div>
