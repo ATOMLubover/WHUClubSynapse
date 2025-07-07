@@ -13,7 +13,6 @@ import { config } from '@/config'
 
 // AI服务健康检查
 export const checkAiServiceHealth = async (): Promise<boolean> => {
-  return true;
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
@@ -21,28 +20,79 @@ export const checkAiServiceHealth = async (): Promise<boolean> => {
     // 获取JWT token
     const jwtToken = localStorage.getItem('token')
     if (!jwtToken) {
-      throw new Error('未找到认证token')
+      console.warn('AI服务健康检查：未找到认证token')
+      return false
     }
 
-    const response = await fetch(getHealthCheckURL(), {
-      method: 'GET',
+    // 1. 首先尝试一个简单的测试查询
+    const testQuery = {
+      query: "测试查询",
+      enable_thinking: true,
+      history: []
+    }
+
+    const response = await fetch(getSideChatURL(), {
+      method: 'POST',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwtToken}`
+        'Authorization': `Bearer ${jwtToken}`,
+        'Accept': 'text/event-stream',
+        'X-API-Key': getApiKey()
       },
+      body: JSON.stringify(testQuery)
     })
 
     clearTimeout(timeoutId)
 
-    if (response.ok) {
-      return true
-    } else {
-      console.warn('AI服务健康检查失败:', response.status, response.statusText)
+    // 检查响应状态
+    if (response.status === 401 || response.status === 403) {
+      console.warn('AI服务健康检查：认证失败')
       return false
     }
+
+    if (response.status === 404) {
+      console.warn('AI服务健康检查：服务端点不存在')
+      return false
+    }
+
+    if (response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504) {
+      console.warn('AI服务健康检查：服务器错误', response.status)
+      return false
+    }
+
+    // 检查响应头部
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('text/event-stream')) {
+      console.warn('AI服务健康检查：响应类型不正确', contentType)
+      return false
+    }
+
+    // 如果能获取到响应体，说明服务正常
+    if (response.body) {
+      try {
+        const reader = response.body.getReader()
+        const { value } = await reader.read()
+        reader.cancel() // 立即取消读取，我们只需要确认能收到数据
+        
+        if (value) {
+          console.log('AI服务健康检查：成功接收到数据流')
+          return true
+        }
+      } catch (error) {
+        console.warn('AI服务健康检查：读取响应流失败', error)
+        return false
+      }
+    }
+
+    console.warn('AI服务健康检查：无法获取响应体')
+    return false
   } catch (error) {
-    console.error('AI服务健康检查异常:', error)
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.warn('AI服务健康检查：请求超时')
+    } else {
+      console.error('AI服务健康检查异常:', error)
+    }
     return false
   }
 }
