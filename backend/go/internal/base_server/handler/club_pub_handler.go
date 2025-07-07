@@ -277,8 +277,10 @@ func (h *ClubPubHandler) GetMyUpdateApplis(ctx iris.Context) {
 	var resApplis []*dto.UpdateClubInfoResponse
 	for _, appli := range applis {
 		resApplis = append(resApplis, &dto.UpdateClubInfoResponse{
-			Proposal: string(appli.Proposal),
-			Status:   appli.Status,
+			AppliId:        int(appli.UpdateAppliId),
+			Proposal:       string(appli.Proposal),
+			RejectedReason: appli.RejectedReason,
+			Status:         appli.Status,
 		})
 	}
 

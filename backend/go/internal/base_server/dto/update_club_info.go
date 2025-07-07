@@ -9,6 +9,8 @@ type UpdateClubInfoRequest struct {
 }
 
 type UpdateClubInfoResponse struct {
-	Proposal string `json:"proposal"`
-	Status   string `json:"status"`
+	Proposal       string `json:"proposal"`
+	Status         string `json:"status"`
+	AppliId        int    `json:"appli_id"`
+	RejectedReason string `json:"rejected_reason"`
 }

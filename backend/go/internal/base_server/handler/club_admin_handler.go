@@ -168,19 +168,9 @@ func (h *ClubAdminHandler) GetUpdateList(ctx iris.Context) {
 		return
 	}
 
-	var resApplis []struct {
-		AppliId        int    `json:"appli_id"`
-		Proposal       string `json:"proposal"`
-		RejectedReason string `json:"rejected_reason"`
-		Status         string `json:"status"`
-	}
+	var resApplis []dto.UpdateClubInfoResponse
 	for _, appli := range applis {
-		resApplis = append(resApplis, struct {
-			AppliId        int    `json:"appli_id"`
-			Proposal       string `json:"proposal"`
-			RejectedReason string `json:"rejected_reason"`
-			Status         string `json:"status"`
-		}{
+		resApplis = append(resApplis, dto.UpdateClubInfoResponse{
 			AppliId:        int(appli.UpdateAppliId),
 			Proposal:       string(appli.Proposal),
 			RejectedReason: appli.RejectedReason,
