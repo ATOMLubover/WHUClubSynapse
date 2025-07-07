@@ -1567,3 +1567,39 @@ export const getClubsByCategory = async (
     throw error
   }
 }
+
+// 获取分类社团数量
+export const getCategoryCount = async (categoryId: number): Promise<number> => {
+  if (getIsUsingMockAPI()) {
+    return 0
+  }
+
+  try {
+    const response = await request.get(`/api/club/category/${categoryId}/count`)
+    return response.data || 0
+  } catch (error) {
+    console.error(`获取分类 ${categoryId} 的社团数量失败:`, error)
+    return 0
+  }
+}
+
+// 获取所有分类的社团数量
+export const getAllCategoriesCounts = async (categories: ClubCategory[]): Promise<Map<number, number>> => {
+  if (getIsUsingMockAPI()) {
+    return new Map()
+  }
+
+  try {
+    const counts = new Map<number, number>()
+    await Promise.all(
+      categories.map(async (category) => {
+        const count = await getCategoryCount(category.category_id)
+        counts.set(category.category_id, count)
+      })
+    )
+    return counts
+  } catch (error) {
+    console.error('获取所有分类社团数量失败:', error)
+    return new Map()
+  }
+}

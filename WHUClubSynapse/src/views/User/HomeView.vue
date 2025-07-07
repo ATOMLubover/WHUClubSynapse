@@ -109,7 +109,7 @@
             <el-tab-pane label="全部" name="">
               <template #label>
                 全部
-                <el-badge :value="getTotalCount()" class="category-badge" />
+                <el-badge :value="clubStore.getTotalClubCount" class="category-badge" />
               </template>
             </el-tab-pane>
             <el-tab-pane
@@ -121,10 +121,7 @@
               <template #label>
                 {{ category.name }}
                 <el-badge
-                  :value="
-                    clubStore.categoriesList.find((c) => c.category_id === category.category_id)
-                      ?.count || 0
-                  "
+                  :value="clubStore.getCategoryCount(category.category_id)"
                   class="category-badge"
                 />
               </template>

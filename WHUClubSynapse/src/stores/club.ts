@@ -15,7 +15,8 @@ export const useClubStore = defineStore('club', () => {
   const favoriteClubs = ref<Club[]>([])
   const latestClubs = ref<Club[]>([])
   const recommendedClubs = ref<Club[]>([])
-  const categoriesList = ref<ClubCategory[]>([]) // 新增：分类列表
+  const categoriesList = ref<ClubCategory[]>([]) // 分类列表
+  const categoryCounts = ref<Map<number, number>>(new Map()) // 分类数量映射
   const currentClub = ref<Club | null>(null)
   const joinedClubs = ref<Club[]>([])
   const managedClubs = ref<Club[]>([])
@@ -76,6 +77,8 @@ export const useClubStore = defineStore('club', () => {
             parseInt(activeCategory.value),
             queryParams
           )
+          // 更新当前分类的数量
+          categoryCounts.value.set(parseInt(activeCategory.value), response.total)
         } catch (error) {
           console.error('分类查询失败，回退到全部列表:', error)
           // 如果分类API失败，回退到获取全部列表
@@ -184,7 +187,22 @@ export const useClubStore = defineStore('club', () => {
       categoriesLoading.value = true
       const response = await clubApi.getClubCategoriesList()
       categoriesList.value = response
+
+      // 获取每个分类的社团数量
+      await Promise.all(
+        response.map(async (category) => {
+          try {
+            const result = await clubApi.getClubsByCategory(category.category_id, { page: 1, pageSize: 1 })
+            categoryCounts.value.set(category.category_id, result.total)
+          } catch (error) {
+            console.error(`获取分类 ${category.category_id} 的社团数量失败:`, error)
+            categoryCounts.value.set(category.category_id, 0)
+          }
+        })
+      )
+
       console.log('社团分类列表已加载:', response)
+      console.log('分类数量已加载:', categoryCounts.value)
       return response
     } catch (error) {
       console.error('获取社团分类列表失败:', error)
@@ -194,6 +212,19 @@ export const useClubStore = defineStore('club', () => {
       categoriesLoading.value = false
     }
   }
+
+  // 获取分类的社团数量
+  const getCategoryCount = (categoryId: number): number => {
+    return categoryCounts.value.get(categoryId) || 0
+  }
+
+  // 获取所有社团总数
+  const getTotalClubCount = computed(() => {
+    if (globalPageData.total > 0) {
+      return globalPageData.total
+    }
+    return Array.from(categoryCounts.value.values()).reduce((sum, count) => sum + count, 0)
+  })
 
   // 设置搜索参数
   const setSearchParams = (params: Partial<SearchParams>) => {
@@ -563,6 +594,7 @@ export const useClubStore = defineStore('club', () => {
     applications,
     // categories,
     categoriesList, // 新增：分类列表
+    categoryCounts,
     currentClub,
     globalPageData,
     searchPageData,
@@ -578,6 +610,8 @@ export const useClubStore = defineStore('club', () => {
     // 计算属性
     totalPages,
     hasMore,
+    getCategoryCount,
+    getTotalClubCount,
     // 方法
     fetchClubs,
     searchClubs,
