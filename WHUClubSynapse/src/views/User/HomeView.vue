@@ -116,7 +116,7 @@
               v-for="category in clubStore.categoriesList"
               :key="category.category_id"
               :label="category.name"
-              :name="category.category_id"
+              :name="category.category_id.toString()"
             >
               <template #label>
                 {{ category.name }}
@@ -278,8 +278,11 @@ const banners = ref([
 // TODO:分类数据
 const categories = ref<ClubCategory[]>([])
 
+// 定义排序类型
+type SortType = 'hot' | 'time' | 'members'
+
 // 排序方式
-const sortBy = ref<string>('hot')
+const sortBy = ref<SortType>('time')
 
 // 快速链接
 const quickLinks = ref([
@@ -341,26 +344,40 @@ const formatDate = (dateStr: string) => {
 }
 
 // 处理分类切换
-const handleCategoryChange = (category: string) => {
-  clubStore.setActiveCategory(category)
-  clubStore.setSearchParams({ category: category as number | '' }) // 类型断言
-  clubStore.fetchClubs()
+const handleCategoryChange = async (categoryId: string) => {
+  try {
+    clubStore.setActiveCategory(categoryId)
+    // 重置页码
+    clubStore.setGlobalPage(1)
+    // 重新获取社团列表
+    await clubStore.fetchClubs({ sortBy: sortBy.value as SortType })
+  } catch (error) {
+    console.error('切换分类失败:', error)
+    ElMessage.error('切换分类失败')
+  }
 }
 
-// 处理排序切换
-const handleSortChange = (sort: string) => {
-  sortBy.value = sort
-  clubStore.setSearchParams({ sortBy: sort as 'hot' | 'time' | 'members' })
-  clubStore.fetchClubs()
+// 处理排序方式改变
+const handleSortChange = async () => {
+  try {
+    // 重置页码
+    clubStore.setGlobalPage(1)
+    // 重新获取社团列表
+    await clubStore.fetchClubs({ sortBy: sortBy.value as SortType })
+  } catch (error) {
+    console.error('更改排序方式失败:', error)
+    ElMessage.error('更改排序方式失败')
+  }
 }
 
-// 处理分页切换
+// 处理页码改变
 const handlePageChange = async (page: number) => {
-  clubStore.setGlobalPage(page)
-  await clubStore.fetchClubs()
-  await clubStore.fetchFavoriteClubs()
-  await clubStore.fetchPendingClubApplications({})
-  await clubStore.fetchJoinedClubs()
+  try {
+    await clubStore.fetchClubs({ sortBy: sortBy.value as SortType }, page)
+  } catch (error) {
+    console.error('切换页面失败:', error)
+    ElMessage.error('切换页面失败')
+  }
 }
 
 // 跳转到社团详情

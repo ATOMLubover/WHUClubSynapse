@@ -1530,3 +1530,72 @@ export const getUpdateListAdmin = async (
     throw error
   }
 }
+
+// 获取指定分类的社团列表
+export const getClubsByCategory = async (
+  categoryId: number,
+  params: {
+    page?: number
+    pageSize?: number
+    sortBy?: string
+  } = {}
+): Promise<PaginatedData<Club>> => {
+  if (getIsUsingMockAPI()) {
+    return await mockClub.mockGetClubList({ ...params, category: categoryId.toString() })
+  }
+
+  const queryParams = new URLSearchParams()
+  if (params.page && params.pageSize) {
+    const offset = (params.page - 1) * params.pageSize
+    queryParams.append('offset', offset.toString())
+    queryParams.append('num', params.pageSize.toString())
+  }
+  if (params.sortBy) {
+    queryParams.append('sortBy', params.sortBy)
+  }
+
+  const queryString = queryParams.toString()
+  const url = queryString 
+    ? `/api/club/category/${categoryId}?${queryString}` 
+    : `/api/club/category/${categoryId}`
+
+  try {
+    const response = await request.get(url)
+    if (!response.data) {
+      return {
+        list: [],
+        total: 0,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10
+      }
+    }
+
+    // 处理返回的数据
+    const clubs = response.data.map((club: Club) => {
+      if (club.tags == null) {
+        club.tags = []
+      }
+      const timestamp = new Date().getTime()
+      if (club.logo_url == '') {
+        club.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+      } else {
+        club.logo_url = `${config.apiBaseUrl}/${club.logo_url}?t=${timestamp}`
+      }
+      return club
+    })
+
+    // 使用返回的列表长度作为该分类的总数
+    // 如果后端返回了total字段，则使用后端返回的total
+    const total = response.data.total || clubs.length
+
+    return {
+      list: clubs,
+      total: total,
+      page: params.page || 1,
+      pageSize: params.pageSize || 10
+    }
+  } catch (error) {
+    console.error('获取分类社团列表失败:', error)
+    throw error
+  }
+}
