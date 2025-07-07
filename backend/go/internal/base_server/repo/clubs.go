@@ -103,6 +103,7 @@ func (r *sClubRepo) GetClubNum() (int64, error) {
 
 func (r *sClubRepo) UpdateClubInfo(tx *gorm.DB, newInfo dbstruct.Club) error {
 	return tx.
+		Model(&dbstruct.Club{}).
 		Where("club_id = ?", newInfo.ClubId).
 		Updates(newInfo).Error
 }

@@ -56,7 +56,7 @@ func (r *sUpdateClubInfoAppliRepo) AddUpdateClubInfoAppli(appli *dbstruct.Update
 func (r *sUpdateClubInfoAppliRepo) GetAppliForUpdate(tx *gorm.DB, appliId int) (*dbstruct.UpdateClubInfoAppli, error) {
 	var appli dbstruct.UpdateClubInfoAppli
 	err := tx.
-		//Clauses(clause.Locking{Strength: "UPDATE"}).
+		Preload("Club").
 		Where("update_appli_id = ?", appliId).
 		First(&appli).Error
 	return &appli, err
