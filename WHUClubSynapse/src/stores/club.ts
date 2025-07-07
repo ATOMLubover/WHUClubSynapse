@@ -59,20 +59,40 @@ export const useClubStore = defineStore('club', () => {
   const hasMore = computed(() => globalPageData.currentPage < totalPages.value)
 
   // 获取社团列表
-
-  
-  
-  const fetchClubs = async (params?: Partial<SearchParams>,page?:number,pageSize?:number) => {
+  const fetchClubs = async (params?: Partial<SearchParams>, page?: number, pageSize?: number) => {
     try {
       loading.value = true
       const queryParams = {
-        // ...searchParams.value,
-        // ...params,
-        page: page||globalPageData.currentPage,
-        pageSize: pageSize||globalPageData.pageSize,
+        page: page || globalPageData.currentPage,
+        pageSize: pageSize || globalPageData.pageSize,
+        sortBy: params?.sortBy
       }
 
-      const response = await clubApi.getClubList(queryParams)
+      let response
+      if (activeCategory.value && activeCategory.value !== '') {
+        try {
+          // 如果有选中的分类，使用分类API
+          response = await clubApi.getClubsByCategory(
+            parseInt(activeCategory.value),
+            queryParams
+          )
+        } catch (error) {
+          console.error('分类查询失败，回退到全部列表:', error)
+          // 如果分类API失败，回退到获取全部列表
+          response = await clubApi.getClubList({
+            ...params,
+            category: parseInt(activeCategory.value),
+            ...queryParams
+          })
+        }
+      } else {
+        // 获取所有社团
+        response = await clubApi.getClubList({
+          ...params,
+          ...queryParams
+        })
+      }
+
       const data = response
       clubs.value = data.list
       globalPageData.total = data.total
@@ -82,6 +102,8 @@ export const useClubStore = defineStore('club', () => {
     } catch (error) {
       console.error('获取社团列表失败:', error)
       ElMessage.error('获取社团列表失败')
+      // 出错时清空列表但保持其他状态
+      clubs.value = []
       throw error
     } finally {
       loading.value = false

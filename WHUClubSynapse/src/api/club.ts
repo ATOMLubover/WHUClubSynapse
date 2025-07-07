@@ -1087,41 +1087,6 @@ export const uploadClubLogo = async (clubId: string, file: File): Promise<{ data
 
 // 获取用户社团信息更新申请列表(User)
 export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication[]> => {
-  if (getIsUsingMockAPI()) {
-    // 模拟数据
-    const mockApplications: ClubUpdateApplication[] = [
-      {
-        name: "机器人研究社",
-        club_id: 9,
-        logo_url: "",
-        leader_id: 4,
-        created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
-        category_id: 1,
-        description: "探索人工智能的奥秘，动手制作智能机器人。参与机器人竞赛，推动科技创新发展。",
-        member_count: 0,
-        requirements: "",
-        status: "pending",
-        rejected_reason: ""
-      },
-      {
-        name: "摄影艺术社",
-        club_id: 10,
-        logo_url: "https://example.com/logo.jpg",
-        leader_id: 5,
-        created_at: "2024-01-02T00:00:00Z",
-        updated_at: "2024-01-02T00:00:00Z",
-        category_id: 2,
-        description: "用镜头记录美好瞬间，分享摄影技巧，提升艺术修养。",
-        member_count: 15,
-        requirements: "热爱摄影艺术",
-        status: "pending",
-        rejected_reason: ""
-      }
-    ]
-    return mockApplications
-  }
-
   try {
     const response = await request.get('/api/club/pub/my_update_applis')
 
@@ -1130,7 +1095,7 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
     }
 
     // 解析字符串数组为对象数组
-    const applications: ClubUpdateApplication[] = response.data.map((item: any) => {
+    const applications = response.data.map((item: any) => {
       try {
         const proposal = item.proposal
         // 移除可能的转义字符
@@ -1162,10 +1127,11 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           parsed.type = []
         }
 
+        // 修正属性名称，使用rejected_reason而不是reject_reason
         return {
           ...parsed,
           status: item.status,
-          reject_reason: item.rejected_reason
+          rejected_reason: item.rejected_reason || item.reject_reason || ''
         } as ClubUpdateApplication
       } catch (parseError) {
         console.error('解析社团更新申请数据失败:', parseError, '原始数据:', item)
@@ -1183,8 +1149,8 @@ export const getClubUpdateApplications = async (): Promise<ClubUpdateApplication
           requirements: '',
           type: [],
           status: '',
-          reject_reason: ''
-        }
+          rejected_reason: ''
+        } as ClubUpdateApplication
       }
     })
     console.log(applications)
@@ -1533,6 +1499,75 @@ export const getUpdateListAdmin = async (
     }
   } catch (error) {
     console.error('获取更新社团申请列表失败:', error)
+    throw error
+  }
+}
+
+// 获取指定分类的社团列表
+export const getClubsByCategory = async (
+  categoryId: number,
+  params: {
+    page?: number
+    pageSize?: number
+    sortBy?: string
+  } = {}
+): Promise<PaginatedData<Club>> => {
+  if (getIsUsingMockAPI()) {
+    return await mockClub.mockGetClubList({ ...params, category: categoryId })
+  }
+
+  const queryParams = new URLSearchParams()
+  if (params.page && params.pageSize) {
+    const offset = (params.page - 1) * params.pageSize
+    queryParams.append('offset', offset.toString())
+    queryParams.append('num', params.pageSize.toString())
+  }
+  if (params.sortBy) {
+    queryParams.append('sortBy', params.sortBy)
+  }
+
+  const queryString = queryParams.toString()
+  const url = queryString 
+    ? `/api/club/category/${categoryId}?${queryString}` 
+    : `/api/club/category/${categoryId}`
+
+  try {
+    const response = await request.get(url)
+    if (!response.data) {
+      return {
+        list: [],
+        total: 0,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10
+      }
+    }
+
+    // 处理返回的数据
+    const clubs = response.data.map((club: Club) => {
+      if (club.tags == null) {
+        club.tags = []
+      }
+      const timestamp = new Date().getTime()
+      if (club.logo_url == '') {
+        club.logo_url = `${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
+      } else {
+        club.logo_url = `${config.apiBaseUrl}/${club.logo_url}?t=${timestamp}`
+      }
+      return club
+    })
+
+    // 使用返回的列表长度作为该分类的总数
+    // 如果后端返回了total字段，则使用后端返回的total
+    const total = response.data.total || clubs.length
+
+    return {
+      list: clubs,
+      total: total,
+      page: params.page || 1,
+      pageSize: params.pageSize || 10
+    }
+  } catch (error) {
+    console.error('获取分类社团列表失败:', error)
     throw error
   }
 }
