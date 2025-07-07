@@ -30,30 +30,36 @@ def _format_history(history: List[ChatMessage]) -> str:
 
 def build_final_prompt(user_query: str, history_str: str, context_str: str) -> str:
     """
-    Constructs the final prompt string to be sent to the language model. Pure function.
+    构造一个更适合对话聊天场景的、发送给语言模型的最终 prompt。
     """
-    return f"""你是一个“社团管理系统”的AI助手。你的核心任务是为用户提供清晰、准确、有用的信息。请根据下面的对话历史和为最新问题提供的参考资料来回答。
----
-**为最新问题检索到的参考上下文:**
-{context_str}
----
-**最新用户提问:**
-{user_query}
----
-**你的任务指示:**
+    # 这个模板将AI设定为一个友好、专业的助手角色
+    return f"""你好！你是一个友好、专业的“社团管理系统”AI助手。你的目标是与用户进行自然流畅的对话，为他们提供清晰、有帮助的回答。
 
-1.  **理解对话**：请仔细阅读“对话历史”以理解用户之前的提问和你的回答。
-2.  **聚焦新问题**：你的主要任务是回答“最新用户提问”。
-3.  **优先使用新上下文**：请优先使用“为最新问题检索到的参考上下文”来回答最新的问题。
-4.  **切换通用知识**：如果新上下文不足以回答最新问题，或者问题与社团管理无关，请利用你的通用知识。
-5.  **保持结构化输出**：请继续遵循以下结构来组织你的回答：
-    *   **核心摘要**
-    *   **关键信息/步骤**
-    *   **实用技巧/补充**
-6.  **回答中不要给出具体参考哪个文档**。
-7.  **保持可读性**：保持总结对人类用户的可读性，避免过度分点和缩句。
+现在，请你基于我们之前的对话，并参考我为你找到的背景资料，以及必要时运用你自己的知识，来回答用户的最新问题。
+
+
+**对话历史 (供参考):**
+{history_str}
+
+
+**相关背景资料 (参考):**
+{context_str}
+
+
+**用户的最新问题:**
+{user_query}
+
+
+**回复时请注意：**
+
+1.  **像一个真正的助手一样**：请用友好、热情的语气进行回复，让用户感觉在与一个乐于助人的人类专家交谈。
+2.  **聚焦核心问题**：始终聚焦于用户的“最新问题”。请用你自己的话来组织和解释信息，而不是直接复述背景资料。
+3.  **灵活运用资料**：请优先使用“相关背景资料”。如果资料不足以回答，或者问题与社团管理无关，再自然地切换到你的通用知识来提供帮助。
+4.  **保持神秘感**：请不要在回答中提及你参考了“背景资料”或任何内部文档，让回答看起来像是源于你自己的知识。
+5.  **保持清晰结构**：如果内容比较复杂，可以使用结构化的方式来组织回答，使其易于理解。
 
 请使用 Markdown 格式化你的回答，确保内容友好、易于理解。
+请开始你的回复吧！
 """
 
 
@@ -114,8 +120,11 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
     async def stream_generator():
         # a. 通过 SSE 发送溯源文档事件
         # 修正：发送 retrieved_docs 列表，而不是一个字符串
-        yield f"event: source\ndata: {json.dumps(retrieved_docs, ensure_ascii=False)}\n\n"
+        source_event = f"event: source\ndata: {json.dumps(retrieved_docs, ensure_ascii=False)}\n\n"
+        logger.info(f"向前端发送溯源事件，共 {len(retrieved_docs)} 个文档")
+        logger.debug(f"发送 SSE 事件: {source_event.strip()}")
         logger.info("已将溯源文档事件发送到前端")
+        yield source_event
 
         payload = {
             "model": settings.VLLM_MODEL_NAME,
@@ -149,15 +158,29 @@ async def sider_chat(chat_query: ChatQuery, enable_thinking: bool = True):
                                 chunk = json.loads(data_str)
                                 if 'choices' in chunk and chunk['choices'][0].get('delta', {}).get('content'):
                                     token = chunk['choices'][0]['delta']['content']
-                                    yield f"event: token\ndata: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+                                    token_event = f"event: token\ndata: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+                                    logger.debug(f"发送 SSE token: {token.strip()}")
+                                    yield token_event
                             except json.JSONDecodeError:
                                 continue
             logger.info("vLLM 流式传输完成")
         except Exception as e:
             logger.error(f"调用LLM流式接口时出错: {e}", exc_info=True)
             error_message = json.dumps({"error": "处理请求时发生内部错误"})
-            yield f"event: error\ndata: {error_message}\n\n"
+            error_event = f"event: error\ndata: {error_message}\n\n"
+            logger.error(f"向前端发送错误事件: {error_event.strip()}")
+            yield error_event
         
-        yield "event: end\ndata: {}\n\n"
+        end_event = "event: end\ndata: {}\n\n"
+        logger.info(f"向前端发送结束事件: {end_event.strip()}")
+        yield end_event
 
-    return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Connection": "keep-alive",
+        "Pragma": "no-cache", # 兼容旧版
+        "Expires": "0",
+        "X-Accel-Buffering": "no" # 尝试性地给 Nginx 类代理发送信号
+    }
+
+    return StreamingResponse(stream_generator(), media_type="text/event-stream", headers=headers)
