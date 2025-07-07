@@ -1,6 +1,18 @@
 import { AI_CONFIG, getChatApiUrl } from '@/config/ai'
 import type { ClubRecommendRequest, ClubRecommendResponse } from '@/types'
 
+// 基础错误类
+export class AIServiceError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public response?: string
+  ) {
+    super(message)
+    this.name = 'AIServiceError'
+  }
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
   content: string
@@ -20,6 +32,132 @@ export interface ChatResponse {
   response: string
   model: string
   usage?: Record<string, any>
+}
+
+export interface StreamCallbacks {
+  onToken?: (token: string) => void
+  onError?: (error: Error) => void
+  onFinish?: () => void
+}
+
+// 统一的请求处理函数
+async function makeAIRequest<T>(
+  url: string,
+  data: any,
+  options: {
+    stream?: boolean
+    timeout?: number
+    callbacks?: StreamCallbacks
+  } = {}
+): Promise<T> {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    throw new AIServiceError('未找到认证token')
+  }
+
+  const { stream = false, timeout = AI_CONFIG.REQUEST_TIMEOUT, callbacks } = options
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': stream ? 'text/event-stream' : 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(timeout)
+    })
+
+    // 处理错误响应
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new AIServiceError(
+        `请求失败: ${errorText}`,
+        response.status,
+        errorText
+      )
+    }
+
+    // 处理流式响应
+    if (stream && response.body && callbacks) {
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonData = line.slice(5)
+              try {
+                const parsed = JSON.parse(jsonData)
+                if (parsed.token) {
+                  callbacks.onToken?.(parsed.token)
+                }
+              } catch (e) {
+                // 如果不是JSON，直接发送原始数据
+                callbacks.onToken?.(jsonData)
+              }
+            }
+          }
+        }
+        callbacks.onFinish?.()
+      } catch (error) {
+        callbacks.onError?.(error instanceof Error ? error : new Error(String(error)))
+        reader.cancel()
+      }
+      return {} as T // 流式响应不返回数据
+    }
+
+    // 处理普通JSON响应
+    const responseData = await response.json()
+    return responseData as T
+  } catch (error) {
+    if (error instanceof AIServiceError) {
+      throw error
+    }
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new AIServiceError('请求超时')
+    }
+    throw new AIServiceError(
+      error instanceof Error ? error.message : '未知错误'
+    )
+  }
+}
+
+// 修改chatWithAI函数支持流式响应
+export const chatWithAI = async (
+  requestData: ChatRequest,
+  callbacks?: StreamCallbacks
+): Promise<ChatResponse> => {
+  const url = getChatApiUrl()
+  console.log('AI聊天请求URL:', url)
+  console.log('AI聊天请求数据:', requestData)
+
+  const response = await makeAIRequest<ChatResponse>(
+    url,
+    {
+      ...requestData,
+      model: requestData.model || AI_CONFIG.DEFAULT_MODEL,
+      max_tokens: requestData.max_tokens || AI_CONFIG.DEFAULT_MAX_TOKENS,
+      temperature: requestData.temperature || AI_CONFIG.DEFAULT_TEMPERATURE,
+      top_p: requestData.top_p || AI_CONFIG.DEFAULT_TOP_P,
+      system_prompt: requestData.system_prompt || 'You are a helpful assistant.'
+    },
+    {
+      stream: requestData.stream,
+      callbacks
+    }
+  )
+
+  console.log('AI聊天响应数据:', response)
+  return response
 }
 
 // AI审核助手接口类型
@@ -51,142 +189,6 @@ export interface ApplicationScreeningRequestAlt {
 export interface ApplicationScreeningResponse {
   summary: string
   suggestion: string
-}
-
-export const chatWithAI = async (requestData: ChatRequest): Promise<ChatResponse> => {
-  try {
-    console.log('AI聊天请求URL:', getChatApiUrl())
-    console.log('AI聊天请求数据:', requestData)
-    
-    const token = localStorage.getItem('token')
-    const response = await fetch(getChatApiUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        messages: requestData.messages,
-        model: requestData.model || AI_CONFIG.DEFAULT_MODEL,
-        max_tokens: requestData.max_tokens || AI_CONFIG.DEFAULT_MAX_TOKENS,
-        temperature: requestData.temperature || AI_CONFIG.DEFAULT_TEMPERATURE,
-        top_p: requestData.top_p || AI_CONFIG.DEFAULT_TOP_P,
-        stream: requestData.stream || false,
-        system_prompt: requestData.system_prompt || 'You are a helpful assistant.'
-      }),
-      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
-    })
-
-    console.log('AI聊天响应状态:', response.status)
-    console.log('AI聊天响应头:', Object.fromEntries(response.headers.entries()))
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('AI聊天HTTP错误:', response.status, errorText)
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-    }
-
-    const data = await response.json()
-    console.log('AI聊天响应数据:', data)
-    return data
-  } catch (error) {
-    console.error('AI聊天请求失败:', error)
-    throw error
-  }
-}
-
-// 检查AI服务状态
-export const checkAIStatus = async (): Promise<boolean> => {
-  try {
-    // 获取token
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.warn('AI状态检查：未找到认证token')
-      return false
-    }
-
-    // 使用实际的聊天接口进行测试
-    const testRequest: ChatRequest = {
-      messages: [
-        {
-          role: 'user',
-          content: '测试消息'
-        }
-      ],
-      max_tokens: 10,
-      temperature: 0.7,
-      stream: false
-    }
-
-    console.log('AI状态检查：发送测试请求')
-    
-    const response = await fetch(getChatApiUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(testRequest),
-      signal: AbortSignal.timeout(10000) // 10秒超时
-    })
-    
-    console.log('AI状态检查响应状态:', response.status)
-    
-    // 检查认证相关错误
-    if (response.status === 401 || response.status === 403) {
-      console.warn('AI状态检查：认证失败')
-      return false
-    }
-
-    // 检查服务是否存在
-    if (response.status === 404) {
-      console.warn('AI状态检查：服务端点不存在')
-      return false
-    }
-
-    // 检查服务器错误
-    if (response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504) {
-      console.warn('AI状态检查：服务器错误', response.status)
-      return false
-    }
-
-    // 检查响应类型
-    const contentType = response.headers.get('content-type')
-    if (!contentType || !contentType.includes('application/json')) {
-      console.warn('AI状态检查：响应类型不正确', contentType)
-      return false
-    }
-
-    // 尝试解析响应
-    if (response.ok) {
-      try {
-        const data = await response.json()
-        if (data && (data.response || data.generated_text)) {
-          console.log('AI状态检查：服务正常运行')
-          return true
-        } else {
-          console.warn('AI状态检查：响应格式不正确')
-          return false
-        }
-      } catch (error) {
-        console.warn('AI状态检查：响应解析失败', error)
-        return false
-      }
-    }
-    
-    console.warn('AI状态检查：服务响应异常', response.status)
-    return false
-    
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      console.warn('AI状态检查：请求超时')
-    } else {
-      console.error('AI状态检查失败:', error)
-    }
-    return false
-  }
 }
 
 // AI审核助手API
@@ -502,5 +504,34 @@ export const getClubRecommendations = async (request: ClubRecommendRequest): Pro
   } catch (error) {
     console.error('AI智能推荐社团请求失败:', error)
     throw error
+  }
+}
+
+// 修改checkAIStatus函数使用统一的请求处理
+export const checkAIStatus = async (): Promise<boolean> => {
+  try {
+    const testRequest: ChatRequest = {
+      messages: [
+        {
+          role: 'user',
+          content: AI_CONFIG.TEST_REQUEST.content
+        }
+      ],
+      max_tokens: AI_CONFIG.TEST_REQUEST.max_tokens,
+      temperature: AI_CONFIG.TEST_REQUEST.temperature,
+      stream: false
+    }
+
+    await makeAIRequest(
+      getChatApiUrl(),
+      testRequest,
+      { timeout: AI_CONFIG.HEALTH_CHECK_TIMEOUT }
+    )
+    
+    console.log('AI状态检查：服务正常运行')
+    return true
+  } catch (error) {
+    console.warn('AI状态检查失败:', error instanceof Error ? error.message : error)
+    return false
   }
 } 

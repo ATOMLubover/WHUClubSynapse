@@ -204,31 +204,6 @@
           </div>
         </el-card>
 
-        <!-- 推荐给你 -->
-        <el-card v-if="authStore.isLoggedIn" class="sidebar-card">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Star /></el-icon>
-              <span>推荐给你</span>
-            </div>
-          </template>
-          <div class="recommend-list">
-            <div
-              v-for="club in clubStore.recommendedClubs"
-              :key="club.club_id"
-              class="recommend-item"
-              @click="goToClub(club.club_id)"
-            >
-              <el-image :src="club.logo_url" fit="cover" class="recommend-image" />
-              <div class="recommend-info">
-                <div class="recommend-name">{{ club.club_name }}</div>
-                <el-tag :type="getCategoryType(club.category)" size="small">
-                  {{ club.category }}
-                </el-tag>
-              </div>
-            </div>
-          </div>
-        </el-card>
 
         <!-- 快速入口 -->
         <el-card v-if="authStore.isLoggedIn && !authStore.isGuest" class="sidebar-card">

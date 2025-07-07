@@ -1,0 +1,2087 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "username": "user_0001",
+      "email": "user0001@example.com",
+      "role": "admin",
+      "created_at": "2025-01-25T11:02:36.000000",
+      "updated_at": "2025-01-26T11:02:36.000000",
+      "last_active_at": "2025-01-26T23:34:36.000000",
+      "extension": {
+        "realName": "周涛",
+        "studentId": "20236170",
+        "major": "软件工程",
+        "bio": "专注于数据分析",
+        "preferences": {
+          "interestedCategories": [
+            "阅读",
+            "运动",
+            "音乐"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "开朗外向",
+          "独立思考"
+        ],
+        "phone": "13057013952"
+      }
+    },
+    {
+      "user_id": 2,
+      "username": "user_0002",
+      "email": "user0002@example.com",
+      "role": "admin",
+      "created_at": "2025-01-01T11:02:36.000000",
+      "updated_at": "2025-01-04T11:02:36.000000",
+      "last_active_at": "2025-01-04T17:58:36.000000",
+      "extension": {
+        "realName": "李娜",
+        "studentId": "20236268",
+        "major": "人工智能",
+        "bio": "热衷于技术创新",
+        "preferences": {
+          "interestedCategories": [
+            "游戏",
+            "旅行"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考"
+        ],
+        "phone": "13198126929"
+      }
+    },
+    {
+      "user_id": 3,
+      "username": "user_0003",
+      "email": "user0003@example.com",
+      "role": "user",
+      "created_at": "2025-04-17T11:02:36.000000",
+      "updated_at": "2025-04-22T11:02:36.000000",
+      "last_active_at": "2025-04-22T23:28:36.000000",
+      "extension": {
+        "realName": "赵磊",
+        "studentId": "20231391",
+        "major": "通信工程",
+        "bio": "积极向上，乐于学习",
+        "preferences": {
+          "interestedCategories": [
+            "旅行",
+            "游戏"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "逻辑清晰",
+          "学习能力强"
+        ],
+        "phone": "13476426347"
+      }
+    },
+    {
+      "user_id": 4,
+      "username": "user_0004",
+      "email": "user0004@example.com",
+      "role": "user",
+      "created_at": "2025-03-19T11:03:47.000000",
+      "updated_at": "2025-03-24T11:03:47.000000",
+      "last_active_at": "2025-03-25T08:27:47.000000",
+      "extension": {
+        "realName": "何丹",
+        "studentId": "20234083",
+        "major": "自动化",
+        "bio": "积极向上，乐于学习",
+        "preferences": {
+          "interestedCategories": [
+            "阅读",
+            "金融"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "耐心细致",
+          "责任心强",
+          "沉着冷静"
+        ],
+        "phone": "13645875997"
+      }
+    },
+    {
+      "user_id": 5,
+      "username": "user_0005",
+      "email": "user0005@example.com",
+      "role": "admin",
+      "created_at": "2025-03-22T11:03:47.000000",
+      "updated_at": "2025-03-27T11:03:47.000000",
+      "last_active_at": "2025-03-27T15:43:47.000000",
+      "extension": {
+        "realName": "陈洁",
+        "studentId": "20233239",
+        "major": "传播学",
+        "bio": "热爱编程和篮球",
+        "preferences": {
+          "interestedCategories": [
+            "教育",
+            "科技",
+            "健康",
+            "电影"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "独立思考",
+          "逻辑清晰",
+          "勇于担当"
+        ],
+        "phone": "13682439169"
+      }
+    },
+    {
+      "user_id": 6,
+      "username": "user_0006",
+      "email": "user0006@example.com",
+      "role": "admin",
+      "created_at": "2025-03-03T11:03:47.000000",
+      "updated_at": "2025-03-10T11:03:47.000000",
+      "last_active_at": "2025-03-10T14:09:47.000000",
+      "extension": {
+        "realName": "高飞",
+        "studentId": "20232544",
+        "major": "机械工程",
+        "bio": "擅长团队协作",
+        "preferences": {
+          "interestedCategories": [
+            "摄影",
+            "美食"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "责任心强",
+          "幽默风趣"
+        ],
+        "phone": "13988746261"
+      }
+    },
+    {
+      "user_id": 7,
+      "username": "user_0007",
+      "email": "user0007@example.com",
+      "role": "admin",
+      "created_at": "2024-11-13T11:23:34.000000+08:00",
+      "updated_at": "2025-05-30T11:23:34.000000+08:00",
+      "last_active_at": "2025-07-07T08:54:34.000000+08:00",
+      "extension": {
+        "realName": "李娜",
+        "studentId": "20235687",
+        "major": "生物医学工程",
+        "bio": "喜欢探索未知领域",
+        "preferences": {
+          "interestedCategories": [
+            "文化",
+            "自然",
+            "时尚",
+            "历史",
+            "美食"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "沉着冷静",
+          "善于沟通",
+          "学习能力强",
+          "幽默风趣"
+        ],
+        "phone": "13757024443"
+      }
+    },
+    {
+      "user_id": 8,
+      "username": "user_0008",
+      "email": "user0008@example.com",
+      "role": "admin",
+      "created_at": "2025-04-20T11:23:34.000000+08:00",
+      "updated_at": "2025-05-31T11:23:34.000000+08:00",
+      "last_active_at": "2025-07-07T08:22:34.000000+08:00",
+      "extension": {
+        "realName": "王伟",
+        "studentId": "20231815",
+        "major": "教育学",
+        "bio": "独立思考，勇于创新",
+        "preferences": {
+          "interestedCategories": [
+            "新闻",
+            "金融",
+            "摄影",
+            "阅读"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考"
+        ],
+        "phone": "13671798942"
+      }
+    },
+    {
+      "user_id": 9,
+      "username": "user_0009",
+      "email": "user0009@example.com",
+      "role": "admin",
+      "created_at": "2025-03-02T11:23:34.000000+08:00",
+      "updated_at": "2025-05-12T11:23:34.000000+08:00",
+      "last_active_at": "2025-07-06T16:58:34.000000+08:00",
+      "extension": {
+        "realName": "王伟",
+        "studentId": "20232516",
+        "major": "人工智能",
+        "bio": "喜欢探索未知领域",
+        "preferences": {
+          "interestedCategories": [
+            "游戏",
+            "艺术",
+            "生活",
+            "金融",
+            "运动"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "组织能力强",
+          "富有创造力"
+        ],
+        "phone": "13319503286"
+      }
+    },
+    {
+      "user_id": 10,
+      "username": "user_0010",
+      "email": "user0010@example.com",
+      "role": "admin",
+      "created_at": "2024-09-07T11:24:03.000000+08:00",
+      "updated_at": "2024-10-01T11:24:03.000000+08:00",
+      "last_active_at": "2024-10-14T10:21:03.000000+08:00",
+      "extension": {
+        "realName": "姜文",
+        "studentId": "20235259",
+        "major": "机械工程",
+        "bio": "热爱编程和篮球",
+        "preferences": {
+          "interestedCategories": [
+            "文化",
+            "商业",
+            "电影",
+            "旅行",
+            "历史"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "学习能力强"
+        ],
+        "phone": "13472419978"
+      }
+    },
+    {
+      "user_id": 11,
+      "username": "user_0011",
+      "email": "user0011@example.com",
+      "role": "admin",
+      "created_at": "2025-01-20T11:24:03.000000+08:00",
+      "updated_at": "2025-02-06T11:24:03.000000+08:00",
+      "last_active_at": "2025-03-03T11:30:03.000000+08:00",
+      "extension": {
+        "realName": "吴迪",
+        "studentId": "20231378",
+        "major": "传播学",
+        "bio": "享受生活，乐于分享",
+        "preferences": {
+          "interestedCategories": [
+            "金融"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "开朗外向"
+        ],
+        "phone": "13329633879"
+      }
+    },
+    {
+      "user_id": 12,
+      "username": "user_0012",
+      "email": "user0012@example.com",
+      "role": "user",
+      "created_at": "2025-04-30T11:24:03.000000+08:00",
+      "updated_at": "2025-05-10T11:24:03.000000+08:00",
+      "last_active_at": "2025-05-13T02:09:03.000000+08:00",
+      "extension": {
+        "realName": "高飞",
+        "studentId": "20236750",
+        "major": "统计学",
+        "bio": "热衷于公益事业",
+        "preferences": {
+          "interestedCategories": [
+            "旅游",
+            "公益",
+            "金融",
+            "美食"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "自我驱动",
+          "沉着冷静",
+          "善解人意"
+        ],
+        "phone": "13765107269"
+      }
+    },
+    {
+      "user_id": 13,
+      "username": "user_0013",
+      "email": "user0013@example.com",
+      "role": "admin",
+      "created_at": "2024-09-08T11:24:41.000000+08:00",
+      "updated_at": "2024-09-17T11:24:41.000000+08:00",
+      "last_active_at": "2024-09-17T11:27:41.000000+08:00",
+      "extension": {
+        "realName": "吴丽",
+        "studentId": "20235940",
+        "major": "汉语言文学",
+        "bio": "追求卓越，不断进步",
+        "preferences": {
+          "interestedCategories": [
+            "育儿",
+            "旅游",
+            "金融",
+            "历史"
+          ]
+        },
+        "tags": [
+          "抗压能力强",
+          "适应力强",
+          "自我驱动"
+        ],
+        "phone": "13426219488"
+      }
+    },
+    {
+      "user_id": 14,
+      "username": "user_0014",
+      "email": "user0014@example.com",
+      "role": "user",
+      "created_at": "2024-08-01T11:24:41.000000+08:00",
+      "updated_at": "2024-08-16T11:24:41.000000+08:00",
+      "last_active_at": "2024-08-16T11:32:41.000000+08:00",
+      "extension": {
+        "realName": "林志玲",
+        "studentId": "20239062",
+        "major": "市场营销",
+        "bio": "喜欢探索未知领域",
+        "preferences": {
+          "interestedCategories": [
+            "阅读",
+            "时尚",
+            "文化",
+            "游戏",
+            "体育"
+          ]
+        },
+        "tags": [
+          "创新思维",
+          "耐心细致",
+          "善于沟通"
+        ],
+        "phone": "13693409160"
+      }
+    },
+    {
+      "user_id": 15,
+      "username": "user_0015",
+      "email": "user0015@example.com",
+      "role": "user",
+      "created_at": "2025-04-22T11:24:41.000000+08:00",
+      "updated_at": "2025-05-18T11:24:41.000000+08:00",
+      "last_active_at": "2025-05-18T11:59:41.000000+08:00",
+      "extension": {
+        "realName": "赵薇",
+        "studentId": "20235338",
+        "major": "哲学",
+        "bio": "热爱大自然",
+        "preferences": {
+          "interestedCategories": [
+            "教育",
+            "艺术",
+            "音乐"
+          ]
+        },
+        "tags": [
+          "幽默风趣",
+          "自我驱动",
+          "积极乐观"
+        ],
+        "phone": "13428801931"
+      }
+    },
+    {
+      "user_id": 16,
+      "username": "user_0016",
+      "email": "user0016@example.com",
+      "role": "user",
+      "created_at": "2024-08-01T11:56:21.000000+08:00",
+      "updated_at": "2024-09-09T11:56:21.000000+08:00",
+      "last_active_at": "2025-02-20T13:43:21.000000+08:00",
+      "extension": {
+        "realName": "黄磊",
+        "studentId": "20236191",
+        "major": "心理学",
+        "bio": "享受瑜伽和冥想的平静",
+        "preferences": {
+          "interestedCategories": [
+            "美食烹饪",
+            "游戏",
+            "科学",
+            "自然"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "责任心强",
+          "适应力强"
+        ],
+        "phone": "13573173824"
+      }
+    },
+    {
+      "user_id": 17,
+      "username": "user_0017",
+      "email": "user0017@example.com",
+      "role": "user",
+      "created_at": "2024-08-17T11:56:21.000000+08:00",
+      "updated_at": "2025-06-03T11:56:21.000000+08:00",
+      "last_active_at": "2025-06-27T21:20:21.000000+08:00",
+      "extension": {
+        "realName": "彭于晏",
+        "studentId": "20238197",
+        "major": "护理学",
+        "bio": "积极向上，乐于学习",
+        "preferences": {
+          "interestedCategories": [
+            "历史",
+            "游戏",
+            "运动",
+            "时尚",
+            "公益"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "有条不紊",
+          "决策果断"
+        ],
+        "phone": "13932997341"
+      }
+    },
+    {
+      "user_id": 18,
+      "username": "user_0018",
+      "email": "user0018@example.com",
+      "role": "user",
+      "created_at": "2024-08-23T11:56:21.000000+08:00",
+      "updated_at": "2025-05-10T11:56:21.000000+08:00",
+      "last_active_at": "2025-06-29T16:12:21.000000+08:00",
+      "extension": {
+        "realName": "彭于晏",
+        "studentId": "20239253",
+        "major": "药学",
+        "bio": "热衷于公益事业",
+        "preferences": {
+          "interestedCategories": [
+            "音乐",
+            "育儿",
+            "阅读"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有同情心",
+          "幽默风趣",
+          "独立思考",
+          "细心周到"
+        ],
+        "phone": "13475135538"
+      }
+    },
+    {
+      "user_id": 19,
+      "username": "user_0019",
+      "email": "user0019@example.com",
+      "role": "user",
+      "created_at": "2025-06-11T11:57:44.000000+08:00",
+      "updated_at": "2025-06-24T11:57:44.000000+08:00",
+      "last_active_at": "2025-06-25T18:43:44.000000+08:00",
+      "extension": {
+        "realName": "迪丽热巴",
+        "studentId": "20232100",
+        "major": "自动化",
+        "bio": "热衷于技术创新",
+        "preferences": {
+          "interestedCategories": [
+            "游戏",
+            "宠物",
+            "娱乐"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考",
+          "富有同情心"
+        ],
+        "phone": "13148712448"
+      }
+    },
+    {
+      "user_id": 20,
+      "username": "user_0020",
+      "email": "user0020@example.com",
+      "role": "admin",
+      "created_at": "2024-07-15T11:57:44.000000+08:00",
+      "updated_at": "2025-06-23T11:57:44.000000+08:00",
+      "last_active_at": "2025-07-02T23:06:44.000000+08:00",
+      "extension": {
+        "realName": "刘德华",
+        "studentId": "20237404",
+        "major": "数学",
+        "bio": "对新能源充满兴趣",
+        "preferences": {
+          "interestedCategories": [
+            "心理健康",
+            "投资理财",
+            "职场"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "抗压能力强",
+          "富有同情心",
+          "开朗外向",
+          "积极乐观"
+        ],
+        "phone": "13642552693"
+      }
+    },
+    {
+      "user_id": 21,
+      "username": "user_0021",
+      "email": "user0021@example.com",
+      "role": "admin",
+      "created_at": "2024-12-28T11:57:44.000000+08:00",
+      "updated_at": "2025-06-24T11:57:44.000000+08:00",
+      "last_active_at": "2025-06-24T16:47:44.000000+08:00",
+      "extension": {
+        "realName": "王俊凯",
+        "studentId": "20238541",
+        "major": "建筑学",
+        "bio": "擅长团队协作",
+        "preferences": {
+          "interestedCategories": [
+            "科学",
+            "历史",
+            "电影",
+            "阅读",
+            "手工艺"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "决策果断"
+        ],
+        "phone": "13088509562"
+      }
+    },
+    {
+      "user_id": 22,
+      "username": "user_0022",
+      "email": "user0022@example.com",
+      "role": "user",
+      "created_at": "2025-05-11T11:58:06.000000+08:00",
+      "updated_at": "2025-05-26T11:58:06.000000+08:00",
+      "last_active_at": "2025-06-01T19:14:06.000000+08:00",
+      "extension": {
+        "realName": "谢霆锋",
+        "studentId": "20235848",
+        "major": "医学影像学",
+        "bio": "善于跨文化交流",
+        "preferences": {
+          "interestedCategories": [
+            "生活",
+            "健康",
+            "阅读",
+            "投资理财",
+            "历史"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "团队合作",
+          "耐心细致",
+          "积极乐观"
+        ],
+        "phone": "13786425884"
+      }
+    },
+    {
+      "user_id": 23,
+      "username": "user_0023",
+      "email": "user0023@example.com",
+      "role": "admin",
+      "created_at": "2024-10-13T11:58:06.000000+08:00",
+      "updated_at": "2025-04-16T11:58:06.000000+08:00",
+      "last_active_at": "2025-06-07T17:19:06.000000+08:00",
+      "extension": {
+        "realName": "方圆",
+        "studentId": "20231550",
+        "major": "社会工作",
+        "bio": "擅长解决复杂问题",
+        "preferences": {
+          "interestedCategories": [
+            "新闻",
+            "美食烹饪",
+            "动物保护",
+            "健康"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "条理清晰",
+          "勇于担当",
+          "创新思维",
+          "决策果断"
+        ],
+        "phone": "13393237011"
+      }
+    },
+    {
+      "user_id": 24,
+      "username": "user_0024",
+      "email": "user0024@example.com",
+      "role": "admin",
+      "created_at": "2025-03-06T11:58:06.000000+08:00",
+      "updated_at": "2025-04-05T11:58:06.000000+08:00",
+      "last_active_at": "2025-05-14T12:53:06.000000+08:00",
+      "extension": {
+        "realName": "吴丽",
+        "studentId": "20235231",
+        "major": "体育学",
+        "bio": "享受解决复杂问题的过程",
+        "preferences": {
+          "interestedCategories": [
+            "音乐",
+            "育儿"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "责任心强"
+        ],
+        "phone": "13069391672"
+      }
+    },
+    {
+      "user_id": 25,
+      "username": "user_0025",
+      "email": "user0025@example.com",
+      "role": "admin",
+      "created_at": "2025-06-15T11:58:28.000000+08:00",
+      "updated_at": "2025-06-27T11:58:28.000000+08:00",
+      "last_active_at": "2025-07-06T00:22:28.000000+08:00",
+      "extension": {
+        "realName": "成龙",
+        "studentId": "20232088",
+        "major": "数据科学与大数据技术",
+        "bio": "享受生活，乐于分享",
+        "preferences": {
+          "interestedCategories": [
+            "美食",
+            "职场"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "自我驱动",
+          "积极主动",
+          "富有创造力"
+        ],
+        "phone": "13014065179"
+      }
+    },
+    {
+      "user_id": 26,
+      "username": "user_0026",
+      "email": "user0026@example.com",
+      "role": "user",
+      "created_at": "2024-10-24T11:58:28.000000+08:00",
+      "updated_at": "2025-06-06T11:58:28.000000+08:00",
+      "last_active_at": "2025-06-23T01:35:28.000000+08:00",
+      "extension": {
+        "realName": "杨洋",
+        "studentId": "20237854",
+        "major": "计算机科学",
+        "bio": "擅长解决复杂问题",
+        "preferences": {
+          "interestedCategories": [
+            "美食烹饪"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "追求完美",
+          "富有激情"
+        ],
+        "phone": "13235122180"
+      }
+    },
+    {
+      "user_id": 27,
+      "username": "user_0027",
+      "email": "user0027@example.com",
+      "role": "user",
+      "created_at": "2024-08-24T11:58:28.000000+08:00",
+      "updated_at": "2024-11-04T11:58:28.000000+08:00",
+      "last_active_at": "2025-01-27T00:14:28.000000+08:00",
+      "extension": {
+        "realName": "章子怡",
+        "studentId": "20231240",
+        "major": "材料科学与工程",
+        "bio": "热衷于公益事业",
+        "preferences": {
+          "interestedCategories": [
+            "哲学",
+            "运动",
+            "历史",
+            "职业发展",
+            "户外探险"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "抗压能力强",
+          "团队合作",
+          "富有激情",
+          "批判性思维"
+        ],
+        "phone": "13547384316"
+      }
+    },
+    {
+      "user_id": 28,
+      "username": "user_0028",
+      "email": "user0028@example.com",
+      "role": "user",
+      "created_at": "2024-07-10T11:58:58.000000+08:00",
+      "updated_at": "2025-02-05T11:58:58.000000+08:00",
+      "last_active_at": "2025-06-19T14:10:58.000000+08:00",
+      "extension": {
+        "realName": "梁朝伟",
+        "studentId": "20239765",
+        "major": "工商管理",
+        "bio": "沉迷于科幻小说",
+        "preferences": {
+          "interestedCategories": [
+            "科技"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "高效执行"
+        ],
+        "phone": "13635757613"
+      }
+    },
+    {
+      "user_id": 29,
+      "username": "user_0029",
+      "email": "user0029@example.com",
+      "role": "admin",
+      "created_at": "2025-02-01T11:58:58.000000+08:00",
+      "updated_at": "2025-05-15T11:58:58.000000+08:00",
+      "last_active_at": "2025-05-28T05:43:58.000000+08:00",
+      "extension": {
+        "realName": "蔡华",
+        "studentId": "20237462",
+        "major": "物理学",
+        "bio": "乐于助人，富有同情心",
+        "preferences": {
+          "interestedCategories": [
+            "历史",
+            "数字艺术",
+            "游戏",
+            "机器人"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "细心周到",
+          "正直诚信"
+        ],
+        "phone": "13189869251"
+      }
+    },
+    {
+      "user_id": 30,
+      "username": "user_0030",
+      "email": "user0030@example.com",
+      "role": "admin",
+      "created_at": "2025-01-04T11:58:58.000000+08:00",
+      "updated_at": "2025-01-27T11:58:58.000000+08:00",
+      "last_active_at": "2025-02-18T05:04:58.000000+08:00",
+      "extension": {
+        "realName": "朱莉",
+        "studentId": "20232555",
+        "major": "经济学",
+        "bio": "喜欢阅读和写作",
+        "preferences": {
+          "interestedCategories": [
+            "社会"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "追求完美",
+          "自我驱动",
+          "创新思维",
+          "条理清晰"
+        ],
+        "phone": "13738291331"
+      }
+    },
+    {
+      "user_id": 31,
+      "username": "user_0031",
+      "email": "user0031@example.com",
+      "role": "user",
+      "created_at": "2024-10-18T11:59:16.000000+08:00",
+      "updated_at": "2025-05-23T11:59:16.000000+08:00",
+      "last_active_at": "2025-06-29T08:15:16.000000+08:00",
+      "extension": {
+        "realName": "梁家辉",
+        "studentId": "20234123",
+        "major": "环境工程",
+        "bio": "热衷于学习新技能",
+        "preferences": {
+          "interestedCategories": [
+            "职场",
+            "宠物",
+            "金融",
+            "历史"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "灵活应变",
+          "高效率",
+          "自律"
+        ],
+        "phone": "13912345678"
+      }
+    },
+    {
+      "user_id": 32,
+      "username": "user_0032",
+      "email": "user0032@example.com",
+      "role": "admin",
+      "created_at": "2025-01-05T11:59:16.000000+08:00",
+      "updated_at": "2025-06-01T11:59:16.000000+08:00",
+      "last_active_at": "2025-07-06T03:40:16.000000+08:00",
+      "extension": {
+        "realName": "张家辉",
+        "studentId": "20238765",
+        "major": "人工智能",
+        "bio": "对人工智能充满热情",
+        "preferences": {
+          "interestedCategories": [
+            "科技",
+            "数字艺术",
+            "游戏"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "逻辑清晰",
+          "创新思维",
+          "批判性思维"
+        ],
+        "phone": "13887654321"
+      }
+    },
+    {
+      "user_id": 33,
+      "username": "user_0033",
+      "email": "user0033@example.com",
+      "role": "user",
+      "created_at": "2024-09-22T11:59:16.000000+08:00",
+      "updated_at": "2025-04-10T11:59:16.000000+08:00",
+      "last_active_at": "2025-06-15T22:05:16.000000+08:00",
+      "extension": {
+        "realName": "古丽娜扎",
+        "studentId": "20235678",
+        "major": "金融学",
+        "bio": "注重个人成长",
+        "preferences": {
+          "interestedCategories": [
+            "投资理财",
+            "健康",
+            "教育"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "责任心强",
+          "严谨细致",
+          "富有远见"
+        ],
+        "phone": "13765432109"
+      }
+    },
+    {
+      "user_id": 34,
+      "username": "user_0034",
+      "email": "user0034@example.com",
+      "role": "user",
+      "created_at": "2024-09-07T11:59:36.000000+08:00",
+      "updated_at": "2025-03-20T11:59:36.000000+08:00",
+      "last_active_at": "2025-05-18T19:30:36.000000+08:00",
+      "extension": {
+        "realName": "唐嫣",
+        "studentId": "20231029",
+        "major": "国际经济与贸易",
+        "bio": "热衷于极限运动",
+        "preferences": {
+          "interestedCategories": [
+            "旅行",
+            "户外探险",
+            "运动",
+            "健康"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有冒险精神",
+          "乐观向上",
+          "积极主动"
+        ],
+        "phone": "13698765432"
+      }
+    },
+    {
+      "user_id": 35,
+      "username": "user_0035",
+      "email": "user0035@example.com",
+      "role": "admin",
+      "created_at": "2024-11-25T11:59:36.000000+08:00",
+      "updated_at": "2025-06-05T11:59:36.000000+08:00",
+      "last_active_at": "2025-07-07T08:10:36.000000+08:00",
+      "extension": {
+        "realName": "杨幂",
+        "studentId": "20235567",
+        "major": "计算机科学",
+        "bio": "热爱编程和篮球",
+        "preferences": {
+          "interestedCategories": [
+            "科技",
+            "游戏",
+            "数字艺术"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "逻辑清晰",
+          "学习能力强",
+          "高效率",
+          "批判性思维"
+        ],
+        "phone": "13876543210"
+      }
+    },
+    {
+      "user_id": 36,
+      "username": "user_0036",
+      "email": "user0036@example.com",
+      "role": "user",
+      "created_at": "2025-03-01T11:59:36.000000+08:00",
+      "updated_at": "2025-06-20T11:59:36.000000+08:00",
+      "last_active_at": "2025-07-06T15:25:36.000000+08:00",
+      "extension": {
+        "realName": "刘德华",
+        "studentId": "20239012",
+        "major": "音乐学",
+        "bio": "享受生活，乐于分享",
+        "preferences": {
+          "interestedCategories": [
+            "音乐",
+            "艺术",
+            "电影",
+            "娱乐"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "幽默风趣",
+          "善于沟通",
+          "开朗外向"
+        ],
+        "phone": "13567890123"
+      }
+    },
+    {
+      "user_id": 37,
+      "username": "user_0037",
+      "email": "user0037@example.com",
+      "role": "user",
+      "created_at": "2024-07-20T11:59:36.000000+08:00",
+      "updated_at": "2025-01-15T11:59:36.000000+08:00",
+      "last_active_at": "2025-06-01T10:45:36.000000+08:00",
+      "extension": {
+        "realName": "周杰伦",
+        "studentId": "20234567",
+        "major": "美术学",
+        "bio": "热衷于艺术创作",
+        "preferences": {
+          "interestedCategories": [
+            "艺术",
+            "摄影",
+            "文化",
+            "历史"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "富有创造力",
+          "独立思考",
+          "追求完美"
+        ],
+        "phone": "13789012345"
+      }
+    },
+    {
+      "user_id": 38,
+      "username": "user_0038",
+      "email": "user0038@example.com",
+      "role": "admin",
+      "created_at": "2025-04-01T11:59:36.000000+08:00",
+      "updated_at": "2025-06-10T11:59:36.000000+08:00",
+      "last_active_at": "2025-07-05T09:00:36.000000+08:00",
+      "extension": {
+        "realName": "林志玲",
+        "studentId": "20237890",
+        "major": "行政管理",
+        "bio": "擅长团队协作",
+        "preferences": {
+          "interestedCategories": [
+            "职场",
+            "教育",
+            "社会"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "组织能力强",
+          "善于沟通",
+          "执行力强"
+        ],
+        "phone": "13901234567"
+      }
+    },
+    {
+      "user_id": 39,
+      "username": "user_0039",
+      "email": "user0039@example.com",
+      "role": "user",
+      "created_at": "2024-12-12T11:59:36.000000+08:00",
+      "updated_at": "2025-05-01T11:59:36.000000+08:00",
+      "last_active_at": "2025-06-20T17:50:36.000000+08:00",
+      "extension": {
+        "realName": "彭于晏",
+        "studentId": "20232345",
+        "major": "体育学",
+        "bio": "喜欢挑战自我",
+        "preferences": {
+          "interestedCategories": [
+            "运动",
+            "户外探险",
+            "健康"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "自我驱动",
+          "积极乐观",
+          "适应力强"
+        ],
+        "phone": "13023456789"
+      }
+    },
+    {
+      "user_id": 40,
+      "username": "user_0040",
+      "email": "user0040@example.com",
+      "role": "admin",
+      "created_at": "2025-02-18T11:59:36.000000+08:00",
+      "updated_at": "2025-06-25T11:59:36.000000+08:00",
+      "last_active_at": "2025-07-07T05:30:36.000000+08:00",
+      "extension": {
+        "realName": "迪丽热巴",
+        "studentId": "20236789",
+        "major": "设计学",
+        "bio": "热衷于艺术创作",
+        "preferences": {
+          "interestedCategories": [
+            "艺术",
+            "时尚",
+            "摄影",
+            "数字艺术"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有创造力",
+          "注重细节",
+          "追求完美"
+        ],
+        "phone": "13198765432"
+      }
+    },
+    {
+      "user_id": 41,
+      "username": "user_0041",
+      "email": "user0041@example.com",
+      "role": "user",
+      "created_at": "2024-08-05T11:59:36.000000+08:00",
+      "updated_at": "2025-03-01T11:59:36.000000+08:00",
+      "last_active_at": "2025-06-11T12:15:36.000000+08:00",
+      "extension": {
+        "realName": "易烊千玺",
+        "studentId": "20233456",
+        "major": "新闻学",
+        "bio": "喜欢阅读和写作",
+        "preferences": {
+          "interestedCategories": [
+            "新闻",
+            "阅读",
+            "历史",
+            "文化"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "逻辑清晰",
+          "表达清晰",
+          "批判性思维"
+        ],
+        "phone": "13210987654"
+      }
+    },
+    {
+      "user_id": 42,
+      "username": "user_0042",
+      "email": "user0042@example.com",
+      "role": "user",
+      "created_at": "2025-05-10T11:59:36.000000+08:00",
+      "updated_at": "2025-06-20T11:59:36.000000+08:00",
+      "last_active_at": "2025-07-06T23:40:36.000000+08:00",
+      "extension": {
+        "realName": "王俊凯",
+        "studentId": "20237654",
+        "major": "药学",
+        "bio": "热衷于公益事业",
+        "preferences": {
+          "interestedCategories": [
+            "公益",
+            "健康",
+            "社会",
+            "环保"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "乐于助人",
+          "富有同情心",
+          "正直诚信"
+        ],
+        "phone": "13345678901"
+      }
+    },
+    {
+      "user_id": 43,
+      "username": "user_0043",
+      "email": "user0043@example.com",
+      "role": "admin",
+      "created_at": "2024-10-01T11:59:36.000000+08:00",
+      "updated_at": "2025-04-15T11:59:36.000000+08:00",
+      "last_active_at": "2025-06-28T16:00:36.000000+08:00",
+      "extension": {
+        "realName": "古天乐",
+        "studentId": "20239988",
+        "major": "临床医学",
+        "bio": "擅长解决复杂问题",
+        "preferences": {
+          "interestedCategories": [
+            "科学",
+            "健康",
+            "医学"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "沉着冷静",
+          "决策果断",
+          "抗压能力强",
+          "严谨细致"
+        ],
+        "phone": "13490123456"
+      }
+    },
+    {
+      "user_id": 44,
+      "username": "user_0044",
+      "email": "user0044@example.com",
+      "role": "user",
+      "created_at": "2024-11-08T12:00:01.000000+08:00",
+      "updated_at": "2025-05-19T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-25T07:30:01.000000+08:00",
+      "extension": {
+        "realName": "郑秀文",
+        "studentId": "20231122",
+        "major": "工商管理",
+        "bio": "热衷于技术创新",
+        "preferences": {
+          "interestedCategories": [
+            "商业",
+            "金融",
+            "职场"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "创新思维",
+          "高效率",
+          "决策果断"
+        ],
+        "phone": "13911223344"
+      }
+    },
+    {
+      "user_id": 45,
+      "username": "user_0045",
+      "email": "user0045@example.com",
+      "role": "admin",
+      "created_at": "2024-07-25T12:00:01.000000+08:00",
+      "updated_at": "2025-01-01T12:00:01.000000+08:00",
+      "last_active_at": "2025-05-10T18:45:01.000000+08:00",
+      "extension": {
+        "realName": "梁朝伟",
+        "studentId": "20234455",
+        "major": "电影",
+        "bio": "喜欢阅读和写作",
+        "preferences": {
+          "interestedCategories": [
+            "电影",
+            "艺术",
+            "阅读",
+            "历史"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "细心周到",
+          "富有创造力",
+          "追求完美"
+        ],
+        "phone": "13876543210"
+      }
+    },
+    {
+      "user_id": 46,
+      "username": "user_0046",
+      "email": "user0046@example.com",
+      "role": "user",
+      "created_at": "2025-03-15T12:00:01.000000+08:00",
+      "updated_at": "2025-06-28T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-06T09:10:01.000000+08:00",
+      "extension": {
+        "realName": "章子怡",
+        "studentId": "20237788",
+        "major": "国际关系",
+        "bio": "善于跨文化交流",
+        "preferences": {
+          "interestedCategories": [
+            "文化",
+            "社会",
+            "新闻",
+            "公益"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "善于沟通",
+          "灵活应变",
+          "富有同情心"
+        ],
+        "phone": "13700112233"
+      }
+    },
+    {
+      "user_id": 47,
+      "username": "user_0047",
+      "email": "user0047@example.com",
+      "role": "user",
+      "created_at": "2024-08-01T12:00:01.000000+08:00",
+      "updated_at": "2025-02-10T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-15T21:20:01.000000+08:00",
+      "extension": {
+        "realName": "金城武",
+        "studentId": "20239900",
+        "major": "哲学",
+        "bio": "独立思考，勇于创新",
+        "preferences": {
+          "interestedCategories": [
+            "哲学",
+            "科学",
+            "历史",
+            "阅读"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考",
+          "批判性思维",
+          "好奇心强"
+        ],
+        "phone": "13622334455"
+      }
+    },
+    {
+      "user_id": 48,
+      "username": "user_0048",
+      "email": "user0048@example.com",
+      "role": "admin",
+      "created_at": "2025-04-20T12:00:01.000000+08:00",
+      "updated_at": "2025-06-05T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-07T02:05:01.000000+08:00",
+      "extension": {
+        "realName": "舒淇",
+        "studentId": "20235678",
+        "major": "表演艺术",
+        "bio": "享受生活，乐于分享",
+        "preferences": {
+          "interestedCategories": [
+            "艺术",
+            "时尚",
+            "美食",
+            "旅行"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "开朗外向",
+          "幽默风趣",
+          "善于倾听"
+        ],
+        "phone": "13588776655"
+      }
+    },
+    {
+      "user_id": 49,
+      "username": "user_0049",
+      "email": "user0049@example.com",
+      "role": "user",
+      "created_at": "2024-10-10T12:00:01.000000+08:00",
+      "updated_at": "2025-03-01T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-20T10:00:01.000000+08:00",
+      "extension": {
+        "realName": "周润发",
+        "studentId": "20231234",
+        "major": "会计学",
+        "bio": "擅长解决复杂问题",
+        "preferences": {
+          "interestedCategories": [
+            "金融",
+            "商业",
+            "职场",
+            "投资理财"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "严谨细致",
+          "条理清晰",
+          "逻辑清晰"
+        ],
+        "phone": "13399887766"
+      }
+    },
+    {
+      "user_id": 50,
+      "username": "user_0050",
+      "email": "user0050@example.com",
+      "role": "admin",
+      "created_at": "2025-01-01T12:00:01.000000+08:00",
+      "updated_at": "2025-06-15T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-07T00:15:01.000000+08:00",
+      "extension": {
+        "realName": "张曼玉",
+        "studentId": "20238877",
+        "major": "汉语言文学",
+        "bio": "热衷于艺术创作",
+        "preferences": {
+          "interestedCategories": [
+            "文学",
+            "艺术",
+            "历史",
+            "文化"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有创造力",
+          "追求完美",
+          "细心周到"
+        ],
+        "phone": "13455667788"
+      }
+    },
+    {
+      "user_id": 51,
+      "username": "user_0051",
+      "email": "user0051@example.com",
+      "role": "user",
+      "created_at": "2024-07-15T12:00:01.000000+08:00",
+      "updated_at": "2025-02-20T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-29T14:30:01.000000+08:00",
+      "extension": {
+        "realName": "黎明",
+        "studentId": "20233344",
+        "major": "音乐学",
+        "bio": "享受瑜伽和冥想的平静",
+        "preferences": {
+          "interestedCategories": [
+            "音乐",
+            "健康",
+            "心理健康"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "沉着冷静",
+          "积极乐观",
+          "适应力强"
+        ],
+        "phone": "13211223344"
+      }
+    },
+    {
+      "user_id": 52,
+      "username": "user_0052",
+      "email": "user0052@example.com",
+      "role": "user",
+      "created_at": "2025-05-05T12:00:01.000000+08:00",
+      "updated_at": "2025-06-25T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-06T19:50:01.000000+08:00",
+      "extension": {
+        "realName": "郭富城",
+        "studentId": "20236677",
+        "major": "体育学",
+        "bio": "热衷于极限运动",
+        "preferences": {
+          "interestedCategories": [
+            "运动",
+            "户外探险",
+            "健康",
+            "旅行"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有冒险精神",
+          "自我驱动",
+          "勇于担当"
+        ],
+        "phone": "13144556677"
+      }
+    },
+    {
+      "user_id": 53,
+      "username": "user_0053",
+      "email": "user0053@example.com",
+      "role": "admin",
+      "created_at": "2024-09-01T12:00:01.000000+08:00",
+      "updated_at": "2025-04-10T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-28T08:00:01.000000+08:00",
+      "extension": {
+        "realName": "刘青云",
+        "studentId": "20230099",
+        "major": "建筑学",
+        "bio": "独立思考，勇于创新",
+        "preferences": {
+          "interestedCategories": [
+            "科技",
+            "科学",
+            "建筑",
+            "环保"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考",
+          "创新思维",
+          "富有远见",
+          "注重细节"
+        ],
+        "phone": "13088990011"
+      }
+    },
+    {
+      "user_id": 44,
+      "username": "user_0044",
+      "email": "user0044@example.com",
+      "role": "user",
+      "created_at": "2024-11-08T12:00:01.000000+08:00",
+      "updated_at": "2025-05-19T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-25T07:30:01.000000+08:00",
+      "extension": {
+        "realName": "郑秀文",
+        "studentId": "20231122",
+        "major": "工商管理",
+        "bio": "热衷于技术创新",
+        "preferences": {
+          "interestedCategories": [
+            "商业",
+            "金融",
+            "职场"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "创新思维",
+          "高效率",
+          "决策果断"
+        ],
+        "phone": "13911223344"
+      }
+    },
+    {
+      "user_id": 45,
+      "username": "user_0045",
+      "email": "user0045@example.com",
+      "role": "admin",
+      "created_at": "2024-07-25T12:00:01.000000+08:00",
+      "updated_at": "2025-01-01T12:00:01.000000+08:00",
+      "last_active_at": "2025-05-10T18:45:01.000000+08:00",
+      "extension": {
+        "realName": "梁朝伟",
+        "studentId": "20234455",
+        "major": "电影",
+        "bio": "喜欢阅读和写作",
+        "preferences": {
+          "interestedCategories": [
+            "电影",
+            "艺术",
+            "阅读",
+            "历史"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": false,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "细心周到",
+          "富有创造力",
+          "追求完美"
+        ],
+        "phone": "13876543210"
+      }
+    },
+    {
+      "user_id": 46,
+      "username": "user_0046",
+      "email": "user0046@example.com",
+      "role": "user",
+      "created_at": "2025-03-15T12:00:01.000000+08:00",
+      "updated_at": "2025-06-28T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-06T09:10:01.000000+08:00",
+      "extension": {
+        "realName": "章子怡",
+        "studentId": "20237788",
+        "major": "国际关系",
+        "bio": "善于跨文化交流",
+        "preferences": {
+          "interestedCategories": [
+            "文化",
+            "社会",
+            "新闻",
+            "公益"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "善于沟通",
+          "灵活应变",
+          "富有同情心"
+        ],
+        "phone": "13700112233"
+      }
+    },
+    {
+      "user_id": 47,
+      "username": "user_0047",
+      "email": "user0047@example.com",
+      "role": "user",
+      "created_at": "2024-08-01T12:00:01.000000+08:00",
+      "updated_at": "2025-02-10T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-15T21:20:01.000000+08:00",
+      "extension": {
+        "realName": "金城武",
+        "studentId": "20239900",
+        "major": "哲学",
+        "bio": "独立思考，勇于创新",
+        "preferences": {
+          "interestedCategories": [
+            "哲学",
+            "科学",
+            "历史",
+            "阅读"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": false,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考",
+          "批判性思维",
+          "好奇心强"
+        ],
+        "phone": "13622334455"
+      }
+    },
+    {
+      "user_id": 48,
+      "username": "user_0048",
+      "email": "user0048@example.com",
+      "role": "admin",
+      "created_at": "2025-04-20T12:00:01.000000+08:00",
+      "updated_at": "2025-06-05T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-07T02:05:01.000000+08:00",
+      "extension": {
+        "realName": "舒淇",
+        "studentId": "20235678",
+        "major": "表演艺术",
+        "bio": "享受生活，乐于分享",
+        "preferences": {
+          "interestedCategories": [
+            "艺术",
+            "时尚",
+            "美食",
+            "旅行"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": true,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "开朗外向",
+          "幽默风趣",
+          "善于倾听"
+        ],
+        "phone": "13588776655"
+      }
+    },
+    {
+      "user_id": 49,
+      "username": "user_0049",
+      "email": "user0049@example.com",
+      "role": "user",
+      "created_at": "2024-10-10T12:00:01.000000+08:00",
+      "updated_at": "2025-03-01T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-20T10:00:01.000000+08:00",
+      "extension": {
+        "realName": "周润发",
+        "studentId": "20231234",
+        "major": "会计学",
+        "bio": "擅长解决复杂问题",
+        "preferences": {
+          "interestedCategories": [
+            "金融",
+            "商业",
+            "职场",
+            "投资理财"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "严谨细致",
+          "条理清晰",
+          "逻辑清晰"
+        ],
+        "phone": "13399887766"
+      }
+    },
+    {
+      "user_id": 50,
+      "username": "user_0050",
+      "email": "user0050@example.com",
+      "role": "admin",
+      "created_at": "2025-01-01T12:00:01.000000+08:00",
+      "updated_at": "2025-06-15T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-07T00:15:01.000000+08:00",
+      "extension": {
+        "realName": "张曼玉",
+        "studentId": "20238877",
+        "major": "汉语言文学",
+        "bio": "热衷于艺术创作",
+        "preferences": {
+          "interestedCategories": [
+            "文学",
+            "艺术",
+            "历史",
+            "文化"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有创造力",
+          "追求完美",
+          "细心周到"
+        ],
+        "phone": "13455667788"
+      }
+    },
+    {
+      "user_id": 51,
+      "username": "user_0051",
+      "email": "user0051@example.com",
+      "role": "user",
+      "created_at": "2024-07-15T12:00:01.000000+08:00",
+      "updated_at": "2025-02-20T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-29T14:30:01.000000+08:00",
+      "extension": {
+        "realName": "黎明",
+        "studentId": "20233344",
+        "major": "音乐学",
+        "bio": "享受瑜伽和冥想的平静",
+        "preferences": {
+          "interestedCategories": [
+            "音乐",
+            "健康",
+            "心理健康"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "沉着冷静",
+          "积极乐观",
+          "适应力强"
+        ],
+        "phone": "13211223344"
+      }
+    },
+    {
+      "user_id": 52,
+      "username": "user_0052",
+      "email": "user0052@example.com",
+      "role": "user",
+      "created_at": "2025-05-05T12:00:01.000000+08:00",
+      "updated_at": "2025-06-25T12:00:01.000000+08:00",
+      "last_active_at": "2025-07-06T19:50:01.000000+08:00",
+      "extension": {
+        "realName": "郭富城",
+        "studentId": "20236677",
+        "major": "体育学",
+        "bio": "热衷于极限运动",
+        "preferences": {
+          "interestedCategories": [
+            "运动",
+            "户外探险",
+            "健康",
+            "旅行"
+          ],
+          "emailNotifications": false,
+          "applicationNotifications": true,
+          "activityNotifications": true,
+          "profilePublic": false,
+          "showJoinedClubs": false
+        },
+        "tags": [
+          "富有冒险精神",
+          "自我驱动",
+          "勇于担当"
+        ],
+        "phone": "13144556677"
+      }
+    },
+    {
+      "user_id": 53,
+      "username": "user_0053",
+      "email": "user0053@example.com",
+      "role": "admin",
+      "created_at": "2024-09-01T12:00:01.000000+08:00",
+      "updated_at": "2025-04-10T12:00:01.000000+08:00",
+      "last_active_at": "2025-06-28T08:00:01.000000+08:00",
+      "extension": {
+        "realName": "刘青云",
+        "studentId": "20230099",
+        "major": "建筑学",
+        "bio": "独立思考，勇于创新",
+        "preferences": {
+          "interestedCategories": [
+            "科技",
+            "科学",
+            "建筑",
+            "环保"
+          ],
+          "emailNotifications": true,
+          "applicationNotifications": false,
+          "activityNotifications": false,
+          "profilePublic": true,
+          "showJoinedClubs": true
+        },
+        "tags": [
+          "独立思考",
+          "创新思维",
+          "富有远见",
+          "注重细节"
+        ],
+        "phone": "13088990011"
+      }
+    }
+  ]
+}
