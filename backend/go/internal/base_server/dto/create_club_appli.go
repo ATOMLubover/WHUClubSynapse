@@ -18,9 +18,10 @@ type CreateClubAppliResponse struct {
 }
 
 type CreateClubAppliProposalResponse struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	LeaderId    int      `json:"leader_id"`
-	CategoryId  int      `json:"category_id"`
-	Tags        []string `json:"tags"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	LeaderId     int      `json:"leader_id"`
+	CategoryId   int      `json:"category_id"`
+	Tags         []string `json:"tags"`
+	Requirements string   `json:"requirements"`
 }
