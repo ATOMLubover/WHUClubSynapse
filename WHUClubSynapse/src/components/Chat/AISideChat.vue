@@ -182,13 +182,21 @@
             :disabled="!aiAvailable || isLoading"
           />
           <el-button 
+            v-if="!isLoading"
             type="primary" 
             @click="handleSend"
-            :loading="isLoading"
             :disabled="!inputMessage.trim() || !aiAvailable"
             class="send-button"
           >
             <el-icon><Position /></el-icon>
+          </el-button>
+          <el-button
+            v-else
+            type="danger"
+            @click="stopResponse"
+            class="stop-button"
+          >
+            <el-icon><CircleClose /></el-icon>
           </el-button>
         </div>
         <div class="input-tips">
@@ -212,6 +220,7 @@ import {
   Loading,
   Position,
   Warning,
+  CircleClose,
 } from '@element-plus/icons-vue'
 import { checkAiServiceHealth } from '@/api/ai-search'
 import { sideChatStream } from '@/api/ai-search'
@@ -228,6 +237,7 @@ const inputMessage = ref('')
 const isLoading = ref(false)
 const chatContentRef = ref<HTMLElement>()
 const aiAvailable = ref(true) // AI服务可用性状态
+const abortController = ref<AbortController | null>(null)
 
 // 对话历史
 const chatHistory = ref<(ChatMessage & { sources?: SmartSearchSource[] })[]>([])
@@ -275,12 +285,24 @@ const checkAiAvailability = async () => {
   }
 }
 
+const stopResponse = () => {
+  if (abortController.value) {
+    abortController.value.abort()
+    abortController.value = null
+    isLoading.value = false
+    ElMessage.info('已停止AI回复')
+  }
+}
+
 const sendMessage = async (message?: string) => {
   const content = message || inputMessage.value.trim()
   
   if (!content || !aiAvailable.value) {
     return
   }
+
+  // 创建新的AbortController
+  abortController.value = new AbortController()
 
   // 添加用户消息
   const userMessage: ChatMessage = {
@@ -321,6 +343,7 @@ const sendMessage = async (message?: string) => {
           history: chatHistory.value.slice(0, -1)
         },
         {
+          signal: abortController.value?.signal,
           onSource: (src) => {
             sources = src
             chatHistory.value[aiMsgIndex].sources = sources
@@ -370,12 +393,17 @@ const sendMessage = async (message?: string) => {
       )
     })
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 
-                        typeof error === 'string' ? error : 
-                        'Unknown error'
-    console.error('Stream处理错误:', errorMessage)
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.log('用户停止了AI回复')
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Unknown error'
+      console.error('Stream处理错误:', errorMessage)
+    }
   } finally {
     isLoading.value = false
+    abortController.value = null
   }
 }
 
@@ -960,5 +988,38 @@ const testAiConnectivity = async () => {
 }
 .chat-header-sub .clear-btn {
   margin-left: 12px;
+}
+
+.stop-button {
+  margin-left: 8px;
+  padding: 8px;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.el-button.stop-button {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.el-button.stop-button:hover {
+  background-color: #f78989;
+  border-color: #f78989;
+  color: white;
+}
+
+.el-button.stop-button:focus {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.el-button.stop-button .el-icon {
+  font-size: 20px;
+  margin: 0;
 }
 </style> 

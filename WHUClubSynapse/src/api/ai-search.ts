@@ -52,6 +52,7 @@ export async function fetchSSE({
   url,
   body,
   headers,
+  signal,
   onSource,
   onToken,
   onEnd,
@@ -60,6 +61,7 @@ export async function fetchSSE({
   url: string
   body: any
   headers: Record<string, string>
+  signal?: AbortSignal
   onSource?: (sources: any[]) => void
   onToken?: (token: string) => void
   onEnd?: () => void
@@ -86,6 +88,7 @@ export async function fetchSSE({
       method: 'POST',
       headers: finalHeaders,
       body: JSON.stringify(body),
+      signal
     })
     
     if (!resp.ok) {
@@ -188,38 +191,52 @@ export async function fetchSSE({
 
 export function smartSearchStream(
   request: SmartSearchRequest,
-  { onSource, onToken, onEnd, onError }: { onSource?: (sources: any[]) => void; onToken?: (token: string) => void; onEnd?: () => void; onError?: (err: any) => void }
+  { signal, onSource, onToken, onEnd, onError }: { 
+    signal?: AbortSignal
+    onSource?: (sources: any[]) => void
+    onToken?: (token: string) => void
+    onEnd?: () => void
+    onError?: (err: any) => void 
+  }
 ) {
   return fetchSSE({
     url: getSmartSearchURL(),
-    body: request,
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-API-Key': getApiKey(),
+      'Accept': 'text/event-stream',
+      'X-API-Key': getApiKey()
     },
+    body: request,
+    signal,
     onSource,
     onToken,
     onEnd,
-    onError,
+    onError
   })
 }
 
 export function sideChatStream(
   request: SideChatRequest,
-  { onSource, onToken, onEnd, onError }: { onSource?: (sources: any[]) => void; onToken?: (token: string) => void; onEnd?: () => void; onError?: (err: any) => void }
+  { signal, onSource, onToken, onEnd, onError }: { 
+    signal?: AbortSignal
+    onSource?: (sources: any[]) => void
+    onToken?: (token: string) => void
+    onEnd?: () => void
+    onError?: (err: any) => void 
+  }
 ) {
   return fetchSSE({
     url: getSideChatURL(),
-    body: request,
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-API-Key': getApiKey(),
+      'Accept': 'text/event-stream',
+      'X-API-Key': getApiKey()
     },
+    body: request,
+    signal,
     onSource,
     onToken,
     onEnd,
-    onError,
+    onError
   })
 } 
