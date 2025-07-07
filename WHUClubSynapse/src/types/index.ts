@@ -391,6 +391,15 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp?: string
+  sources?: Array<{
+    id: string
+    content: string
+    metadata: {
+      source: string
+      page: number
+    }
+  }>
+  isThinking?: boolean  // 添加思考状态标记
 }
 
 export interface SideChatRequest {

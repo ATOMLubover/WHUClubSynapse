@@ -13,15 +13,23 @@ import { config } from '@/config'
 
 // AI服务健康检查
 export const checkAiServiceHealth = async (): Promise<boolean> => {
+  return true;
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+
+    // 获取JWT token
+    const jwtToken = localStorage.getItem('token')
+    if (!jwtToken) {
+      throw new Error('未找到认证token')
+    }
 
     const response = await fetch(getHealthCheckURL(), {
       method: 'GET',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwtToken}`
       },
     })
 
@@ -57,10 +65,26 @@ export async function fetchSSE({
   onEnd?: () => void
   onError?: (err: any) => void
 }) {
+  let reader: ReadableStreamDefaultReader | null = null
+  let waitingMessageInterval: number | null = null
+  let waitCount = 0
+  
   try {
+    // 获取JWT token
+    const jwtToken = localStorage.getItem('token')
+    if (!jwtToken) {
+      throw new Error('未找到认证token')
+    }
+
+    // 合并headers，添加Authorization
+    const finalHeaders = {
+      ...headers,
+      'Authorization': `Bearer ${jwtToken}`
+    }
+
     const resp = await fetch(url, {
       method: 'POST',
-      headers,
+      headers: finalHeaders,
       body: JSON.stringify(body),
     })
     
@@ -69,84 +93,96 @@ export async function fetchSSE({
     }
     
     if (!resp.body) throw new Error('No response body')
-    const reader = resp.body.getReader()
+    reader = resp.body.getReader()
     const decoder = new TextDecoder('utf-8')
     let buffer = ''
     let isEnded = false
     let eventType = ''
+    let completeResponse = '' // 用于存储完整响应
+    
+    // 设置等待消息的定时器
+    waitingMessageInterval = setInterval(() => {
+      waitCount++
+      //console.log(`等待end标签中...已等待${waitCount}秒`)
+    }, 1000)
     
     while (!isEnded) {
       const { value, done } = await reader.read()
-      if (done) break
       
-      buffer += decoder.decode(value, { stream: true })
-      let lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-      
-      for (const line of lines) {
-        const trimmedLine = line.trim()
-        if (!trimmedLine) continue
+      if (value) {
+        buffer += decoder.decode(value, { stream: true })
+        let lines = buffer.split('\n')
+        buffer = lines.pop() || ''
         
-        if (trimmedLine.startsWith('event:')) {
-          eventType = trimmedLine.replace('event:', '').trim()
-        } else if (trimmedLine.startsWith('data:')) {
-          const data = trimmedLine.replace('data:', '').trim()
-          if (!data) continue
+        // 处理每一行数据
+        for (const line of lines) {
+          const trimmedLine = line.trim()
+          if (!trimmedLine) continue
           
-          try {
-            if (eventType === 'source') {
-              const parsedData = JSON.parse(data)
-              onSource && onSource(parsedData)
-            } else if (eventType === 'token') {
-              const parsedData = JSON.parse(data)
-              console.log('解析的token数据:', parsedData)
-              // 处理不同的token格式
-              let token = parsedData.token || parsedData.content || parsedData
-              console.log('提取的token:', token, '类型:', typeof token)
-              // 确保token是字符串类型
-              if (typeof token !== 'string') {
-                console.log('token不是字符串，转换为字符串')
-                token = String(token)
-              }
-              console.log('最终token:', token, '类型:', typeof token)
-              if (typeof onToken === 'function') {
-                onToken(token)
-              } else {
-                console.error('onToken不是函数:', onToken)
-              }
-            } else if (eventType === 'end') {
+          if (trimmedLine.startsWith('event:')) {
+            eventType = trimmedLine.replace('event:', '').trim()
+            // 检查是否是end事件
+            if (eventType === 'end') {
+              console.log('收到end事件')
               isEnded = true
-              onEnd && onEnd()
-            } else if (eventType === 'error') {
-              const parsedData = JSON.parse(data)
-              onError && onError(parsedData.error || parsedData)
-              isEnded = true
+              break
             }
-          } catch (parseError) {
-            console.error('SSE数据解析错误:', parseError, '原始数据:', data)
-            // 对于token事件，尝试直接使用原始数据
-            if (eventType === 'token') {
-              let token = data
-              console.log('catch块中的原始token数据:', token, '类型:', typeof token)
-              // 确保token是字符串类型
-              if (typeof token !== 'string') {
-                console.log('catch块中token不是字符串，转换为字符串')
-                token = String(token)
+          } else if (trimmedLine.startsWith('data:')) {
+            const data = trimmedLine.replace('data:', '').trim()
+            if (!data) continue
+            
+            try {
+              if (eventType === 'source') {
+                const parsedData = JSON.parse(data)
+                await onSource?.(parsedData)
+              } else if (eventType === 'token') {
+                const parsedData = JSON.parse(data)
+                let token = parsedData.token || parsedData.content || parsedData
+                if (typeof token !== 'string') {
+                  token = String(token)
+                }
+                console.log('Token:', token)
+                completeResponse += token
+                await onToken?.(token)
+              } else if (eventType === 'error') {
+                const parsedData = JSON.parse(data)
+                throw new Error(parsedData.error || parsedData)
               }
-              console.log('catch块中最终token:', token, '类型:', typeof token)
-              if (typeof onToken === 'function') {
-                onToken(token)
-              } else {
-                console.error('catch块中onToken不是函数:', onToken)
-              }
+            } catch (parseError) {
+              console.error('解析数据时出错:', parseError)
+              throw parseError
             }
           }
         }
       }
+      
+      if (done && isEnded) {
+        break
+      }
     }
+
+    // 清除等待消息的定时器
+    if (waitingMessageInterval) {
+      clearInterval(waitingMessageInterval)
+    }
+
+    console.log('流式传输完成，完整响应：')
+    console.log(completeResponse)
+    onEnd?.()
   } catch (err) {
-    console.error('fetchSSE错误:', err)
-    onError && onError(err)
+    // 清除等待消息的定时器
+    if (waitingMessageInterval) {
+      clearInterval(waitingMessageInterval)
+    }
+    
+    if (reader) {
+      try {
+        await reader.cancel()
+      } catch (cancelError) {
+        // 忽略reader关闭错误
+      }
+    }
+    onError?.(err)
   }
 }
 
@@ -159,6 +195,7 @@ export function smartSearchStream(
     body: request,
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'X-API-Key': getApiKey(),
     },
     onSource,
@@ -177,6 +214,7 @@ export function sideChatStream(
     body: request,
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'X-API-Key': getApiKey(),
     },
     onSource,

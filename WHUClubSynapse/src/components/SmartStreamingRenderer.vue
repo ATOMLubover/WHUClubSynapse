@@ -58,13 +58,17 @@ const renderSegments = computed((): RenderSegment[] => {
   const content = props.content
   if (!content) return []
   
+  // 移除end标签后再处理
+  const contentWithoutEnd = content.replace(/<end>/g, '')
+  
   const segments: RenderSegment[] = []
   let currentPos = 0
   let inThinking = false
   let buffer = ''
+  let hasThinkingContent = false
   
-  while (currentPos < content.length) {
-    const remaining = content.substring(currentPos)
+  while (currentPos < contentWithoutEnd.length) {
+    const remaining = contentWithoutEnd.substring(currentPos)
     
     if (!inThinking) {
       // 检查是否遇到 <think> 开始标签（完整或不完整）
@@ -89,7 +93,7 @@ const renderSegments = computed((): RenderSegment[] => {
         const partialThinkStart = remaining.match(/^<(?:t(?:h(?:i(?:n(?:k>?)?)?)?)?)?$/i)
         if (partialThinkStart) {
           // 可能是不完整的 <think> 标签，检查是否在末尾
-          if (currentPos + partialThinkStart[0].length === content.length) {
+          if (currentPos + partialThinkStart[0].length === contentWithoutEnd.length) {
             // 在内容末尾的不完整标签，等待更多内容
             if (buffer.trim()) {
               segments.push({
@@ -103,7 +107,7 @@ const renderSegments = computed((): RenderSegment[] => {
         }
         
         // 普通字符
-        buffer += content[currentPos]
+        buffer += contentWithoutEnd[currentPos]
         currentPos++
       }
     } else {
@@ -119,7 +123,9 @@ const renderSegments = computed((): RenderSegment[] => {
             class: 'thinking-segment',
             type: 'thinking'
           })
-          buffer = ''
+          hasThinkingContent = true
+          // 不清空buffer，保留思考内容
+          buffer = buffer + '\n\n'
         }
         inThinking = false
         currentPos += thinkEndMatch[0].length
@@ -129,7 +135,7 @@ const renderSegments = computed((): RenderSegment[] => {
         const partialThinkEnd = remaining.match(/^<(?:\/(?:t(?:h(?:i(?:n(?:k>?)?)?)?)?)?)?$/i)
         if (partialThinkEnd) {
           // 可能是不完整的 </think> 标签，检查是否在末尾
-          if (currentPos + partialThinkEnd[0].length === content.length) {
+          if (currentPos + partialThinkEnd[0].length === contentWithoutEnd.length) {
             // 在内容末尾的不完整标签，等待更多内容
             if (buffer.trim()) {
               segments.push({
@@ -143,7 +149,7 @@ const renderSegments = computed((): RenderSegment[] => {
         }
         
         // 思考模式下的普通字符
-        buffer += content[currentPos]
+        buffer += contentWithoutEnd[currentPos]
         currentPos++
       }
     }

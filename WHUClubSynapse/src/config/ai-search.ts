@@ -1,13 +1,13 @@
 // AI智能搜索配置
 export const aiSearchConfig = {
   // AI智能搜索API基础URL
-  baseURL: '/api/trans/rag/', // 根据实际部署情况修改
+  baseURL: 'http://localhost:8080/api/trans/rag/', // 根据实际部署情况修改
   
   // API端点
   endpoints: {
-    smartSearch: '/smart-search',
-    sideChat: '/sider-chat',
-    healthCheck: '/', // 新增健康检查端点
+    smartSearch: 'smart-search',
+    sideChat: 'sider-chat',
+    healthCheck: 'health', // 新增健康检查端点
   },
   
   // API Key配置

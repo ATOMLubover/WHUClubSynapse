@@ -238,7 +238,18 @@ const props = defineProps<{
 const authStore = useAuthStore()
 const isClubLeader = computed(() => {
   const user = authStore.user
-  return user && props.leaderId === user.user_id
+  // 检查用户是否登录
+  if (!user) {
+    return false
+  }
+  
+  // 检查用户是否为超级管理员
+  if (user.role === 'admin') {
+    return true
+  }
+  
+  // 检查用户是否为该社团的管理员
+  return props.leaderId === user.user_id
 })
 
 const announcements = ref<Announcement[]>([])
@@ -425,6 +436,16 @@ const useAIResult = () => {
 // 清空AI生成结果
 const clearResults = () => {
   aiResult.value = ''
+}
+
+// 添加错误处理
+const handleUnauthorizedAction = () => {
+  if (!authStore.user) {
+    ElMessage.warning('请先登录')
+    // 可以在这里添加跳转到登录页面的逻辑
+    return
+  }
+  ElMessage.error('您没有权限执行此操作')
 }
 
 onMounted(() => {
