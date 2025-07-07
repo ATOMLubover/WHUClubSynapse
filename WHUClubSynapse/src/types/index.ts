@@ -80,6 +80,7 @@ export interface Club {
   created_at: string
   member_count: number
   leader_id?: string
+  leader?:User
   //以上是必须包含的，以下是可选的
   adminId?: string
   adminName?: string
@@ -446,7 +447,7 @@ export interface ClubUpdateApplication {
   requirements: string
   type?: string[] // 社团标签数组，可能为null或空数组
   status: string
-  rejected_reason: string
+  rejected_reason?: string
 }
 
 export interface AdminCreateApplication {

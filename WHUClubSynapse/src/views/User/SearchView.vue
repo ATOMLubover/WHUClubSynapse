@@ -94,16 +94,6 @@
         />
       </div>
     </div>
-
-    <!-- 推荐社团 -->
-    <div v-if="clubStore.searchClubs.length === 0 && !clubStore.loading" class="recommendations">
-      <h3>推荐社团</h3>
-      <div class="recommend-grid">
-        <div v-for="club in recommendedClubs" :key="club.club_id" class="recommend-item">
-          <ClubCard :club="club" />
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -192,6 +182,8 @@ const performSearch = async () => {
     pageSize: clubStore.searchPageData.pageSize,
   }
 
+  console.log('params', params)
+
   try {
     if (searchKeyword.value) {
       await clubStore.searchClubs(searchKeyword.value, params)
@@ -201,15 +193,6 @@ const performSearch = async () => {
     }
   } catch (error) {
     console.error('搜索失败:', error)
-  }
-}
-
-// 获取推荐社团
-const fetchRecommendations = async () => {
-  try {
-    recommendedClubs.value = await clubStore.fetchRecommendedClubs(6)
-  } catch (error) {
-    console.error('获取推荐社团失败:', error)
   }
 }
 
@@ -234,9 +217,6 @@ onMounted(async () => {
   // 从URL参数初始化搜索状态
   searchKeyword.value = (route.query.keyword as string) || ''
   activeCategory.value = Number(route.query.category) || ''
-
-  // 获取推荐社团
-  await fetchRecommendations()
 
   // 如果有搜索参数则执行搜索
   if (searchKeyword.value || activeCategory.value) {

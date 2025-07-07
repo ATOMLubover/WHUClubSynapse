@@ -118,36 +118,7 @@ const router = createRouter({
       name: 'register',
       component: () => import('@/views/Login/RegisterView.vue'),
     },
-    {
-      path: '/test',
-      name: 'test',
-      component: () => import('@/views/test2.vue'),
-    },
-    {
-      path: '/test-streaming',
-      name: 'test-streaming',
-      component: () => import('@/views/test-streaming.vue'),
-    },
-    {
-      path: '/test-ai-introduction',
-      name: 'test-ai-introduction',
-      component: () => import('@/views/test-ai-introduction.vue'),
-    },
-    {
-      path: '/test-ai-announcement',
-      name: 'test-ai-announcement',
-      component: () => import('@/views/test-ai-announcement.vue'),
-    },
-    {
-      path: '/test-club-announcements',
-      name: 'test-club-announcements',
-      component: () => import('@/views/test-club-announcements.vue'),
-    },
-    {
-      path: '/test-password-fix',
-      name: 'test-password-fix',
-      component: () => import('@/views/test-password-fix.vue'),
-    },
+  
     {
       path:'/admin',
       name:'admin',

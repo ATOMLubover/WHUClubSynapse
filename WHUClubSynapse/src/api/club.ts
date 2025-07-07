@@ -104,6 +104,10 @@ export const getClubDetail = async (id: string, post_num: number = 5): Promise<C
    else{
         response.data.logo_url = `${config.apiBaseUrl}/` + response.data.logo_url+ `?t=${timestamp}`
       }
+      if(response.data.leader_id){
+        const user=await getUserById(response.data.leader_id)
+        response.data.leader=user
+      }
   return response.data as Club
 }
 // 获取最新社团
