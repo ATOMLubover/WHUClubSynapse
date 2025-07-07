@@ -7,7 +7,7 @@ import type {
   SideChatResponse,
   ChatMessage
 } from '@/types'
-import { getSmartSearchURL, getSideChatURL, getHealthCheckURL, getApiKey, isAiSearchEnabled, isSideChatEnabled, isHealthCheckEnabled } from '@/config/ai-search'
+import { getSmartSearchURL, getSideChatURL, getApiKey, isAiSearchEnabled, isSideChatEnabled, getHealthCheckTimeout, getTestQuery } from '@/config/ai-search'
 import { config } from '@/config'
 
 
@@ -15,7 +15,7 @@ import { config } from '@/config'
 export const checkAiServiceHealth = async (): Promise<boolean> => {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+    const timeoutId = setTimeout(() => controller.abort(), getHealthCheckTimeout()) // 使用配置的超时时间
 
     // 获取JWT token
     const jwtToken = localStorage.getItem('token')
@@ -26,7 +26,7 @@ export const checkAiServiceHealth = async (): Promise<boolean> => {
 
     // 1. 首先尝试一个简单的测试查询
     const testQuery = {
-      query: "测试查询",
+      query: getTestQuery(),
       enable_thinking: true,
       history: []
     }
