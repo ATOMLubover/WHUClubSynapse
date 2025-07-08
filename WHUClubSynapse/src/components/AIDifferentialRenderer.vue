@@ -31,16 +31,16 @@ const processedIndex = ref(0)
 const streamingSegments = computed((): StreamingSegment[] => {
   const content = props.content
   if (!content) return []
-  
+
   const segments: StreamingSegment[] = []
   let currentPos = 0
   let inThinking = false
   let buffer = ''
-  
+
   // 逐字符处理内容，检测标签
   while (currentPos < content.length) {
     const remaining = content.substring(currentPos)
-    
+
     if (!inThinking) {
       // 查找 <think> 开始标签
       const thinkStartMatch = remaining.match(/^<think>/i)
@@ -50,7 +50,7 @@ const streamingSegments = computed((): StreamingSegment[] => {
           segments.push({
             content: buffer,
             class: 'normal-segment',
-            type: 'normal'
+            type: 'normal',
           })
         }
         buffer = ''
@@ -71,7 +71,7 @@ const streamingSegments = computed((): StreamingSegment[] => {
           segments.push({
             content: buffer,
             class: 'thinking-segment',
-            type: 'thinking'
+            type: 'thinking',
           })
         }
         buffer = ''
@@ -85,36 +85,40 @@ const streamingSegments = computed((): StreamingSegment[] => {
       }
     }
   }
-  
+
   // 处理剩余内容
   if (buffer.trim()) {
     segments.push({
       content: buffer,
       class: inThinking ? 'thinking-segment' : 'normal-segment',
-      type: inThinking ? 'thinking' : 'normal'
+      type: inThinking ? 'thinking' : 'normal',
     })
   }
-  
+
   // 如果没有分段，整个内容作为正常内容
   if (segments.length === 0) {
     segments.push({
       content: content,
       class: 'normal-segment',
-      type: 'normal'
+      type: 'normal',
     })
   }
-  
+
   return segments
 })
 
 // 监听内容变化，实时更新渲染
-watch(() => props.content, (newContent, oldContent) => {
-  // 检测是否有新的内容追加
-  if (newContent && oldContent && newContent.startsWith(oldContent)) {
-    // 这是流式追加，重新计算分段
-    processedIndex.value = 0
-  }
-}, { immediate: true })
+watch(
+  () => props.content,
+  (newContent, oldContent) => {
+    // 检测是否有新的内容追加
+    if (newContent && oldContent && newContent.startsWith(oldContent)) {
+      // 这是流式追加，重新计算分段
+      processedIndex.value = 0
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
@@ -192,7 +196,8 @@ watch(() => props.content, (newContent, oldContent) => {
   font-size: 0.7em;
 }
 
-.thinking-segment :deep(ul), .thinking-segment :deep(ol) {
+.thinking-segment :deep(ul),
+.thinking-segment :deep(ol) {
   margin: 6px 0;
   padding-left: 16px;
 }
@@ -200,4 +205,4 @@ watch(() => props.content, (newContent, oldContent) => {
 .thinking-segment :deep(li) {
   margin: 2px 0;
 }
-</style> 
+</style>
