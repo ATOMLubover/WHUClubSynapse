@@ -84,6 +84,7 @@ import { useClubStore } from '@/stores/club'
 import type { ClubPost, Club } from '@/types'
 import { Plus, ChatLineRound, ArrowRightBold } from '@element-plus/icons-vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import { validatePostContent, validateCommentContent } from '@/api/ai'
 
 const props = defineProps<{
   clubId: string
@@ -140,6 +141,12 @@ const handleCreate = async () => {
   }
   createLoading.value = true
   try {
+    // 首先进行AI内容审核
+    const isContentValid = await validatePostContent(createForm.value.title, createForm.value.content)
+    if (!isContentValid) {
+      return
+    }
+
     await createClubPost({
       club_id: Number(props.clubId),
       title: createForm.value.title,

@@ -1,5 +1,6 @@
 import { AI_CONFIG, getChatApiUrl } from '@/config/ai'
 import type { ClubRecommendRequest, ClubRecommendResponse } from '@/types'
+import { ElMessage } from 'element-plus'
 
 // 基础错误类
 export class AIServiceError extends Error {
@@ -532,6 +533,92 @@ export const checkAIStatus = async (): Promise<boolean> => {
     return true
   } catch (error) {
     console.warn('AI状态检查失败:', error instanceof Error ? error.message : error)
+    return false
+  }
+} 
+
+// 内容审核接口类型
+export interface ContentModerationRequest {
+  text: string
+}
+
+export interface ContentModerationResponse {
+  is_safe: boolean
+  reason?: string
+}
+
+// 内容审核API
+export const moderateContent = async (text: string): Promise<ContentModerationResponse> => {
+  try {
+    const url = `${AI_CONFIG.BASE_URL}content_moderation`
+    console.log('内容审核请求URL:', url)
+    console.log('内容审核请求数据:', { text })
+    
+    const token = localStorage.getItem('token')
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ text }),
+      signal: AbortSignal.timeout(AI_CONFIG.REQUEST_TIMEOUT)
+    })
+
+    console.log('内容审核响应状态:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('内容审核请求失败:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('内容审核响应数据:', data)
+    return data
+  } catch (error) {
+    console.error('内容审核请求失败:', error)
+    throw error
+  }
+}
+
+// 帖子内容审核工具函数
+export const validatePostContent = async (title: string, content: string): Promise<boolean> => {
+  try {
+    // 合并标题和内容进行审核
+    const fullText = `${title}\n${content}`
+    const result = await moderateContent(fullText)
+    
+    if (!result.is_safe) {
+      // 如果内容不安全，显示原因
+      ElMessage.error(`内容审核未通过: ${result.reason || '包含不当内容'}`)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('帖子内容审核失败:', error)
+    ElMessage.error('内容审核服务异常，请稍后重试')
+    return false
+  }
+}
+
+// 评论内容审核工具函数
+export const validateCommentContent = async (content: string): Promise<boolean> => {
+  try {
+    const result = await moderateContent(content)
+    
+    if (!result.is_safe) {
+      // 如果内容不安全，显示原因
+      ElMessage.error(`内容审核未通过: ${result.reason || '包含不当内容'}`)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('评论内容审核失败:', error)
+    ElMessage.error('内容审核服务异常，请稍后重试')
     return false
   }
 } 
