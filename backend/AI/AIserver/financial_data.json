@@ -1,0 +1,74 @@
+{
+  "篮球社": {
+    "entries": [
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": "用于活动"
+      },
+      {
+        "item": "10瓶水",
+        "amount": 40.0,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      },
+      {
+        "item": "一包零食",
+        "amount": 15.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      },
+      {
+        "item": "采购设备",
+        "amount": 800.0,
+        "category": "物资",
+        "payer": "李四",
+        "date": "今天",
+        "remark": "大家凑钱一起采购"
+      },
+      {
+        "item": "请人来讲座",
+        "amount": 600.0,
+        "category": "活动",
+        "payer": "王五",
+        "date": "今天",
+        "remark": "社长自掏腰包支付"
+      },
+      {
+        "item": "设备",
+        "amount": 800.0,
+        "category": "物资",
+        "payer": "小明",
+        "date": "今天",
+        "remark": "集资采购"
+      },
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      },
+      {
+        "item": "10瓶水和一包零食",
+        "amount": 55.8,
+        "category": "活动",
+        "payer": "小明",
+        "date": "今天",
+        "remark": null
+      }
+    ],
+    "budget": {
+      "limit": 2000.0,
+      "description": "篮球社2024年全年预算"
+    }
+  }
+}
