@@ -1,0 +1,310 @@
+439ea1bfd7895e95226b29ed515d3236c6812c9e djfjcen 2025-07-07
+252	0	backend/AI/AIserver/vllm_proxy_server.py
+
+dfc51b4e1c62814446f41d76b76796954a3a3219 djfjcen 2025-07-06
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+16	0	backend/AI/AIserver/financial_data.json
+65	0	backend/AI/AIserver/generated_data/ml_data_test_small_20250705_155556.json
+65	0	backend/AI/AIserver/generated_data/ml_data_test_small_20250705_161900.json
+362	0	backend/AI/AIserver/latency_test.py
+7	0	backend/AI/AIserver/local_synced_data.jsonl
+0	174	backend/AI/AIserver/performance_test.py
+87	7	backend/AI/AIserver/test_client.py
+270	79	backend/AI/AIserver/test_client_ngrok.py
+2	1	backend/AI/AIserver/vllm_proxy_server.py
+-	-	backend/AI/data/__pycache__/extract_club_data.cpython-39.pyc
+0	27	backend/AI/data/local_synced_data.jsonl
+357	0	backend/latency_test.py
+199	0	performance_test_script.py
+
+9bee2f9ad2c28c3d6a685160864ce673478d8138 djfjcen 2025-07-05
+c1487c5d71e3e680b4455f4700a0aeca59f8ebde djfjcen 2025-07-05
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+2	2	backend/AI/AIserver/start_server.py
+6	6	backend/AI/AIserver/vllm_proxy_server.py
+-	-	backend/AI/data/__pycache__/extract_club_data.cpython-38.pyc
+-	-	backend/AI/data/__pycache__/extract_club_data.cpython-39.pyc
+1	0	backend/AI/data/extract_club_data.py
+24	1	backend/AI/data/local_synced_data.jsonl
+-	-	backend/AI/data/recommend_system/__pycache__/content_based_recommender.cpython-311.pyc
+-	-	backend/AI/data/recommend_system/__pycache__/recommend_service.cpython-311.pyc
+2	1	backend/AI/data/recommend_system/extracted_clubs.csv
+4	1	backend/AI/data/standalone.py
+
+4cca4c0d1e8819cce3b1f18578db3ce2514a3eaa djfjcen 2025-07-04
+86	12	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/config_manager.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/summary.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+30	0	backend/AI/AIserver/mcpserver.py
+29	5	backend/AI/AIserver/requirements.txt
+84	1	backend/AI/AIserver/test_client.py
+219	58	backend/AI/AIserver/vllm_proxy_server.py
+0	0	backend/AI/{recommend_system => data}/communities.csv
+0	0	"backend/AI/data/communities.csv\357\200\272Zone.Identifier"
+82	0	backend/AI/data/extract_club_data.py
+2	0	backend/AI/data/extracted_clubs.csv
+4	13	backend/AI/data/local_synced_data.jsonl
+-	-	backend/AI/data/recommend_system/__pycache__/content_based_recommender.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/__pycache__/deep_community_recommend.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/__pycache__/recommend_service.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/backoff/0.29/community_recommender.pth
+0	0	"backend/AI/data/recommend_system/backoff/0.29/community_recommender.pth\357\200\272Zone.Identifier"
+-	-	backend/AI/data/recommend_system/backoff/0.29/word2vec_tags.model
+0	0	"backend/AI/data/recommend_system/backoff/0.29/word2vec_tags.model\357\200\272Zone.Identifier"
+229	0	backend/AI/data/recommend_system/content_based_recommender.py
+2	0	backend/AI/data/recommend_system/extracted_clubs.csv
+76	0	backend/AI/data/recommend_system/recommend_server.py
+96	0	backend/AI/data/recommend_system/recommend_service.py
+-	-	backend/AI/recommend_system/__pycache__/deep_community_recommend.cpython-39.pyc
+-	-	backend/AI/recommend_system/__pycache__/recommend_service.cpython-39.pyc
+-	-	backend/AI/recommend_system/community_recommender.pth
+0	280	backend/AI/recommend_system/deep_community_recommend.py
+0	535	backend/AI/recommend_system/interactions.csv
+0	228	backend/AI/recommend_system/recommend_service.py
+0	148	backend/AI/recommend_system/use_recommend_model.py
+0	481	backend/AI/recommend_system/users.csv
+22	0	backend/AI/start_services.sh
+7	0	local_synced_data.jsonl
+
+6cb1c3254503641747a166dc73b79d4308b691df djfjcen 2025-07-04
+-	-	backend/AI/AIserver/__pycache__/config_manager.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/summary.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-311.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+30	0	backend/AI/AIserver/mcpserver.py
+29	5	backend/AI/AIserver/requirements.txt
+84	1	backend/AI/AIserver/test_client.py
+219	58	backend/AI/AIserver/vllm_proxy_server.py
+0	0	backend/AI/{recommend_system => data}/communities.csv
+0	0	"backend/AI/data/communities.csv\357\200\272Zone.Identifier"
+82	0	backend/AI/data/extract_club_data.py
+2	0	backend/AI/data/extracted_clubs.csv
+4	13	backend/AI/data/local_synced_data.jsonl
+-	-	backend/AI/data/recommend_system/__pycache__/content_based_recommender.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/__pycache__/deep_community_recommend.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/__pycache__/recommend_service.cpython-39.pyc
+-	-	backend/AI/data/recommend_system/backoff/0.29/community_recommender.pth
+0	0	"backend/AI/data/recommend_system/backoff/0.29/community_recommender.pth\357\200\272Zone.Identifier"
+-	-	backend/AI/data/recommend_system/backoff/0.29/word2vec_tags.model
+0	0	"backend/AI/data/recommend_system/backoff/0.29/word2vec_tags.model\357\200\272Zone.Identifier"
+229	0	backend/AI/data/recommend_system/content_based_recommender.py
+2	0	backend/AI/data/recommend_system/extracted_clubs.csv
+76	0	backend/AI/data/recommend_system/recommend_server.py
+96	0	backend/AI/data/recommend_system/recommend_service.py
+-	-	backend/AI/recommend_system/__pycache__/deep_community_recommend.cpython-39.pyc
+-	-	backend/AI/recommend_system/__pycache__/recommend_service.cpython-39.pyc
+-	-	backend/AI/recommend_system/community_recommender.pth
+0	280	backend/AI/recommend_system/deep_community_recommend.py
+0	535	backend/AI/recommend_system/interactions.csv
+0	228	backend/AI/recommend_system/recommend_service.py
+0	148	backend/AI/recommend_system/use_recommend_model.py
+0	481	backend/AI/recommend_system/users.csv
+22	0	backend/AI/start_services.sh
+7	0	local_synced_data.jsonl
+
+bb6a08be55960824f4e82bcc86d2ca566eed8c15 djfjcen 2025-07-04
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+2160	0	backend/AI/AIserver/generated_data/ml_data_20250703_192422.json
+51	0	backend/AI/AIserver/generated_ml_data/communities.csv
+535	0	backend/AI/AIserver/generated_ml_data/interactions.csv
+481	0	backend/AI/AIserver/generated_ml_data/users.csv
+74	0	backend/AI/AIserver/test_ml_data_generation.py
+518	10	backend/AI/AIserver/vllm_proxy_server.py
+-	-	backend/AI/recommend_system/__pycache__/deep_community_recommend.cpython-39.pyc
+-	-	backend/AI/recommend_system/__pycache__/recommend_service.cpython-39.pyc
+51	0	backend/AI/recommend_system/communities.csv
+-	-	backend/AI/recommend_system/community_recommender.pth
+280	0	backend/AI/recommend_system/deep_community_recommend.py
+535	0	backend/AI/recommend_system/interactions.csv
+228	0	backend/AI/recommend_system/recommend_service.py
+148	0	backend/AI/recommend_system/use_recommend_model.py
+481	0	backend/AI/recommend_system/users.csv
+
+92b8bdb14dbe53078446f8393d38875954e80477 djfjcen 2025-07-03
+49	0	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+106	4	backend/AI/AIserver/test_client.py
+62	2	backend/AI/AIserver/vllm_proxy_server.py
+0	1	backend/AI/recommend_system/Club-Recommendation-System
+
+f3e5bb156f4b0104bfc0e1ed9bd607f492c0e06d djfjcen 2025-07-03
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+7	4	backend/AI/AIserver/generate.py
+0	50	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_155616.jsonl
+0	30	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_160626.jsonl
+0	1500	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_160921.jsonl
+0	100	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_165959.jsonl
+500	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_190640.jsonl
+500	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_192613.jsonl
+129	55	backend/AI/AIserver/vllm_proxy_server.py
+1	0	backend/AI/recommend_system/Club-Recommendation-System
+
+e1fe07737c84ec2639f1b80f9857b45a9cdc5321 djfjcen 2025-07-02
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+147	0	backend/AI/AIserver/generate.py
+50	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_155616.jsonl
+30	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_160626.jsonl
+1500	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_160921.jsonl
+100	0	backend/AI/AIserver/generated_data/generated_data/training_data_20250702_165959.jsonl
+390	2	backend/AI/AIserver/vllm_proxy_server.py
+
+47e8872f5268647ece80b3688214e0a78f9b1d6a djfjcen 2025-07-02
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+3	0	backend/AI/AIserver/config.json
+20	0	backend/AI/AIserver/start_server.py
+349	2	backend/AI/AIserver/vllm_proxy_server.py
+8	0	backend/AI/api lab/standalone.py
+1	0	backend/AI/data/bagin.sh
+13	0	backend/AI/data/local_synced_data.jsonl
+509	0	backend/AI/data/standalone.py
+
+a5ed1a133e876c7a867de287a668c17500a7c63a djfjcen 2025-07-01
+0	0	backend/AI/AIserver/Club_information.json
+64	0	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+2	1	backend/AI/AIserver/begin.sh
+122	0	backend/AI/AIserver/chat_client_gui.py
+24	0	backend/AI/AIserver/financial_data.json
+26	0	backend/AI/AIserver/vllm_proxy_server.py
+
+ca21e6565befe1f2c84973ee37af1ced8f27b429 djfjcen 2025-06-30
+225	20	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/config_manager.cpython-38.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+3	0	backend/AI/AIserver/config.json
+4	0	backend/AI/AIserver/config_manager.py
+34	0	backend/AI/AIserver/financial_data.json
+1	0	backend/AI/AIserver/financial_data.json.bak_1751248224
+19	0	backend/AI/AIserver/start_server.py
+250	4	backend/AI/AIserver/test_client.py
+243	2	backend/AI/AIserver/test_client_ngrok.py
+470	26	backend/AI/AIserver/vllm_proxy_server.py
+
+3983a66d329e1e277b86d2f2c725bd45cbc25716 djfjcen 2025-06-28
+45	66	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+1	0	backend/AI/AIserver/start_server.py
+50	3	backend/AI/AIserver/test_client.py
+49	2	backend/AI/AIserver/test_client_ngrok.py
+102	2	backend/AI/AIserver/vllm_proxy_server.py
+
+be708243d79971edbb1377a32b34dffabbe48354 djfjcen 2025-06-28
+2	1	backend/AI/AIserver/README.md
+5	2	backend/AI/AIserver/vllm_proxy_server.py
+
+eff3e89e81a173c57e8309b6a972479b752dfab3 djfjcen 2025-06-28
+55	7	backend/AI/AIserver/README.md
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+2	0	backend/AI/AIserver/start_server.py
+100	11	backend/AI/AIserver/test_client.py
+90	1	backend/AI/AIserver/test_client_ngrok.py
+164	0	backend/AI/AIserver/vllm_proxy_server.py
+
+fa31142bac00dd11fc94c0b87b2ad27df780e7e1 djfjcen 2025-06-28
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+174	0	backend/AI/AIserver/performance_test.py
+22	24	backend/AI/AIserver/test_client.py
+276	38	backend/AI/AIserver/test_client_ngrok.py
+
+c9a78a76bb6fe634774cbbf88cb8bb7381270b3c djfjcen 2025-06-27
+31	19	backend/AI/AIserver/README.md
+1	0	backend/AI/AIserver/start_server.py
+14	1	backend/AI/AIserver/test_client.py
+11	0	backend/AI/AIserver/vllm_proxy_server.py
+
+cd524e24319f5519f5997a18a5a21c9b050c6882 djfjcen 2025-06-27
+61	2	backend/AI/AIserver/README.md
+2	0	backend/AI/AIserver/start_server.py
+2	0	backend/AI/AIserver/vllm_proxy_server.py
+
+8c27f46c2b583e15fecde4c65fbb72aed824eb28 djfjcen 2025-06-27
+-	-	backend/AI/AIserver/__pycache__/summary.cpython-38.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+1	0	backend/AI/AIserver/begin.sh
+1	1	backend/AI/AIserver/config.json
+343	29	backend/AI/AIserver/test_client.py
+1	1	backend/AI/AIserver/test_client_ngrok.py
+238	61	backend/AI/AIserver/vllm_proxy_server.py
+
+cbf8ef74bda2204b84ab29a5a665d05d082f6d6f djfjcen 2025-06-26
+68	0	backend/AI/AIserver/Dockerfile
+0	0	"backend/AI/AIserver/Dockerfile\357\200\272Zone.Identifier"
+
+38ef7ac1fa634766eb078ba8de3ae9acf2fe9f22 djfjcen 2025-06-26
+2	0	backend/AI/AIserver/begin.sh
+278	0	backend/AI/AIserver/test_client_ngrok.py
+
+c836f9f009535ec1a71c37872da8c213efe14be1 djfjcen 2025-06-26
+405	0	backend/AI/AIserver/README.md
+1	0	backend/AI/AIserver/__init__.py
+-	-	backend/AI/AIserver/__pycache__/config_manager.cpython-38.pyc
+-	-	backend/AI/AIserver/__pycache__/vllm_proxy_server.cpython-38.pyc
+33	0	backend/AI/AIserver/config.json
+122	0	backend/AI/AIserver/config_manager.py
+5	0	backend/AI/AIserver/requirements.txt
+154	0	backend/AI/AIserver/start_server.py
+27	0	backend/AI/AIserver/summary.py
+6	0	backend/AI/AIserver/test.py
+247	0	backend/AI/AIserver/test_client.py
+32	0	backend/AI/AIserver/test_import.py
+389	0	backend/AI/AIserver/vllm_proxy_server.py
+0	0	backend/AI/{ => api lab}/client_dual_role.py
+0	0	backend/AI/{ => api lab}/config.json
+0	0	backend/AI/{ => api lab}/deepseekfunc.py
+0	0	backend/AI/{ => api lab}/default.py
+0	0	backend/AI/{ => api lab}/doubao.py
+0	0	backend/AI/{ => api lab}/example.json
+0	0	backend/AI/{ => api lab}/gemini.py
+0	0	backend/AI/{ => api lab}/geminireasoner.py
+0	0	backend/AI/{ => api lab}/http_to_wss_server.json
+0	0	backend/AI/{ => api lab}/http_to_wss_server.py
+0	0	backend/AI/{ => api lab}/image to base64.py
+0	0	backend/AI/{ => api lab}/kimi.py
+0	0	backend/AI/{ => api lab}/model_map.ini
+0	0	"backend/AI/openai\345\205\274\345\256\271\345\244\232\346\250\241\346\200\201\346\236\204\345\273\272messages\347\244\272\344\276\213.txt" => "backend/AI/api lab/openai\345\205\274\345\256\271\345\244\232\346\250\241\346\200\201\346\236\204\345\273\272messages\347\244\272\344\276\213.txt"
+0	0	backend/AI/{ => api lab}/readimageexample.json
+0	0	backend/AI/{ => api lab}/server.crt
+0	0	backend/AI/{ => api lab}/server.key
+0	0	backend/AI/{ => api lab}/sonar.py
+0	0	backend/AI/{ => api lab}/support model.txt
+0	0	backend/AI/{ => api lab}/test.py
+0	0	backend/AI/{ => api lab}/testexam1.json
+0	0	backend/AI/{ => api lab}/tiangong.py
+0	0	backend/AI/{ => api lab}/tongyi.py
+
+fda51dcf73e05313db030f7ebd9f6ecd1845d4e6 djfjcen 2025-06-23
+74	0	backend/AI/client_dual_role.py
+9	0	backend/AI/config.json
+100	0	backend/AI/deepseekfunc.py
+18	0	backend/AI/default.py
+68	0	backend/AI/doubao.py
+47	0	backend/AI/example.json
+29	0	backend/AI/gemini.py
+61	0	backend/AI/geminireasoner.py
+7	0	backend/AI/http_to_wss_server.json
+384	0	backend/AI/http_to_wss_server.py
+11	0	backend/AI/image to base64.py
+130	0	backend/AI/kimi.py
+21	0	backend/AI/model_map.ini
+61	0	"backend/AI/openai\345\205\274\345\256\271\345\244\232\346\250\241\346\200\201\346\236\204\345\273\272messages\347\244\272\344\276\213.txt"
+27	0	backend/AI/readimageexample.json
+22	0	backend/AI/server.crt
+28	0	backend/AI/server.key
+66	0	backend/AI/sonar.py
+174	0	backend/AI/support model.txt
+10	0	backend/AI/test.py
+26	0	backend/AI/testexam1.json
+40	0	backend/AI/tiangong.py
+125	0	backend/AI/tongyi.py
+
+bc006654702a9c5dec94f4588c7fb5bbf590b418 djfjcen 2025-06-23
+1	0	README.md
+
+dd354a29fdbe533f1b1d782bdc6b8099101682f6 ATOM_Lubover 2025-06-23
+0	0	backend/backend-readme.md
+
+d51988b3badb2b7054266c83486247c81e1202fa lbbbbbb 2025-06-23
+21	0	LICENSE
+2	0	README.md

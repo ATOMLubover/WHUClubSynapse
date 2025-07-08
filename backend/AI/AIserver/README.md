@@ -894,3 +894,65 @@ python vllm_proxy_server.py
             "save_file": "my_ml_dataset.json"
           }'
         ```
+
+### 22. 内容审核接口
+
+**接口路径:** `/content_moderation`
+**HTTP 方法:** `POST`
+**功能描述:** 接收一段文本内容，由AI判断其是否包含非法或不当内容。
+
+#### 请求体 (Request Body)
+
+使用 `application/json` 格式。
+
+**`ContentModerationRequest`**
+
+| 字段名称 | 类型   | 描述         |
+| :------- | :----- | :----------- |
+| `text`   | `string` | 待审核的文本内容 |
+
+**示例请求:**
+
+```json
+{
+  "text": "这段文本需要被审核。"
+}
+```
+
+#### 响应体 (Response Body)
+
+使用 `application/json` 格式。
+
+**`ContentModerationResponse`**
+
+| 字段名称 | 类型      | 描述                             |
+| :------- | :-------- | :------------------------------- |
+| `is_safe`  | `boolean` | `True` 表示内容安全，`False` 表示内容不安全 |
+| `reason`   | `string`  | (可选) 当 `is_safe` 为 `False` 时，提供不安全的原因说明 |
+
+**示例响应 (内容安全):**
+
+```json
+{
+  "is_safe": true,
+  "reason": null
+}
+```
+
+**示例响应 (内容不安全):**
+
+```json
+{
+  "is_safe": false,
+  "reason": "包含敏感词汇或不当言论。"
+}
+```
+
+**`curl` 示例**:
+```bash
+curl -X POST http://localhost:8080/content_moderation \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "测试文本"
+  }'
+```

@@ -113,7 +113,7 @@ class ChatRequest(BaseModel):
     max_tokens: Optional[int] = config.default_max_tokens
     temperature: Optional[float] = config.default_temperature
     top_p: Optional[float] = config.default_top_p
-    stream: Optional[bool] = True
+    stream: Optional[bool] = False
     system_prompt: Optional[str] = "You are a helpful assistant."
 
 class ChatResponse(BaseModel):
@@ -141,6 +141,13 @@ class ContentGenerationResponse(BaseModel):
     generated_text: str
 
 # 新增申请筛选助手请求和响应模型
+class ContentModerationRequest(BaseModel):
+    text: str
+
+class ContentModerationResponse(BaseModel):
+    is_safe: bool
+    reason: Optional[str] = None # 可以选择添加一个reason字段，说明不安全的原因
+
 class ApplicationScreeningRequest(BaseModel):
     applicant_data: Dict[str, Any] # 申请者个人资料，如姓名、专业、技能等
     application_reason: str       # 申请理由
@@ -568,7 +575,7 @@ async def chat(request: ChatRequest):
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
             "top_p": request.top_p,
-            "stream": request.stream
+            "stream": False
         }
         
         # 如果有系统提示，添加到消息列表开头
@@ -639,6 +646,8 @@ async def chat(request: ChatRequest):
                 timeout=config.request_timeout
             )
             
+            logger.debug(f"vLLM原始响应文本: {response.text[:500]}") # 添加日志
+
             if response.status_code != 200:
                 logger.error(f"vLLM服务器返回错误: {response.status_code} - {response.text}")
                 raise HTTPException(
@@ -656,11 +665,12 @@ async def chat(request: ChatRequest):
                     detail=f"vLLM API错误: {result['error']}"
                 )
             
-            # 提取响应内容
+            # 提取响应内容ChatResponse
             if result.get("choices") and len(result["choices"]) > 0:
                 choice = result["choices"][0]
                 if "message" in choice and "content" in choice["message"]:
-                    response_text = choice["message"]["content"]
+                    content_from_vllm = choice["message"].get("content")
+                    response_text = "" if content_from_vllm is None else content_from_vllm # 确保content不为None，如果为None则设置为""
                     
                     # 构造响应
                     chat_response = ChatResponse(
@@ -1345,6 +1355,8 @@ async def financial_bookkeeping(request: FinancialBookkeepingRequest):
         if json_string.startswith("```json") and json_string.endswith("```"):
             json_string = json_string[len("```json"): -len("```")].strip()
         
+        logger.debug(f"财务记账AI原始JSON响应: {json_string[:500]}") # 添加日志
+
         try:
             parsed_response = json.loads(json_string)
             parsed_entries_data = parsed_response.get("parsed_entries", [])
@@ -1472,6 +1484,8 @@ async def generate_financial_report(request: FinancialReportRequest):
         json_string = llm_response_content.strip()
         if json_string.startswith("```json") and json_string.endswith("```"):
             json_string = json_string[len("```json"): -len("```")].strip()
+
+        logger.debug(f"财务报表AI原始JSON响应: {json_string[:500]}") # 添加日志
 
         try:
             parsed_response = json.loads(json_string)
@@ -2185,6 +2199,7 @@ async def generate_training_data(request: TrainingDataGenerationRequest):
                             if choice.get("delta") and "content" in choice["delta"]:
                                 content = choice["delta"]["content"]
                                 llm_response_content += content
+                                logger.debug(f"vLLM流式响应累计内容: {llm_response_content[:500]}") # 添加日志
                                 buffer += content
                     except json.JSONDecodeError:
                         logger.debug(f"无法解析的SSE数据行: {data}")
@@ -3054,6 +3069,93 @@ async def generate_user_data(request: MLDataGenerationRequest):
         logger.error(f"AI机器学习数据生成失败: {e}")
         raise HTTPException(status_code=500, detail=f"AI机器学习数据生成失败: {e}")
 
+@app.post("/content_moderation", response_model=ContentModerationResponse)
+async def content_moderation(request: ContentModerationRequest):
+    """
+    对即将发送到社交平台上的文本进行内容审核，判断它是否可以被发到网上。
+    如果含有非法内容就返回false，可以发送就返回True。
+    
+    Args:
+        request: 包含待审核文本的请求体。
+        
+    Returns:
+        ContentModerationResponse: 包含审核结果和可选原因。
+    """
+    try:
+        # 定义内容审核Prompt模板
+        prompt_template = """
+你是一位专业的内容审核专家，负责审查即将发布到社交平台上的文本内容，确保其符合社交媒体的政策和社会道德标准。
+
+你的任务是根据以下要求，对给定的文本进行审核，并返回审核结果和可选原因。
+
+**审核要求:**
+1.  **非法内容:** 检查文本是否包含任何非法、违反社会道德或法律的内容。这可能包括但不限于：
+    - 违反国家法律法规的内容，如宣扬暴力、恐怖主义、色情、赌博、毒品等。
+    - 侵犯他人知识产权或隐私的内容，如盗版、抄袭、侵权等。
+    - 涉及政治敏感话题的内容，如政治宣传、政治人物诋毁等。
+    - 其他可能被社交媒体平台认为不适合发布的内容。
+
+2.  **社交媒体政策:** 检查文本是否违反社交媒体平台的政策，如：
+    - 垃圾信息、广告、骚扰信息等。
+    - 侵犯他人名誉权的内容，如诽谤、诬陷等。
+    - 其他可能被社交媒体平台认为不适合发布的内容。
+
+**输入文本:**
+{text}
+
+**输出格式要求:**
+请**直接**按照以下JSON格式返回结果，**不要包含任何Markdown代码块或其他文本**：
+{{
+  "is_safe": true,
+  "reason": "文本内容符合社交媒体政策和社会道德标准"
+}}
+
+请开始进行内容审核。
+"""
+
+        # 格式化Prompt
+        full_prompt = prompt_template.format(
+            text=request.text
+        )
+        
+        logger.info(f"内容审核Prompt: {full_prompt[:200]}...") # 增加日志长度
+
+        # Construct messages for the chat function
+        messages = [
+            Message(role="system", content="你是一位专业的内容审核专家，负责审查即将发布到社交平台上的文本内容，确保其符合社交媒体的政策和社会道德标准。"),
+            Message(role="user", content=full_prompt)
+        ]
+        
+        chat_request = ChatRequest(
+            messages=messages,
+            model=config.default_model, # Use default model
+            max_tokens=2048, # Adjust max tokens as needed for post length
+            temperature=0.7,
+            top_p=0.95,
+            stream=False # We need a complete response
+        )
+
+        chat_response = await chat(chat_request) # Call the local chat function
+
+        generated_text = chat_response.response
+
+        if not generated_text.strip():
+            raise ValueError("AI未返回有效的生成内容。")
+            
+        # Parse the JSON response
+        try:
+            response_json = json.loads(generated_text)
+            is_safe = response_json.get("is_safe", False)
+            reason = response_json.get("reason", None)
+        except json.JSONDecodeError as e:
+            logger.error(f"解析AI响应JSON失败: {e}")
+            raise HTTPException(status_code=500, detail=f"解析AI响应JSON失败: {e}")
+
+        return ContentModerationResponse(is_safe=is_safe, reason=reason)
+
+    except Exception as e:
+        logger.error(f"内容审核失败: {e}")
+        raise HTTPException(status_code=500, detail=f"内容审核失败: {e}")
 
 if __name__ == "__main__":
     print(f"启动vLLM代理服务器...")
@@ -3081,6 +3183,7 @@ if __name__ == "__main__":
     print(f"训练数据生成接口: http://{config.server_host}:{config.server_port}/generate_training_data")
     print(f"机器学习数据生成接口: http://{config.server_host}:{config.server_port}/generate_ml_data")
     print(f"用户数据生成接口: http://{config.server_host}:{config.server_port}/generate_user_data")
+    print(f"内容审核接口: http://{config.server_host}:{config.server_port}/content_moderation")
     
     # 使用自定义的uvicorn配置类来支持优雅停机
     class UvicornServer(uvicorn.Server):

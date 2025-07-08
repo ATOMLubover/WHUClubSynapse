@@ -31,13 +31,42 @@ def extract_club_data():
                     tags_str = metadata.get('tags', '[]')
                     try:
                         if isinstance(tags_str, str):
+                            # 首先尝试解析为JSON数组
+                            # 替换单引号为双引号，使其成为有效的JSON字符串
+                            if tags_str.strip().startswith(('[', '{')):
+                                # 仅当它是潜在的JSON字符串时才尝试替换
+                                tags_str = tags_str.replace("'", '"')
                             tags_list = json.loads(tags_str)
                         else:
+                            # 如果不是字符串，假设它已经是列表或者其他可迭代对象
                             tags_list = tags_str
+
                         if isinstance(tags_list, list):
-                            clubs[club_id]['tags'] = tags_list
+                            # 过滤掉空字符串和None，并转换为字符串类型
+                            clubs[club_id]['tags'] = [str(tag).strip() for tag in tags_list if tag]
+                        elif isinstance(tags_list, str) and tags_list.strip():
+                            # 如果解析后仍然是字符串（例如，非JSON格式的标签），尝试按逗号或管道分割
+                            if ',' in tags_list:
+                                clubs[club_id]['tags'] = [tag.strip() for tag in tags_list.split(',') if tag.strip()]
+                            elif '|' in tags_list:
+                                clubs[club_id]['tags'] = [tag.strip() for tag in tags_list.split('|') if tag.strip()]
+                            else:
+                                # 如果是单个非JSON字符串，作为单个标签
+                                clubs[club_id]['tags'] = [tags_list.strip()]
+                        else:
+                            clubs[club_id]['tags'] = []
+
                     except json.JSONDecodeError:
-                        clubs[club_id]['tags'] = []
+                        # 如果JSON解析失败，尝试将tags_str作为逗号或管道分隔的字符串处理
+                        if isinstance(tags_str, str) and tags_str.strip():
+                            if ',' in tags_str:
+                                clubs[club_id]['tags'] = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+                            elif '|' in tags_str:
+                                clubs[club_id]['tags'] = [tag.strip() for tag in tags_str.split('|') if tag.strip()]
+                            else:
+                                clubs[club_id]['tags'] = [tags_str.strip()]
+                        else:
+                            clubs[club_id]['tags'] = []
                 
                 # 处理帖子信息
                 elif data['id'].startswith('dynamic::post_id::'):

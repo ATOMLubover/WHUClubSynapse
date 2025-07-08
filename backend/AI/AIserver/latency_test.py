@@ -26,7 +26,7 @@ TONGYI_API_KEY = "sk-354859a6d3ae438fb8ab9b98194f5266" # 请替换为您的真�
 TONGYI_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # 从 test_client_ngrok.py 获取的 ngrok 代理地址
-NGROK_PROXY_URL = "https://6a52-125-220-159-5.ngrok-free.app" # 请替换为您的实际ngrok公网地址
+NGROK_PROXY_URL = "https://730e81d21264.ngrok-free.app" # 请替换为您的实际ngrok公网地址
 
 # 定义不同的 max_tokens
 DEFAULT_MAX_TOKENS = 16384

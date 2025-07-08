@@ -70,5 +70,63 @@
       "limit": 2000.0,
       "description": "篮球社2024年全年预算"
     }
+  },
+  "机器人社团": {
+    "entries": [
+      {
+        "item": "设备",
+        "amount": 400.0,
+        "category": "物资",
+        "payer": null,
+        "date": null,
+        "remark": null
+      }
+    ],
+    "budget": {}
+  },
+  "英语口语社团": {
+    "entries": [
+      {
+        "item": "设备采购",
+        "amount": 200.0,
+        "category": "物资",
+        "payer": "张三",
+        "date": "今天",
+        "remark": "集资采购"
+      },
+      {
+        "item": "设备",
+        "amount": 200.0,
+        "category": "物资",
+        "payer": "张三",
+        "date": null,
+        "remark": null
+      },
+      {
+        "item": "设备采购",
+        "amount": 200.0,
+        "category": "物资",
+        "payer": "张三",
+        "date": "2023-10-26",
+        "remark": null
+      },
+      {
+        "item": "设备",
+        "amount": 55.0,
+        "category": "物资",
+        "payer": "张三",
+        "date": null,
+        "remark": null
+      },
+      {
+        "item": "材料",
+        "amount": 200.0,
+        "category": "物资",
+        "payer": "张三",
+        "date": "今天",
+        "remark": null
+      }
+    ],
+    "budget": {}
   }
 }
