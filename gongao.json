@@ -1,0 +1,240 @@
+[
+    {
+      "type": "activity",
+      "content": "社团成功举办了主题为“科技前沿与未来”的分享会",
+      "metadata": {
+        "activity_type": "sharing_session",
+        "location": "教学楼A201",
+        "participants": 55,
+        "speaker": "张教授"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "关于社团新会费调整的通知",
+      "metadata": {
+        "priority": "medium",
+        "valid_until": "2024-09-30",
+        "tags": ["会费", "通知"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团组织了“城市绿道骑行”户外活动",
+      "metadata": {
+        "activity_type": "outdoor_event",
+        "location": "城市绿道起点",
+        "participants": 20,
+        "distance_km": 15
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "招募2024年秋季社团骨干成员",
+      "metadata": {
+        "priority": "high",
+        "valid_until": "2024-09-01",
+        "tags": ["招募", "骨干"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团举办了“编程马拉松”竞赛",
+      "metadata": {
+        "activity_type": "competition",
+        "location": "计算机实验室",
+        "participants": 40,
+        "theme": "人工智能应用"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "关于社团网站维护升级的通知",
+      "metadata": {
+        "priority": "low",
+        "valid_until": "2024-07-15",
+        "tags": ["网站", "维护"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团成员参与了社区志愿服务活动",
+      "metadata": {
+        "activity_type": "volunteer_service",
+        "location": "XX社区养老院",
+        "participants": 12,
+        "service_hours_per_person": 4
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团组织了“电影之夜”观影活动",
+      "metadata": {
+        "activity_type": "movie_night",
+        "location": "学生中心多功能厅",
+        "participants": 60,
+        "movie_title": "肖申克的救赎"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "2024年秋季学期社团纳新宣讲会安排",
+      "metadata": {
+        "priority": "high",
+        "valid_until": "2024-08-25",
+        "tags": ["纳新", "宣讲会"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团成功举办了“辩论赛之夜”",
+      "metadata": {
+        "activity_type": "debate_competition",
+        "location": "报告厅",
+        "participants": 80,
+        "theme": "人工智能对社会发展的影响"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "社团招募新媒体运营志愿者",
+      "metadata": {
+        "priority": "medium",
+        "valid_until": "2024-08-10",
+        "tags": ["招募", "志愿者", "新媒体"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团组织了“城市徒步探索”活动",
+      "metadata": {
+        "activity_type": "hiking",
+        "location": "城市公园",
+        "participants": 25,
+        "distance_km": 8
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "关于社团办公室调整的通知",
+      "metadata": {
+        "priority": "low",
+        "valid_until": "2024-07-20",
+        "tags": ["办公室", "通知"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团举办了“AI与艺术创作”沙龙",
+      "metadata": {
+        "activity_type": "salon",
+        "location": "创意工坊",
+        "participants": 35,
+        "topic": "AI在绘画和音乐中的应用"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "社团暑期社会实践项目报名启动",
+      "metadata": {
+        "priority": "high",
+        "valid_until": "2024-07-25",
+        "tags": ["暑期", "实践", "报名"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团组织了“桌游竞技之夜”",
+      "metadata": {
+        "activity_type": "board_game_night",
+        "location": "学生活动室",
+        "participants": 30,
+        "games_played": ["狼人杀", "三国杀", "卡坦岛"]
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "社团公众号内容征集活动",
+      "metadata": {
+        "priority": "medium",
+        "valid_until": "2024-08-05",
+        "tags": ["公众号", "征集", "内容"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团举办了“摄影技巧分享会”",
+      "metadata": {
+        "activity_type": "sharing_session",
+        "location": "艺术学院摄影棚",
+        "participants": 45,
+        "theme": "风光摄影与后期处理"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "关于社团团建活动的投票通知",
+      "metadata": {
+        "priority": "low",
+        "valid_until": "2024-07-18",
+        "tags": ["团建", "投票"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团成员参观了当地科技馆",
+      "metadata": {
+        "activity_type": "excursion",
+        "location": "XX科技馆",
+        "participants": 28,
+        "exhibit_focus": "未来科技展"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "社团年度总结大会暨表彰大会预告",
+      "metadata": {
+        "priority": "high",
+        "valid_until": "2024-12-01",
+        "tags": ["总结", "表彰", "大会"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团举办了“就业经验分享会”",
+      "metadata": {
+        "activity_type": "sharing_session",
+        "location": "就业指导中心",
+        "participants": 70,
+        "speaker_background": "往届优秀毕业生"
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "社团征集下一年度活动提案",
+      "metadata": {
+        "priority": "medium",
+        "valid_until": "2024-11-15",
+        "tags": ["提案", "活动", "征集"]
+      }
+    },
+    {
+      "type": "activity",
+      "content": "社团组织了“城市定向越野”比赛",
+      "metadata": {
+        "activity_type": "orientation_race",
+        "location": "校园及周边区域",
+        "participants": 40,
+        "team_size": 4
+      }
+    },
+    {
+      "type": "announcement",
+      "content": "关于社团新媒体平台投稿的注意事项",
+      "metadata": {
+        "priority": "low",
+        "valid_until": "2024-12-31",
+        "tags": ["投稿", "新媒体", "须知"]
+      }
+    }
+  ]

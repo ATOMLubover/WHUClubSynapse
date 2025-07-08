@@ -1,0 +1,27 @@
+# 忽略backend文件夹
+backend/
+
+# 常见的忽略文件
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 依赖目录
+node_modules/
+
+# 构建输出
+dist/
+build/
+
+# 环境变量文件
+.env
+.env.local
+.env.production
+.env.staging
