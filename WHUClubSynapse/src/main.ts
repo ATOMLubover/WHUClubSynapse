@@ -19,15 +19,15 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
+// 先初始化Pinia
 app.use(createPinia())
-
-// 初始化配置Store
-const configStore = useConfigStore()
-configStore.restoreUserPreference()
-
 app.use(router)
 app.use(ElementPlus, {
   locale: zhCn,
 })
+
+// 然后再初始化配置Store
+const configStore = useConfigStore()
+configStore.restoreUserPreference()
 
 app.mount('#app')

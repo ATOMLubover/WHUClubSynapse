@@ -1,6 +1,5 @@
 -- 插入社团数据（适配public.clubs 表结构）
 INSERT INTO "public"."clubs" (
-  "club_id",
   "name",
   "leader_id",
   "category_id",
@@ -14,7 +13,6 @@ INSERT INTO "public"."clubs" (
 ) VALUES 
 -- 社团1：英语口语社团
 (
-  85,
   '英语口语社团',
   8,
   1,
@@ -28,7 +26,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团2：青年志愿者协会
 (
-  86,
   '青年志愿者协会',
   8,
   1,
@@ -42,7 +39,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团3：摄影社
 (
-  87,
   '摄影社',
   8,
   1,
@@ -56,7 +52,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团4：机器人社团
 (
-  84,
   '机器人社团',
   8,
   1,
@@ -70,7 +65,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团5：茶艺社
 (
-  88,
   '茶艺社',
   8,
   1,
@@ -84,7 +78,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团6：街舞社
 (
-  89,
   '街舞社',
   9,
   1,
@@ -98,7 +91,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团7：动漫社
 (
-  90,
   '动漫社',
   10,
   1,
@@ -112,7 +104,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团8：心理健康协会
 (
-  91,
   '心理健康协会',
   11,
   1,
@@ -126,7 +117,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团9：编程俱乐部
 (
-  92,
   '编程俱乐部',
   12,
   1,
@@ -140,7 +130,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团10：文学社
 (
-  93,
   '文学社',
   13,
   1,
@@ -154,7 +143,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团11：足球爱好者协会
 (
-  94,
   '足球爱好者协会',
   14,
   1,
@@ -168,7 +156,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团12：棋艺社
 (
-  95,
   '棋艺社',
   15,
   1,
@@ -182,7 +169,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团13：吉他社
 (
-  96,
   '吉他社',
   16,
   1,
@@ -196,7 +182,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团14：辩论社
 (
-  97,
   '辩论社',
   17,
   1,
@@ -210,7 +195,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团15：天文爱好者协会
 (
-  98,
   '天文爱好者协会',
   18,
   1,
@@ -224,7 +208,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团16：烹饪社
 (
-  99,
   '烹饪社',
   19,
   1,
@@ -238,7 +221,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团17：创业俱乐部
 (
-  100,
   '创业俱乐部',
   20,
   1,
@@ -252,7 +234,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团18：篮球社
 (
-  101,
   '篮球社',
   21,
   1,
@@ -266,7 +247,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团19：手工艺社
 (
-  102,
   '手工艺社',
   22,
   3,
@@ -280,7 +260,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团20：电影鉴赏社
 (
-  103,
   '电影鉴赏社',
   23,
   1,
@@ -294,7 +273,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团21：环保协会
 (
-  104,
   '环保协会',
   24,
   1,
@@ -308,7 +286,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团22：乐高俱乐部
 (
-  105,
   '乐高俱乐部',
   25,
   1,
@@ -322,7 +299,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团23：模拟联合国社团
 (
-  106,
   '模拟联合国社团',
   26,
   1,
@@ -336,7 +312,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团24：瑜伽社
 (
-  107,
   '瑜伽社',
   27,
   1,
@@ -350,7 +325,6 @@ INSERT INTO "public"."clubs" (
 ),
 -- 社团25：心理咨询互助社
 (
-  108,
   '心理咨询互助社',
   28,
   1,

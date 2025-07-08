@@ -303,7 +303,7 @@
       <ClubAnnouncementManager
         v-if="club"
         :club-id="Number(clubId)"
-        :leader-id="Number(club.leader_id)"
+        :leader-id="Number(club.leader_id || 0)"
       />
     </div>
   </div>

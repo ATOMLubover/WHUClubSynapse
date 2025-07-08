@@ -228,15 +228,19 @@ const isClubLeader = computed(() => {
   const user = authStore.user
   // 检查用户是否登录
   if (!user) {
+    console.log('用户未登录')
     return false
   }
   
   // 检查用户是否为超级管理员
   if (user.role === 'admin') {
+    console.log('用户是超级管理员')
     return true
   }
   
   // 检查用户是否为该社团的管理员
+  console.log('当前用户ID:', user.user_id)
+  console.log('社团负责人ID:', props.leaderId)
   return props.leaderId === user.user_id
 })
 
@@ -272,14 +276,39 @@ const fetchAnnouncements = async () => {
     }
     if (response.data) {
       announcements.value = response.data.map((item: any) => {
-        const content = JSON.parse(item.content)
-        return {
-          id: item.id,
-          title: content.title,
-          content: content.content,
-          type: content.type,
-          created_at: item.created_at,
-          metadata: content.metadata || { tags: [] },
+        try {
+          // 检查content是否存在且不为空
+          if (!item.content) {
+            console.warn('公告内容为空:', item)
+            return {
+              id: item.id,
+              title: '无标题',
+              content: '',
+              type: 'announcement',
+              created_at: item.created_at,
+              metadata: { tags: [] },
+            }
+          }
+          
+          const content = JSON.parse(item.content)
+          return {
+            id: item.id,
+            title: content.title || '无标题',
+            content: content.content || '',
+            type: content.type || 'announcement',
+            created_at: item.created_at,
+            metadata: content.metadata || { tags: [] },
+          }
+        } catch (parseError) {
+          console.error('解析公告内容失败:', parseError, item)
+          return {
+            id: item.id,
+            title: '解析错误',
+            content: '该公告内容格式有误',
+            type: 'announcement',
+            created_at: item.created_at,
+            metadata: { tags: [] },
+          }
         }
       })
     }
