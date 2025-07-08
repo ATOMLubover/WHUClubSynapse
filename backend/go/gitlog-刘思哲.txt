@@ -1,0 +1,462 @@
+lubover@LB-OnsokuDash:~/proj/whuclubsynapse-go/backend/go$  git log --numstat --pretty=format:"%H %an %ad" --date=short
+74dcbdce2461ceffe338013f0286468550a8062e ATOM_Lubover 2025-07-07
+4       2       backend/go/internal/base_server/dto/update_club_info.go
+2       12      backend/go/internal/base_server/handler/club_admin_handler.go
+4       2       backend/go/internal/base_server/handler/club_pub_handler.go
+
+bbe726c19fbbb913c5c3d023848df399d210f4dc ATOM_Lubover 2025-07-07
+12      9       backend/go/internal/base_server/handler/club_admin_handler.go
+
+336d302009899a43e01faa6793424040ec031711 ATOM_Lubover 2025-07-07
+9       9       backend/go/internal/base_server/repo/update_club_info_applis.go
+10      1       backend/go/internal/base_server/service/club_service.go
+
+ab0e2de1a346342c38da6316a720a317600a5f33 ATOM_Lubover 2025-07-07
+18      4       backend/go/internal/base_server/repo/update_club_info_applis.go
+
+eca16b6bb6d936d535ba048a6848f2d6f59cf4f1 ATOM_Lubover 2025-07-07
+1       0       backend/go/internal/base_server/repo/clubs.go
+1       1       backend/go/internal/base_server/repo/update_club_info_applis.go
+
+17b6e4246e8e04eb41a886cf97cec80456c443d9 ATOM_Lubover 2025-07-07
+5       1       backend/go/internal/base_server/service/club_service.go
+
+4268a02844b3c6a818f36d160e37f6b64bea783c ATOM_Lubover 2025-07-07
+2       2       backend/go/internal/base_server/repo/update_club_info_applis.go
+
+fe37ec3109d070abacf68704208aa0a57beb31f7 ATOM_Lubover 2025-07-07
+6       5       backend/go/internal/base_server/dto/create_club_appli.go
+6       5       backend/go/internal/base_server/handler/club_handler.go
+
+72af86382c0b8de538f3636d8430a7874932fea9 ATOM_Lubover 2025-07-07
+1       0       backend/go/internal/base_server/repo/clubs.go
+
+0b0824213f37d681beab978cdf0a1feccb3c5fde ATOM_Lubover 2025-07-07
+7       1       backend/go/internal/base_server/handler/club_pub_handler.go
+1       1       backend/go/internal/base_server/repo/club_posts.go
+
+00c46709981ebac8a3514c138f61aa1cff937823 thebreeze 2025-07-05
+58d8afd6bbd8d0d8b7cba548f9374e21663109a7 thebreeze 2025-07-05
+10      9       backend/go/internal/base_server/handler/club_handler.go
+1       1       backend/go/internal/base_server/repo/create_club_applis.go
+1       1       backend/go/internal/base_server/repo/join_club_applis.go
+1       1       backend/go/internal/base_server/repo/update_club_info_applis.go
+
+5bc808e8f0a50d733ad222968de36746da0b5d89 ATOM_Lubover 2025-07-05
+10      9       backend/go/internal/base_server/handler/club_handler.go
+
+261e36145f0c20a9790043c7dd6d16ad12856f4a ATOM_Lubover 2025-07-05
+10      9       backend/go/internal/base_server/dto/club.go
+9       8       backend/go/internal/base_server/handler/club_handler.go
+
+196d6d6d0d43387077837d605b5bca1a0d7bfb2f ATOM_Lubover 2025-07-05
+6       5       backend/go/internal/base_server/handler/club_handler.go
+
+52cb21d931b27e8ba1b2d95dc8379a15f493782b ATOM_Lubover 2025-07-05
+0       1       backend/go/cmd/base_server/main.go
+1       1       backend/go/config/basic_config.json
+72      16      backend/go/internal/base_server/handler/trans_handler.go
+1       1       backend/go/internal/base_server/service/club_service.go
+47      0       backend/go/test/main.go
+
+feaf7ef24b090df4c9624d4680a97f6da58063e3 ATOM_Lubover 2025-07-05
+3       1       backend/go/cmd/base_server/main.go
+
+c0239d46877ffbcea7d5227ff20d4d817d51f429 ATOM_Lubover 2025-07-05
+4       4       backend/go/internal/base_server/handler/club_admin_handler.go
+4       0       backend/go/internal/base_server/handler/trans_handler.go
+
+2ab47d3116f92af77247c7be62255061f93b714c ATOM_Lubover 2025-07-05
+9       2       backend/go/internal/base_server/handler/club_admin_handler.go
+38      0       backend/go/internal/base_server/handler/trans_handler.go
+
+1b272c3f30759fd340d4390a9c9ccfddf0d4ac57 ATOM_Lubover 2025-07-05
+0       7       backend/go/cmd/base_server/main.go
+1       1       backend/go/config/basic_config.json
+14      2       backend/go/internal/base_server/handler/club_admin_handler.go
+13      0       backend/go/internal/base_server/handler/trans_handler.go
+
+b79ec15e84e4e90e87e4afc9b75197dd5d9acc9c ATOM_Lubover 2025-07-05
+8       3       backend/go/cmd/base_server/main.go
+1       1       backend/go/config/basic_config.json
+
+6d531176a2a94f5f71f6c719f451d012815e55c1 ATOM_Lubover 2025-07-04
+14      2       backend/go/internal/base_server/handler/club_admin_handler.go
+
+f7a23b02b5eb4882e90643d9f2b287df4a2df1eb ATOM_Lubover 2025-07-04
+3       1       backend/go/cmd/base_server/main.go
+2       2       backend/go/internal/base_server/handler/club_pub_handler.go
+
+348afcf6c6710fee5e54feec29a2f028c1df362e ATOM_Lubover 2025-07-04
+1       1       backend/go/internal/base_server/handler/club_pub_handler.go
+2       1       backend/go/internal/base_server/repo/club_posts.go
+3       3       backend/go/internal/base_server/repo/clubs.go
+1       1       backend/go/internal/base_server/service/club_service.go
+
+9cd6dc1bc03b2e1b1646ecf16ec21d1d0cf5131b ATOM_Lubover 2025-07-04
+5       2       backend/go/internal/base_server/handler/club_pub_handler.go
+
+9642fdc625c2f2aa7cf10c28311b3ae16e3a51d8 ATOM_Lubover 2025-07-04
+2       5       backend/go/internal/base_server/dto/update_club_info.go
+11      9       backend/go/internal/base_server/handler/club_handler.go
+2       2       backend/go/internal/base_server/handler/club_pub_handler.go
+
+0c35ce2acad8ca22230489cc7f143c3e60096fce ATOM_Lubover 2025-07-04
+1       11      backend/go/internal/base_server/handler/post_handler.go
+3       3       backend/go/internal/base_server/repo/club_post_comments.go
+1       1       backend/go/internal/base_server/repo/update_club_info_applis.go
+3       3       backend/go/internal/base_server/service/post_service.go
+
+0e8f9eff71d41c8e3e227ece520c309921a11b36 ATOM_Lubover 2025-07-04
+34      0       backend/go/internal/base_server/handler/club_admin_handler.go
+10      0       backend/go/internal/base_server/repo/create_club_applis.go
+6       0       backend/go/internal/base_server/service/club_service.go
+
+37a3f2b4e4d3809620196d82b7da7a4fea174e07 ATOM_Lubover 2025-07-04
+1       1       backend/go/cmd/base_server/main.go
+
+c4ebd3c16024fd388a9ccb0a7c479d5b8d454447 ATOM_Lubover 2025-07-04
+2       1       backend/go/internal/base_server/handler/club_handler.go
+16      11      backend/go/internal/base_server/handler/user_handler.go
+
+1b187c7410ca340d24143068bd4609270120f8d6 ATOM_Lubover 2025-07-04
+8       0       backend/go/internal/base_server/dto/update_club_info.go
+35      0       backend/go/internal/base_server/handler/club_admin_handler.go
+29      1       backend/go/internal/base_server/handler/club_pub_handler.go
+19      0       backend/go/internal/base_server/repo/update_club_info_applis.go
+11      0       backend/go/internal/base_server/service/club_service.go
+
+b1c33eb2e84b41973b27f0bb438ca938e116bf70 ATOM_Lubover 2025-07-04
+1       0       backend/go/internal/base_server/dto/club_post.go
+2       0       backend/go/internal/base_server/handler/club_handler.go
+2       0       backend/go/internal/base_server/handler/post_handler.go
+
+62ba94be771939260ffd3143715d937a8d79034f ATOM_Lubover 2025-07-04
+3       0       backend/go/internal/base_server/dto/userinfo.go
+61      0       backend/go/internal/base_server/handler/club_handler.go
+23      0       backend/go/internal/base_server/handler/club_pub_handler.go
+3       0       backend/go/internal/base_server/handler/user_handler.go
+24      0       backend/go/internal/base_server/repo/club_members.go
+14      0       backend/go/internal/base_server/repo/clubs.go
+1       1       backend/go/internal/base_server/repo/create_club_applis.go
+1       1       backend/go/internal/base_server/repo/join_club_applis.go
+24      0       backend/go/internal/base_server/service/club_service.go
+
+dcde775f9cd4df709aa0ae914787329cd31df115 ATOM_Lubover 2025-07-03
+9       0       backend/go/internal/base_server/dto/update_user.go
+1       0       backend/go/internal/base_server/dto/userinfo.go
+55      2       backend/go/internal/base_server/handler/user_handler.go
+9       1       backend/go/internal/base_server/repo/users.go
+9       0       backend/go/internal/base_server/service/uesr_service.go
+1       0       backend/go/internal/shared/dbstruct/models.go
+
+366836284f397210a3e0f922f45d1b930ce35fe2 ATOM_Lubover 2025-07-03
+8       0       backend/go/cmd/base_server/main.go
+1       1       backend/go/config/basic_config.json
+105     8       backend/go/internal/base_server/handler/trans_handler.go
+4       3       backend/go/internal/base_server/repo/join_club_applis.go
+7       3       backend/go/internal/base_server/service/club_service.go
+
+d698a413d5bce665af7aa11717c54640f467d866 ATOM_Lubover 2025-07-03
+3       3       backend/go/config/basic_config.json
+11      1       backend/go/internal/base_server/handler/club_pub_handler.go
+5       0       backend/go/internal/base_server/handler/trans_handler.go
+
+d041ae821abcff0ccb68a39457a5c5517a0ee40b ATOM_Lubover 2025-07-03
+2       2       backend/go/internal/base_server/handler/club_pub_handler.go
+
+0cb79a9b0e45261a2d620fdefe1a3f902cf4ff0c ATOM_Lubover 2025-07-03
+5       4       backend/go/internal/base_server/dto/update_club_info.go
+22      3       backend/go/internal/base_server/handler/club_pub_handler.go
+
+eac49562eaeaa67c18ee327deb7462ac0e409923 ATOM_Lubover 2025-07-03
+40      2       backend/go/internal/base_server/handler/user_handler.go
+
+412281ca3e493292dda088c2f1b2904c6e6de27b ATOM_Lubover 2025-07-03
+2       0       backend/go/cmd/base_server/main.go
+-       -       backend/go/cmd/base_server/pub/club_logos/default.jpg
+-       -       backend/go/cmd/base_server/pub/user_avatars/default.jpg
+6       4       backend/go/internal/base_server/handler/user_handler.go
+1       1       backend/go/internal/base_server/repo/club_post_comments.go
+
+83b5f0d091d67393696d16f31633125fda33cdb9 ATOM_Lubover 2025-07-02
+4       0       backend/go/cmd/base_server/main.go
+8       0       backend/go/go.mod
+17      0       backend/go/go.sum
+6       0       backend/go/internal/base_server/dto/post_comment.go
+143     0       backend/go/internal/base_server/esimpl/es.go
+29      0       backend/go/internal/base_server/handler/post_handler.go
+
+67769202686dec9a566b87712c362b1bc2c3534c ATOM_Lubover 2025-07-02
+8       2       backend/go/internal/base_server/handler/user_handler.go
+
+68744cdc42de1d2e82cd8f359a17f496e57dbcd1 ATOM_Lubover 2025-07-02
+5       0       backend/go/internal/base_server/handler/club_handler.go
+69      0       backend/go/internal/base_server/handler/club_pub_handler.go
+50      0       backend/go/internal/base_server/handler/user_handler.go
+11      2       backend/go/internal/base_server/repo/club_members.go
+7       0       backend/go/internal/base_server/repo/clubs.go
+8       0       backend/go/internal/base_server/repo/users.go
+6       0       backend/go/internal/base_server/service/club_service.go
+5       0       backend/go/internal/base_server/service/uesr_service.go
+2       2       backend/go/internal/shared/dbstruct/models.go
+
+df740b8b65fb9aeb2c4f62c34adcab759780bca3 ATOM_Lubover 2025-07-02
+26      0       backend/go/internal/base_server/handler/club_handler.go
+1       0       backend/go/internal/base_server/redisimpl/redis_client.go
+
+f8e351204ad70dd9b962904eaa24b912e50199be ATOM_Lubover 2025-07-02
+18      9       backend/go/internal/base_server/dto/create_club_appli.go
+49      5       backend/go/internal/base_server/handler/club_handler.go
+
+2f8bfd6af5bbd040d2925f6cf5cf5d24a8d609a8 ATOM_Lubover 2025-07-02
+2       1       backend/go/cmd/base_server/main.go
+1       0       backend/go/cmd/base_server/pub/post_files/2025-07-01_15.md
+2       2       backend/go/config/basic_config.json
+1       1       backend/go/internal/base_server/handler/club_pub_handler.go
+2       2       backend/go/internal/base_server/handler/post_handler.go
+1       1       backend/go/internal/base_server/handler/user_handler.go
+12      2       backend/go/internal/base_server/redisimpl/redis_client.go
+2       3       backend/go/internal/base_server/repo/create_club_applis.go
+2       3       backend/go/internal/base_server/repo/join_club_applis.go
+14      1       backend/go/internal/base_server/repo/transaction_coordinator.go
+2       3       backend/go/internal/base_server/repo/update_club_info_applis.go
+3       2       backend/go/internal/base_server/service/club_service.go
+
+56236a291c57330b91a52837fa36a6f8ee26c7e7 ATOM_Lubover 2025-07-01
+1       0       backend/go/internal/base_server/dto/join_club_appli.go
+2       0       backend/go/internal/base_server/handler/club_handler.go
+30      0       backend/go/internal/base_server/handler/club_pub_handler.go
+4       8       backend/go/internal/base_server/repo/create_club_applis.go
+11      0       backend/go/internal/base_server/service/club_service.go
+
+97b9c8036bc77334e20dfbd5ecc8c7601760523e ATOM_Lubover 2025-07-01
+1       1       backend/go/internal/base_server/dto/create_club_appli.go
+17      3       backend/go/internal/base_server/handler/club_handler.go
+
+097efc2b72e483bcb18a8fa89e539e7ee699a1bf ATOM_Lubover 2025-07-01
+3       3       backend/go/config/basic_config.json
+1       1       backend/go/go.mod
+1       0       backend/go/internal/base_server/dto/club.go
+2       0       backend/go/internal/base_server/dto/create_club_appli.go
+1       0       backend/go/internal/base_server/dto/join_club_appli.go
+100     0       backend/go/internal/base_server/handler/club_handler.go
+12      3       backend/go/internal/base_server/handler/trans_handler.go
+3       5       backend/go/internal/base_server/repo/club_favourites.go
+1       0       backend/go/internal/base_server/repo/clubs.go
+13      13      backend/go/internal/shared/dbstruct/models.go
+1       1       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+29da624787e4117b76b17c872608dfee15e9577e ATOM_Lubover 2025-07-01
+5       2       backend/go/cmd/base_server/main.go
+1       0       backend/go/cmd/base_server/pub/post_files/2025-06-30_14.md
+3       1       backend/go/config/basic_config.json
+1       1       backend/go/go.mod
+3       0       backend/go/internal/base_server/baseconfig/config.go
+8       7       backend/go/internal/base_server/dto/club.go
+2       1       backend/go/internal/base_server/handler/post_handler.go
+95      12      backend/go/internal/base_server/handler/trans_handler.go
+7       1       backend/go/internal/base_server/repo/club_favourites.go
+3       1       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+524e22d409d44e3d6552e58e3883f728e15cd31d ATOM_Lubover 2025-06-30
+10      9       backend/go/cmd/base_server/main.go
+2       2       backend/go/config/basic_config.json
+1       5       backend/go/internal/base_server/dto/club_post.go
+1       1       backend/go/internal/base_server/handler/auth_handler.go
+29      4       backend/go/internal/base_server/handler/club_admin_handler.go
+2       2       backend/go/internal/base_server/handler/club_pub_handler.go
+22      3       backend/go/internal/base_server/handler/post_handler.go
+28      0       backend/go/internal/base_server/handler/trans_handler.go
+90      0       backend/go/internal/base_server/redisimpl/redis_client.go
+10      4       backend/go/internal/base_server/repo/club_post_comments.go
+17      6       backend/go/internal/base_server/repo/club_posts.go
+18      5       backend/go/internal/base_server/service/club_service.go
+7       91      backend/go/internal/base_server/service/post_service.go
+1       1       backend/go/internal/shared/dbstruct/models.go
+7       10      "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+11eb2e0150b37a6d521086e6720c74877e70affa ATOM_Lubover 2025-06-30
+22      21      backend/go/cmd/base_server/main.go
+1       1       backend/go/config/basic_config.json
+6       0       backend/go/internal/base_server/dto/category.go
+22      0       backend/go/internal/base_server/handler/club_handler.go
+5       0       backend/go/internal/base_server/service/club_service.go
+95      0       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+fba789611f0f429ed5827adad3c4886fd6d9091d ATOM_Lubover 2025-06-29
+25      2       backend/go/cmd/base_server/main.go
+1       0       backend/go/config/basic_config.json
+19      15      backend/go/go.mod
+57      37      backend/go/go.sum
+4       1       backend/go/internal/base_server/baseconfig/config.go
+7       0       backend/go/internal/base_server/dto/_proc_create_post.go
+7       6       backend/go/internal/base_server/dto/club.go
+9       0       backend/go/internal/base_server/dto/favorite.go
+5       0       backend/go/internal/base_server/dto/join_club_appli.go
+0       7       backend/go/internal/base_server/dto/proc_create_post.go
+75      6       backend/go/internal/base_server/handler/auth_handler.go
+134     37      backend/go/internal/base_server/handler/club_handler.go
+39      1       backend/go/internal/base_server/handler/post_handler.go
+59      0       backend/go/internal/base_server/model/jwt_claim.go
+2       2       backend/go/internal/base_server/redisimpl/redis_client.go
+6       3       backend/go/internal/base_server/repo/club_favourites.go
+11      0       backend/go/internal/base_server/repo/clubs.go
+10      4       backend/go/internal/base_server/service/club_service.go
+4       2       backend/go/internal/base_server/service/post_service.go
+4       1       backend/go/internal/shared/dbstruct/models.go
+7       9       backend/go/server_build.bash
+252     156     "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+aebcebb5a9ed970bd65b2c8fec7bd233de42d53c ATOM_Lubover 2025-06-28
+187     14      backend/go/cmd/base_server/main.go
+4       0       backend/go/go.mod
+10      0       backend/go/go.sum
+6       5       backend/go/internal/base_server/dto/club.go
+8       2       backend/go/internal/base_server/dto/club_post.go
+8       0       backend/go/internal/base_server/dto/create_club_appli.go
+9       0       backend/go/internal/base_server/dto/join_club_appli.go
+9       0       backend/go/internal/base_server/dto/post_comment.go
+7       0       backend/go/internal/base_server/dto/proc_create_club.go
+7       0       backend/go/internal/base_server/dto/proc_create_post.go
+7       0       backend/go/internal/base_server/dto/proc_join_club.go
+7       0       backend/go/internal/base_server/dto/proc_update_club.go
+162     0       backend/go/internal/base_server/handler/auth_handler.go
+109     0       backend/go/internal/base_server/handler/club_admin_handler.go
+173     107     backend/go/internal/base_server/handler/club_handler.go
+98      0       backend/go/internal/base_server/handler/club_pub_handler.go
+133     0       backend/go/internal/base_server/handler/post_handler.go
+114     0       backend/go/internal/base_server/handler/post_pub_handler.go
+21      188     backend/go/internal/base_server/handler/user_handler.go
+94      0       backend/go/internal/base_server/repo/_create_post_applis.go
+3       3       backend/go/internal/base_server/repo/categories.go
+62      0       backend/go/internal/base_server/repo/club_favourites.go
+10      5       backend/go/internal/base_server/repo/club_members.go
+0       38      backend/go/internal/base_server/repo/club_post.go
+40      0       backend/go/internal/base_server/repo/club_post_comments.go
+111     0       backend/go/internal/base_server/repo/club_posts.go
+11      6       backend/go/internal/base_server/repo/clubs.go
+63      11      backend/go/internal/base_server/repo/create_club_applis.go
+54      10      backend/go/internal/base_server/repo/join_club_applis.go
+25      0       backend/go/internal/base_server/repo/transaction_coordinator.go
+79      0       backend/go/internal/base_server/repo/update_club_info_applis.go
+12      3       backend/go/internal/base_server/repo/users.go
+171     27      backend/go/internal/base_server/service/club_service.go
+231     0       backend/go/internal/base_server/service/post_service.go
+2       7       backend/go/internal/base_server/service/uesr_service.go
+90      43      backend/go/internal/shared/dbstruct/models.go
+24      0       backend/go/internal/shared/jsonbutil/jsonb_helper.go
+1       1       backend/go/server_run.bash
+4       0       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+7912bf4fb33315069a6d747240dabab2f31ca0c7 ATOM_Lubover 2025-06-26
+8       8       backend/go/cmd/{auth_server => base_server}/main.go
+0       0       backend/go/config/{auth_config.json => basic_config.json}
+0       154     backend/go/internal/auth_server/repo/user_repo.go
+1       1       backend/go/internal/{auth_server/authconfig => base_server/baseconfig}/config.go
+15      0       backend/go/internal/base_server/dto/club.go
+10      0       backend/go/internal/base_server/dto/club_member.go
+15      0       backend/go/internal/base_server/dto/club_post.go
+7       0       backend/go/internal/base_server/dto/create_club_appli.go
+1       1       backend/go/internal/{auth_server => base_server}/dto/login.go
+0       0       backend/go/internal/{auth_server => base_server}/dto/mailvrf.go
+1       1       backend/go/internal/{auth_server => base_server}/dto/register.go
+8       0       backend/go/internal/base_server/dto/update_club_info.go
+1       1       backend/go/internal/{auth_server => base_server}/dto/userinfo.go
+4       3       backend/go/internal/{auth_server => base_server}/grpcimpl/mailvrf/verification_service.pb.go
+0       0       backend/go/internal/{auth_server => base_server}/grpcimpl/mailvrf/verification_service.proto
+3       2       backend/go/internal/{auth_server => base_server}/grpcimpl/mailvrf/verification_service_grpc.pb.go
+3       3       backend/go/internal/{auth_server => base_server}/grpcimpl/mailvrf_client.go
+353     0       backend/go/internal/base_server/handler/club_handler.go
+5       0       backend/go/internal/base_server/handler/const.go
+25      27      backend/go/internal/{auth_server => base_server}/handler/user_handler.go
+0       0       backend/go/internal/{auth_server => base_server}/model/jwt_claim.go
+2       2       backend/go/internal/{auth_server => base_server}/redisimpl/redis_client.go
+46      0       backend/go/internal/base_server/repo/categories.go
+78      0       backend/go/internal/base_server/repo/club_members.go
+38      0       backend/go/internal/base_server/repo/club_post.go
+88      0       backend/go/internal/base_server/repo/clubs.go
+64      0       backend/go/internal/base_server/repo/create_club_applis.go
+71      0       backend/go/internal/base_server/repo/join_club_applis.go
+82      0       backend/go/internal/base_server/repo/users.go
+127     0       backend/go/internal/base_server/service/club_service.go
+14      14      backend/go/internal/{auth_server => base_server}/service/uesr_service.go
+4       4       backend/go/internal/{auth_server/model => shared/dbstruct}/models.go
+60      60      backend/go/internal/shared/jwtutil/jwt_processer.go
+22      22      "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+1       1       "backend/go/\346\236\266\346\236\204\345\256\236\351\252\214\346\200\247\346\226\207\346\241\243.md"
+
+8f69bbff1b770ec84c1d84c3211bfaad8aecbd7c ATOM_Lubover 2025-06-25
+15      11      backend/go/cmd/auth_server/main.go
+18      0       backend/go/config/auth_config.json
+0       21      backend/go/config/auth_config.yaml
+2       1       backend/go/go.mod
+2       0       backend/go/go.sum
+16      22      backend/go/internal/auth_server/authconfig/config.go
+2       2       backend/go/internal/auth_server/dto/login.go
+3       3       backend/go/internal/auth_server/grpcimpl/mailvrf_client.go
+164     61      backend/go/internal/auth_server/handler/user_handler.go
+6       0       backend/go/internal/auth_server/model/jwt_claim.go
+26      6       backend/go/internal/auth_server/redisimpl/redis_client.go
+28      0       backend/go/internal/auth_server/repo/{users.go => user_repo.go}
+28      3       backend/go/internal/auth_server/service/uesr_service.go
+4       5       backend/go/internal/shared/config/config.go
+25      0       backend/go/internal/shared/jwtutil/jwt_helper.go
+77      0       backend/go/internal/shared/jwtutil/jwt_processer.go
+1       1       backend/go/internal/shared/logger/logger.go
+166     1       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+
+eabc84f4a6fdc6994eb76aac432431ea956807eb ATOM_Lubover 2025-06-25
+35      2       backend/go/cmd/auth_server/main.go
+17      1       backend/go/config/auth_config.yaml
+21      0       backend/go/config/sslcert/openssl.cnf
+22      0       backend/go/config/sslcert/server.crt
+28      0       backend/go/config/sslcert/server.key
+13      6       backend/go/go.mod
+30      14      backend/go/go.sum
+19      0       backend/go/internal/auth_server/authconfig/config.go
+1       0       backend/go/internal/auth_server/dto/login.go
+5       0       backend/go/internal/auth_server/dto/mailvrf.go
+13      0       backend/go/internal/auth_server/dto/register.go
+10      0       backend/go/internal/auth_server/dto/userinfo.go
+226     0       backend/go/internal/auth_server/grpcimpl/mailvrf/verification_service.pb.go
+18      0       backend/go/internal/auth_server/grpcimpl/mailvrf/verification_service.proto
+105     0       backend/go/internal/auth_server/grpcimpl/mailvrf/verification_service_grpc.pb.go
+77      0       backend/go/internal/auth_server/grpcimpl/mailvrf_client.go
+149     23      backend/go/internal/auth_server/handler/user_handler.go
+35      35      backend/go/internal/auth_server/model/{uesr_model.go => models.go}
+60      0       backend/go/internal/auth_server/redisimpl/redis_client.go
+89      7       backend/go/internal/auth_server/repo/users.go
+37      20      backend/go/internal/auth_server/service/uesr_service.go
+45      0       backend/go/internal/shared/rediscli/redis_client.go
+0       0       backend/go/{script_auth_run.bash => server_run.bash}
+
+0a7f41af751fe1f8700c58e0cbb76543f2404dee ATOM_Lubover 2025-06-24
+59      0       backend/go/cmd/auth_server/main.go
+5       0       backend/go/config/auth_config.yaml
+87      0       backend/go/go.mod
+248     0       backend/go/go.sum
+10      0       backend/go/internal/auth_server/authconfig/config.go
+14      0       backend/go/internal/auth_server/dto/login.go
+63      0       backend/go/internal/auth_server/handler/user_handler.go
+131     0       backend/go/internal/auth_server/model/uesr_model.go
+44      0       backend/go/internal/auth_server/repo/users.go
+58      0       backend/go/internal/auth_server/service/uesr_service.go
+32      0       backend/go/internal/shared/config/config.go
+25      0       backend/go/internal/shared/logger/logger.go
+6       0       backend/go/script_auth_run.bash
+14      0       backend/go/server_build.bash
+6       0       "backend/go/\346\216\245\345\217\243\346\226\207\346\241\243.md"
+295     0       "backend/go/\346\236\266\346\236\204\345\256\236\351\252\214\346\200\247\346\226\207\346\241\243.md"
+
+29c0ae51d4da7410fac80eb8d209b88443145be7 ATOM_Lubover 2025-06-23
+34      0       backend/go/.gitignore
+
+dd354a29fdbe533f1b1d782bdc6b8099101682f6 ATOM_Lubover 2025-06-23
+0       0       backend/backend-readme.md
+
+d51988b3badb2b7054266c83486247c81e1202fa lbbbbbb 2025-06-23
+21      0       LICENSE
+2       0       README.md
+lubover@LB-OnsokuDash:~/proj/whuclubsynapse-go/backend/go$ git log --author="ATOM_Lubover" --pretty=tformat: --numstat | awk '{ add += $1; subs += $2; sum = add - subs } END { printf "Added lines: %s, Removed lines: %s, Total diff: %s\n", add, subs, sum }'
+Added lines: 9103, Removed lines: 1805, Total diff: 7298
