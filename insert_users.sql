@@ -1,6 +1,5 @@
 -- 插入用户数据（适配public.users 表结构）
 INSERT INTO "public"."users" (
-  "user_id", 
   "username", 
   "password_hash", 
   "email", 
@@ -13,7 +12,6 @@ INSERT INTO "public"."users" (
 ) VALUES 
 -- 用户1
 (
-  1, 
   'user_0001', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0001@example.com',  
@@ -26,7 +24,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户2
 (
-  2, 
   'user_0002', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0002@example.com',  
@@ -39,7 +36,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户3
 (
-  3, 
   'user_0003', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0003@example.com',  
@@ -52,7 +48,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户4
 (
-  4, 
   'user_0004', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0004@example.com',  
@@ -65,7 +60,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户5
 (
-  5, 
   'user_0005', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0005@example.com',  
@@ -78,7 +72,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户6
 (
-  6, 
   'user_0006', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0006@example.com',  
@@ -91,7 +84,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户7
 (
-  7, 
   'user_0007', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0007@example.com',  
@@ -104,7 +96,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户8
 (
-  8, 
   'user_0008', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0008@example.com',  
@@ -117,7 +108,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户9
 (
-  9, 
   'user_0009', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0009@example.com',  
@@ -130,7 +120,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户10
 (
-  10, 
   'user_0010', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0010@example.com',  
@@ -143,7 +132,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户11
 (
-  11, 
   'user_0011', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0011@example.com',  
@@ -156,7 +144,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户12
 (
-  12, 
   'user_0012', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0012@example.com',  
@@ -169,7 +156,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户13
 (
-  13, 
   'user_0013', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0013@example.com',  
@@ -182,7 +168,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户14
 (
-  14, 
   'user_0014', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0014@example.com',  
@@ -195,7 +180,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户15
 (
-  15, 
   'user_0015', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0015@example.com',  
@@ -208,7 +192,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户16
 (
-  16, 
   'user_0016', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0016@example.com',  
@@ -221,7 +204,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户17
 (
-  17, 
   'user_0017', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0017@example.com',  
@@ -234,7 +216,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户18
 (
-  18, 
   'user_0018', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0018@example.com',  
@@ -247,7 +228,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户19
 (
-  19, 
   'user_0019', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0019@example.com',  
@@ -260,7 +240,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户20
 (
-  20, 
   'user_0020', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0020@example.com',  
@@ -273,7 +252,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户21
 (
-  21, 
   'user_0021', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0021@example.com',  
@@ -286,7 +264,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户22
 (
-  22, 
   'user_0022', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0022@example.com',  
@@ -299,7 +276,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户23
 (
-  23, 
   'user_0023', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0023@example.com',  
@@ -312,7 +288,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户24
 (
-  24, 
   'user_0024', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0024@example.com',  
@@ -325,7 +300,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户25
 (
-  25, 
   'user_0025', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0025@example.com',  
@@ -338,7 +312,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户26
 (
-  26, 
   'user_0026', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0026@example.com',  
@@ -351,7 +324,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户27
 (
-  27, 
   'user_0027', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0027@example.com',  
@@ -364,7 +336,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户28
 (
-  28, 
   'user_0028', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0028@example.com',  
@@ -377,7 +348,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户29
 (
-  29, 
   'user_0029', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0029@example.com',  
@@ -390,7 +360,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户30
 (
-  30, 
   'user_0030', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0030@example.com',  
@@ -403,7 +372,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户31
 (
-  31, 
   'user_0031', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0031@example.com',  
@@ -416,7 +384,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户32
 (
-  32, 
   'user_0032', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0032@example.com',  
@@ -429,7 +396,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户33
 (
-  33, 
   'user_0033', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0033@example.com',  
@@ -442,7 +408,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户34
 (
-  34, 
   'user_0034', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0034@example.com',  
@@ -455,7 +420,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户35
 (
-  35, 
   'user_0035', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0035@example.com',  
@@ -468,7 +432,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户36
 (
-  36, 
   'user_0036', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0036@example.com',  
@@ -481,7 +444,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户37
 (
-  37, 
   'user_0037', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0037@example.com',  
@@ -494,7 +456,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户38
 (
-  38, 
   'user_0038', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0038@example.com',  
@@ -507,7 +468,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户39
 (
-  39, 
   'user_0039', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0039@example.com',  
@@ -520,7 +480,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户40
 (
-  40, 
   'user_0040', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0040@example.com',  
@@ -533,7 +492,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户41
 (
-  41, 
   'user_0041', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0041@example.com',  
@@ -546,7 +504,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户42
 (
-  42, 
   'user_0042', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0042@example.com',  
@@ -559,7 +516,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户43
 (
-  43, 
   'user_0043', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0043@example.com',  
@@ -572,7 +528,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户44
 (
-  44, 
   'user_0044', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0044@example.com',  
@@ -585,7 +540,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户45
 (
-  45, 
   'user_0045', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0045@example.com',  
@@ -598,7 +552,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户46
 (
-  46, 
   'user_0046', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0046@example.com',  
@@ -611,7 +564,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户47
 (
-  47, 
   'user_0047', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0047@example.com',  
@@ -624,7 +576,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户48
 (
-  48, 
   'user_0048', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0048@example.com',  
@@ -637,7 +588,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户49
 (
-  49, 
   'user_0049', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0049@example.com',  
@@ -650,7 +600,6 @@ INSERT INTO "public"."users" (
 ),
 -- 用户50
 (
-  50, 
   'user_0050', 
   '$2a$10$GBq4EkE71/./1enmPH5u1e9PsgdhzBuZQ20HcgDhk7r3quWJjq/yK', 
   'user0050@example.com',  
