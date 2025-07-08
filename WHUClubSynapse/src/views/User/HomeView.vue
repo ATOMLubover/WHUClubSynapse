@@ -109,7 +109,7 @@
             <el-tab-pane label="全部" name="">
               <template #label>
                 全部
-                <el-badge :value="clubStore.getTotalClubCount" class="category-badge" />
+                <el-badge :value="total" class="category-badge" />
               </template>
             </el-tab-pane>
             <el-tab-pane
@@ -201,7 +201,6 @@
           </div>
         </el-card>
 
-
         <!-- 快速入口 -->
         <el-card v-if="authStore.isLoggedIn && !authStore.isGuest" class="sidebar-card">
           <template #header>
@@ -248,6 +247,7 @@ import type { ClubCategory, SmartSearchResponse } from '@/types'
 import { ElMessage } from 'element-plus'
 import { smartSearchStream, checkAiServiceHealth } from '@/api/ai-search'
 import { isAiSearchEnabled as checkAiSearchEnabled } from '@/config/ai-search'
+import request from '@/utils/request'
 
 const router = useRouter()
 const clubStore = useClubStore()
@@ -367,10 +367,20 @@ const handleSortChange = async () => {
   }
 }
 
+const total = ref(0)
+const getTotal = async () => {
+  const res = await request.get('/api/club/club_num')
+  total.value = res.data.club_num
+}
+getTotal()
+
 // 处理页码改变
 const handlePageChange = async (page: number) => {
   try {
     await clubStore.fetchClubs({ sortBy: sortBy.value as SortType }, page)
+    await clubStore.fetchFavoriteClubs()
+    await clubStore.fetchPendingClubApplications({})
+    await clubStore.fetchJoinedClubs()
   } catch (error) {
     console.error('切换页面失败:', error)
     ElMessage.error('切换页面失败')

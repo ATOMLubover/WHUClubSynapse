@@ -34,14 +34,7 @@
             <div class="card-content">
               <!-- 社团信息头部 -->
               <div class="club-header">
-                <el-avatar
-                  :size="60"
-                  :src="
-                    application.club?.logo_url ||
-                    'https://cdn.jsdelivr.net/gh/whu-asset/static/club-default.png'
-                  "
-                  class="club-avatar"
-                />
+                <el-avatar :size="60" :src="application.club?.logo_url" class="club-avatar" />
                 <div class="club-info">
                   <h3 class="club-name">
                     <el-link

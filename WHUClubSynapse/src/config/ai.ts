@@ -1,7 +1,9 @@
+import { config } from "."
+
 // AI服务配置
 export const AI_CONFIG = {
   // AI代理服务器地址 - 修改这里即可更新所有AI接口地址
-  BASE_URL: '/api/trans/llm/',
+  BASE_URL: `${config.apiBaseUrl}/api/trans/llm/`,
   
   // 默认模型配置
   DEFAULT_MODEL: 'Qwen/Qwen3-8B-AWQ',

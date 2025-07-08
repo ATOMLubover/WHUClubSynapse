@@ -40,10 +40,6 @@
       <!-- 社团详情 -->
       <div class="club-details">
         <div class="detail-item">
-          <el-icon><User /></el-icon>
-          <span>负责人：{{ club.adminName }}</span>
-        </div>
-        <div class="detail-item">
           <el-icon><UserFilled /></el-icon>
           <span>成员：{{ club.member_count }}/{{ clubStore.MAX_MEMBER_NUM }}</span>
         </div>

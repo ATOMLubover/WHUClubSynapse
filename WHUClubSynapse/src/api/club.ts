@@ -1513,7 +1513,7 @@ export const getClubsByCategory = async (
   } = {}
 ): Promise<PaginatedData<Club>> => {
   if (getIsUsingMockAPI()) {
-    return await mockClub.mockGetClubList({ ...params, category: categoryId })
+    // return await mockClub.mockGetClubList({ ...params, category: categoryId })
   }
 
   const queryParams = new URLSearchParams()
@@ -1558,10 +1558,10 @@ export const getClubsByCategory = async (
 
     // 使用返回的列表长度作为该分类的总数
     // 如果后端返回了total字段，则使用后端返回的total
-    const total = response.data.total || clubs.length
+    const total = response.data.length
 
     return {
-      list: clubs,
+      list: clubs.slice((params.page! - 1) * params.pageSize!, params.page! * params.pageSize!),
       total: total,
       page: params.page || 1,
       pageSize: params.pageSize || 10

@@ -245,11 +245,6 @@
                   </span>
                 </div>
               </div>
-
-              <div class="info-item full-width">
-                <span class="info-label">个人偏好</span>
-                <span class="info-value">{{ userDetail?.preferences || '未设置偏好' }}</span>
-              </div>
             </div>
           </div>
         </div>

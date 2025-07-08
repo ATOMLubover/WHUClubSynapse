@@ -5,6 +5,7 @@ import * as clubApi from '@/api/club'
 import type { Club, ClubCategory, SearchParams, PaginatedData, ClubPost, ClubApplication, ClubCreatedApplication } from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import { config } from '@/config'
+import request from '@/utils/request'
 
 export const useClubStore = defineStore('club', () => {
   const MAX_MEMBER_NUM=50
@@ -235,13 +236,7 @@ export const useClubStore = defineStore('club', () => {
     return categoryCounts.value.get(categoryId) || 0
   }
 
-  // 获取所有社团总数
-  const getTotalClubCount = computed(() => {
-    if (globalPageData.total > 0) {
-      return globalPageData.total
-    }
-    return Array.from(categoryCounts.value.values()).reduce((sum, count) => sum + count, 0)
-  })
+ 
 
   // 设置搜索参数
   const setSearchParams = (params: Partial<SearchParams>) => {
@@ -326,20 +321,26 @@ export const useClubStore = defineStore('club', () => {
           club.status="pending"
         }
       })
-      let list=applications.value
+      let list=applications.value as ClubApplication[]
       if(params.page!=null&&params.pageSize!=null){
         list=list.slice((params.page-1)*params.pageSize,params.page*params.pageSize)
       }
 
+      const timestamp=new Date().getTime()
+
       list.forEach(async(application)=>{
         const club=await fetchClubBasic(application.club_id)
         if(club){
-          if(club.logo_url="")
+          if(club.logo_url=="")
           {
-            club.logo_url=`${config.apiBaseUrl}/pub/club_logos/default.jpg`
+            club.logo_url=`${config.apiBaseUrl}/pub/club_logos/default.jpg?t=${timestamp}`
           }
-          application.club=club
+          else{
+            club.logo_url=`${config.apiBaseUrl}/${club.logo_url}?t=${timestamp}`
+          }
         }
+
+        application.club=club
       })
 
       return {
@@ -628,7 +629,6 @@ export const useClubStore = defineStore('club', () => {
     totalPages,
     hasMore,
     getCategoryCount,
-    getTotalClubCount,
     // 方法
     fetchClubs,
     searchClubs,
