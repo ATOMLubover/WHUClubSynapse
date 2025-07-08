@@ -3,9 +3,7 @@
     <!-- 左侧Logo和标题 -->
     <div class="header-left">
       <router-link to="/" class="logo-link">
-        <el-icon class="logo-icon" :size="32">
-          <House />
-        </el-icon>
+        <img src="../../../public/favicon.ico" alt="logo" class="logo-icon" />
         <span class="logo-text">WHU社团联盟</span>
       </router-link>
     </div>
@@ -226,6 +224,8 @@ onMounted(() => {
 }
 
 .logo-icon {
+  width: 32px;
+  height: 32px;
   margin-right: 8px;
 }
 
