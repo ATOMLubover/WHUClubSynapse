@@ -60,14 +60,26 @@
               placeholder="说点什么吧..."
               :maxlength="500"
             />
-            <el-button
-              type="primary"
-              @click="handleReply"
-              :loading="replyLoading"
-              class="reply-btn"
-              :disabled="!authStore.isLoggedIn || authStore.isGuest"
-              >回复</el-button
-            >
+            <div class="reply-buttons">
+              <el-button
+                type="warning"
+                @click="handleAICheck"
+                :loading="aiCheckLoading"
+                :disabled="!replyContent.trim() || aiCheckPassed"
+                class="reply-btn"
+              >
+                AI审核
+              </el-button>
+              <el-button
+                type="primary"
+                @click="handleReply"
+                :loading="replyLoading"
+                class="reply-btn"
+                :disabled="!authStore.isLoggedIn || authStore.isGuest || !aiCheckPassed"
+              >
+                回复
+              </el-button>
+            </div>
           </div>
         </el-card>
       </div>
@@ -81,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getClubPostDetail, replyClubPost } from '@/api/club'
@@ -91,6 +103,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import type { ClubPost, ClubPostComment } from '@/types'
 import { useClubStore } from '@/stores/club'
+import { validateCommentContent } from '@/api/ai'
 const defaultAvatar = 'https://cdn.jsdelivr.net/gh/whu-asset/static/avatar-default.png'
 const route = useRoute()
 const authStore = useAuthStore()
@@ -107,6 +120,14 @@ const postLoading = ref(false)
 const repliesLoading = ref(false)
 const replyContent = ref('')
 const replyLoading = ref(false)
+
+const aiCheckLoading = ref(false)
+const aiCheckPassed = ref(false)
+
+// 监听回复内容变化，重置审核状态
+watch(() => replyContent.value, () => {
+  aiCheckPassed.value = false
+})
 
 const fetchPost = async () => {
   try {
@@ -169,6 +190,30 @@ const fetchReplies = async () => {
   }
 }
 
+const handleAICheck = async () => {
+  if (!replyContent.value.trim()) {
+    ElMessage.warning('回复内容不能为空')
+    return
+  }
+  
+  aiCheckLoading.value = true
+  try {
+    const isContentValid = await validateCommentContent(replyContent.value)
+    if (isContentValid) {
+      aiCheckPassed.value = true
+      ElMessage.success('AI审核通过')
+    } else {
+      aiCheckPassed.value = false
+      ElMessage.error('AI审核未通过，请修改内容后重试')
+    }
+  } catch (error) {
+    console.error('AI审核失败:', error)
+    ElMessage.error('AI审核失败，请重试')
+  } finally {
+    aiCheckLoading.value = false
+  }
+}
+
 const handleReply = async () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
@@ -184,6 +229,12 @@ const handleReply = async () => {
     ElMessage.warning('回复内容不能为空')
     return
   }
+
+  if (!aiCheckPassed.value) {
+    ElMessage.warning('请先通过AI审核')
+    return
+  }
+
   replyLoading.value = true
   const user_id = authStore.getCurrentUserId()
   try {
@@ -194,6 +245,7 @@ const handleReply = async () => {
     })
     ElMessage.success('回复成功')
     replyContent.value = ''
+    aiCheckPassed.value = false
     fetchReplies()
   } finally {
     replyLoading.value = false
@@ -517,22 +569,15 @@ onMounted(() => {
   font-size: 15px;
 }
 
-.reply-btn {
-  align-self: flex-end;
-  margin-top: 4px;
-  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
-  border: none;
-  font-weight: 500;
-  border-radius: 20px;
-  padding: 0 22px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.08);
-  transition: box-shadow 0.2s;
+.reply-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
-.reply-btn:hover {
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.18);
-  opacity: 0.92;
+.reply-btn {
+  min-width: 80px;
 }
 
 .pagination {

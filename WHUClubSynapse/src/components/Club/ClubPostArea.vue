@@ -68,7 +68,22 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
-        <el-button type="primary" @click="handleCreate" :loading="createLoading">发布</el-button>
+        <el-button 
+          type="warning" 
+          @click="handleAICheck" 
+          :loading="aiCheckLoading"
+          :disabled="!createForm.title.trim() || !createForm.content.trim() || aiCheckPassed"
+        >
+          AI审核
+        </el-button>
+        <el-button 
+          type="primary" 
+          @click="handleCreate" 
+          :loading="createLoading"
+          :disabled="!aiCheckPassed"
+        >
+          发布
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -104,6 +119,14 @@ const showCreate = ref(false)
 const createForm = ref({ title: '', content: '' })
 const createLoading = ref(false)
 
+const aiCheckLoading = ref(false)
+const aiCheckPassed = ref(false)
+
+// 监听表单内容变化，重置审核状态
+watch(() => [createForm.value.title, createForm.value.content], () => {
+  aiCheckPassed.value = false
+}, { deep: true })
+
 const showCreateDialog = () => {
   if (authStore.isLoggedIn && props.club?.status == 'joined') {
     showCreate.value = true
@@ -134,19 +157,43 @@ const goToPost = (row: ClubPost) => {
   router.push(`/club/post/${props.clubId}/${row.post_id}/${encodedContentUrl}`)
 }
 
+const handleAICheck = async () => {
+  if (!createForm.value.title.trim() || !createForm.value.content.trim()) {
+    ElMessage.warning('标题和内容不能为空')
+    return
+  }
+  
+  aiCheckLoading.value = true
+  try {
+    const isContentValid = await validatePostContent(createForm.value.title, createForm.value.content)
+    if (isContentValid) {
+      aiCheckPassed.value = true
+      ElMessage.success('AI审核通过')
+    } else {
+      aiCheckPassed.value = false
+      ElMessage.error('AI审核未通过，请修改内容后重试')
+    }
+  } catch (error) {
+    console.error('AI审核失败:', error)
+    ElMessage.error('AI审核失败，请重试')
+  } finally {
+    aiCheckLoading.value = false
+  }
+}
+
 const handleCreate = async () => {
   if (!createForm.value.title.trim() || !createForm.value.content.trim()) {
     ElMessage.warning('标题和内容不能为空')
     return
   }
+  
+  if (!aiCheckPassed.value) {
+    ElMessage.warning('请先通过AI审核')
+    return
+  }
+  
   createLoading.value = true
   try {
-    // 首先进行AI内容审核
-    const isContentValid = await validatePostContent(createForm.value.title, createForm.value.content)
-    if (!isContentValid) {
-      return
-    }
-
     await createClubPost({
       club_id: Number(props.clubId),
       title: createForm.value.title,
@@ -156,6 +203,7 @@ const handleCreate = async () => {
     showCreate.value = false
     createForm.value.title = ''
     createForm.value.content = ''
+    aiCheckPassed.value = false
     // 使用store方法刷新帖子列表
     await fetchPosts()
   } catch (error) {
