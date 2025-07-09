@@ -427,7 +427,7 @@ export const getClubPosts = async (clubId: string, page: number, pageSize: numbe
       return {
         ...item,
         authorName: user.username,
-        authorAvatar: `${config.apiBaseUrl}/${user.avatar_url}`
+        authorAvatar: user.avatar_url=='' ? `${config.apiBaseUrl}/pub/user_avatars/default.jpg` : `${config.apiBaseUrl}/${user.avatar_url}`
       }
     })
   )
@@ -475,7 +475,7 @@ export const getClubPostComments = async (postId: string, page: number, pageSize
       return {
         ...item,
         authorName: user.username,
-        authorAvatar: `${config.apiBaseUrl}/${user.avatar_url}`
+        authorAvatar: user.avatar_url=='' ? `${config.apiBaseUrl}/pub/user_avatars/default.jpg` : `${config.apiBaseUrl}/${user.avatar_url}`
       }
     })
   )

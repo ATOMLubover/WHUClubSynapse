@@ -125,9 +125,12 @@ const aiCheckLoading = ref(false)
 const aiCheckPassed = ref(false)
 
 // 监听回复内容变化，重置审核状态
-watch(() => replyContent.value, () => {
-  aiCheckPassed.value = false
-})
+watch(
+  () => replyContent.value,
+  () => {
+    aiCheckPassed.value = false
+  },
+)
 
 const fetchPost = async () => {
   try {
@@ -195,7 +198,7 @@ const handleAICheck = async () => {
     ElMessage.warning('回复内容不能为空')
     return
   }
-  
+
   aiCheckLoading.value = true
   try {
     const isContentValid = await validateCommentContent(replyContent.value)
@@ -220,7 +223,9 @@ const handleReply = async () => {
     return
   }
 
-  if (clubStore.clubs.find((c) => c.club_id == clubId)?.status != 'joined') {
+  const members = (await clubStore.fetchClubDetail(clubId))?.members
+  console.log('members:', members)
+  if (!members?.some((m) => m.member_id == authStore.getCurrentUserId()?.toString())) {
     ElMessage.warning('请先加入社团')
     return
   }
